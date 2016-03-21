@@ -1,10 +1,9 @@
 # Features:
-
+   * User Commands
+   * a few Black Desert Online scripts
+   * work in progress, more features coming soon. 
 # Installation
-
-## RSS
-
-## Special instructions for setting up google search and youtube APIs:
+   * Coming soon...
 
 # Commands
    * !youtube [search_term] - Searches youtube for text that the user passes, then gives back a link to one of the videos.
@@ -14,9 +13,9 @@
    * !join [server join url] - send the join URL to a sever where lemon bot is in and he will join the other server
    * !help - returns the github page with Help information and commands.  
 # Updates
-
+  * updates happen when I feel like it. 
 # ToDo:
-All the things!
+  * All the things!
 
 # Help
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on my Team Speak
