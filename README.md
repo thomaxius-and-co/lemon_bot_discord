@@ -2,6 +2,7 @@
    * User Commands
    * a few Black Desert Online scripts
    * work in progress, more features coming soon. 
+
 # Installation
    * Coming soon...
 
@@ -12,8 +13,10 @@
    * !8ball [question] - This returns the eightball prediction and the question the user asked
    * !join [server join url] - send the join URL to a sever where lemon bot is in and he will join the other server
    * !help - returns the github page with Help information and commands.  
+
 # Updates
   * updates happen when I feel like it. 
+
 # ToDo:
   * All the things!
 
