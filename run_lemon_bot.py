@@ -44,7 +44,7 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 
-API_KEY = 'e8b843957be984dee5f1966d4df6ecc5'
+API_KEY = ''
 
 
 # Function to search for a youtube video and return a link.
@@ -161,5 +161,5 @@ def on_message(message):
         client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
 
 # Simple client login and starting the bot.
-client.login('lemon65.twitch@gmail.com', 'Dragon_4545')
+client.login('', '')
 client.run()
