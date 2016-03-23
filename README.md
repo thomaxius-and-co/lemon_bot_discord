@@ -1,11 +1,12 @@
 # Lemon Bot Will Rule The World!
-
-![alt text](http://hd.wallpaperswide.com/thumbs/robot_face-t2.jpg "Lemon Bot Will Rule the World!")
+![alt text](http://i.imgur.com/pbuSNr4.jpg "Lemon Bot Will Rule the World!")
 
 ## Features:
-   * User Commands
-   * a few Black Desert Online scripts
-   * work in progress, more features coming soon. 
+   * Youtube Integration
+   * CleverBot Integration
+   * Magic EightBall
+   * Weather by ZipCode
+   * Black Desert Online scripts
 
 ## Installation
    * Git clone the Repo. 
