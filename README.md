@@ -1,22 +1,22 @@
-
+# Lemon Bot Will Rule The World!
 
 ![alt text](http://hd.wallpaperswide.com/thumbs/robot_face-t2.jpg "Lemon Bot Will Rule the World!")
 
-# Features:
+## Features:
    * User Commands
    * a few Black Desert Online scripts
    * work in progress, more features coming soon. 
 
-# Installation
+## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
 
-# Requirements
+## Requirements
    * Python 2.7.6
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
 
-# Commands
+## Commands
 | Commands        | description |
 | ------------- |:-------------:|
 | !youtube [search_term]| Searches youtube for text that the user passes, then gives back a link to one of the videos. |
@@ -29,25 +29,25 @@
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
 | !help | Returns the github page with Help information and commands. |
 
-# Updates
+## Updates
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
 
-# ToDo:
+## ToDo:
   * Google Search
   * Wiki Search
   * Other BDO scripts Etc. 
   * Music functions? 
 
-# Help
+## Help
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on my Team Speak
     (IP = ts.ramcommunity.com) user name is lemon65. 
 
-# Notes
+## Notes
   * I have seen lag issues with servers that can't parse the HTMl data quickly, for example a Raspberry-PI
 
-# Copyright
-  *  #################### Copyright (c) 2016 RamCommunity #################
+## Copyright
 
+#################### Copyright (c) 2016 RamCommunity #################
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
