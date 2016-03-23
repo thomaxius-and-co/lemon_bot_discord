@@ -25,6 +25,7 @@
 | !roll |  This rolls from 0-100, and returns the users name and the roll value. |
 | !coin | Simple coin toss command, gives you a 50/50 chance. |
 | !8ball [question] | This returns the eightball prediction and the question the user asked. |
+| !spank [target_user] | This will return with a punishment for the target user. |
 | !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
 | !help | Returns the github page with Help information and commands. |
