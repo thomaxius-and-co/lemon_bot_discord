@@ -1,4 +1,4 @@
-# Lemon Bot Will Rule The World! ![alt text](http://i.imgur.com/uhYjTMt.jpg "Lemon Bot Will Rule the World!")
+![alt text](http://i.imgur.com/uhYjTMt.jpg "Lemon Bot Will Rule the World!") Lemon Bot ![alt text](http://i.imgur.com/uhYjTMt.jpg "Lemon Bot Will Rule the World!")
 
 ## Features:
    * Youtube Integration
