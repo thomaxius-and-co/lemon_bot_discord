@@ -9,12 +9,13 @@
    * Currency system
    * Black Desert Online scripts
 
-## Demo
+## Demo Video
 [![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/4agdwM8miZw/0.jpg)](http://www.youtube.com/watch?v=4agdwM8miZw)
 
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
+   * More to Come...
 
 ## Requirements
    * Python 2.7.6
