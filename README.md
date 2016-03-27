@@ -28,7 +28,7 @@
 | ------------- |:-------------:|
 | !youtube [search_term]| Searches youtube for text that the user passes, then gives back a link to one of the videos. |
 | !cleverbot [question] |  This will reach out to the cleverbot API and return an Answer. |
-| !enchant [target_level][fail_stacks] |  this is a Black Desert command that figures out the enchanting chances for black stonee upgrades. |
+| !enchant [target_level][fail_stacks] |  this is a Black Desert command that figures out the enchanting chances for black stone upgrades. |
 | !roll |  This rolls from 0-100, and returns the users name and the roll value. |
 | !coin | Simple coin toss command, gives you a 50/50 chance. |
 | !8ball [question] | This returns the eightball prediction and the question the user asked. |
