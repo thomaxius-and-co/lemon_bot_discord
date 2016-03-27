@@ -17,7 +17,7 @@
    * Python 2.7.6
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
-   * dicrod.py - https://github.com/Rapptz/discord.py
+   * discord.py - https://github.com/Rapptz/discord.py
 
 ## Commands
 | Commands        | description |
