@@ -14,14 +14,22 @@
 #########################################
 # google search
 # wiki search
+
+#########################################
+# Casino - Idea
+
+# !blackjack -- author has X and X for a total of X, Commands !stand, !hit,
+# and !doubledown.
 #########################################
 
+import os
 import time
 import json
 import discord
 import random
 import urllib2
 import requests
+import pickle
 import cleverbot
 import enchanting_chances as en
 from bs4 import BeautifulSoup
@@ -30,6 +38,9 @@ from bs4 import BeautifulSoup
 import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 client = discord.Client()
+BANK_PATH = './bot_files/lemon_bot_bank.pkl'
+BET_PATH = './bot_files/lemon_bot_bets.pkl'
+ACC_PATH = './bot_files/lemon_bot_accnum.pkl'
 
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
@@ -44,8 +55,9 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 
-API_KEY = ''
+SLOT_PATTERN = [':four_leaf_clover:', ':moneybag:', ':cherries:', ':lemon:', ':grapes:', ':hankey:']
 
+API_KEY = ''
 
 # Function to search for a youtube video and return a link.
 def youtube_search(message):
@@ -61,6 +73,193 @@ def youtube_search(message):
             link_list.append('https://www.youtube.com' + vid['href'])
     random_num = random.randint(0, len(link_list) - 1)
     client.send_message(message.channel, link_list[random_num])
+
+
+# Function to clear a chat Channel.
+def clear_chat_channel(message):
+    counter = 0
+    all_messages = client.messages
+    target_channel = message.channel
+    for message_step in all_messages:
+        if message_step.channel == target_channel:
+            client.delete_message(message_step)
+            counter += 1
+    client.send_message(message.channel, 'I have removed %s old messages' % counter)
+
+
+# Save the dict Object
+def save_obj(dict, file_path):
+    with open(file_path, 'wb') as f:
+        pickle.dump(dict, f, pickle.HIGHEST_PROTOCOL)
+
+# Load the pickle Object
+def load_obj(file_path):
+    file_bool = os.path.isfile(file_path)
+    if file_bool:
+        with open(file_path, 'rb') as f:
+            return pickle.load(f)
+    else:
+        return None
+
+
+# Build Dict and return
+def build_dict(file_path):
+    path_bool = os.path.isfile(file_path)
+    if not path_bool:
+        data_dict = {}
+    else:
+        data_dict = load_obj(file_path)
+    return data_dict
+
+
+# Function to play the slots
+def play_slots(author, message):
+    wheel_list = []
+    results_dict = {}
+    count = 1
+    winnings = 0
+    bet_dict = build_dict(BET_PATH)
+    if bet_dict.get(str(author)):
+        set_bet = bet_dict.get(str(author))
+    else:
+        client.send_message(message.channel, 'You need to set a bet with the !bet command, Example: !bet 10')
+        return
+    bank_dict = build_dict(BANK_PATH)
+    if bank_dict.get(str(author)):
+        balance = bank_dict.get(str(author))
+    else:
+        client.send_message(message.channel, 'You need to run the !loan command.')
+        return
+    if set_bet > balance:
+        client.send_message(message.channel, 'Your balance of $%s is to low, lower your bet amount of $%s' % (balance, set_bet))
+        return
+    while count <= 4:
+        wheel_pick = SLOT_PATTERN[random.randint(0, len(SLOT_PATTERN) - 1)]
+        wheel_list.append(wheel_pick)
+        count += 1
+    last_step = ''
+    for wheel_step in wheel_list:
+        if not results_dict.get(wheel_step):
+            results_dict[wheel_step] = 1
+        if results_dict.get(wheel_step) and last_step == wheel_step:
+            data = results_dict.get(wheel_step)
+            results_dict[wheel_step] = data + 1
+        last_step = wheel_step
+    for k, v in results_dict.iteritems():
+        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 4:
+            winnings = set_bet * 50
+            break
+        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 3:
+            winnings = set_bet * 25
+            break
+        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 2:
+            winnings = set_bet * 15
+            break
+        if k == ':moneybag:' and v == 4:
+            winnings = set_bet * 500
+            break
+        if k == ':moneybag:' and v == 3:
+            winnings = set_bet * 100
+            break
+        if k == ':moneybag:' and v == 2:
+            winnings = set_bet * 25
+            break
+        if k == ':four_leaf_clover:' and v == 4:
+            winnings = set_bet * 1000
+            break
+        if k == ':four_leaf_clover:' and v == 3:
+            winnings = set_bet * 200
+            break
+        if k == ':four_leaf_clover:' and v == 2:
+            winnings = set_bet * 50
+            break
+        else:
+            winnings = -set_bet
+    wheel_payload = '%s Bet: $%s --> | ' %( author, set_bet) + ' - '.join(wheel_list) + ' |' + ' Outcome: $%s' % winnings
+    client.send_message(message.channel, wheel_payload)
+    result = int(bank_dict.get(str(author))) + int(winnings)
+    if result <= 0:
+        bank_dict[str(author)] = 0
+    else:
+        bank_dict[str(author)] = result
+    save_obj(bank_dict, BANK_PATH)
+
+
+# Function to set a users bet.
+def set_bet(author, message):
+    amount = message.content.replace('!bet ', '')
+    try:
+        amount = int(amount)
+    except Exception:
+        client.send_message(message.channel, 'You need to enter an integer, Example: !bet 5')
+        return
+    file_bool = os.path.isfile(BET_PATH)
+    if not file_bool:
+        data_dict = {}
+    else:
+        data_dict = load_obj(BET_PATH)
+    client.send_message(message.channel, '%s, set bet to: %s' % (author, amount))
+    data_dict[str(author)] = amount
+    save_obj(data_dict, BET_PATH)
+
+# Function to look at the currently Set bet.
+def review_bet(author, message):
+    file_bool = os.path.isfile(BET_PATH)
+    if not file_bool:
+        bet_dict = {}
+    else:
+        bet_dict = load_obj(BET_PATH)
+    if bet_dict.get(str(author)):
+        client.send_message(message.channel, '%s is currently betting: %s' % (author, bet_dict.get(str(author))))
+    else:
+        client.send_message(message.channel, '%s your bet is not Set, use the !bet command.' % (author))
+
+
+
+# function to loan players money -- ONLY UP TO -- > $50 dollars
+def loan_money(author, message):
+    bank_bool = os.path.isfile(BANK_PATH)
+    if not bank_bool:
+        bank_dict = {}
+    else:
+        bank_dict = load_obj(BANK_PATH)
+    if bank_dict.get(str(author)):
+        money = bank_dict.get(str(author))
+        if money >= 50:
+            client.send_message(message.channel, '%s you have $%s, you do not need a loan.' % (author, money))
+            return
+        else:
+            bank_dict[str(author)] = 50
+            client.send_message(message.channel, '%s, added up to $50' % author)
+    else:
+        bank_dict[str(author)] = 50
+        client.send_message(message.channel, '%s, added $50' % author)
+    save_obj(bank_dict, BANK_PATH)
+
+
+# Function to look up a users Money!
+def bank_lookup(author, message):
+    acc_bool = os.path.isfile(ACC_PATH)
+    if not acc_bool:
+        acc_dict = {}
+    else:
+        acc_dict = load_obj(ACC_PATH)
+    if acc_dict.get(str(author)):
+        account_number = acc_dict.get(str(author))
+    else:
+        account_number = random.randint(0,999999999)
+        acc_dict[str(author)] = account_number
+    bank_bool = os.path.isfile(BANK_PATH)
+    if not bank_bool:
+        bank_dict = {}
+    else:
+        bank_dict = load_obj(BANK_PATH)
+    if str(author) in bank_dict.keys():
+        balance = bank_dict.get(str(author))
+        client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (author, account_number, balance))
+    if not str(author) in bank_dict.keys():
+        client.send_message(message.channel, "Looks like you don't have an Account, try the !loan command.")
+    save_obj(acc_dict, ACC_PATH)
 
 
 # Function to get the weather by zip code. using: http://openweathermap.org
@@ -105,7 +304,7 @@ def coin_toss(message):
     outcome = random.randint(0,1)
     if outcome == 0:
         outcome = "Heads"
-    if outcome == 1:
+    else:
         outcome = "Tails"
     client.send_message(message.channel, "Just a moment, flipping the coin...")
     time.sleep(.5)
@@ -123,7 +322,7 @@ def bdo_enchant(message):
 
 
 # Rolling the odds for a user.
-def roll_odds(message):
+def roll_odds(author, message):
     rand_roll = random.randint(0, 100)
     client.send_message(message.channel, '%s your roll is %s' % (author, rand_roll))
 
@@ -144,7 +343,7 @@ def on_message(message):
     if message.content.startswith('!youtube'):
         youtube_search(message)
     if message.content.startswith('!roll'):
-        roll_odds(message)
+        roll_odds(author, message)
     if message.content.startswith('!8ball'):
         eight_ball(message)
     if message.content.startswith('!join'):
@@ -159,7 +358,25 @@ def on_message(message):
         coin_toss(message)
     if message.content.startswith('!help'):
         client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
+    if message.content.startswith('!slots'):
+        play_slots(author, message)
+    if message.content.startswith('!clear'):
+        clear_chat_channel(message)
+    if message.content.startswith('!bet'):
+        set_bet(author, message)
+    if message.content.startswith('!reviewbet'):
+        review_bet(author, message)
+    if message.content.startswith('!loan'):
+        loan_money(author, message)
+    if message.content.startswith('!bank'):
+        bank_lookup(author, message)
 
+
+
+# Create the local Dirs if needed.
+file_bool = os.path.exists("./bot_files")
+if not file_bool:
+    os.system('mkdir ./bot_files')
 # Simple client login and starting the bot.
 client.login('', '')
 client.run()
