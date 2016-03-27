@@ -28,6 +28,12 @@
 | !spank [target_user] | This will return with a punishment for the target user. |
 | !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
+| !slots | runs the slots, and uses the users money from the bank. Slots KEY = [4-Fruit(*50), 3-Fruit(*25), 2-Fruit(*15), 4-Money(*500), 3-Money(*100),2-Money(*25), 4-Clover(*1000), 3-Clover(*200), 2-Clover(*50)]|
+| !clear | clears the chat log in that channel. |
+| !bet [amount] | Set the users betting amount. |
+| !reviewbet | Returns the users current bet. |
+| !loan | Gives the user, a little cash, Max amount of $50 bucks. |
+| !bank | Shows the user how much money they have. |
 | !help | Returns the github page with Help information and commands. |
 
 ## Updates
