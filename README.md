@@ -5,6 +5,8 @@
    * CleverBot Integration
    * Magic EightBall
    * Weather by ZipCode
+   * Slot Machine
+   * Currency system
    * Black Desert Online scripts
 
 ## Installation
@@ -42,6 +44,7 @@
 ## ToDo:
   * Google Search
   * Wiki Search
+  * Black Jack
   * Other BDO scripts Etc. 
   * Music functions? 
 
