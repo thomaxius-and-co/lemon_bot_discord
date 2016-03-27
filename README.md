@@ -9,7 +9,7 @@
    * Currency system
    * Black Desert Online scripts
 
-## Demo Video
+## Demo Video:
 [![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/4agdwM8miZw/0.jpg)](http://www.youtube.com/watch?v=4agdwM8miZw)
 
 ## Installation
@@ -17,13 +17,13 @@
    	* git clone https://github.com/lemon65/lemon_bot_discord
    * More to Come...
 
-## Requirements
+## Requirements:
    * Python 2.7.6
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
    * discord.py - https://github.com/Rapptz/discord.py
 
-## Commands
+## Commands:
 | Commands        | description |
 | ------------- |:-------------:|
 | !youtube [search_term]| Searches youtube for text that the user passes, then gives back a link to one of the videos. |
@@ -43,7 +43,7 @@
 | !bank | Shows the user how much money they have. |
 | !help | Returns the github page with Help information and commands. |
 
-## Updates
+## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
 
 ## ToDo:
@@ -53,17 +53,17 @@
   * Other BDO scripts Etc. 
   * Music functions? 
 
-## Help
+## Help:
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on my Team Speak
     (IP = ts.ramcommunity.com) user name is lemon65. 
 
-## Notes
+## Notes:
   * I have seen lag issues with servers that can't parse the HTMl data quickly, for example a Raspberry-PI
 
-## Thank you to 
+## Thank you to:
   * Rapptz, for making discord.py - https://github.com/Rapptz/discord.py
 
-## Copyright
+## Copyright:
 
 #################### Copyright (c) 2016 RamCommunity #################
 
