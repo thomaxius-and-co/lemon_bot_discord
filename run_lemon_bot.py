@@ -14,6 +14,12 @@
 #########################################
 # google search
 # wiki search
+# Limiter for the Slots, so you cant spam them. Maybe your arm is Tired wait a
+# little bit. ?
+
+# Zork Adventure game, in a channel of its own.
+
+# TODO -- EASY MODE - Norm the messages so users can send any caps.
 
 #########################################
 # Casino - Idea
@@ -55,7 +61,7 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 
-SLOT_PATTERN = [':four_leaf_clover:', ':moneybag:', ':cherries:', ':lemon:', ':grapes:', ':hankey:']
+SLOT_PATTERN = [':four_leaf_clover:', ':"moneybag":', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
 API_KEY = ''
 
@@ -152,26 +158,17 @@ def play_slots(author, message):
         if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 3:
             winnings = set_bet * 25
             break
-        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 2:
-            winnings = set_bet * 15
-            break
-        if k == ':moneybag:' and v == 4:
+        if k == ':"moneybag":' and v == 4:
             winnings = set_bet * 500
             break
-        if k == ':moneybag:' and v == 3:
+        if k == ':"moneybag":' and v == 3:
             winnings = set_bet * 100
-            break
-        if k == ':moneybag:' and v == 2:
-            winnings = set_bet * 25
             break
         if k == ':four_leaf_clover:' and v == 4:
             winnings = set_bet * 1000
             break
         if k == ':four_leaf_clover:' and v == 3:
             winnings = set_bet * 200
-            break
-        if k == ':four_leaf_clover:' and v == 2:
-            winnings = set_bet * 50
             break
         else:
             winnings = -set_bet
@@ -204,11 +201,7 @@ def set_bet(author, message):
 
 # Function to look at the currently Set bet.
 def review_bet(author, message):
-    file_bool = os.path.isfile(BET_PATH)
-    if not file_bool:
-        bet_dict = {}
-    else:
-        bet_dict = load_obj(BET_PATH)
+    bet_dict = build_dict(BET_PATH)
     if bet_dict.get(str(author)):
         client.send_message(message.channel, '%s is currently betting: %s' % (author, bet_dict.get(str(author))))
     else:
@@ -218,11 +211,7 @@ def review_bet(author, message):
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
 def loan_money(author, message):
-    bank_bool = os.path.isfile(BANK_PATH)
-    if not bank_bool:
-        bank_dict = {}
-    else:
-        bank_dict = load_obj(BANK_PATH)
+    bank_dict = build_dict(BANK_PATH)
     if bank_dict.get(str(author)):
         money = bank_dict.get(str(author))
         if money >= 50:
@@ -239,21 +228,13 @@ def loan_money(author, message):
 
 # Function to look up a users Money!
 def bank_lookup(author, message):
-    acc_bool = os.path.isfile(ACC_PATH)
-    if not acc_bool:
-        acc_dict = {}
-    else:
-        acc_dict = load_obj(ACC_PATH)
+    acc_dict = build_dict(ACC_PATH)
     if acc_dict.get(str(author)):
         account_number = acc_dict.get(str(author))
     else:
         account_number = random.randint(0,999999999)
         acc_dict[str(author)] = account_number
-    bank_bool = os.path.isfile(BANK_PATH)
-    if not bank_bool:
-        bank_dict = {}
-    else:
-        bank_dict = load_obj(BANK_PATH)
+    bank_dict = build_dict(BANK_PATH)
     if str(author) in bank_dict.keys():
         balance = bank_dict.get(str(author))
         client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (author, account_number, balance))
@@ -261,6 +242,15 @@ def bank_lookup(author, message):
         client.send_message(message.channel, "Looks like you don't have an Account, try the !loan command.")
     save_obj(acc_dict, ACC_PATH)
 
+#Function to lookup the money and create a top 5 users.
+def leader_lookup(author, message):
+    bank_dict = build_dict(BANK_PATH)
+    counter = 0
+    leader_list = []
+    for key in sorted(bank_dict, key=bank_dict.get, reverse=True)[:5]:
+        counter += 1
+        leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
+    client.send_message(message.channel, '  |  '.join(leader_list))
 
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
@@ -370,6 +360,8 @@ def on_message(message):
         loan_money(author, message)
     if message.content.startswith('!bank'):
         bank_lookup(author, message)
+    if message.content.startswith('!leader'):
+        leader_lookup(author, message)
 
 
 
