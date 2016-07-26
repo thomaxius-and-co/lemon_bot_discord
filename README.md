@@ -30,6 +30,8 @@
    * Python 2.7.6
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
+   * Requests - http://docs.python-requests.org/en/master/
+   * pickle - https://docs.python.org/2/library/pickle.html
    * discord.py - https://github.com/Rapptz/discord.py
 
 ## Commands:
