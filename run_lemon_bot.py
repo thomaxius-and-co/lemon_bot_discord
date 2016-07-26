@@ -16,9 +16,7 @@
 # wiki search
 # Limiter for the Slots, so you cant spam them. Maybe your arm is Tired wait a
 # little bit. ?
-
 # Zork Adventure game, in a channel of its own.
-
 # TODO -- EASY MODE - Norm the messages so users can send any caps.
 
 #########################################

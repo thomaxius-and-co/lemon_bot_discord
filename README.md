@@ -15,7 +15,16 @@
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
-   * More to Come...
+   * Install packages, normally installed with (pip install [PackageName])
+	* import discord
+	* import requests
+	* import pickle
+	* import cleverbot
+	* from bs4 import BeautifulSoup
+   * Grab an API Key from, http://openweathermap.org and place it in the variable API_KEY
+   * Get the bots creds and update the client.login call
+	* client.login('EMAIL', 'PASSWORD') 
+   * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
 
 ## Requirements:
    * Python 2.7.6
