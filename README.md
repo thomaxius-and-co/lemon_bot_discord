@@ -16,7 +16,7 @@
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
    * Install packages, normally installed with (pip install [PackageName])
-	* import discord
+	* import discord.py
 	* import requests
 	* import pickle
 	* import cleverbot
