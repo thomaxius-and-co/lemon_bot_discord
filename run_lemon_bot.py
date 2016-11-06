@@ -213,14 +213,11 @@ def cmd_help(message, _):
 # Function to clear a chat Channel.
 @asyncio.coroutine
 def cmd_clear(message, _):
-    counter = 0
-    all_messages = client.messages
-    target_channel = message.channel
-    for message_step in all_messages:
-        if message_step.channel == target_channel:
-            client.delete_message(message_step)
-            counter += 1
-    yield from client.send_message(message.channel, 'I have removed %s old messages' % counter)
+    perms = message.channel.permissions_for(message.author)
+    if perms.administrator:
+        yield from client.purge_from(message.channel)
+    else:
+        yield from client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
 
 # Function to play the slots
 @asyncio.coroutine
