@@ -17,7 +17,6 @@
 # Limiter for the Slots, so you cant spam them. Maybe your arm is Tired wait a
 # little bit. ?
 # Zork Adventure game, in a channel of its own.
-# TODO -- EASY MODE - Norm the messages so users can send any caps.
 
 #########################################
 # Casino - Idea
@@ -95,25 +94,36 @@ def build_dict(file_path):
     return data_dict
 
 
+def parse_command(content):
+    if not content.startswith('!'):
+        return None, None
+    cmd, *arg = content.strip('!').split(' ', 1)
+    return cmd.lower(), arg[0] if arg else None
+
 # Dispacther for messages from the users.
 @client.async_event
 def on_message(message):
     author = message.author
     if author.bot:
         return
+
+    cmd, arg = parse_command(message.content)
+    if not cmd:
+        return
+
     # function to call the BDO script and relay odds on enchanting.
-    if message.content.startswith('!enchant'):
+    if cmd == 'enchant':
         try:
-            raw_data = message.content.strip('!enchant ').split(' ')
+            raw_data = arg.split(' ')
             enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
             yield from client.send_message(message.channel, enchanting_results)
         except Exception:
             yield from client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
 
     # Function to search for a youtube video and return a link.
-    if message.content.startswith('!youtube'):
+    if cmd == 'youtube':
         link_list = []
-        text_to_search = message.content.replace('!youtube', '')
+        text_to_search = arg
         print('Searching YouTube for: %s' % text_to_search)
         query = urllib.parse.quote(text_to_search)
         url = "https://www.youtube.com/results?search_query=" + query
@@ -126,27 +136,27 @@ def on_message(message):
         yield from client.send_message(message.channel, link_list[random_num])
 
     # Rolling the odds for a user.
-    if message.content.startswith('!roll'):
+    if cmd == 'roll':
         rand_roll = random.randint(0, 100)
         yield from client.send_message(message.channel, '%s your roll is %s' % (author, rand_roll))
 
     # eight ball function to return the magic of the eight ball.
-    if message.content.startswith('!8ball'):
-        question = message.content.strip('!8ball')
+    if cmd == '8ball':
+        question = arg
         prediction = random.randint(0, len(EIGHT_BALL_OPTIONS) - 1)
         yield from client.send_message(message.channel,
                                        'Question: [%s], %s' % (question, EIGHT_BALL_OPTIONS[prediction]))
 
     # function to make the bot join a server.
-    if message.content.startswith('!join'):
-        join_url = message.content.strip('!join ')
+    if cmd == 'join':
+        join_url = arg
         client.accept_invite(join_url)
         yield from client.send_message(message.channel, 'Joining the Server! ^_^')
 
     # Function to get the weather by zip code. using: http://openweathermap.org
     # you can get an API key on the web site.
-    if message.content.startswith('!weather'):
-        zip_code = message.content.replace('!weather', '')
+    if cmd == 'weather':
+        zip_code = arg
         if not zip_code:
             yield from client.send_message(message.channel, "You must specify a city, eq. Säkylä")
             return
@@ -161,19 +171,20 @@ def on_message(message):
         yield from client.send_message(message.channel, payload)
 
     # Ask clever bot a question.
-    if message.content.startswith('!cleverbot'):
-        question = message.content.replace('!cleverbot', '')
+    if cmd == 'cleverbot':
+        question = arg
         cb1 = cleverbot.Cleverbot()
         answer = cb1.ask(question)
         yield from client.send_message(message.channel, answer)
-    if message.content.startswith('!spank'):
+
+    if cmd == 'spank':
         # this Spanks the user and calls them out on the server, with an '@' message.
         # Format ==> @User has been, INSERT_ITEM_HERE
-        target_user = message.content.replace('!spank ', '')
+        target_user = arg
         punishment = SPANK_BANK[random.randint(0, len(SPANK_BANK) - 1)]
         yield from client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, author))
 
-    if message.content.startswith('!coin'):
+    if cmd == 'coin':
         outcome = random.randint(0, 1)
         if outcome == 0:
             outcome = "Heads"
@@ -183,9 +194,11 @@ def on_message(message):
         print("test")
         time.sleep(.5)
         yield from client.send_message(message.channel, "The coin lands on: %s" % outcome)
-    if message.content.startswith('!help'):
+
+    if cmd == 'help':
         yield from client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
-    if message.content.startswith('!slots'):
+
+    if cmd == 'slots':
         # Function to play the slots
         wheel_list = []
         results_dict = {}
@@ -253,7 +266,7 @@ def on_message(message):
         save_obj(bank_dict, BANK_PATH)
 
     # Function to clear a chat Channel.
-    if message.content.startswith('!clear'):
+    if cmd == 'clear':
         counter = 0
         all_messages = client.messages
         target_channel = message.channel
@@ -264,8 +277,8 @@ def on_message(message):
         yield from client.send_message(message.channel, 'I have removed %s old messages' % counter)
 
     # Function to set a users bet.
-    if message.content.startswith('!bet'):
-        amount = message.content.replace('!bet ', '')
+    if cmd == 'bet':
+        amount = arg
         try:
             amount = int(amount)
         except Exception:
@@ -279,16 +292,18 @@ def on_message(message):
         yield from client.send_message(message.channel, '%s, set bet to: %s' % (author, amount))
         data_dict[str(author)] = amount
         save_obj(data_dict, BET_PATH)
+
     # Function to look at the currently Set bet.
-    if message.content.startswith('!reviewbet'):
+    if cmd = 'reviewbet':
         bet_dict = build_dict(BET_PATH)
         if bet_dict.get(str(author)):
             yield from client.send_message(message.channel,
                                            '%s is currently betting: %s' % (author, bet_dict.get(str(author))))
         else:
             yield from client.send_message(message.channel, '%s your bet is not Set, use the !bet command.' % (author))
+
     # function to loan players money -- ONLY UP TO -- > $50 dollars
-    if message.content.startswith('!loan'):
+    if cmd == 'loan':
         bank_dict = build_dict(BANK_PATH)
         if bank_dict.get(str(author)):
             money = bank_dict.get(str(author))
@@ -305,7 +320,7 @@ def on_message(message):
         save_obj(bank_dict, BANK_PATH)
 
     # Function to look up a users Money!
-    if message.content.startswith('!bank'):
+    if cmd == 'bank':
         acc_dict = build_dict(ACC_PATH)
         if acc_dict.get(str(author)):
             account_number = acc_dict.get(str(author))
@@ -321,8 +336,9 @@ def on_message(message):
             yield from client.send_message(message.channel,
                                            "Looks like you don't have an Account, try the !loan command.")
         save_obj(acc_dict, ACC_PATH)
+
     # Function to lookup the money and create a top 5 users.
-    if message.content.startswith('!leader'):
+    if cmd == 'leader':
         bank_dict = build_dict(BANK_PATH)
         counter = 0
         leader_list = []
