@@ -67,7 +67,6 @@ SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
 
 SLOT_PATTERN = [':four_leaf_clover:', ':"moneybag":', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
-API_KEY = ''
 
 
 # Save the dict Object
@@ -419,4 +418,5 @@ file_bool = os.path.exists("./bot_files")
 if not file_bool:
     os.makedirs('./bot_files')
 # Simple client login and starting the bot.
-client.run('')
+token = os.environ['LEMONBOT_TOKEN']
+client.run(token)

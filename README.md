@@ -1,5 +1,6 @@
 # This is a (crappy) fork of lemon bot for discord: https://github.com/lemon65/lemon_bot_discord
-	* Basically, what is done is that it has been ported to support Python 3.5 (Which is required by Discord.py v. 13). Not all features work, yet.
+	* Basically, what is done is that it has been ported to support Python 3.5 
+	(Which is required by Discord.py v. 13). Not all features work, yet.
 
 
 
@@ -14,7 +15,8 @@
    * Slot Machine
    * Currency system
    * Black Desert Online scripts
-
+   * WolframAlpha
+   
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
@@ -29,7 +31,11 @@
    * Get the bots creds and update the client.login call
 	* client.login('EMAIL', 'PASSWORD') 
    * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
-
+   * Set the following environment variables:
+     * OPEN_WEATHER_APPID
+	 * LEMONBOT_TOKEN
+	 * WOLFRAM_ALPHA_APPID
+     To do this, you can either set them in system settings, or you can do SET valuename=value on windows command line before you run python.
 ## Requirements:
    * Python 3.5.0
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
