@@ -1,3 +1,9 @@
+# This is a (crappy) fork of lemon bot for discord: https://github.com/lemon65/lemon_bot_discord
+	* Basically, what is done is that it has been ported to support Python 3.5 (Which is required by Discord.py v. 13). Not all features work, yet.
+
+
+
+
 # Lemon Bot ![alt text](http://i.imgur.com/uhYjTMt.jpg "Lemon Bot Will Rule the World!")
 
 ## Features:
@@ -8,9 +14,6 @@
    * Slot Machine
    * Currency system
    * Black Desert Online scripts
-
-## Demo Video:
-[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/4agdwM8miZw/0.jpg)](http://www.youtube.com/watch?v=4agdwM8miZw)
 
 ## Installation
    * Git clone the Repo. 
@@ -27,7 +30,7 @@
    * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
 
 ## Requirements:
-   * Python 2.7.6
+   * Python 3.5.0
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
    * Requests - http://docs.python-requests.org/en/master/

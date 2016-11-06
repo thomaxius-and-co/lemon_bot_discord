@@ -99,6 +99,7 @@ def build_dict(file_path):
 @client.async_event
 def on_message(message):
     author = message.author
+    if author.bot:
         return
     # function to call the BDO script and relay odds on enchanting.
     if message.content.startswith('!enchant'):
