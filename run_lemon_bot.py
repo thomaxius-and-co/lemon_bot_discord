@@ -294,7 +294,7 @@ def on_message(message):
         save_obj(data_dict, BET_PATH)
 
     # Function to look at the currently Set bet.
-    if cmd = 'reviewbet':
+    if cmd == 'reviewbet':
         bet_dict = build_dict(BET_PATH)
         if bet_dict.get(str(author)):
             yield from client.send_message(message.channel,
