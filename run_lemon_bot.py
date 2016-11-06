@@ -98,10 +98,6 @@ def build_dict(file_path):
 def parse_command(content):
     if not content.startswith('!'):
         return None, None
-    if content.startswith('!math'): #Math command needs 3 arguments, so I implemented this for now
-        cmd, *arg = content.strip('!').split(' ', 3)
-        print(arg)
-        return cmd, arg
     cmd, *arg = content.strip('!').split(' ', 1)
     return cmd.lower(), arg[0] if arg else None
 
@@ -170,16 +166,15 @@ def cmd_weather(message, zip_code):
 @asyncio.coroutine
 # Simple math command.
 def cmd_math(message, arg):
-    a = arg[0]
-    b = arg[1]
-    c = arg[2]
+    a,b,c = arg.split(' ')
+    print(a,b,c)
     if b == '+':
         calculation = int(a) + int(c)
     if b == '-':
         calculation = int(a) - int(c)
     if b == '*':
         calculation = int(a) * int(c)
-    if b == '/' or b == 'x':
+    if b == '/':
         calculation = int(a) / int(c)
     yield from client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
 

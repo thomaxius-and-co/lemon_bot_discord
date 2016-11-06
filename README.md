@@ -27,15 +27,16 @@
 	* import cleverbot
 	* import wolframalpha
 	* from bs4 import BeautifulSoup
-   * Grab an API Key from, http://openweathermap.org and place it in the variable API_KEY
-   * Get the bots creds and update the client.login call
-	* client.login('EMAIL', 'PASSWORD') 
+   * Grab an API Key from, http://openweathermap.org
+   * Also grab an API from https://www.wolframalpha.com/
    * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
    * Set the following environment variables:
      * OPEN_WEATHER_APPID
 	 * LEMONBOT_TOKEN
 	 * WOLFRAM_ALPHA_APPID
-     To do this, you can either set them in system settings, or you can do SET valuename=value on windows command line before you run python.
+	 
+     To do this, you can either set them in system settings, or you can do SET valuename=value on windows command line before you run python. 
+	 Or you can hardcode them into run_lemon_bot.py
 ## Requirements:
    * Python 3.5.0
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
@@ -65,6 +66,7 @@
 | !leader | Shows the Top five users with the most money. |
 | !wa [query]| Searches WolframAlpha |
 | !help | Returns the github page with Help information and commands. |
+| !math 1 + 1 | Does a calculation with a maximum of 3 digits |
 
 ## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
