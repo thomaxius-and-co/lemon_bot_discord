@@ -98,10 +98,8 @@ def build_dict(file_path):
 # Dispacther for messages from the users.
 @client.async_event
 def on_message(message):
-    if message.author.bot:
-      return
-
     author = message.author
+        return
     # function to call the BDO script and relay odds on enchanting.
     if message.content.startswith('!enchant'):
         try:
@@ -125,6 +123,7 @@ def on_message(message):
             link_list.append('https://www.youtube.com' + vid['href'])
         random_num = random.randint(0, len(link_list) - 1)
         yield from client.send_message(message.channel, link_list[random_num])
+
     # Rolling the odds for a user.
     if message.content.startswith('!roll'):
         rand_roll = random.randint(0, 100)
@@ -147,6 +146,9 @@ def on_message(message):
     # you can get an API key on the web site.
     if message.content.startswith('!weather'):
         zip_code = message.content.replace('!weather', '')
+        if not zip_code:
+            yield from client.send_message(message.channel, "You must specify a city, eq. Säkylä")
+            return
         link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
         r = requests.get(link)
         data = json.loads(r.text)
@@ -178,7 +180,7 @@ def on_message(message):
         yield from client.send_message(message.channel, "Just a moment, flipping the coin...")
         print("test")
         time.sleep(.5)
-        yield from client.send_message(message.channel, "The coin Shows, %s" % outcome)
+        yield from client.send_message(message.channel, "The coin lands on: %s" % outcome)
     if message.content.startswith('!help'):
         yield from client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
     if message.content.startswith('!slots'):
@@ -326,9 +328,6 @@ def on_message(message):
             counter += 1
             leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
         yield from client.send_message(message.channel, '  |  '.join(leader_list))
-    if message.content.startswith('!pm'):
-        yield from client.send_message(message.author, 'HAI')
-
 
 # Create the local Dirs if needed.
 file_bool = os.path.exists("./bot_files")
