@@ -40,12 +40,14 @@ import enchanting_chances as en
 from bs4 import BeautifulSoup
 import asyncio
 from lxml.html.soupparser import fromstring
+import wolframalpha
 
 # Disables the SSL warning, that is printed to the console.
 import requests.packages.urllib3
 
 requests.packages.urllib3.disable_warnings()
 client = discord.Client()
+wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
 ACC_PATH = './bot_files/lemon_bot_accnum.pkl'
@@ -363,6 +365,18 @@ def cmd_leader(message, _):
         leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
     yield from client.send_message(message.channel, '  |  '.join(leader_list))
 
+def cmd_wolframalpha(message, query):
+    print("Searching WolframAlpha for '%s'" % query)
+
+    yield from client.send_typing(message.channel)
+
+    try:
+        res = wolframalpha_client.query(query)
+        answer = next(res.results).text
+        yield from client.send_message(message.channel, answer)
+    except Exception:
+        yield from client.send_message(message.channel, 'I don\'t know how to answer that')
+
 commands = {
     'enchant': cmd_enchant,
     'youtube': cmd_youtube,
@@ -381,7 +395,8 @@ commands = {
     'loan': cmd_loan,
     'bank': cmd_bank,
     'leader': cmd_leader,
-    'math': cmd_math
+    'math': cmd_math,
+    'wa': cmd_wolframalpha,
 }
 
 # Dispacther for messages from the users.

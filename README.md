@@ -23,6 +23,7 @@
 	* import requests
 	* import pickle
 	* import cleverbot
+	* import wolframalpha
 	* from bs4 import BeautifulSoup
    * Grab an API Key from, http://openweathermap.org and place it in the variable API_KEY
    * Get the bots creds and update the client.login call
@@ -56,6 +57,7 @@
 | !loan | Gives the user, a little cash, Max amount of $50 bucks. |
 | !bank | Shows the user how much money they have. |
 | !leader | Shows the Top five users with the most money. |
+| !wa [query]| Searches WolframAlpha |
 | !help | Returns the github page with Help information and commands. |
 
 ## Updates:
