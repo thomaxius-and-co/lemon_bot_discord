@@ -122,8 +122,8 @@ def cmd_youtube(message, text_to_search):
     soup = BeautifulSoup(html, "lxml")
     for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
         link_list.append('https://www.youtube.com' + vid['href'])
-    random_num = random.randint(0, len(link_list) - 1)
-    yield from client.send_message(message.channel, link_list[random_num])
+    random_link = random.choice(link_list)
+    yield from client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
 @asyncio.coroutine
@@ -134,7 +134,7 @@ def cmd_roll(message, _):
 # eight ball function to return the magic of the eight ball.
 @asyncio.coroutine
 def cmd_8ball(message, question):
-    prediction = random.randint(0, len(EIGHT_BALL_OPTIONS) - 1)
+    prediction = random.choice(EIGHT_BALL_OPTIONS)
     yield from client.send_message(message.channel,
                                    'Question: [%s], %s' % (question, EIGHT_BALL_OPTIONS[prediction]))
 
@@ -172,16 +172,12 @@ def cmd_cleverbot(message, question):
 # Format ==> @User has been, INSERT_ITEM_HERE
 @asyncio.coroutine
 def cmd_spank(message, target_user):
-    punishment = SPANK_BANK[random.randint(0, len(SPANK_BANK) - 1)]
+    punishment = random.choice(SPANK_BANK)
     yield from client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
 
 @asyncio.coroutine
 def cmd_coin(message, _):
-    outcome = random.randint(0, 1)
-    if outcome == 0:
-        outcome = "Heads"
-    else:
-        outcome = "Tails"
+    outcome = random.choice(["Heads", "Tails"])
     yield from client.send_message(message.channel, "Just a moment, flipping the coin...")
     print("test")
     time.sleep(.5)
@@ -229,7 +225,7 @@ def cmd_slots(message, _):
                                        balance, set_bet))
         return
     while count <= 4:
-        wheel_pick = SLOT_PATTERN[random.randint(0, len(SLOT_PATTERN) - 1)]
+        wheel_pick = random.choice(SLOT_PATTERN)
         wheel_list.append(wheel_pick)
         count += 1
     last_step = ''
