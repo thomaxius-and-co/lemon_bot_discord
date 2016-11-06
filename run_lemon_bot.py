@@ -154,9 +154,10 @@ def on_message(message):
         r = requests.get(link)
         data = json.loads(r.text)
         location = data['name']
-        temp = data['main']['temp'] * 1.8 - 459.67
+        F = data['main']['temp'] * 1.8 - 459.67
+        C = (F - 32) * 5 / 9
         status = data['weather'][0]['description']
-        payload = 'In %s: Weather is: %s, Temp is: %s' % (location, status, temp)
+        payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
         yield from client.send_message(message.channel, payload)
 
     # Ask clever bot a question.
