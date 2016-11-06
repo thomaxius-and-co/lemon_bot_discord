@@ -97,8 +97,13 @@ def build_dict(file_path):
 def parse_command(content):
     if not content.startswith('!'):
         return None, None
+    if content.startswith('!math'): #Math command needs 3 arguments, so I implemented this for now
+        cmd, *arg = content.strip('!').split(' ', 3)
+        print(arg)
+        return cmd, arg
     cmd, *arg = content.strip('!').split(' ', 1)
     return cmd.lower(), arg[0] if arg else None
+
 
 # function to call the BDO script and relay odds on enchanting.
 @asyncio.coroutine
@@ -136,7 +141,7 @@ def cmd_roll(message, _):
 def cmd_8ball(message, question):
     prediction = random.choice(EIGHT_BALL_OPTIONS)
     yield from client.send_message(message.channel,
-                                   'Question: [%s], %s' % (question, EIGHT_BALL_OPTIONS[prediction]))
+                                   'Question: [%s], %s' % (question, prediction))
 
 # function to make the bot join a server.
 @asyncio.coroutine
@@ -160,6 +165,22 @@ def cmd_weather(message, zip_code):
     status = data['weather'][0]['description']
     payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
     yield from client.send_message(message.channel, payload)
+
+@asyncio.coroutine
+# Simple math command.
+def cmd_math(message, arg):
+    a = arg[0]
+    b = arg[1]
+    c = arg[2]
+    if b == '+':
+        calculation = int(a) + int(c)
+    if b == '-':
+        calculation = int(a) - int(c)
+    if b == '*':
+        calculation = int(a) * int(c)
+    if b == '/' or b == 'x':
+        calculation = int(a) / int(c)
+    yield from client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
 
 # Ask clever bot a question.
 @asyncio.coroutine
@@ -360,6 +381,7 @@ commands = {
     'loan': cmd_loan,
     'bank': cmd_bank,
     'leader': cmd_leader,
+    'math': cmd_math
 }
 
 # Dispacther for messages from the users.
