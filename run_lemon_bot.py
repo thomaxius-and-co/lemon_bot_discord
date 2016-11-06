@@ -127,7 +127,7 @@ def cmd_youtube(message, text_to_search):
 
 # Rolling the odds for a user.
 @asyncio.coroutine
-def cmd_roll(message):
+def cmd_roll(message, _):
     rand_roll = random.randint(0, 100)
     yield from client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
 
@@ -176,7 +176,7 @@ def cmd_spank(message, target_user):
     yield from client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
 
 @asyncio.coroutine
-def cmd_coin(message):
+def cmd_coin(message, _):
     outcome = random.randint(0, 1)
     if outcome == 0:
         outcome = "Heads"
@@ -188,12 +188,12 @@ def cmd_coin(message):
     yield from client.send_message(message.channel, "The coin lands on: %s" % outcome)
 
 @asyncio.coroutine
-def cmd_help(message):
+def cmd_help(message, _):
     yield from client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
 
 # Function to clear a chat Channel.
 @asyncio.coroutine
-def cmd_clear(message):
+def cmd_clear(message, _):
     counter = 0
     all_messages = client.messages
     target_channel = message.channel
@@ -205,7 +205,7 @@ def cmd_clear(message):
 
 # Function to play the slots
 @asyncio.coroutine
-def cmd_slots(message):
+def cmd_slots(message, _):
     wheel_list = []
     results_dict = {}
     count = 1
@@ -290,7 +290,7 @@ def cmd_bet(message, amount):
 
 # Function to look at the currently Set bet.
 @asyncio.coroutine
-def cmd_reviewbet(message):
+def cmd_reviewbet(message, _):
     bet_dict = build_dict(BET_PATH)
     if bet_dict.get(str(message.author)):
         yield from client.send_message(message.channel,
@@ -300,7 +300,7 @@ def cmd_reviewbet(message):
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
 @asyncio.coroutine
-def cmd_loan(message):
+def cmd_loan(message, _):
     bank_dict = build_dict(BANK_PATH)
     if bank_dict.get(str(message.author)):
         money = bank_dict.get(str(message.author))
@@ -318,7 +318,7 @@ def cmd_loan(message):
 
 # Function to look up a users Money!
 @asyncio.coroutine
-def cmd_bank(message):
+def cmd_bank(message, _):
     acc_dict = build_dict(ACC_PATH)
     if acc_dict.get(str(message.author)):
         account_number = acc_dict.get(str(message.author))
@@ -337,7 +337,7 @@ def cmd_bank(message):
 
 # Function to lookup the money and create a top 5 users.
 @asyncio.coroutine
-def cmd_leader(message):
+def cmd_leader(message, _):
     bank_dict = build_dict(BANK_PATH)
     counter = 0
     leader_list = []
@@ -345,6 +345,26 @@ def cmd_leader(message):
         counter += 1
         leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
     yield from client.send_message(message.channel, '  |  '.join(leader_list))
+
+commands = {
+    'enchant': cmd_enchant,
+    'youtube': cmd_youtube,
+    'roll': cmd_roll,
+    '8ball': cmd_8ball,
+    'join': cmd_join,
+    'weather': cmd_weather,
+    'cleverbot': cmd_cleverbot,
+    'spank': cmd_spank,
+    'coin': cmd_coin,
+    'help': cmd_help,
+    'slots': cmd_slots,
+    'clear': cmd_clear,
+    'bet': cmd_bet,
+    'reviewbet': cmd_reviewbet,
+    'loan': cmd_loan,
+    'bank': cmd_bank,
+    'leader': cmd_leader,
+}
 
 # Dispacther for messages from the users.
 @client.async_event
@@ -356,56 +376,10 @@ def on_message(message):
     if not cmd:
         return
 
-    if cmd == 'enchant':
-      yield from cmd_enchant(message, arg)
+    handler = commands.get(cmd)
+    if handler:
+      yield from handler(message, arg)
 
-    if cmd == 'youtube':
-        yield from cmd_youtube(message, arg)
-
-    if cmd == 'roll':
-        yield from cmd_roll(message)
-
-    if cmd == '8ball':
-        yield from cmd_8ball(message, arg)
-
-    if cmd == 'join':
-        yield from cmd_join(message, arg)
-
-    if cmd == 'weather':
-        yield from cmd_weather(message, arg)
-
-    if cmd == 'cleverbot':
-        yield from cmd_cleverbot(message, arg)
-
-    if cmd == 'spank':
-        yield from cmd_spank(message, arg)
-
-    if cmd == 'coin':
-        yield from cmd_coin(message)
-
-    if cmd == 'help':
-        yield from cmd_help(message)
-
-    if cmd == 'slots':
-        yield from cmd_slots(message)
-
-    if cmd == 'clear':
-        yield from cmd_clear(message)
-
-    if cmd == 'bet':
-        yield from cmd_bet(message, arg)
-
-    if cmd == 'reviewbet':
-        yield from cmd_reviewbet(message)
-
-    if cmd == 'loan':
-        yield from cmd_loan(message)
-
-    if cmd == 'bank':
-        yield from cmd_bank(message)
-
-    if cmd == 'leader':
-        yield from cmd_leader(message)
 
 # Create the local Dirs if needed.
 file_bool = os.path.exists("./bot_files")
