@@ -49,6 +49,8 @@ import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
+API_KEY = os.environ['OPEN_WEATHER_APPID']
+token = os.environ['LEMONBOT_TOKEN']
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
 ACC_PATH = './bot_files/lemon_bot_accnum.pkl'
@@ -180,7 +182,10 @@ def cmd_math(message, arg):
 
 @asyncio.coroutine
 def cmd_translate(message, arg):
-    fromlang,tolang,text = arg.split(' ')
+    fromlang,tolang,text = arg.split(' ', 2)
+    if len(text) > 40:
+        yield from client.send_message(message.channel, "Your text is too long: Max allowed is 40 characters.")
+        return
     translator = Translator(tolang,fromlang)
     translation = translator.translate(text)
     yield from client.send_message(message.channel, translation)
@@ -188,6 +193,8 @@ def cmd_translate(message, arg):
 # Ask clever bot a question.
 @asyncio.coroutine
 def cmd_cleverbot(message, question):
+    if not question:
+        yield from client.send_message(message.channel, "You must specify a question!")
     cb1 = cleverbot.Cleverbot()
     answer = cb1.ask(question)
     yield from client.send_message(message.channel, answer)
@@ -418,5 +425,4 @@ file_bool = os.path.exists("./bot_files")
 if not file_bool:
     os.makedirs('./bot_files')
 # Simple client login and starting the bot.
-token = os.environ['LEMONBOT_TOKEN']
 client.run(token)
