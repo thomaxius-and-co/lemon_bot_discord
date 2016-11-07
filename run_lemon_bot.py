@@ -37,6 +37,7 @@ import pickle
 import cleverbot
 import urllib.parse
 import enchanting_chances as en
+from translate import Translator
 from bs4 import BeautifulSoup
 import asyncio
 from lxml.html.soupparser import fromstring
@@ -167,7 +168,6 @@ def cmd_weather(message, zip_code):
 # Simple math command.
 def cmd_math(message, arg):
     a,b,c = arg.split(' ')
-    print(a,b,c)
     if b == '+':
         calculation = int(a) + int(c)
     if b == '-':
@@ -177,6 +177,13 @@ def cmd_math(message, arg):
     if b == '/':
         calculation = int(a) / int(c)
     yield from client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
+
+@asyncio.coroutine
+def cmd_translate(message, arg):
+    fromlang,tolang,text = arg.split(' ')
+    translator = Translator(tolang,fromlang)
+    translation = translator.translate(text)
+    yield from client.send_message(message.channel, translation)
 
 # Ask clever bot a question.
 @asyncio.coroutine
@@ -388,6 +395,7 @@ commands = {
     'leader': cmd_leader,
     'math': cmd_math,
     'wa': cmd_wolframalpha,
+    'translate': cmd_translate
 }
 
 # Dispacther for messages from the users.
