@@ -37,7 +37,7 @@ import pickle
 import cleverbot
 import urllib.parse
 import enchanting_chances as en
-from translate import Translator
+from BingTranslator import Translator
 from bs4 import BeautifulSoup
 import asyncio
 from lxml.html.soupparser import fromstring
@@ -51,6 +51,9 @@ client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']
 token = os.environ['LEMONBOT_TOKEN']
+client_id = os.environ['BING_CLIENTID']
+client_secret = os.environ['BING_SECRET']
+
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
 ACC_PATH = './bot_files/lemon_bot_accnum.pkl'
@@ -71,6 +74,14 @@ SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
 SLOT_PATTERN = [':four_leaf_clover:', ':"moneybag":', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
 
+def parse(input):
+    languages = ['fi', 'en', 'ru', 'se']
+    args = input.split(' ', 2)
+    if len(args) < 3:
+        return ['auto', 'fi', input]
+    if args[0] in languages and args[1] in languages:
+        return args
+    return ['auto', 'fi', input]
 
 # Save the dict Object
 def save_obj(dict, file_path):
@@ -182,12 +193,12 @@ def cmd_math(message, arg):
 
 @asyncio.coroutine
 def cmd_translate(message, arg):
-    fromlang,tolang,text = arg.split(' ', 2)
-    if len(text) > 40:
-        yield from client.send_message(message.channel, "Your text is too long: Max allowed is 40 characters.")
+    tolang,text = arg.split(' ', 1)
+    if len(text) > 100: #maybe it's wise to put a limit on the lenght of the translations
+        yield from client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
         return
-    translator = Translator(tolang,fromlang)
-    translation = translator.translate(text)
+    translator = Translator(client_id, client_secret)
+    translation = translator.translate(text, tolang)
     yield from client.send_message(message.channel, translation)
 
 # Ask clever bot a question.
