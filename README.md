@@ -30,6 +30,8 @@
     * OPEN_WEATHER_APPID
     * LEMONBOT_TOKEN
     * WOLFRAM_ALPHA_APPID
+	* BING_CLIENTID
+	* BING_SECRET
 	
     To do this, you can either set them in system settings, or you can do SET
     valuename=value on windows command line before you run python.  Or you can
@@ -42,7 +44,8 @@
    * Requests - http://docs.python-requests.org/en/master/
    * pickle - https://docs.python.org/2/library/pickle.html
    * discord.py - https://github.com/Rapptz/discord.py
-
+   * bingtranslator https://github.com/wilfilho/BingTranslator
+   * wolframalpha https://github.com/jaraco/wolframalpha
 ## Commands:
 | Commands        | description |
 | ------------- |:-------------:|
