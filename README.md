@@ -20,23 +20,21 @@
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
-   * Install packages, normally installed with (pip install [PackageName])
-	* import discord.py
-	* import requests
-	* import pickle
-	* import cleverbot
-	* import wolframalpha
-	* from bs4 import BeautifulSoup
-   * Grab an API Key from, http://openweathermap.org
-   * Also grab an API from https://www.wolframalpha.com/
-   * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
-   * Set the following environment variables:
-     * OPEN_WEATHER_APPID
-	 * LEMONBOT_TOKEN
-	 * WOLFRAM_ALPHA_APPID
-	 
-     To do this, you can either set them in system settings, or you can do SET valuename=value on windows command line before you run python. 
-	 Or you can hardcode them into run_lemon_bot.py
+  * Install dependencies with `pip install -r requirements.txt`
+    * When you update dependencies, generate new requirements file using `pip freeze > requirements.txt`
+  * Grab an API Key from, http://openweathermap.org
+  * Also grab an API from https://www.wolframalpha.com/
+  * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
+  * Set the following environment variables:
+
+    * OPEN_WEATHER_APPID
+    * LEMONBOT_TOKEN
+    * WOLFRAM_ALPHA_APPID
+	
+    To do this, you can either set them in system settings, or you can do SET
+    valuename=value on windows command line before you run python.  Or you can
+    hardcode them into run_lemon_bot.py
+
 ## Requirements:
    * Python 3.5.0
    * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
