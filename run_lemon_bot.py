@@ -71,7 +71,7 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 
-SLOT_PATTERN = [':four_leaf_clover:', ':"moneybag":', ':cherries:', ':lemon:', ':grapes:', ':poop:']
+SLOT_PATTERN = [':four_leaf_clover:', ':moneybag:', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
 
 def parse(input):
@@ -275,17 +275,17 @@ def cmd_slots(message, _):
             data = results_dict.get(wheel_step)
             results_dict[wheel_step] = data + 1
         last_step = wheel_step
-    for k, v in results_dict.iteritems():
+    for k, v in results_dict.items():
         if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 4:
             winnings = set_bet * 50
             break
         if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 3:
             winnings = set_bet * 25
             break
-        if k == ':"moneybag":' and v == 4:
+        if k == ':moneybag:' and v == 4:
             winnings = set_bet * 500
             break
-        if k == ':"moneybag":' and v == 3:
+        if k == ':moneybag:' and v == 3:
             winnings = set_bet * 100
             break
         if k == ':four_leaf_clover:' and v == 4:
