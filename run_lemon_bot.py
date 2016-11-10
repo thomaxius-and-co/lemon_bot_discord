@@ -252,6 +252,10 @@ def cmd_slots(message, _):
         yield from client.send_message(message.channel,
                                        'You need to set a bet with the !bet command, Example: !bet 10')
         return
+    
+    if set_bet < 0:
+        yield from client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
+        return
     bank_dict = build_dict(BANK_PATH)
     if bank_dict.get(str(message.author)):
         balance = bank_dict.get(str(message.author))
@@ -311,8 +315,11 @@ def cmd_slots(message, _):
 def cmd_bet(message, amount):
     try:
         amount = int(amount)
+        if amount < 0:
+            yield from client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
+            return
     except Exception:
-        yield from client.send_message(message.channel, 'You need to enter an integer, Example: !bet 5')
+        yield from client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
         return
     file_bool = os.path.isfile(BET_PATH)
     if not file_bool:
