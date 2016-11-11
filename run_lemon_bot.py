@@ -154,12 +154,6 @@ def cmd_8ball(message, question):
     yield from client.send_message(message.channel,
                                    'Question: [%s], %s' % (question, prediction))
 
-# function to make the bot join a server.
-@asyncio.coroutine
-def cmd_join(message, join_url):
-    client.accept_invite(join_url)
-    yield from client.send_message(message.channel, 'Joining the Server! ^_^')
-
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
 @asyncio.coroutine
@@ -405,7 +399,6 @@ commands = {
     'youtube': cmd_youtube,
     'roll': cmd_roll,
     '8ball': cmd_8ball,
-    'join': cmd_join,
     'weather': cmd_weather,
     'cleverbot': cmd_cleverbot,
     'spank': cmd_spank,
