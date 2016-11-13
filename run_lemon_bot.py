@@ -42,10 +42,10 @@ from bs4 import BeautifulSoup
 import asyncio
 from lxml.html.soupparser import fromstring
 import wolframalpha
+import threading
 
 # Disables the SSL warning, that is printed to the console.
 import requests.packages.urllib3
-
 requests.packages.urllib3.disable_warnings()
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -70,7 +70,7 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
-
+bjlist = []
 SLOT_PATTERN = [':four_leaf_clover:', ':moneybag:', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
 
@@ -246,7 +246,7 @@ def cmd_slots(message, _):
         yield from client.send_message(message.channel,
                                        'You need to set a bet with the !bet command, Example: !bet 10')
         return
-    
+
     if set_bet < 0:
         yield from client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
@@ -371,6 +371,111 @@ def cmd_bank(message, _):
                                        "Looks like you don't have an Account, try the !loan command.")
     save_obj(acc_dict, ACC_PATH)
 
+def dealcard():
+    card1 = random.randrange(1, 11)
+    card2 = random.randrange(1, 11)
+    return card1, card2
+
+async def dealhand(message, scoredict, firstround=False, player=True, dealer=False):
+    if player and firstround:
+        card1, card2 = dealcard()
+        total = int(card1 + card2)
+        scoredict = {message.author:total}
+        await asyncio.sleep(0.1)
+        await client.send_message(message.channel,
+                                           'DEALER: %s: Your cards: %s and %s (%s total) \n Type !hitme for more cards or !stay to stay' % (message.author,
+                                           card1, card2, total))
+        return scoredict
+    if player and not firstround:
+        card1 = random.randrange(1, 11)
+        total = card1 + scoredict.get(message.author)
+        scoredict = {message.author:total}
+        await asyncio.sleep(0.1)
+        await client.send_message(message.channel,
+                                           'DEALER: %s: Your card is: %s (%s total). Type !hitme for more cards or !stay to stay' % (message.author, card1, total))
+        return scoredict
+    if dealer:
+        card1 = random.randrange(1, 11)
+        if firstround:
+            await client.send_message(message.channel,
+                                           "DEALER: %s: Dealer's card is: %s" % (message.author, card1))
+            scoredict1 = {message.author:card1}
+            return scoredict1
+        else:
+                scoredict1 = scoredict
+                total = card1 + scoredict1.get(message.author)
+                scoredict1 = {message.author:total}
+                await asyncio.sleep(0.1)
+                await client.send_message(message.channel,
+                                          "DEALER: %s: Dealer's card is: %s, total %s" % (message.author,card1, total))
+                return scoredict1
+
+@client.async_event
+async def cmd_blackjack(message, _):
+    if message.content.startswith('!blackjack'):
+        if message.author in bjlist:
+            await client.send_message(message.channel,
+                                      'Cannot play: You have an unfinished game.')
+            return
+        bjlist.append(message.author)
+        scoredict = {}
+        scoredict1 = await dealhand(message, scoredict,player=False,dealer=True,firstround=True)
+        scoredict = await dealhand(message, scoredict,firstround=True)
+        x = True
+        twentyone = False
+        score = scoredict.get(message.author)
+        if score == 21:
+            twentyone = True
+        while x == True:
+            answer = await client.wait_for_message(timeout=25, author=message.author)
+            if answer and answer.content == '!hitme':
+                scoredict = await dealhand(message, scoredict)
+                score = scoredict.get(message.author)
+                if score > 21:
+                    await asyncio.sleep(0.1)
+                    await client.send_message(message.channel,
+                                              'DEALER: %s: Player is BUST! House wins! (Total score: %s))' %(message.author, score))
+                    bjlist.remove(message.author)
+                    return
+            elif answer is None or answer.content == '!stay' or (twentyone == True):
+                bjlist.remove(message.author)
+                await asyncio.sleep(0.1)
+                await client.send_message(message.channel,
+                                          'DEALER: %s: You decided to stay. Your total score: %s' % (message.author, score))
+                await asyncio.sleep(0.1)
+                scoredict1 = await dealhand(message, scoredict1,player=False,dealer=True)
+                dscore = scoredict1.get(message.author)
+                while (dscore < 16 or dscore == 16):
+                    scoredict1 = await dealhand(message, scoredict1, player=False, dealer=True)
+                    dscore = scoredict1.get(message.author)
+                    if not (dscore < 16 or dscore == 16) and (score > dscore):
+                        await asyncio.sleep(0.1)
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                        return
+                    if dscore > 21:
+                        await asyncio.sleep(0.1)
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                        return
+                    if dscore > score:
+                        await asyncio.sleep(0.1)
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: House wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                        return
+                if (dscore > 16 and dscore < 21):
+                    if (score > dscore):
+                        await asyncio.sleep(0.1)
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                        return
+                    else:
+                        await asyncio.sleep(0.1)
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: House wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                        return
+                return
+
 # Function to lookup the money and create a top 5 users.
 @asyncio.coroutine
 def cmd_leader(message, _):
@@ -413,7 +518,8 @@ commands = {
     'leader': cmd_leader,
     'math': cmd_math,
     'wa': cmd_wolframalpha,
-    'translate': cmd_translate
+    'translate': cmd_translate,
+    'blackjack': cmd_blackjack
 }
 
 # Dispacther for messages from the users.
