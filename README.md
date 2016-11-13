@@ -12,11 +12,15 @@
    * CleverBot Integration
    * Magic EightBall
    * Weather by ZipCode
-   * Slot Machine
    * Currency system
    * Black Desert Online scripts
    * WolframAlpha
-   
+   * Bing translate
+   * Simple math
+   * Casino:
+		* Slot Machine
+		* Blackjack
+ 
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
@@ -67,7 +71,9 @@
 | !leader | Shows the Top five users with the most money. |
 | !wa [query]| Searches WolframAlpha |
 | !help | Returns the github page with Help information and commands. |
-| !math 1 + 1 | Does a calculation with a maximum of 3 digits |
+| !math | Does a calculation with a maximum of 3 digits |
+| !blackjack | Play blackjack versus the dealer
+| !translate <language>  <text> | Translate a text to the given language
 
 ## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
@@ -75,10 +81,11 @@
 ## ToDo:
   * Google Search
   * Wiki Search
-  * Black Jack
   * Other BDO scripts Etc. 
   * Music functions? 
 
+  
+  
 ## Help:
   * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on my Team Speak
     (IP = ts.ramcommunity.com) user name is lemon65. 

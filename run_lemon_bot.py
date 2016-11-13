@@ -17,13 +17,7 @@
 # Limiter for the Slots, so you cant spam them. Maybe your arm is Tired wait a
 # little bit. ?
 # Zork Adventure game, in a channel of its own.
-
-#########################################
-# Casino - Idea
-
-# !blackjack -- author has X and X for a total of X, Commands !stand, !hit,
-# and !doubledown.
-#########################################
+# Improve blackjack
 
 import os
 import time
@@ -221,7 +215,7 @@ def cmd_coin(message, _):
 
 @asyncio.coroutine
 def cmd_help(message, _):
-    yield from client.send_message(message.channel, 'https://github.com/lemon65/discord_bot#commands')
+    yield from client.send_message(message.channel, 'https://github.com/Thomaxius/lemon_bot_discord')
 
 # Function to clear a chat Channel.
 @asyncio.coroutine
