@@ -18,9 +18,11 @@
    * Bing translate
    * Simple math
    * Casino:
-		* Slot Machine
-		* Blackjack
- 
+   
+	* Slot Machine
+	* Blackjack
+
+	
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord
@@ -50,6 +52,7 @@
    * discord.py - https://github.com/Rapptz/discord.py
    * bingtranslator https://github.com/wilfilho/BingTranslator
    * wolframalpha https://github.com/jaraco/wolframalpha
+ 
 ## Commands:
 | Commands        | description |
 | ------------- |:-------------:|
