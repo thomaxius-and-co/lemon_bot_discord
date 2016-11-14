@@ -525,7 +525,7 @@ async def cmd_blackjack(message, _):
                         return
                     if dscore == score:
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: It is a draw! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, set_bet))
+                                                  'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, set_bet))
                     else:
                         await asyncio.sleep(0.1)
                         await client.send_message(message.channel,
