@@ -303,6 +303,9 @@ def cmd_slots(message, _):
 def cmd_bet(message, amount):
     try:
         amount = int(amount)
+        if amount > 1000:
+            yield from client.send_message(message.channel, 'Your bet is too high, maximum allowed is 1000.')
+            return
         if amount < 0:
             yield from client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
             return
@@ -411,6 +414,28 @@ async def cmd_blackjack(message, _):
             await client.send_message(message.channel,
                                       'Cannot play: You have an unfinished game.')
             return
+        bet_dict = build_dict(BET_PATH)
+        if bet_dict.get(str(message.author)):
+            set_bet = bet_dict.get(str(message.author))
+        else:
+            await client.send_message(message.channel,
+                                           'You need to set a bet with the !bet command, Example: !bet 10')
+            return
+
+        if set_bet < 0:
+            await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
+            return
+        bank_dict = build_dict(BANK_PATH)
+        if bank_dict.get(str(message.author)):
+            balance = bank_dict.get(str(message.author))
+        else:
+            await client.send_message(message.channel, 'You need to run the !loan command.')
+            return
+        if set_bet > balance:
+            await client.send_message(message.channel,
+                                           'Your balance of $%s is to low, lower your bet amount of $%s' % (
+                                               balance, set_bet))
+            return
         bjlist.append(message.author)
         scoredict = {}
         scoredict1 = await dealhand(message, scoredict,player=False,dealer=True,firstround=True)
@@ -418,20 +443,27 @@ async def cmd_blackjack(message, _):
         x = True
         twentyone = False
         score = scoredict.get(message.author)
-        if score == 21:
-            twentyone = True
         while x == True:
+            if score == 21:
+                twentyone = True
             answer = await client.wait_for_message(timeout=25, author=message.author)
             if answer and answer.content == '!hitme':
                 scoredict = await dealhand(message, scoredict)
                 score = scoredict.get(message.author)
                 if score > 21:
                     await asyncio.sleep(0.1)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: Player is BUST! House wins! (Total score: %s))' %(message.author, score))
                     bjlist.remove(message.author)
+                    winnings = -set_bet
+                    result = int(bank_dict.get(str(message.author))) + int(winnings)
+                    if result <= 0:
+                        bank_dict[str(message.author)] = 0
+                    else:
+                        bank_dict[str(message.author)] = result
+                    save_obj(bank_dict, BANK_PATH)
+                    await client.send_message(message.channel,
+                                              'DEALER: %s: Player is BUST! House wins! (Total score: %s)) \n You lose $%s' %(message.author, score, set_bet))
                     return
-            elif answer is None or answer.content == '!stay' or (twentyone == True):
+            elif answer is None or answer.content == '!stay' or twentyone is True:
                 bjlist.remove(message.author)
                 await asyncio.sleep(0.1)
                 await client.send_message(message.channel,
@@ -439,34 +471,72 @@ async def cmd_blackjack(message, _):
                 await asyncio.sleep(0.1)
                 scoredict1 = await dealhand(message, scoredict1,player=False,dealer=True)
                 dscore = scoredict1.get(message.author)
-                while (dscore < 16 or dscore == 16):
+                while dscore < 17:
                     scoredict1 = await dealhand(message, scoredict1, player=False, dealer=True)
                     dscore = scoredict1.get(message.author)
-                    if not (dscore < 16 or dscore == 16) and (score > dscore):
+                    if not dscore < 17 and (score > dscore):
                         await asyncio.sleep(0.1)
+                        winnings = set_bet
+                        result = int(bank_dict.get(str(message.author))) + int(winnings)
+                        if result <= 0:
+                            bank_dict[str(message.author)] = 0
+                        else:
+                            bank_dict[str(message.author)] = result
+                        save_obj(bank_dict, BANK_PATH)
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                         return
                     if dscore > 21:
                         await asyncio.sleep(0.1)
+                        winnings = set_bet
+                        result = int(bank_dict.get(str(message.author))) + int(winnings)
+                        if result <= 0:
+                            bank_dict[str(message.author)] = 0
+                        else:
+                            bank_dict[str(message.author)] = result
+                        save_obj(bank_dict, BANK_PATH)
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                                                  'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                         return
                     if dscore > score:
                         await asyncio.sleep(0.1)
+                        winnings = -set_bet
+                        result = int(bank_dict.get(str(message.author))) + int(winnings)
+                        if result <= 0:
+                            bank_dict[str(message.author)] = 0
+                        else:
+                            bank_dict[str(message.author)] = result
+                        save_obj(bank_dict, BANK_PATH)
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: House wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                                                  'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
                         return
                 if (dscore > 16 and dscore < 21):
                     if (score > dscore):
                         await asyncio.sleep(0.1)
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                                                  'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s$' % (message.author, score, dscore, set_bet))
+                        winnings = set_bet
+                        result = int(bank_dict.get(str(message.author))) + int(winnings)
+                        if result <= 0:
+                            bank_dict[str(message.author)] = 0
+                        else:
+                            bank_dict[str(message.author)] = result
+                        save_obj(bank_dict, BANK_PATH)
                         return
+                    if dscore == score:
+                        await client.send_message(message.channel,
+                                                  'DEALER: %s: It is a draw! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, set_bet))
                     else:
                         await asyncio.sleep(0.1)
                         await client.send_message(message.channel,
-                                                  'DEALER: %s: House wins! Player score %s, dealer score %s' % (message.author, score, dscore))
+                                                  'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
+                        winnings = -set_bet
+                        result = int(bank_dict.get(str(message.author))) + int(winnings)
+                        if result <= 0:
+                            bank_dict[str(message.author)] = 0
+                        else:
+                            bank_dict[str(message.author)] = result
+                        save_obj(bank_dict, BANK_PATH)
                         return
                 return
 
