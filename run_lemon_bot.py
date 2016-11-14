@@ -67,6 +67,32 @@ SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
 bjlist = []
 SLOT_PATTERN = [':four_leaf_clover:', ':moneybag:', ':cherries:', ':lemon:', ':grapes:', ':poop:']
 
+def get_account_number(user):
+    acc_dict = build_dict(ACC_PATH)
+    if acc_dict.get(str(user)):
+        account_number = acc_dict.get(str(user))
+    else:
+        account_number = random.randint(0, 999999999)
+        acc_dict[str(user)] = account_number
+    save_obj(acc_dict, ACC_PATH)
+    return account_number
+
+def get_balance(user):
+    bank = build_dict(BANK_PATH)
+    if bank.get(str(user)):
+        balance = int(bank.get(str(user)))
+    else:
+        balance = 0
+    return balance
+
+def add_money(user, amount):
+    total = get_balance(user) + amount
+    bank = build_dict(BANK_PATH)
+    if total <= 0:
+        bank[str(user)] = 0
+    else:
+        bank[str(user)] = total
+    save_obj(bank, BANK_PATH)
 
 def parse(input):
     languages = ['fi', 'en', 'ru', 'se']
@@ -244,12 +270,12 @@ def cmd_slots(message, _):
     if set_bet < 0:
         yield from client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
-    bank_dict = build_dict(BANK_PATH)
-    if bank_dict.get(str(message.author)):
-        balance = bank_dict.get(str(message.author))
-    else:
+
+    balance = get_balance(message.author)
+    if balance == 0:
         yield from client.send_message(message.channel, 'You need to run the !loan command.')
         return
+
     if set_bet > balance:
         yield from client.send_message(message.channel,
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
@@ -291,12 +317,7 @@ def cmd_slots(message, _):
     wheel_payload = '%s Bet: $%s --> | ' % (message.author, set_bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     yield from client.send_message(message.channel, wheel_payload)
-    result = int(bank_dict.get(str(message.author))) + int(winnings)
-    if result <= 0:
-        bank_dict[str(message.author)] = 0
-    else:
-        bank_dict[str(message.author)] = result
-    save_obj(bank_dict, BANK_PATH)
+    add_money(message.author, winnings)
 
 # Function to set a users bet.
 @asyncio.coroutine
@@ -334,39 +355,25 @@ def cmd_reviewbet(message, _):
 # function to loan players money -- ONLY UP TO -- > $50 dollars
 @asyncio.coroutine
 def cmd_loan(message, _):
-    bank_dict = build_dict(BANK_PATH)
-    if bank_dict.get(str(message.author)):
-        money = bank_dict.get(str(message.author))
-        if money >= 50:
-            yield from client.send_message(message.channel,
-                                           '%s you have $%s, you do not need a loan.' % (message.author, money))
-            return
-        else:
-            bank_dict[str(message.author)] = 50
-            yield from client.send_message(message.channel, '%s, added up to $50' % message.author)
-    else:
-        bank_dict[str(message.author)] = 50
+    balance = get_balance(message.author)
+    if balance >= 50:
+        yield from client.send_message(message.channel, '%s you have $%s, you do not need a loan.' % (message.author, balance))
+        return
+
+    add_money(message.author, 50 - balance)
+    if balance == 0:
         yield from client.send_message(message.channel, '%s, added $50' % message.author)
-    save_obj(bank_dict, BANK_PATH)
+    else:
+        yield from client.send_message(message.channel, '%s, added up to $50' % message.author)
 
 # Function to look up a users Money!
 @asyncio.coroutine
 def cmd_bank(message, _):
-    acc_dict = build_dict(ACC_PATH)
-    if acc_dict.get(str(message.author)):
-        account_number = acc_dict.get(str(message.author))
-    else:
-        account_number = random.randint(0, 999999999)
-        acc_dict[str(message.author)] = account_number
-    bank_dict = build_dict(BANK_PATH)
-    if str(message.author) in bank_dict.keys():
-        balance = bank_dict.get(str(message.author))
-        yield from client.send_message(message.channel,
-                                       'User: %s, Account-#: %s, Balance: $%s' % (message.author, account_number, balance))
-    if not str(message.author) in bank_dict.keys():
-        yield from client.send_message(message.channel,
-                                       "Looks like you don't have an Account, try the !loan command.")
-    save_obj(acc_dict, ACC_PATH)
+    account_number = get_account_number(message.author)
+    balance = get_balance(message.author)
+    yield from client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (message.author, account_number, balance))
+    if balance == 0:
+        yield from client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
 def dealcard():
     card1 = random.randrange(1, 11)
@@ -425,10 +432,9 @@ async def cmd_blackjack(message, _):
         if set_bet < 0:
             await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
             return
-        bank_dict = build_dict(BANK_PATH)
-        if bank_dict.get(str(message.author)):
-            balance = bank_dict.get(str(message.author))
-        else:
+
+        balance = get_balance(message.author)
+        if balance == 0:
             await client.send_message(message.channel, 'You need to run the !loan command.')
             return
         if set_bet > balance:
@@ -454,12 +460,7 @@ async def cmd_blackjack(message, _):
                     await asyncio.sleep(0.1)
                     bjlist.remove(message.author)
                     winnings = -set_bet
-                    result = int(bank_dict.get(str(message.author))) + int(winnings)
-                    if result <= 0:
-                        bank_dict[str(message.author)] = 0
-                    else:
-                        bank_dict[str(message.author)] = result
-                    save_obj(bank_dict, BANK_PATH)
+                    add_money(message.author, winnings)
                     await client.send_message(message.channel,
                                               'DEALER: %s: Player is BUST! House wins! (Total score: %s)) \n You lose $%s' %(message.author, score, set_bet))
                     return
@@ -477,36 +478,21 @@ async def cmd_blackjack(message, _):
                     if not dscore < 17 and (score > dscore):
                         await asyncio.sleep(0.1)
                         winnings = set_bet
-                        result = int(bank_dict.get(str(message.author))) + int(winnings)
-                        if result <= 0:
-                            bank_dict[str(message.author)] = 0
-                        else:
-                            bank_dict[str(message.author)] = result
-                        save_obj(bank_dict, BANK_PATH)
+                        add_money(message.author, winnings)
                         await client.send_message(message.channel,
                                                   'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                         return
                     if dscore > 21:
                         await asyncio.sleep(0.1)
                         winnings = set_bet
-                        result = int(bank_dict.get(str(message.author))) + int(winnings)
-                        if result <= 0:
-                            bank_dict[str(message.author)] = 0
-                        else:
-                            bank_dict[str(message.author)] = result
-                        save_obj(bank_dict, BANK_PATH)
+                        add_money(message.author, winnings)
                         await client.send_message(message.channel,
                                                   'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                         return
                     if dscore > score:
                         await asyncio.sleep(0.1)
                         winnings = -set_bet
-                        result = int(bank_dict.get(str(message.author))) + int(winnings)
-                        if result <= 0:
-                            bank_dict[str(message.author)] = 0
-                        else:
-                            bank_dict[str(message.author)] = result
-                        save_obj(bank_dict, BANK_PATH)
+                        add_money(message.author, winnings)
                         await client.send_message(message.channel,
                                                   'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
                         return
@@ -516,12 +502,7 @@ async def cmd_blackjack(message, _):
                         await client.send_message(message.channel,
                                                   'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s$' % (message.author, score, dscore, set_bet))
                         winnings = set_bet
-                        result = int(bank_dict.get(str(message.author))) + int(winnings)
-                        if result <= 0:
-                            bank_dict[str(message.author)] = 0
-                        else:
-                            bank_dict[str(message.author)] = result
-                        save_obj(bank_dict, BANK_PATH)
+                        add_money(message.author, winnings)
                         return
                     if dscore == score:
                         await client.send_message(message.channel,
@@ -531,12 +512,7 @@ async def cmd_blackjack(message, _):
                         await client.send_message(message.channel,
                                                   'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
                         winnings = -set_bet
-                        result = int(bank_dict.get(str(message.author))) + int(winnings)
-                        if result <= 0:
-                            bank_dict[str(message.author)] = 0
-                        else:
-                            bank_dict[str(message.author)] = result
-                        save_obj(bank_dict, BANK_PATH)
+                        add_money(message.author, winnings)
                         return
                 return
 
