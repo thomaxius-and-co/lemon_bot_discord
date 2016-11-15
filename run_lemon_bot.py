@@ -543,19 +543,19 @@ async def cmd_wolframalpha(message, query):
 async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api..
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.74",
+        "Current version of the bot: 0.74b",
         "Changelog: Max bet in blackjack is now unlimited, but only 1000 in slots. Added !clearbot, which deletes 50 of bot messages.",
     ]))
 
 async def cmd_pickone(message, args):
     if not args:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by comma, for example !pickone pizza burger.')
+                                                        ' by a comma, for example !pickone pizza, burger.')
         return
     choices = args.split(',')
     if len(choices) < 2:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by comma, for example !pickone pizza burger.')
+                                                        ' by a comma, for example !pickone pizza, burger.')
         return
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s' % choice)
