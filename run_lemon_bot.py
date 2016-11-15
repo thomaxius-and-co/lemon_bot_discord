@@ -52,6 +52,8 @@ client_secret = os.environ['BING_SECRET']
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
 
+EMOJI_THINKING = u"\U0001F914"
+
 with suppress(FileNotFoundError):
     os.remove('./bot_files/lemon_bot_accnum.pkl')
 
@@ -579,11 +581,17 @@ commands = {
     'clearbot': cmd_clearbot
 }
 
+async def think(message):
+    if EMOJI_THINKING in message.content:
+        await client.add_reaction(message, EMOJI_THINKING)
+
 # Dispacther for messages from the users.
 @client.event
 async def on_message(message):
     if message.author.bot:
         return
+
+    await think(message)
 
     cmd, arg = parse_command(message.content)
     if not cmd:
