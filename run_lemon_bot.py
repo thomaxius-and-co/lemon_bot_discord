@@ -33,7 +33,7 @@ import urllib.parse
 import enchanting_chances as en
 from BingTranslator import Translator
 from bs4 import BeautifulSoup
-import asyncio
+from asyncio import sleep
 from lxml.html.soupparser import fromstring
 import wolframalpha
 import threading
@@ -140,18 +140,16 @@ def parse_command(content):
 
 
 # function to call the BDO script and relay odds on enchanting.
-@asyncio.coroutine
-def cmd_enchant(message, arg):
+async def cmd_enchant(message, arg):
     try:
         raw_data = arg.split(' ')
         enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
-        yield from client.send_message(message.channel, enchanting_results)
+        await client.send_message(message.channel, enchanting_results)
     except Exception:
-        yield from client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
+        await client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
 
 # Function to search for a youtube video and return a link.
-@asyncio.coroutine
-def cmd_youtube(message, text_to_search):
+async def cmd_youtube(message, text_to_search):
     link_list = []
     print('Searching YouTube for: %s' % text_to_search)
     query = urllib.parse.quote(text_to_search)
@@ -162,27 +160,23 @@ def cmd_youtube(message, text_to_search):
     for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
         link_list.append('https://www.youtube.com' + vid['href'])
     random_link = random.choice(link_list)
-    yield from client.send_message(message.channel, random_link)
+    await client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
-@asyncio.coroutine
-def cmd_roll(message, _):
+async def cmd_roll(message, _):
     rand_roll = random.randint(0, 100)
-    yield from client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
+    await client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
-@asyncio.coroutine
-def cmd_8ball(message, question):
+async def cmd_8ball(message, question):
     prediction = random.choice(EIGHT_BALL_OPTIONS)
-    yield from client.send_message(message.channel,
-                                   'Question: [%s], %s' % (question, prediction))
+    await client.send_message(message.channel, 'Question: [%s], %s' % (question, prediction))
 
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
-@asyncio.coroutine
-def cmd_weather(message, zip_code):
+async def cmd_weather(message, zip_code):
     if not zip_code:
-        yield from client.send_message(message.channel, "You must specify a city, eq. Säkylä")
+        await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
     r = requests.get(link)
@@ -192,11 +186,10 @@ def cmd_weather(message, zip_code):
     C = (F - 32) * 5 / 9
     status = data['weather'][0]['description']
     payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-    yield from client.send_message(message.channel, payload)
+    await client.send_message(message.channel, payload)
 
-@asyncio.coroutine
 # Simple math command.
-def cmd_math(message, arg):
+async def cmd_math(message, arg):
     a,b,c = arg.split(' ')
     if b == '+':
         calculation = int(a) + int(c)
@@ -206,57 +199,50 @@ def cmd_math(message, arg):
         calculation = int(a) * int(c)
     if b == '/':
         calculation = int(a) / int(c)
-    yield from client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
+    await client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
 
-@asyncio.coroutine
-def cmd_translate(message, arg):
+async def cmd_translate(message, arg):
     tolang,text = arg.split(' ', 1)
     if len(text) > 100: #maybe it's wise to put a limit on the lenght of the translations
-        yield from client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
+        await client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
         return
     translator = Translator(client_id, client_secret)
     translation = translator.translate(text, tolang)
-    yield from client.send_message(message.channel, translation)
+    await client.send_message(message.channel, translation)
 
 # Ask clever bot a question.
-@asyncio.coroutine
-def cmd_cleverbot(message, question):
+async def cmd_cleverbot(message, question):
     if not question:
-        yield from client.send_message(message.channel, "You must specify a question!")
+        await client.send_message(message.channel, "You must specify a question!")
     cb1 = cleverbot.Cleverbot()
     answer = cb1.ask(question)
-    yield from client.send_message(message.channel, answer)
+    await client.send_message(message.channel, answer)
 
 # this Spanks the user and calls them out on the server, with an '@' message.
 # Format ==> @User has been, INSERT_ITEM_HERE
-@asyncio.coroutine
-def cmd_spank(message, target_user):
+async def cmd_spank(message, target_user):
     punishment = random.choice(SPANK_BANK)
-    yield from client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
+    await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
 
-@asyncio.coroutine
-def cmd_coin(message, _):
+async def cmd_coin(message, _):
     outcome = random.choice(["Heads", "Tails"])
-    yield from client.send_message(message.channel, "Just a moment, flipping the coin...")
-    yield from asyncio.sleep(.5)
-    yield from client.send_message(message.channel, "The coin lands on: %s" % outcome)
+    await client.send_message(message.channel, "Just a moment, flipping the coin...")
+    await sleep(.5)
+    await client.send_message(message.channel, "The coin lands on: %s" % outcome)
 
-@asyncio.coroutine
-def cmd_help(message, _):
-    yield from client.send_message(message.channel, 'https://github.com/Thomaxius/lemon_bot_discord')
+async def cmd_help(message, _):
+    await client.send_message(message.channel, 'https://github.com/Thomaxius/lemon_bot_discord')
 
 # Function to clear a chat Channel.
-@asyncio.coroutine
-def cmd_clear(message, _):
+async def cmd_clear(message, _):
     perms = message.channel.permissions_for(message.author)
     if perms.administrator:
-        yield from client.purge_from(message.channel)
+        await client.purge_from(message.channel)
     else:
-        yield from client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
 
 # Function to play the slots
-@asyncio.coroutine
-def cmd_slots(message, _):
+async def cmd_slots(message, _):
     wheel_list = []
     results_dict = {}
     count = 1
@@ -265,21 +251,21 @@ def cmd_slots(message, _):
     if bet_dict.get(str(message.author)):
         set_bet = bet_dict.get(str(message.author))
     else:
-        yield from client.send_message(message.channel,
+        await client.send_message(message.channel,
                                        'You need to set a bet with the !bet command, Example: !bet 10')
         return
 
     if set_bet < 0:
-        yield from client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
+        await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
     balance = get_balance(message.author)
     if balance == 0:
-        yield from client.send_message(message.channel, 'You need to run the !loan command.')
+        await client.send_message(message.channel, 'You need to run the !loan command.')
         return
 
     if set_bet > balance:
-        yield from client.send_message(message.channel,
+        await client.send_message(message.channel,
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
                                        balance, set_bet))
         return
@@ -326,64 +312,60 @@ def cmd_slots(message, _):
             winnings = -set_bet
     wheel_payload = '%s Bet: $%s --> | ' % (message.author, set_bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
-    yield from client.send_message(message.channel, wheel_payload)
+    await client.send_message(message.channel, wheel_payload)
     add_money(message.author, winnings)
 
 # Function to set a users bet.
-@asyncio.coroutine
-def cmd_bet(message, amount):
+async def cmd_bet(message, amount):
     try:
         amount = int(amount)
         if amount > 1000:
-            yield from client.send_message(message.channel, 'Your bet is too high, maximum allowed is 1000.')
+            await client.send_message(message.channel, 'Your bet is too high, maximum allowed is 1000.')
             return
         if amount < 0:
-            yield from client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
+            await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
             return
     except Exception:
-        yield from client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
+        await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
         return
     file_bool = os.path.isfile(BET_PATH)
     if not file_bool:
         data_dict = {}
     else:
         data_dict = load_obj(BET_PATH)
-    yield from client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
+    await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
     data_dict[str(message.author)] = amount
     save_obj(data_dict, BET_PATH)
 
 # Function to look at the currently Set bet.
-@asyncio.coroutine
-def cmd_reviewbet(message, _):
+async def cmd_reviewbet(message, _):
     bet_dict = build_dict(BET_PATH)
     if bet_dict.get(str(message.author)):
-        yield from client.send_message(message.channel,
+        await client.send_message(message.channel,
                                        '%s is currently betting: %s' % (message.author, bet_dict.get(str(message.author))))
     else:
-        yield from client.send_message(message.channel, '%s your bet is not Set, use the !bet command.' % (message.author))
+        await client.send_message(message.channel, '%s your bet is not Set, use the !bet command.' % (message.author))
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
-@asyncio.coroutine
-def cmd_loan(message, _):
+async def cmd_loan(message, _):
     balance = get_balance(message.author)
     if balance >= 50:
-        yield from client.send_message(message.channel, '%s you have $%s, you do not need a loan.' % (message.author, balance))
+        await client.send_message(message.channel, '%s you have $%s, you do not need a loan.' % (message.author, balance))
         return
 
     add_money(message.author, 50 - balance)
     if balance == 0:
-        yield from client.send_message(message.channel, '%s, added $50' % message.author)
+        await client.send_message(message.channel, '%s, added $50' % message.author)
     else:
-        yield from client.send_message(message.channel, '%s, added up to $50' % message.author)
+        await client.send_message(message.channel, '%s, added up to $50' % message.author)
 
 # Function to look up a users Money!
-@asyncio.coroutine
-def cmd_bank(message, _):
+async def cmd_bank(message, _):
     account_number = get_account_number(message.author)
     balance = get_balance(message.author)
-    yield from client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (message.author, account_number, balance))
+    await client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (message.author, account_number, balance))
     if balance == 0:
-        yield from client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
+        await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
 def dealcard():
     card1 = random.choice(cards)
@@ -395,7 +377,7 @@ async def dealhand(message, scoredict, firstround=False, player=True, dealer=Fal
         card1, card2 = dealcard()
         total = int(card1 + card2)
         scoredict = {message.author:total}
-        await asyncio.sleep(0.1)
+        await sleep(0.1)
         await client.send_message(message.channel,
                                            'DEALER: %s: Your cards: %s and %s (%s total) \n Type !hitme for more cards or !stay to stay' % (message.author,
                                            card1, card2, total))
@@ -404,7 +386,7 @@ async def dealhand(message, scoredict, firstround=False, player=True, dealer=Fal
         card1 = random.choice(cards)
         total = card1 + scoredict.get(message.author)
         scoredict = {message.author:total}
-        await asyncio.sleep(0.1)
+        await sleep(0.1)
         await client.send_message(message.channel,
                                            'DEALER: %s: Your card is: %s (%s total). Type !hitme for more cards or !stay to stay' % (message.author, card1, total))
         return scoredict
@@ -419,13 +401,11 @@ async def dealhand(message, scoredict, firstround=False, player=True, dealer=Fal
                 scoredict1 = scoredict
                 total = card1 + scoredict1.get(message.author)
                 scoredict1 = {message.author:total}
-                await asyncio.sleep(0.1)
+                await sleep(0.1)
                 await client.send_message(message.channel,
                                           "DEALER: %s: Dealer's card is: %s, total %s" % (message.author,card1, total))
                 return scoredict1
 
-@client.async_event
-@asyncio.coroutine
 async def cmd_blackjack(message, _):
     realauthor = message.author
     if message.author in bjlist:
@@ -468,7 +448,7 @@ async def cmd_blackjack(message, _):
             scoredict = await dealhand(message, scoredict)
             score = scoredict.get(message.author)
             if score > 21:
-                await asyncio.sleep(0.1)
+                await sleep(0.1)
                 bjlist.remove(message.author)
                 winnings = -set_bet
                 add_money(message.author, winnings)
@@ -477,31 +457,31 @@ async def cmd_blackjack(message, _):
                 return
         elif answer is None or answer.content.lower() == '!stay' or twentyone is True:
             bjlist.remove(message.author)
-            await asyncio.sleep(0.1)
+            await sleep(0.1)
             await client.send_message(message.channel,
                                       'DEALER: %s: You decided to stay. Your total score: %s' % (message.author, score))
-            await asyncio.sleep(0.1)
+            await sleep(0.1)
             scoredict1 = await dealhand(message, scoredict1,player=False,dealer=True)
             dscore = scoredict1.get(message.author)
             while dscore < 17:
                 scoredict1 = await dealhand(message, scoredict1, player=False, dealer=True)
                 dscore = scoredict1.get(message.author)
                 if not dscore < 17 and (score > dscore):
-                    await asyncio.sleep(0.1)
+                    await sleep(0.1)
                     winnings = set_bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
                                               'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                     return
                 if dscore > 21:
-                    await asyncio.sleep(0.1)
+                    await sleep(0.1)
                     winnings = set_bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
                                               'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                     return
                 if dscore > score:
-                    await asyncio.sleep(0.1)
+                    await sleep(0.1)
                     winnings = -set_bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
@@ -509,7 +489,7 @@ async def cmd_blackjack(message, _):
                     return
             if (dscore > 16 and dscore < 21):
                 if (score > dscore):
-                    await asyncio.sleep(0.1)
+                    await sleep(0.1)
                     await client.send_message(message.channel,
                                               'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
                     winnings = set_bet
@@ -519,7 +499,7 @@ async def cmd_blackjack(message, _):
                     await client.send_message(message.channel,
                                               'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, set_bet))
                 else:
-                    await asyncio.sleep(0.1)
+                    await sleep(0.1)
                     await client.send_message(message.channel,
                                               'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
                     winnings = -set_bet
@@ -528,46 +508,46 @@ async def cmd_blackjack(message, _):
             return
 
 # Function to lookup the money and create a top 5 users.
-@asyncio.coroutine
-def cmd_leader(message, _):
+async def cmd_leader(message, _):
     bank_dict = build_dict(BANK_PATH)
     counter = 0
     leader_list = []
     for key in sorted(bank_dict, key=bank_dict.get, reverse=True)[:5]:
         counter += 1
         leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
-    yield from client.send_message(message.channel, '  |  '.join(leader_list))
+    await client.send_message(message.channel, '  |  '.join(leader_list))
 
-def cmd_wolframalpha(message, query):
+async def cmd_wolframalpha(message, query):
     print("Searching WolframAlpha for '%s'" % query)
 
-    yield from client.send_typing(message.channel)
+    await client.send_typing(message.channel)
 
     try:
         res = wolframalpha_client.query(query)
         answer = next(res.results).text
-        yield from client.send_message(message.channel, answer)
+        await client.send_message(message.channel, answer)
     except Exception:
-        yield from client.send_message(message.channel, 'I don\'t know how to answer that')
+        await client.send_message(message.channel, 'I don\'t know how to answer that')
 
-def cmd_version(message, args):
-                                                    "Changelog: Added !version, improved blackjack, added !pickon"
-                                                    "e, updated readme, modified !slots.")
+async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api..
-    return
+    await client.send_message(message.channel, "\n".join([
+        "Current version of the bot: 0.71c",
+        "Changelog: Added !version, improved blackjack, added !pickone, updated readme, modified !slots.",
+    ]))
 
-def cmd_pickone(message, args):
+async def cmd_pickone(message, args):
     if not args:
-        yield from client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
+        await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by comma, for example !pickone pizza burger.')
         return
     choices = args.split(',')
     if len(choices) < 2:
-        yield from client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
+        await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by comma, for example !pickone pizza burger.')
         return
     choice = random.choice(choices)
-    yield from client.send_message(message.channel, '%s' % choice)
+    await client.send_message(message.channel, '%s' % choice)
 
 commands = {
     'enchant': cmd_enchant,
@@ -595,8 +575,8 @@ commands = {
 }
 
 # Dispacther for messages from the users.
-@client.async_event
-def on_message(message):
+@client.event
+async def on_message(message):
     if message.author.bot:
         return
 
@@ -606,8 +586,7 @@ def on_message(message):
 
     handler = commands.get(cmd)
     if handler:
-      yield from handler(message, arg)
-
+      await handler(message, arg)
 
 # Create the local Dirs if needed.
 file_bool = os.path.exists("./bot_files")
