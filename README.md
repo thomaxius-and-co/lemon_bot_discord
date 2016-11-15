@@ -18,7 +18,6 @@
    * Bing translate
    * Simple math
    * Casino:
-   
 	* Slot Machine
 	* Blackjack
 
@@ -65,7 +64,7 @@
 | !spank [target_user] | This will return with a punishment for the target user. |
 | !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
-| !slots | runs the slots, and uses the users money from the bank. Slots KEY = [4-Fruit(*50), 3-Fruit(*25), 4-Money(*500), 3-Money(*100), 4-Clover(*1000), 3-Clover(*200)]|
+| !slots | runs the slots, and uses the users money from the bank.|
 | !clear | clears the chat log in that channel. |
 | !bet [amount] | Set the users betting amount. |
 | !reviewbet | Returns the users current bet. |
@@ -77,6 +76,9 @@
 | !math | Does a calculation with a maximum of 3 digits |
 | !blackjack | Play blackjack versus the dealer
 | !translate <language>  <text> | Translate a text to the given language
+| !clearbot | Deletes 50 of bot messages. Only available to admins.
+| !pickone <arguments> | Picks a random choice out of X arguments
+| !version | Displays the bot's version.
 
 ## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
