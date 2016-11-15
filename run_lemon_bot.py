@@ -30,6 +30,7 @@ import requests
 import pickle
 import cleverbot
 import urllib.parse
+from contextlib import suppress
 import enchanting_chances as en
 from BingTranslator import Translator
 from bs4 import BeautifulSoup
@@ -50,7 +51,9 @@ client_secret = os.environ['BING_SECRET']
 
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
-ACC_PATH = './bot_files/lemon_bot_accnum.pkl'
+
+with suppress(FileNotFoundError):
+    os.remove('./bot_files/lemon_bot_accnum.pkl')
 
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
@@ -70,15 +73,6 @@ SLOT_PATTERN = [':four_leaf_clover:', ':four_leaf_clover:', ':moneybag:', ':mone
                 ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',
                 ':grapes:', ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',':grapes:',':watermelon:', ':watermelon:', ':watermelon:', ':watermelon:']
 
-def get_account_number(user):
-    acc_dict = build_dict(ACC_PATH)
-    if acc_dict.get(str(user)):
-        account_number = acc_dict.get(str(user))
-    else:
-        account_number = random.randint(0, 999999999)
-        acc_dict[str(user)] = account_number
-    save_obj(acc_dict, ACC_PATH)
-    return account_number
 
 def get_balance(user):
     bank = build_dict(BANK_PATH)
@@ -372,9 +366,8 @@ async def cmd_loan(message, _):
 
 # Function to look up a users Money!
 async def cmd_bank(message, _):
-    account_number = get_account_number(message.author)
     balance = get_balance(message.author)
-    await client.send_message(message.channel, 'User: %s, Account-#: %s, Balance: $%s' % (message.author, account_number, balance))
+    await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author, balance))
     if balance == 0:
         await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
