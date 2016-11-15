@@ -241,6 +241,16 @@ async def cmd_clear(message, _):
     else:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
 
+# Delete 50 of bots messages
+async def cmd_clearbot(message, _):
+    perms = message.channel.permissions_for(message.author)
+    def isbot(message):
+        return message.author == client.user and message.author.bot #Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
+    if perms.administrator:
+        await client.purge_from(message.channel, limit=50, check=isbot)
+    else:
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+
 # Function to play the slots
 async def cmd_slots(message, _):
     wheel_list = []
@@ -268,6 +278,10 @@ async def cmd_slots(message, _):
         await client.send_message(message.channel,
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
                                        balance, set_bet))
+        return
+    if set_bet > 1000:
+        await client.send_message(message.channel,
+                                       'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
     while count <= 4:
         wheel_pick = random.choice(SLOT_PATTERN)
@@ -319,9 +333,6 @@ async def cmd_slots(message, _):
 async def cmd_bet(message, amount):
     try:
         amount = int(amount)
-        if amount > 1000:
-            await client.send_message(message.channel, 'Your bet is too high, maximum allowed is 1000.')
-            return
         if amount < 0:
             await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
             return
@@ -532,8 +543,8 @@ async def cmd_wolframalpha(message, query):
 async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api..
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.71c",
-        "Changelog: Added !version, improved blackjack, added !pickone, updated readme, modified !slots.",
+        "Current version of the bot: 0.74",
+        "Changelog: Max bet in blackjack is now unlimited, but only 1000 in slots. Added !clearbot, which deletes 50 of bot messages.",
     ]))
 
 async def cmd_pickone(message, args):
@@ -571,7 +582,8 @@ commands = {
     'translate': cmd_translate,
     'blackjack': cmd_blackjack,
     'pickone': cmd_pickone,
-    'version': cmd_version
+    'version': cmd_version,
+    'clearbot': cmd_clearbot
 }
 
 # Dispacther for messages from the users.
