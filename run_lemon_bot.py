@@ -337,7 +337,13 @@ async def cmd_slots(message, _):
             winnings = bet * 200
             break
         if k == emoji.POOP and v == 4:
-            winnings = bet * 2000
+            winnings = bet * 10000
+            spam = 0
+            while spam > 10:
+                await client.send_message(message.channel,
+                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (message.author, winnings))
+                await sleep(1)
+                spam =+ 1
         else:
             winnings = -bet
     wheel_payload = '%s Bet: $%s --> | ' % (message.author, bet) + ' - '.join(
@@ -530,7 +536,7 @@ async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api.. Version
     # number should be commits divided by 100.
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.86",
+        "Current version of the bot: 0.87",
         "Changelog: Blackjack has been redone",
     ]))
 
