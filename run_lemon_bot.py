@@ -102,20 +102,22 @@ SLOT_PATTERN = [
 
 def get_balance(user):
     bank = build_dict(BANK_PATH)
-    if bank.get(str(user)):
-        balance = int(bank.get(str(user)))
-    else:
-        balance = 0
-    return balance
+    return bank.get(str(user), 0)
 
 def add_money(user, amount):
     total = get_balance(user) + amount
     bank = build_dict(BANK_PATH)
-    if total <= 0:
-        bank[str(user)] = 0
-    else:
-        bank[str(user)] = total
+    bank[str(user)] = max(0, total)
     save_obj(bank, BANK_PATH)
+
+def get_bet(user):
+    bets = build_dict(BET_PATH)
+    return bets.get(str(user), 0)
+
+def set_bet(user, amount):
+    bets = build_dict(BET_PATH)
+    bets[str(user)] = max(0, amount)
+    save_obj(bets, BET_PATH)
 
 def parse(input):
     languages = ['fi', 'en', 'ru', 'se']
@@ -277,15 +279,9 @@ async def cmd_slots(message, _):
     results_dict = {}
     count = 1
     winnings = 0
-    bet_dict = build_dict(BET_PATH)
-    if bet_dict.get(str(message.author)):
-        set_bet = bet_dict.get(str(message.author))
-    else:
-        await client.send_message(message.channel,
-                                       'You need to set a bet with the !bet command, Example: !bet 10')
-        return
 
-    if set_bet < 0:
+    bet = get_bet(message.author)
+    if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
@@ -294,12 +290,12 @@ async def cmd_slots(message, _):
         await client.send_message(message.channel, 'You need to run the !loan command.')
         return
 
-    if set_bet > balance:
+    if bet > balance:
         await client.send_message(message.channel,
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
-                                       balance, set_bet))
+                                       balance, bet))
         return
-    if set_bet > 1000:
+    if bet > 1000:
         await client.send_message(message.channel,
                                        'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
@@ -317,34 +313,34 @@ async def cmd_slots(message, _):
         last_step = wheel_step
     for k, v in results_dict.items():
         if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 4:
-            winnings = set_bet * 25
+            winnings = bet * 25
             break
         if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 3:
-            winnings = set_bet * 10
+            winnings = bet * 10
             break
         if (k == emoji.WATERMELON) and v == 3:
-            winnings = set_bet * 20
+            winnings = bet * 20
             break
         if (k == emoji.WATERMELON) and v == 4:
-            winnings = set_bet * 50
+            winnings = bet * 50
             break
         if k == emoji.MONEY_BAG and v == 4:
-            winnings = set_bet * 500
+            winnings = bet * 500
             break
         if k == emoji.MONEY_BAG and v == 3:
-            winnings = set_bet * 100
+            winnings = bet * 100
             break
         if k == emoji.FOUR_LEAF_CLOVER and v == 4:
-            winnings = set_bet * 1000
+            winnings = bet * 1000
             break
         if k == emoji.FOUR_LEAF_CLOVER and v == 3:
-            winnings = set_bet * 200
+            winnings = bet * 200
             break
         if k == emoji.POOP and v == 4:
-            winnings = set_bet * 2000
+            winnings = bet * 2000
         else:
-            winnings = -set_bet
-    wheel_payload = '%s Bet: $%s --> | ' % (message.author, set_bet) + ' - '.join(
+            winnings = -bet
+    wheel_payload = '%s Bet: $%s --> | ' % (message.author, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
     add_money(message.author, winnings)
@@ -359,23 +355,14 @@ async def cmd_bet(message, amount):
     except Exception:
         await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
         return
-    file_bool = os.path.isfile(BET_PATH)
-    if not file_bool:
-        data_dict = {}
-    else:
-        data_dict = load_obj(BET_PATH)
+    set_bet(message.author, amount)
     await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
-    data_dict[str(message.author)] = amount
-    save_obj(data_dict, BET_PATH)
 
 # Function to look at the currently Set bet.
 async def cmd_reviewbet(message, _):
-    bet_dict = build_dict(BET_PATH)
-    if bet_dict.get(str(message.author)):
-        await client.send_message(message.channel,
-                                       '%s is currently betting: %s' % (message.author, bet_dict.get(str(message.author))))
-    else:
-        await client.send_message(message.channel, '%s your bet is not Set, use the !bet command.' % (message.author))
+    bet = get_bet(message.author)
+    await client.send_message(message.channel,
+                                       '%s is currently betting: %s' % (message.author, bet))
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
 async def cmd_loan(message, _):
@@ -442,15 +429,8 @@ async def cmd_blackjack(message, _):
         await client.send_message(message.channel,
                                   'Cannot play: You have an unfinished game.')
         return
-    bet_dict = build_dict(BET_PATH)
-    if bet_dict.get(str(message.author)):
-        set_bet = bet_dict.get(str(message.author))
-    else:
-        await client.send_message(message.channel,
-                                       'You need to set a bet with the !bet command, Example: !bet 10')
-        return
-
-    if set_bet < 0:
+    bet = get_bet(message.author)
+    if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
@@ -458,10 +438,10 @@ async def cmd_blackjack(message, _):
     if balance == 0:
         await client.send_message(message.channel, 'You need to run the !loan command.')
         return
-    if set_bet > balance:
+    if bet > balance:
         await client.send_message(message.channel,
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
-                                           balance, set_bet))
+                                           balance, bet))
         return
     bjlist.append(message.author)
     scoredict = {}
@@ -480,10 +460,10 @@ async def cmd_blackjack(message, _):
             if score > 21:
                 await sleep(0.1)
                 bjlist.remove(message.author)
-                winnings = -set_bet
+                winnings = -bet
                 add_money(message.author, winnings)
                 await client.send_message(message.channel,
-                                          'DEALER: %s: Player is BUST! House wins! (Total score: %s)) \n You lose $%s' %(message.author, score, set_bet))
+                                          'DEALER: %s: Player is BUST! House wins! (Total score: %s)) \n You lose $%s' %(message.author, score, bet))
                 return
         elif answer is None or answer.content.lower() == '!stay' or twentyone is True:
             bjlist.remove(message.author)
@@ -498,41 +478,41 @@ async def cmd_blackjack(message, _):
                 dscore = scoredict1.get(message.author)
                 if not dscore < 17 and (score > dscore):
                     await sleep(0.1)
-                    winnings = set_bet
+                    winnings = bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
-                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
+                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
                     return
                 if dscore > 21:
                     await sleep(0.1)
-                    winnings = set_bet
+                    winnings = bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
-                                              'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
+                                              'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
                     return
                 if dscore > score:
                     await sleep(0.1)
-                    winnings = -set_bet
+                    winnings = -bet
                     add_money(message.author, winnings)
                     await client.send_message(message.channel,
-                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
+                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, bet))
                     return
             if (dscore > 16 and dscore < 21):
                 if (score > dscore):
                     await sleep(0.1)
                     await client.send_message(message.channel,
-                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, set_bet))
-                    winnings = set_bet
+                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
+                    winnings = bet
                     add_money(message.author, winnings)
                     return
                 if dscore == score:
                     await client.send_message(message.channel,
-                                              'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, set_bet))
+                                              'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, bet))
                 else:
                     await sleep(0.1)
                     await client.send_message(message.channel,
-                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, set_bet))
-                    winnings = -set_bet
+                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, bet))
+                    winnings = -bet
                     add_money(message.author, winnings)
                     return
             return
