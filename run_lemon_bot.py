@@ -39,6 +39,8 @@ from lxml.html.soupparser import fromstring
 import wolframalpha
 import threading
 
+import emoji
+
 # Disables the SSL warning, that is printed to the console.
 import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
@@ -51,8 +53,6 @@ client_secret = os.environ['BING_SECRET']
 
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
-
-EMOJI_THINKING = u"\U0001F914"
 
 with suppress(FileNotFoundError):
     os.remove('./bot_files/lemon_bot_accnum.pkl')
@@ -71,10 +71,34 @@ SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 bjlist = []
 cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
-SLOT_PATTERN = [':four_leaf_clover:', ':four_leaf_clover:', ':moneybag:', ':moneybag:', ':moneybag:', ':poop:',
-                ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',
-                ':grapes:', ':cherries:', ':lemon:',':grapes:', ':cherries:', ':lemon:',':grapes:',':watermelon:', ':watermelon:', ':watermelon:', ':watermelon:']
 
+SLOT_PATTERN = [
+    emoji.FOUR_LEAF_CLOVER,
+    emoji.FOUR_LEAF_CLOVER,
+    emoji.MONEY_BAG,
+    emoji.MONEY_BAG,
+    emoji.MONEY_BAG,
+    emoji.POOP,
+    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.WATERMELON,
+    emoji.WATERMELON,
+    emoji.WATERMELON,
+    emoji.WATERMELON,
+]
 
 def get_balance(user):
     bank = build_dict(BANK_PATH)
@@ -292,31 +316,31 @@ async def cmd_slots(message, _):
             results_dict[wheel_step] = data + 1
         last_step = wheel_step
     for k, v in results_dict.items():
-        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 4:
+        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 4:
             winnings = set_bet * 25
             break
-        if (k == ':cherries:' or k == ':lemon:' or k == ':grapes:') and v == 3:
+        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 3:
             winnings = set_bet * 10
             break
-        if (k == ':watermelon:') and v == 3:
+        if (k == emoji.WATERMELON) and v == 3:
             winnings = set_bet * 20
             break
-        if (k == ':watermelon:') and v == 4:
+        if (k == emoji.WATERMELON) and v == 4:
             winnings = set_bet * 50
             break
-        if k == ':moneybag:' and v == 4:
+        if k == emoji.MONEY_BAG and v == 4:
             winnings = set_bet * 500
             break
-        if k == ':moneybag:' and v == 3:
+        if k == emoji.MONEY_BAG and v == 3:
             winnings = set_bet * 100
             break
-        if k == ':four_leaf_clover:' and v == 4:
+        if k == emoji.FOUR_LEAF_CLOVER and v == 4:
             winnings = set_bet * 1000
             break
-        if k == ':four_leaf_clover:' and v == 3:
+        if k == emoji.FOUR_LEAF_CLOVER and v == 3:
             winnings = set_bet * 200
             break
-        if k == ':poop' and v == 4:
+        if k == emoji.POOP and v == 4:
             winnings = set_bet * 2000
         else:
             winnings = -set_bet
@@ -582,8 +606,8 @@ commands = {
 }
 
 async def think(message):
-    if EMOJI_THINKING in message.content:
-        await client.add_reaction(message, EMOJI_THINKING)
+    if emoji.THINKING in message.content:
+        await client.add_reaction(message, emoji.THINKING)
 
 # Dispacther for messages from the users.
 @client.event
