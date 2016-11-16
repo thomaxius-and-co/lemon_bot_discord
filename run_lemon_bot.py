@@ -38,7 +38,6 @@ from asyncio import sleep
 from lxml.html.soupparser import fromstring
 import wolframalpha
 import threading
-
 import emoji
 
 # Disables the SSL warning, that is printed to the console.
@@ -265,6 +264,7 @@ async def cmd_clear(message, _):
 
 # Delete 50 of bots messages
 async def cmd_clearbot(message, _):
+    #It might be wise to make a separate command for each type of !clear, so there are no chances for mistakes.
     perms = message.channel.permissions_for(message.author)
     def isbot(message):
         return message.author == client.user and message.author.bot #Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
@@ -389,39 +389,46 @@ def dealcard():
     card2 = random.choice(cards)
     return card1, card2
 
-async def dealhand(message, scoredict, firstround=False, player=True, dealer=False):
+async def dealhand(message, score, firstround=False, player=True, dealer=False):
     if player and firstround:
         card1, card2 = dealcard()
-        total = int(card1 + card2)
-        scoredict = {message.author:total}
-        await sleep(0.1)
+        score = int(card1 + card2)
+        await sleep(0.2)
         await client.send_message(message.channel,
                                            'DEALER: %s: Your cards: %s and %s (%s total) \n Type !hitme for more cards or !stay to stay' % (message.author,
-                                           card1, card2, total))
-        return scoredict
+                                           card1, card2, score))
+        return score
     if player and not firstround:
         card1 = random.choice(cards)
-        total = card1 + scoredict.get(message.author)
-        scoredict = {message.author:total}
-        await sleep(0.1)
+        score = card1 + score
+        await sleep(0.2)
         await client.send_message(message.channel,
-                                           'DEALER: %s: Your card is: %s (%s total). Type !hitme for more cards or !stay to stay' % (message.author, card1, total))
-        return scoredict
+                                           'DEALER: %s: Your card is: %s (%s total). Type !hitme for more cards or !stay to stay' % (message.author, card1, score))
+        return score
     if dealer:
         card1 = random.choice(cards)
         if firstround:
             await client.send_message(message.channel,
                                            "DEALER: %s: Dealer's card is: %s" % (message.author, card1))
-            scoredict1 = {message.author:card1}
-            return scoredict1
-        else:
-                scoredict1 = scoredict
-                total = card1 + scoredict1.get(message.author)
-                scoredict1 = {message.author:total}
-                await sleep(0.1)
-                await client.send_message(message.channel,
-                                          "DEALER: %s: Dealer's card is: %s, total %s" % (message.author,card1, total))
-                return scoredict1
+            return card1
+        if not firstround:
+            score = card1 + score
+            await sleep(0.2)
+            await client.send_message(message.channel,
+                                          "DEALER: %s: Dealer's card is: %s, total %s" % (message.author,card1, score))
+            return score
+
+async def getresponse(message, score, stay):
+    answer = await client.wait_for_message(timeout=25, author=message.author)
+    if answer and answer.content.lower() == '!hitme':
+        score = await dealhand(message, score)
+        stay = False
+        return score, stay
+    elif answer is None or answer.content.lower() == '!stay':
+        stay = True
+        return score, stay
+
+
 
 async def cmd_blackjack(message, _):
     realauthor = message.author
@@ -444,78 +451,58 @@ async def cmd_blackjack(message, _):
                                            balance, bet))
         return
     bjlist.append(message.author)
-    scoredict = {}
-    scoredict1 = await dealhand(message, scoredict,player=False,dealer=True,firstround=True)
-    scoredict = await dealhand(message, scoredict,firstround=True)
-    x = True
-    twentyone = False
-    score = scoredict.get(message.author)
-    while x == True:
-        if score == 21:
-            twentyone = True
-        answer = await client.wait_for_message(timeout=25, author=realauthor)
-        if answer and answer.content.lower() == '!hitme':
-            scoredict = await dealhand(message, scoredict)
-            score = scoredict.get(message.author)
-            if score > 21:
-                await sleep(0.1)
-                bjlist.remove(message.author)
-                winnings = -bet
-                add_money(message.author, winnings)
-                await client.send_message(message.channel,
-                                          'DEALER: %s: Player is BUST! House wins! (Total score: %s)) \n You lose $%s' %(message.author, score, bet))
-                return
-        elif answer is None or answer.content.lower() == '!stay' or twentyone is True:
-            bjlist.remove(message.author)
-            await sleep(0.1)
-            await client.send_message(message.channel,
-                                      'DEALER: %s: You decided to stay. Your total score: %s' % (message.author, score))
-            await sleep(0.1)
-            scoredict1 = await dealhand(message, scoredict1,player=False,dealer=True)
-            dscore = scoredict1.get(message.author)
-            while dscore < 17:
-                scoredict1 = await dealhand(message, scoredict1, player=False, dealer=True)
-                dscore = scoredict1.get(message.author)
-                if not dscore < 17 and (score > dscore):
-                    await sleep(0.1)
-                    winnings = bet
-                    add_money(message.author, winnings)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
-                    return
-                if dscore > 21:
-                    await sleep(0.1)
-                    winnings = bet
-                    add_money(message.author, winnings)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
-                    return
-                if dscore > score:
-                    await sleep(0.1)
-                    winnings = -bet
-                    add_money(message.author, winnings)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, bet))
-                    return
-            if (dscore > 16 and dscore < 21):
-                if (score > dscore):
-                    await sleep(0.1)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (message.author, score, dscore, bet))
-                    winnings = bet
-                    add_money(message.author, winnings)
-                    return
-                if dscore == score:
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (message.author, score, dscore, bet))
-                else:
-                    await sleep(0.1)
-                    await client.send_message(message.channel,
-                                              'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (message.author, score, dscore, bet))
-                    winnings = -bet
-                    add_money(message.author, winnings)
-                    return
-            return
+    pscore = 0
+    dscore = 0
+    stay = False
+    dscore = await dealhand(message, dscore, firstround=True, player=False, dealer=True)
+    pscore = await dealhand(message, pscore, firstround=True)
+    while pscore < 22:
+        pscore, stay = await getresponse(message, pscore, stay)
+        print(pscore)
+        if stay is True or pscore == 21:
+            break
+    if pscore > 21:
+        await sleep(0.2)
+        bjlist.remove(message.author)
+        winnings = -bet
+        add_money(message.author, winnings)
+        await client.send_message(message.channel,
+                                  'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
+                                  message.author, pscore, bet))
+        return
+    while dscore < 17:
+        await sleep(0.2)
+        dscore = await dealhand(message, dscore, player=False, dealer=True)
+    bjlist.remove(message.author)
+    if dscore > 21:
+        await sleep(0.2)
+        winnings = bet
+        add_money(message.author, winnings)
+        await client.send_message(message.channel,
+                                  'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (
+                                  message.author, pscore, dscore, bet))
+        return
+    if dscore > pscore:
+        await sleep(0.2)
+        winnings = -bet
+        add_money(message.author, winnings)
+        await client.send_message(message.channel,
+                                  'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (
+                                  message.author, pscore, dscore, bet))
+        return
+    if pscore > dscore:
+        await sleep(0.2)
+        winnings = bet
+        add_money(message.author, winnings)
+        await client.send_message(message.channel,
+                                  'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (
+                                  message.author, pscore, dscore, bet))
+    if pscore == dscore:
+        await sleep(0.2)
+        await client.send_message(message.channel,
+                                  'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (
+                                  message.author, pscore, dscore, bet))
+        return
 
 # Function to lookup the money and create a top 5 users.
 async def cmd_leader(message, _):
@@ -540,10 +527,11 @@ async def cmd_wolframalpha(message, query):
         await client.send_message(message.channel, 'I don\'t know how to answer that')
 
 async def cmd_version(message, args):
-    # todo: Make this function update automatically with some sort of github api..
+    # todo: Make this function update automatically with some sort of github api.. Version
+    # number should be commits divided by 100.
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.85",
-        "Changelog: Max bet in blackjack is now unlimited, but only 1000 in slots. Added !clearbot, which deletes 50 of bot messages.",
+        "Current version of the bot: 0.86",
+        "Changelog: Blackjack has been redone",
     ]))
 
 async def cmd_pickone(message, args):
