@@ -542,7 +542,7 @@ async def cmd_wolframalpha(message, query):
 async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api..
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.74b",
+        "Current version of the bot: 0.85",
         "Changelog: Max bet in blackjack is now unlimited, but only 1000 in slots. Added !clearbot, which deletes 50 of bot messages.",
     ]))
 
