@@ -70,7 +70,7 @@ SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
 bjlist = []
 cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
-
+doublelist = []
 SLOT_PATTERN = [
     emoji.FOUR_LEAF_CLOVER,
     emoji.FOUR_LEAF_CLOVER,
@@ -246,10 +246,11 @@ async def cmd_spank(message, target_user):
     await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
 
 async def cmd_coin(message, _):
-    outcome = random.choice(["Heads", "Tails"])
+    coin = random.choice(["Heads", "Tails"])
     await client.send_message(message.channel, "Just a moment, flipping the coin...")
     await sleep(.5)
-    await client.send_message(message.channel, "The coin lands on: %s" % outcome)
+    await client.send_message(message.channel, "The coin lands on: %s" % coin)
+    return coin
 
 async def cmd_help(message, _):
     await client.send_message(message.channel, 'https://github.com/Thomaxius/lemon_bot_discord')
@@ -275,17 +276,17 @@ async def cmd_clearbot(message, _):
 
 # Function to play the slots
 async def cmd_slots(message, _):
+    player = message.author
     wheel_list = []
     results_dict = {}
     count = 1
     winnings = 0
-
-    bet = get_bet(message.author)
+    bet = get_bet(player)
     if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
-    balance = get_balance(message.author)
+    balance = get_balance(player)
     if balance == 0:
         await client.send_message(message.channel, 'You need to run the !loan command.')
         return
@@ -299,6 +300,12 @@ async def cmd_slots(message, _):
         await client.send_message(message.channel,
                                        'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
+    if player not in doublelist:
+        doublelist.append(player)
+    else:
+        await client.send_message(message.channel, 'Cannot play: You have an unfinished game')
+        return
+    add_money(player, -bet)
     while count <= 4:
         wheel_pick = random.choice(SLOT_PATTERN)
         wheel_list.append(wheel_pick)
@@ -341,15 +348,54 @@ async def cmd_slots(message, _):
             spam = 0
             while spam > 10:
                 await client.send_message(message.channel,
-                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (message.author, winnings))
+                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player, winnings))
                 await sleep(1)
                 spam =+ 1
-        else:
-            winnings = -bet
-    wheel_payload = '%s Bet: $%s --> | ' % (message.author, bet) + ' - '.join(
+    wheel_payload = '%s Bet: $%s --> | ' % (player, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
-    add_money(message.author, winnings)
+    while winnings > 0 and player in doublelist:
+        doubletimes = +1
+        if doubletimes == 5:
+            await client.send_message(message.channel,
+                                      'You have reached the doubling limit! You won %s' % (winnings))
+            doublelist.remove(player)
+            break
+        await client.send_message(message.channel,
+                                  'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
+        winnings = await askifdouble(message, winnings)
+    if winnings > 0:
+        add_money(player, winnings)
+    if player in doublelist:
+        doublelist.remove(player)
+
+async def askifdouble(message, winnings):
+    answer = await client.wait_for_message(timeout=15, author=message.author)
+    if answer and answer.content.lower() == '!double':
+        await client.send_message(message.channel,
+                                  "Type 'heads' or 'tails'")
+        answer = await client.wait_for_message(timeout=25, author=message.author)
+        if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
+            coin = await cmd_coin(message, winnings)
+            if coin.lower() == answer.content.lower():
+                winnings *= 2
+                await client.send_message(message.channel,
+                                          "You win! %s" % winnings)
+                return winnings
+            else:
+                await client.send_message(message.channel,
+                                          "You lose!")
+                doublelist.remove(message.author)
+                winnings = 0
+                return winnings
+    elif answer is None or answer.content.lower() == '!take': #I'm tired and cannot think of any other way. Just inputting anything to stay sounds a bit messy.
+        doublelist.remove(message.author)
+        await client.send_message(message.channel,
+                                  "You took the money (%s)" % winnings)
+    else:
+        return winnings
+
+
 
 # Function to set a users bet.
 async def cmd_bet(message, amount):
@@ -424,7 +470,7 @@ async def dealhand(message, score, firstround=False, player=True, dealer=False):
                                           "DEALER: %s: Dealer's card is: %s, total %s" % (message.author,card1, score))
             return score
 
-async def getresponse(message, score, stay):
+async def getresponse(message, score):
     answer = await client.wait_for_message(timeout=25, author=message.author)
     if answer and answer.content.lower() == '!hitme':
         score = await dealhand(message, score)
@@ -433,7 +479,8 @@ async def getresponse(message, score, stay):
     elif answer is None or answer.content.lower() == '!stay':
         stay = True
         return score, stay
-
+    stay = False
+    return score, stay
 
 
 async def cmd_blackjack(message, _):
@@ -459,12 +506,10 @@ async def cmd_blackjack(message, _):
     bjlist.append(message.author)
     pscore = 0
     dscore = 0
-    stay = False
     dscore = await dealhand(message, dscore, firstround=True, player=False, dealer=True)
     pscore = await dealhand(message, pscore, firstround=True)
     while pscore < 22:
-        pscore, stay = await getresponse(message, pscore, stay)
-        print(pscore)
+        pscore, stay = await getresponse(message, pscore)
         if stay is True or pscore == 21:
             break
     if pscore > 21:
