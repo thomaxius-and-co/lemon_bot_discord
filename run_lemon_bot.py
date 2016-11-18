@@ -369,12 +369,15 @@ async def cmd_slots(message, _):
     if player in doublelist:
         doublelist.remove(player)
 
+def check(message):
+    return message.author == message.author
+
 async def askifdouble(message, winnings):
-    answer = await client.wait_for_message(timeout=15, author=message.author)
+    answer = await client.wait_for_message(timeout=15, author=message.author, check=check)
     if answer and answer.content.lower() == '!double':
         await client.send_message(message.channel,
                                   "Type 'heads' or 'tails'")
-        answer = await client.wait_for_message(timeout=25, author=message.author)
+        answer = await client.wait_for_message(timeout=25, author=message.author, check=check)
         if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
             coin = await cmd_coin(message, winnings)
             if coin.lower() == answer.content.lower():
@@ -392,6 +395,7 @@ async def askifdouble(message, winnings):
         doublelist.remove(message.author)
         await client.send_message(message.channel,
                                   "You took the money (%s)" % winnings)
+        return winnings
     else:
         return winnings
 
@@ -471,7 +475,7 @@ async def dealhand(message, score, firstround=False, player=True, dealer=False):
             return score
 
 async def getresponse(message, score):
-    answer = await client.wait_for_message(timeout=25, author=message.author)
+    answer = await client.wait_for_message(timeout=25, author=message.author, check=check)
     if answer and answer.content.lower() == '!hitme':
         score = await dealhand(message, score)
         stay = False
@@ -579,10 +583,10 @@ async def cmd_wolframalpha(message, query):
 
 async def cmd_version(message, args):
     # todo: Make this function update automatically with some sort of github api.. Version
-    # number should be commits divided by 100.
+    # number should be commits divided by 1000.
     await client.send_message(message.channel, "\n".join([
-        "Current version of the bot: 0.87",
-        "Changelog: Blackjack has been redone",
+        "Current version of the bot: 0.08",
+        "Changelog: Added doubling to slots (very early version), un-retarded blackjack some more.",
     ]))
 
 async def cmd_pickone(message, args):
