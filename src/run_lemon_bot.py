@@ -68,6 +68,11 @@ EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
 
 SPANK_BANK = ['spanked', 'clobbered', 'paddled', 'whipped', 'punished',
               'caned', 'thrashed', 'smacked']
+
+BOT_ANSWERS = ["My choice is:", "I'll choose:", "I'm going with:", "The right choice is definately:",
+               "If I had to choose, I'd go with:",
+               "This one is obvious. It is:", "This one is easy:", "Stupid question. It's:", "The correct choice is:",
+               "Hmm. I'd go with:", "Good question. My choice is:"]
 bjlist = []
 cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
 SLOT_PATTERN = [
@@ -595,8 +600,9 @@ async def cmd_pickone(message, args):
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by a comma, for example !pickone pizza, burger.')
         return
+    jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
-    await client.send_message(message.channel, '%s' % choice)
+    await client.send_message(message.channel, '%s %s' % (jibbajabba, choice))
 
 commands = {
     'enchant': cmd_enchant,
