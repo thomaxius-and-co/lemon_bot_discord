@@ -595,7 +595,7 @@ async def cmd_pickone(message, args):
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by a comma, for example !pickone pizza, burger.')
         return
-    choices = args.split(',')
+    choices = args.split(",")
     if len(choices) < 2:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by a comma, for example !pickone pizza, burger.')
