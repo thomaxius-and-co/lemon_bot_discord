@@ -1,0 +1,14 @@
+dependencies:
+  override:
+    - pip install ansible==2.2.0.0
+    - pip install dopy==0.3.7
+
+test:
+  override:
+    - ./test.sh
+
+deployment:
+  production:
+    branch: master
+    commands:
+      - ./deploy.sh
