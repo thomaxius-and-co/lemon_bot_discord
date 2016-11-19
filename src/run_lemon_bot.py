@@ -599,7 +599,7 @@ async def cmd_pickone(message, args):
         return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
-    await client.send_message(message.channel, '%s %s' % (jibbajabba, choice))
+    await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
 commands = {
     'enchant': cmd_enchant,
