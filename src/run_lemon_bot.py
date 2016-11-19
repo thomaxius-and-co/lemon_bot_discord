@@ -53,9 +53,6 @@ client_secret = os.environ['BING_SECRET']
 BANK_PATH = './bot_files/lemon_bot_bank.pkl'
 BET_PATH = './bot_files/lemon_bot_bets.pkl'
 
-with suppress(FileNotFoundError):
-    os.remove('./bot_files/lemon_bot_accnum.pkl')
-
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
