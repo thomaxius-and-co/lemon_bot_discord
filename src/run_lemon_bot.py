@@ -39,6 +39,7 @@ from lxml.html.soupparser import fromstring
 import wolframalpha
 import threading
 import emoji
+import osu
 
 # Disables the SSL warning, that is printed to the console.
 import requests.packages.urllib3
@@ -647,6 +648,22 @@ async def cmd_pickone(message, args):
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
+async def cmd_osu(message, user):
+    results = osu.user(user)
+    if len(results) == 0:
+        await client.send_message(message.channel, "User %s not found" % user)
+        return
+
+    data = results[0]
+    username = data["username"]
+    rank = int(data["pp_rank"])
+    pp = round(float(data["pp_raw"]))
+    acc = float(data["accuracy"])
+
+    reply = "%s (#%d) has %d pp and %.2f%% acc" % (username, rank, pp, acc)
+    await client.send_message(message.channel, reply)
+
+
 commands = {
     'enchant': cmd_enchant,
     'youtube': cmd_youtube,
@@ -671,6 +688,7 @@ commands = {
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
+    'osu': cmd_osu,
 }
 
 async def think(message):
