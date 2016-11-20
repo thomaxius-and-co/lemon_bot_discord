@@ -24,26 +24,21 @@ import time
 import json
 import discord
 import random
-import urllib3
-import urllib.request
-import requests
+import urllib
 import pickle
 import cleverbot
-import urllib.parse
 from contextlib import suppress
 import enchanting_chances as en
 from BingTranslator import Translator
 from bs4 import BeautifulSoup
 from asyncio import sleep
+import aiohttp
 from lxml.html.soupparser import fromstring
 import wolframalpha
 import threading
 import emoji
 import osu
 
-# Disables the SSL warning, that is printed to the console.
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']
@@ -176,13 +171,13 @@ async def cmd_youtube(message, text_to_search):
     print('Searching YouTube for: %s' % text_to_search)
     query = urllib.parse.quote(text_to_search)
     url = "https://www.youtube.com/results?search_query=" + query
-    response = urllib.request.urlopen(url)
-    html = response.read()
-    soup = BeautifulSoup(html, "lxml")
-    for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
-        link_list.append('https://www.youtube.com' + vid['href'])
-    random_link = random.choice(link_list)
-    await client.send_message(message.channel, random_link)
+    async with aiohttp.get(url) as r:
+        html = await r.text()
+        soup = BeautifulSoup(html, "lxml")
+        for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
+            link_list.append('https://www.youtube.com' + vid['href'])
+        random_link = random.choice(link_list)
+        await client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
 async def cmd_roll(message, _):
@@ -201,14 +196,14 @@ async def cmd_weather(message, zip_code):
         await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
-    r = requests.get(link)
-    data = json.loads(r.text)
-    location = data['name']
-    F = data['main']['temp'] * 1.8 - 459.67
-    C = (F - 32) * 5 / 9
-    status = data['weather'][0]['description']
-    payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-    await client.send_message(message.channel, payload)
+    async with aiohttp.get(link) as r:
+        data = await r.json()
+        location = data['name']
+        F = data['main']['temp'] * 1.8 - 459.67
+        C = (F - 32) * 5 / 9
+        status = data['weather'][0]['description']
+        payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
+        await client.send_message(message.channel, payload)
 
 # Simple math command.
 async def cmd_math(message, arg):
@@ -648,7 +643,7 @@ async def cmd_pickone(message, args):
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
 async def cmd_osu(message, user):
-    results = osu.user(user)
+    results = await osu.user(user)
     if len(results) == 0:
         await client.send_message(message.channel, "User %s not found" % user)
         return
