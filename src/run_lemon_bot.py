@@ -432,29 +432,38 @@ async def cmd_bank(message, _):
         await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
 async def getcardrank(card, score):
-    if card in ['Q', 'K', 'J']:
+    letter = card
+    if card == 'K':
         rank = 10
-        return rank
+        return rank, letter
+    if card == 'J':
+        rank = 10
+        return rank, letter
+    if card == 'Q':
+        rank = 10
+        return rank, letter
     if card == 'A' and score > 10:
         rank = 1
-        return rank
+        return rank, letter
     if card == 'A' and score < 11:
         rank = 11
-        return rank
+        return rank, letter
     else:
         rank = card
-    return int(rank)
+    return int(rank), letter
 
 async def dealcard(cards, score):
     card1 = cards.pop()
-    rank = await getcardrank(card1[0], score)
+    rank, letter = await getcardrank(card1[0], score)
     suit = card1[1]
-    return rank, suit
+    return rank, suit, letter
+
+
 
 async def dealhand(message, score, cards, firstround=False, player=True, dealer=False):
     if player and firstround:
-        card1rank, card1suit = await dealcard(cards, score)
-        card2rank, card2suit = await dealcard(cards, score)
+        card1rank, card1suit, card1letter = await dealcard(cards, score)
+        card2rank, card2suit, card2letter = await dealcard(cards, score)
         score = card1rank + card2rank
         await sleep(0.2)
         await client.send_message(message.channel,
@@ -462,11 +471,11 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                            "%s                     %s\n"
                                            "    %s     and    %s\n"
                                            "        %s                     %s        (%s total) "
-                                           "\n Type !hitme for more cards, !stay to stay and !doubledown for double down." % (message.author, card1rank, card2rank, card1suit, card2suit, card1rank, card2rank, score))
+                                           "\n Type !hitme for more cards, !stay to stay and !doubledown for double down." % (message.author, card1letter, card2letter, card1suit, card2suit, card1letter, card2letter, score))
 
         return score
     if player and not firstround:
-        card1rank, card1suit = await dealcard(cards, score)
+        card1rank, card1suit, card1letter = await dealcard(cards, score)
         score += card1rank
         await sleep(0.2)
         await client.send_message(message.channel,
@@ -475,17 +484,17 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                   "    %s\n"
                                   "        %s       total: %s"
                                   "\n Type !hitme for more cards,  !stay to stay and !doubledown for double down." % (
-                                      card1rank, card1suit, card1rank, score))
+                                      card1letter, card1suit, card1letter, score))
         return score
     if dealer:
-        card1rank, card1suit = await dealcard(cards, score)
+        card1rank, card1suit, card1letter = await dealcard(cards, score)
         if firstround:
             await client.send_message(message.channel,
                                       "DEALER: Dealer's card is:\n"
                                       "%s\n"
                                       "    %s\n"
                                       "        %s" % (
-                                      card1rank, card1suit, card1rank))
+                                          card1letter, card1suit, card1letter))
             return card1rank
         if not firstround:
             score += card1rank
@@ -496,7 +505,7 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                       "    %s\n"
                                       "        %s\n"
                                       "                total: %s" % (
-                                      card1rank, card1suit, card1rank, score))
+                                          card1letter, card1suit, card1letter, score))
             return score
 
 async def getresponse(message, score, cards):
@@ -542,13 +551,13 @@ async def cmd_blackjack(message, _):
     dscore = 0
     dscore = await dealhand(message, dscore, cards, firstround=True, player=False, dealer=True)
     pscore = await dealhand(message, pscore, cards, firstround=True)
-    while pscore < 22:
-        if stay is True or pscore == 21:
+    while True:
+        if stay is True or pscore == 21 or pscore > 21:
             break
+        pscore, stay = await getresponse(message, pscore, cards)
         if stay == 'doubledown':
             bet += bet
             break
-        pscore, stay = await getresponse(message, pscore, cards)
     if pscore > 21:
         await sleep(0.2)
         bjlist.remove(message.author)
