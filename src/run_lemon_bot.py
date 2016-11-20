@@ -482,7 +482,7 @@ async def dealhand(message, score, cards, broke, firstround=False, player=True, 
                                   "DEALER: Your card is: \n"
                                   "%s\n"
                                   "    %s\n"
-                                  "        %s       total: %s"% (
+                                  "         %s       total: %s"% (
                                       card1letter, card1suit, card1letter, score))
         if not broke:
             await client.send_message(message.channel, "Type !hitme for more cards,  !stay to stay and !doubledown for double down.")
@@ -492,7 +492,7 @@ async def dealhand(message, score, cards, broke, firstround=False, player=True, 
         if firstround:
             await client.send_message(message.channel,
                                       "DEALER: Dealer's card is:\n"
-                                      "%s\n"
+                                      " %s\n"
                                       "    %s\n"
                                       "        %s" % (
                                           card1letter, card1suit, card1letter))
@@ -504,7 +504,7 @@ async def dealhand(message, score, cards, broke, firstround=False, player=True, 
                                       "DEALER: Dealer's card is: \n"
                                       "%s\n"
                                       "    %s\n"
-                                      "        %s\n"
+                                      "         %s\n"
                                       "                total: %s" % (
                                           card1letter, card1suit, card1letter, score))
             return score
@@ -642,7 +642,7 @@ async def makedeck(blackjack=True):
         value = 6
     for x in range(0, value):
         for suit in [emoji.SPADES, emoji.HEARTS, emoji.CLUBS, emoji.DIAMONDS]:
-            for rank in ['2', '3', '4', '5', '6', '7', '9', '10', 'J', 'Q', 'K', 'A']:
+            for rank in ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']:
                 cards.append((rank, suit))
     random.shuffle(cards)
     return cards
