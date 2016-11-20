@@ -435,7 +435,7 @@ async def cmd_bank(message, _):
     if balance == 0:
         await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
-def getcardrank(card, score):
+async def getcardrank(card, score):
     if card in ['Q', 'K', 'J']:
         rank = 10
         return rank
@@ -449,17 +449,17 @@ def getcardrank(card, score):
         rank = card
     return int(rank)
 
-def dealcard(cards, score):
+async def dealcard(cards, score):
     card1 = cards.pop()
     print(card1)
-    rank = getcardrank(card1[0], score)
+    rank = await getcardrank(card1[0], score)
     suit = card1[1]
     return rank, suit
 
 async def dealhand(message, score, cards, firstround=False, player=True, dealer=False):
     if player and firstround:
-        card1rank, card1suit = dealcard(cards, score)
-        card2rank, card2suit = dealcard(cards, score)
+        card1rank, card1suit = await dealcard(cards, score)
+        card2rank, card2suit = await dealcard(cards, score)
         score = card1rank + card2rank
         await sleep(0.2)
         await client.send_message(message.channel,
@@ -471,7 +471,7 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
 
         return score
     if player and not firstround:
-        card1rank, card1suit = dealcard(cards, score)
+        card1rank, card1suit = await dealcard(cards, score)
         score += card1rank
         await sleep(0.2)
         await client.send_message(message.channel,
@@ -483,7 +483,7 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                       card1rank, card1suit, card1rank, score))
         return score
     if dealer:
-        card1rank, card1suit = dealcard(cards, score)
+        card1rank, card1suit = await dealcard(cards, score)
         if firstround:
             await client.send_message(message.channel,
                                       "DEALER: Dealer's card is:\n"
@@ -518,7 +518,7 @@ async def getresponse(message, score, cards):
 
 
 async def cmd_blackjack(message, _):
-    cards = makedeck(blackjack=True)
+    cards = await makedeck(blackjack=True)
     if message.author in bjlist:
         await client.send_message(message.channel,
                                   'Cannot play: You have an unfinished game.')
@@ -613,7 +613,7 @@ async def cmd_wolframalpha(message, query):
     except Exception:
         await client.send_message(message.channel, 'I don\'t know how to answer that')
 
-def makedeck(blackjack=True):
+async def makedeck(blackjack=True):
     cards = []
     value = 1
     if blackjack:
