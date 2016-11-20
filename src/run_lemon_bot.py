@@ -452,7 +452,6 @@ async def getcardrank(card, score):
 
 async def dealcard(cards, score):
     card1 = cards.pop()
-    print(card1)
     rank = await getcardrank(card1[0], score)
     suit = card1[1]
     return rank, suit
@@ -620,7 +619,7 @@ async def makedeck(blackjack=True):
     if blackjack:
         value = 6
     for x in range(0, value):
-        for suit in [':spades:', ':hearts:', ':clubs:', ':diamonds:']:
+        for suit in [emoji.SPADES, emoji.HEARTS, emoji.CLUBS, emoji.DIAMONDS]:
             for rank in ['2', '3', '4', '5', '6', '7', '9', '10', 'J', 'Q', 'K', 'A']:
                 cards.append((rank, suit))
     random.shuffle(cards)
