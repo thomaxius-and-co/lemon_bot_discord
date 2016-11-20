@@ -89,6 +89,11 @@
       template:
         src: templates/systemd.service.j2
         dest: "/etc/systemd/system/{{ app_name }}.service"
+      register: unit_file
+
+    - name: Reload units
+      shell: systemctl daemon-reload
+      when: unit_file.changed
 
     - name: Restart app
       service:
