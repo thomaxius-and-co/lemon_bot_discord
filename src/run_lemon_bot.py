@@ -462,7 +462,7 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                            "%s                     %s\n"
                                            "    %s     and    %s\n"
                                            "        %s                     %s        (%s total) "
-                                           "\n Type !hitme for more cards or !stay to stay" % (message.author, card1rank, card2rank, card1suit, card2suit, card1rank, card2rank, score))
+                                           "\n Type !hitme for more cards, !stay to stay and !doubledown for double down." % (message.author, card1rank, card2rank, card1suit, card2suit, card1rank, card2rank, score))
 
         return score
     if player and not firstround:
@@ -474,7 +474,7 @@ async def dealhand(message, score, cards, firstround=False, player=True, dealer=
                                   "%s\n"
                                   "    %s\n"
                                   "        %s       total: %s"
-                                  "\n Type !hitme for more cards or !stay to stay" % (
+                                  "\n Type !hitme for more cards,  !stay to stay and !doubledown for double down." % (
                                       card1rank, card1suit, card1rank, score))
         return score
     if dealer:
@@ -505,6 +505,10 @@ async def getresponse(message, score, cards):
         score = await dealhand(message, score, cards)
         stay = False
         return score, stay
+    if answer and answer.content.lower() == '!doubledown':
+        stay = 'doubledown'
+        score = await dealhand(message, score, cards)
+        return score, stay
     elif answer is None or answer.content.lower() == '!stay':
         stay = True
         return score, stay
@@ -532,15 +536,19 @@ async def cmd_blackjack(message, _):
                                        'Your balance of $%s is to low, lower your bet amount of $%s' % (
                                            balance, bet))
         return
+    stay = False
     bjlist.append(message.author)
     pscore = 0
     dscore = 0
     dscore = await dealhand(message, dscore, cards, firstround=True, player=False, dealer=True)
     pscore = await dealhand(message, pscore, cards, firstround=True)
     while pscore < 22:
-        pscore, stay = await getresponse(message, pscore, cards)
         if stay is True or pscore == 21:
             break
+        if stay == 'doubledown':
+            bet += bet
+            break
+        pscore, stay = await getresponse(message, pscore, cards)
     if pscore > 21:
         await sleep(0.2)
         bjlist.remove(message.author)
