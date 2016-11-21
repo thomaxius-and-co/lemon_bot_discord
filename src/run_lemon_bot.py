@@ -337,12 +337,10 @@ async def cmd_slots(message, _):
             break
         if k == emoji.POOP and v == 4:
             winnings = bet * 10000
-            spam = 0
-            while spam > 10:
+            for spam in range (0, 10):
                 await client.send_message(message.channel,
                                           'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player, winnings))
                 await sleep(1)
-                spam =+ 1
     wheel_payload = '%s Bet: $%s --> | ' % (player, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
@@ -350,14 +348,30 @@ async def cmd_slots(message, _):
         doubletimes = +1
         if doubletimes == 5:
             await client.send_message(message.channel,
-                                      'You have reached the doubling limit! You won $%s' % (winnings))
+                                      'You have reached the doubling limit! You won %s' % (winnings))
+            stay = True
             break
         await client.send_message(message.channel,
-                                  'You won $%s! Would you like to double? (Type !double or !take)' % (winnings))
+                                  'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
         winnings, stay = await askifdouble(message, winnings)
     if winnings > 0:
         add_money(player, winnings)
 
+async def askifheadsortails(message, winnings):
+    while True:
+        answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
+        if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
+            coin = await cmd_coin(message, winnings)
+            if coin.lower() == answer.content.lower():
+                winnings *= 2
+                await client.send_message(message.channel,
+                                          "You win! $%s" % winnings)
+                return winnings
+            else:
+                await client.send_message(message.channel,
+                                          "You lose!")
+                winnings = 0
+                return winnings
 def check(message):
     return message.author == message.author
 
@@ -368,31 +382,32 @@ async def askifdouble(message, winnings):
     if answer and answer.content.lower() == '!double':
         await client.send_message(message.channel,
                                   "Type 'heads' or 'tails'")
-        answer = await client.wait_for_message(timeout=25, author=player, check=check)
-        if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
-            coin = await cmd_coin(message, winnings)
-            if coin.lower() == answer.content.lower():
-                winnings *= 2
-                await client.send_message(message.channel,
-                                          "You win! %s" % winnings)
-                stay = False
-                return winnings, stay
-            else:
-                await client.send_message(message.channel,
-                                          "You lose!")
-                winnings = 0
-                return winnings, stay
-    if answer is None or answer.content.lower() == '!take' or answer.content.lower() == '!slots': #I'm tired and cannot think of any other way. Just inputting anything to stay sounds a bit messy.
+        winnings = await askifheadsortails(message, winnings)
+        if winnings > 0:
+            stay = False
+            return winnings, stay
+    elif answer is None or answer.content.lower() == '!slots' or answer.content.lower() == '!take':
         await client.send_message(message.channel,
                                   "You took the money ($%s)" % winnings)
         return winnings, stay
-
-    else:
-        stay = False
-        return winnings, stay
+    return winnings, stay
 
 
-
+async def cmd_randomquote(themessage, _):
+    await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
+    await client.send_typing(themessage.channel)
+    hugelist = []
+    async for message in client.logs_from(themessage.channel, limit=10000):
+        if not message.author.bot:
+            if len(message.content) > 10:
+                if not message.content.startswith('!'):
+                    hugelist.append(message)
+    message = random.choice(hugelist)
+    msg = message.content
+    author = message.author
+    timestamp = message.timestamp
+    reply = '%s, -- %s, %s' % (msg, author, timestamp)
+    await client.send_message(message.channel, reply)
 # Function to set a users bet.
 async def cmd_bet(message, amount):
     try:
@@ -733,6 +748,7 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'osu': cmd_osu,
+    'randomquote': cmd_randomquote
 }
 
 async def think(message):
