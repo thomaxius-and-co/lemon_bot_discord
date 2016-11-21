@@ -350,11 +350,10 @@ async def cmd_slots(message, _):
         doubletimes = +1
         if doubletimes == 5:
             await client.send_message(message.channel,
-                                      'You have reached the doubling limit! You won %s' % (winnings))
-            stay = True
+                                      'You have reached the doubling limit! You won $%s' % (winnings))
             break
         await client.send_message(message.channel,
-                                  'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
+                                  'You won $%s! Would you like to double? (Type !double or !take)' % (winnings))
         winnings, stay = await askifdouble(message, winnings)
     if winnings > 0:
         add_money(player, winnings)
@@ -383,11 +382,13 @@ async def askifdouble(message, winnings):
                                           "You lose!")
                 winnings = 0
                 return winnings, stay
-    elif answer is None or answer.content.lower() == '!take' or answer.content.lower() == '!slots': #I'm tired and cannot think of any other way. Just inputting anything to stay sounds a bit messy.
+    if answer is None or answer.content.lower() == '!take' or answer.content.lower() == '!slots': #I'm tired and cannot think of any other way. Just inputting anything to stay sounds a bit messy.
         await client.send_message(message.channel,
-                                  "You took the money (%s)" % winnings)
+                                  "You took the money ($%s)" % winnings)
         return winnings, stay
+
     else:
+        stay = False
         return winnings, stay
 
 
