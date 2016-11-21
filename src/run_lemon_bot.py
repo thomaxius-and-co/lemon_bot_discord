@@ -459,12 +459,10 @@ async def dealcard(cards, score):
     suit = card1[1]
     return rank, suit, letter
 
-
-
 async def dealhand(message, score, cards, broke, firstround=False, player=True, dealer=False):
     if player and firstround:
         card1rank, card1suit, card1letter = await dealcard(cards, score)
-        card2rank, card2suit, card2letter = await dealcard(cards, score)
+        card2rank, card2suit, card2letter = await dealcard(cards, card1rank)
         score = card1rank + card2rank
         await sleep(0.2)
         await client.send_message(message.channel,
