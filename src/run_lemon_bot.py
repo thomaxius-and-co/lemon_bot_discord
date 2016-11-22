@@ -399,19 +399,18 @@ async def getrandomdate(date2):
     date2 = date2
     diff = random.randrange(int(date1) - int(date2))
     print(diff)
-    fromdate = datetime.date.fromordinal(date2 + diff)
-    todate = datetime.date.fromordinal(date2 + 5)
-    print(date1)
+    fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff), datetime.datetime.min.time())
+    todate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff + 5), datetime.datetime.min.time())
+    print(todate, fromdate)
     return fromdate, todate
 
 async def cmd_randomquote(themessage, _):
-    date = themessage.server.created_at.toordinal()
+    date = themessage.channel.created_at.toordinal()
     date, date1 = await getrandomdate(date)
     await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     await client.send_typing(themessage.channel)
     hugelist = []
-    print('message should be from between %s and %s' % (date, date1))
-    async for message in client.logs_from(themessage.channel, limit=100, after=date, before=date1):
+    async for message in client.logs_from(themessage.channel, limit=10, after=date, before=date1):
         if not message.author.bot:
             if len(message.content) > 10:
                 if not message.content.startswith('!'):
