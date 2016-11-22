@@ -38,6 +38,7 @@ import wolframalpha
 import threading
 import emoji
 import osu
+import datetime
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -393,11 +394,24 @@ async def askifdouble(message, winnings):
     return winnings, stay
 
 
+async def getrandomdate(date2):
+    date1 = datetime.date.today().toordinal()
+    date2 = date2
+    diff = random.randrange(int(date1) - int(date2))
+    print(diff)
+    fromdate = datetime.date.fromordinal(date2 + diff)
+    todate = datetime.date.fromordinal(date2 + 5)
+    print(date1)
+    return fromdate, todate
+
 async def cmd_randomquote(themessage, _):
+    date = themessage.server.created_at.toordinal()
+    date, date1 = await getrandomdate(date)
     await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     await client.send_typing(themessage.channel)
     hugelist = []
-    async for message in client.logs_from(themessage.channel, limit=10000):
+    print('message should be from between %s and %s' % (date, date1))
+    async for message in client.logs_from(themessage.channel, limit=100, after=date, before=date1):
         if not message.author.bot:
             if len(message.content) > 10:
                 if not message.content.startswith('!'):
