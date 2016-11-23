@@ -398,27 +398,27 @@ async def getrandomdate(date2):
     date1 = datetime.date.today().toordinal()
     date2 = date2
     diff = random.randrange(int(date1) - int(date2))
-    print(diff)
     fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff), datetime.datetime.min.time())
-    todate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff + 5), datetime.datetime.min.time())
-    print(todate, fromdate)
-    return fromdate, todate
+    return fromdate
 
 async def cmd_randomquote(themessage, _):
-    date = themessage.channel.created_at.toordinal()
-    date, date1 = await getrandomdate(date)
     await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     await client.send_typing(themessage.channel)
     hugelist = []
-    async for message in client.logs_from(themessage.channel, limit=10, after=date, before=date1):
-        if not message.author.bot:
-            if len(message.content) > 10:
-                if not message.content.startswith('!'):
-                    hugelist.append(message)
+    for x in range(10):
+        date = await getrandomdate(themessage.channel.created_at.toordinal())
+        async for message in client.logs_from(themessage.channel, limit=10, after=date):
+            if not message.author.bot:
+                if len(message.content) > 10:
+                    if not message.content.startswith('!'):
+                        hugelist.append(message)
+    if len(hugelist) == 0:
+        await client.send_message(themessage.channel, 'Sorry, no quotes could be found')
+        return
     message = random.choice(hugelist)
-    msg = message.content
+    msg = message.content.replace('@', '@ ')
     author = message.author
-    timestamp = message.timestamp
+    timestamp = message.timestamp.replace(tzinfo=None)
     reply = '%s, -- %s, %s' % (msg, author, timestamp)
     await client.send_message(message.channel, reply)
 # Function to set a users bet.
