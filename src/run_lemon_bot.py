@@ -404,6 +404,13 @@ async def getrandomdate(date2):
     fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff), datetime.datetime.min.time())
     return fromdate
 
+async def sanitize(msg, id):
+    while id:
+        user = await client.get_user_info(id[0])
+        msg = msg.replace(id[0], user.name)
+        id.remove(id[0])
+    return msg.replace('<','').replace('>','')
+
 async def cmd_randomquote(themessage, input):
     channel = themessage.channel
     if input:
@@ -417,7 +424,6 @@ async def cmd_randomquote(themessage, input):
                                                               "or you lack the permissions for that channel." % input)
                 return
     reply_message = await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
-    await client.send_typing(themessage.channel)
     hugelist = []
     for x in range(10):
         date = await getrandomdate(themessage.channel.created_at.toordinal())
@@ -433,10 +439,12 @@ async def cmd_randomquote(themessage, input):
         await client.edit_message(reply_message, msg)
         return
     message = random.choice(hugelist)
-    msg = message.content.replace('@', '@ ')
+    msg = message.content
+    id = message.raw_mentions
+    if id:
+        msg = await sanitize(msg, id) #made a separate function for this cause henry likes separate functions
     author = message.author
-    timestamp = message.timestamp.replace(tzinfo=None)
-    reply = '%s, -- %s, %s' % (msg, author, timestamp)
+    reply = '%s, -- %s, %s' % (msg, author, message.timestamp.replace(tzinfo=None))
     await client.edit_message(reply_message, reply)
 
 # Function to set a users bet.
