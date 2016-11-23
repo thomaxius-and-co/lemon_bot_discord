@@ -250,7 +250,7 @@ async def cmd_coin(message, _):
     return coin
 
 async def cmd_help(message, _):
-    await client.send_message(message.channel, 'https://github.com/Thomaxius/lemon_bot_discord')
+    await client.send_message(message.channel, 'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Function to clear a chat Channel.
 async def cmd_clear(message, _):
