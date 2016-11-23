@@ -437,7 +437,7 @@ async def cmd_randomquote(themessage, input):
     author = message.author
     timestamp = message.timestamp.replace(tzinfo=None)
     reply = '%s, -- %s, %s' % (msg, author, timestamp)
-    await client.send_message(message.channel, reply)
+    await client.send_message(themessage.channel, reply)
 
 # Function to set a users bet.
 async def cmd_bet(message, amount):
