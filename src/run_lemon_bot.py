@@ -416,7 +416,7 @@ async def cmd_randomquote(themessage, input):
                 await client.send_message(themessage.channel, "Sorry, channel not found: %s, "
                                                               "or you lack the permissions for that channel." % input)
                 return
-    await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
+    reply_message = await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     await client.send_typing(themessage.channel)
     hugelist = []
     for x in range(10):
@@ -430,14 +430,14 @@ async def cmd_randomquote(themessage, input):
         msg = 'Sorry, no quotes could be found'
         if input:
             msg = ('Sorry, no quotes could be found from channel: %s' % input)
-        await client.send_message(themessage.channel, msg)
+        await client.edit_message(reply_message, msg)
         return
     message = random.choice(hugelist)
     msg = message.content.replace('@', '@ ')
     author = message.author
     timestamp = message.timestamp.replace(tzinfo=None)
     reply = '%s, -- %s, %s' % (msg, author, timestamp)
-    await client.send_message(themessage.channel, reply)
+    await client.edit_message(reply_message, reply)
 
 # Function to set a users bet.
 async def cmd_bet(message, amount):
