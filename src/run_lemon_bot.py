@@ -764,17 +764,11 @@ commands = {
     'randomquote': cmd_randomquote
 }
 
-async def think(message):
-    if emoji.THINKING in message.content:
-        await client.add_reaction(message, emoji.THINKING)
-
 # Dispacther for messages from the users.
 @client.event
 async def on_message(message):
     if message.author.bot:
         return
-
-    await think(message)
 
     cmd, arg = parse_command(message.content)
     if not cmd:
