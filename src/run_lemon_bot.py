@@ -397,23 +397,40 @@ async def askifdouble(message, winnings):
 async def getrandomdate(date2):
     date1 = datetime.date.today().toordinal()
     date2 = date2
+    if date1 == date2:
+        fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2), datetime.datetime.min.time())
+        return fromdate
     diff = random.randrange(int(date1) - int(date2))
     fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff), datetime.datetime.min.time())
     return fromdate
 
-async def cmd_randomquote(themessage, _):
+async def cmd_randomquote(themessage, input):
+    channel = themessage.channel
+    if input:
+        for server in client.servers:
+            for channel in server.channels:
+                if channel.name == input:
+                    channel = channel
+                    break
+            else:
+                await client.send_message(themessage.channel, "Sorry, channel not found: %s, "
+                                                              "or you lack the permissions for that channel." % input)
+                return
     await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     await client.send_typing(themessage.channel)
     hugelist = []
     for x in range(10):
         date = await getrandomdate(themessage.channel.created_at.toordinal())
-        async for message in client.logs_from(themessage.channel, limit=10, after=date):
+        async for message in client.logs_from(channel, limit=10, after=date):
             if not message.author.bot:
                 if len(message.content) > 10:
                     if not message.content.startswith('!'):
                         hugelist.append(message)
     if len(hugelist) == 0:
-        await client.send_message(themessage.channel, 'Sorry, no quotes could be found')
+        msg = 'Sorry, no quotes could be found'
+        if input:
+            msg = ('Sorry, no quotes could be found from channel: %s' % input)
+        await client.send_message(themessage.channel, msg)
         return
     message = random.choice(hugelist)
     msg = message.content.replace('@', '@ ')
@@ -421,6 +438,7 @@ async def cmd_randomquote(themessage, _):
     timestamp = message.timestamp.replace(tzinfo=None)
     reply = '%s, -- %s, %s' % (msg, author, timestamp)
     await client.send_message(message.channel, reply)
+
 # Function to set a users bet.
 async def cmd_bet(message, amount):
     try:
