@@ -520,6 +520,8 @@ async def domessage(message, card1suit, card1letter, card2suit, card2letter, sco
             msg = 'Type !hitme for more cards and !stay to stay, or !doubledown for double down.'
             if broke:
                 msg = 'Type !hitme for more cards or !stay to stay.'
+            if score == 21:
+                msg = 'Blackjack!'
             await client.send_message(message.channel,
                                       "DEALER: %s: Your cards: \n"
                                       "%s                     %s\n"
@@ -611,6 +613,7 @@ async def getresponse(message, score, cards, broke):
 
 async def cmd_blackjack(message, _):
     broke = False
+    blackjack = False
     cards = await makedeck(blackjack=True)
     if message.author in bjlist:
         await client.send_message(message.channel,
@@ -638,7 +641,10 @@ async def cmd_blackjack(message, _):
     dscore = 0
     dscore = await dealhand(message, dscore, cards, broke, player=False)
     pscore = await dealhand(message, pscore, cards, broke)
-    while True:
+    if pscore == 21:
+        blackjack = True
+        bet *= 1.5
+    while not blackjack:
         if stay is True or pscore == 21 or pscore > 21:
             break
         pscore, stay = await getresponse(message, pscore, cards, broke)
