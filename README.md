@@ -21,7 +21,18 @@
 	* Slot Machine
 	* Blackjack
 
-	
+## Running locally with Vagrant
+
+Configure your secrets in `ansible/local-secrets.yml`. Use the
+`ansible/local-secrets.example.yml` as a template.
+
+Start the VM with
+
+    vagrant up
+
+This creates the VM and provisions it using Ansible. To apply local changes
+without recreating the VM you can run `vagrant provision`.
+
 ## Installation
    * Git clone the Repo. 
    	* git clone https://github.com/lemon65/lemon_bot_discord

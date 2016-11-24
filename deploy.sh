@@ -9,4 +9,4 @@ echo $ANSIBLE_VAULT_PASSWORD > vault.pw
 ansible-playbook \
   --vault-password-file=vault.pw \
   --extra-vars=@ansible/secrets.yml \
-  ansible/playbook.yml
+  ansible/deploy.yml
