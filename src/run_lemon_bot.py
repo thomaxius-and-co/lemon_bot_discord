@@ -426,7 +426,7 @@ async def cmd_randomquote(themessage, input):
     reply_message = await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
     hugelist = []
     for x in range(10):
-        date = await getrandomdate(themessage.channel.created_at.toordinal())
+        date = await getrandomdate(channel.created_at.toordinal())
         async for message in client.logs_from(channel, limit=10, after=date):
             if not message.author.bot:
                 if len(message.content) > 10:
