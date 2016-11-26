@@ -351,11 +351,10 @@ async def cmd_slots(message, _):
         if doubletimes == 5:
             await client.send_message(message.channel,
                                       'You have reached the doubling limit! You won %s' % (winnings))
-            stay = True
             break
+        winnings, stay = await askifdouble(message, winnings)
         await client.send_message(message.channel,
                                   'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
-        winnings, stay = await askifdouble(message, winnings)
     if winnings > 0:
         add_money(player, winnings)
 
@@ -493,6 +492,7 @@ async def getcardrank(card, hand, score):
     if card in ['K', 'J', 'Q', '10']:
         rank = 10
     if card == 'A':
+        if score > 10:
             rank = 1
             letter = 'a'
         else:
