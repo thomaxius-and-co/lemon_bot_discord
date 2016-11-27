@@ -451,11 +451,11 @@ async def cmd_randomquote(themessage, input):
 async def cmd_bet(message, amount):
     try:
         amount = int(amount)
-        if amount < 0:
-            await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
+        if amount < 1:
+            await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 2. Example: !bet 5')
             return
     except Exception:
-        await client.send_message(message.channel, 'You need to enter a positive integer, Example: !bet 5')
+        await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 2. Example: !bet 5')
         return
     set_bet(message.author, amount)
     await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
@@ -516,33 +516,33 @@ async def dealcard(cards, hand, nofcards, score):
 async def dealhand(message, score, cards, broke, hand, player=True):
     if score == 0:
         if player:
-            phand, score = await dealcard(cards, hand, 2, score)
+            hand, score = await dealcard(cards, hand, 2, score)
             await sleep(0.2)
-            await domessage(message, phand[1], phand[2], phand[4], phand[5], score, broke, firstround=True)
-            return score, phand
+            await domessage(message, hand[1], hand[2], hand[4], hand[5], score, broke, firstround=True)
+            return score, hand
         else:
-            dhand, score = await dealcard(cards, hand, 1, score)
-            await domessage(message, dhand[1], dhand[2], None, None, score, None, player=False, firstround=True)
-            return dhand[0], dhand
+            hand, score = await dealcard(cards, hand, 2, score)
+            await domessage(message, hand[1], hand[2], None, None, score, None, player=False, firstround=True)
+            return hand[0], hand
     else:
         if player:
-            phand, score = await dealcard(cards, hand, 1, score)
+            hand, score = await dealcard(cards, hand, 1, score)
             await sleep(0.2)
-            await domessage(message, phand[-2], phand[-1], None, None, score, broke)
-            return score, phand
+            await domessage(message, hand[-2], hand[-1], None, None, score, broke)
+            return score, hand
         else:
-            dhand, score = await dealcard(cards, hand, 1, score)
+            hand, score = await dealcard(cards, hand, 1, score)
             await sleep(0.2)
-            await domessage(message, dhand[-2], dhand[-1], None, None, score, None, player=False)
-            return score, dhand
+            await domessage(message, hand[-2], hand[-1], None, None, score, None, player=False)
+            return score, hand
 
 async def domessage(message, card1suit, card1letter, card2suit, card2letter, score, broke,
                     firstround=False, player=True):
     if firstround:
         if player:
-            msg = 'Type !hitme for more cards and !stay to stay, or !doubledown for double down.'
+            msg = 'Available options: !hitme, !stay, !surrender, !doubledown'
             if broke:
-                msg = 'Type !hitme for more cards or !stay to stay.'
+                msg = 'Available options: !hitme, !stay, !surrender'
             if score == 21:
                 msg = 'Blackjack!'
             await client.send_message(message.channel,
@@ -562,7 +562,7 @@ async def domessage(message, card1suit, card1letter, card2suit, card2letter, sco
                                           card1letter.upper(), card1suit, card1letter))
     else:
         if player:
-            msg = 'Type !hitme for more cards or !stay to stay.'
+            msg = 'Available options: !hitme, !stay'
             await client.send_message(message.channel,
                 "DEALER: Your card is: \n"
                 "%s\n"
@@ -598,8 +598,16 @@ async def getresponse(message, score, cards, broke, hand):
             stay = False
             return score, stay, hand
         stay = 'doubledown'
-        broke = True #So the player doesn't get a message about !hitme etc
+        broke = True
         score, hand = await dealhand(message, score, cards, broke, hand)
+        return score, stay, hand
+    if answer and answer.content.lower() == '!surrender':
+        if len(hand) > 6:
+            await client.send_message(message.channel,
+                                      "Surrender is only available on the first round.")
+            stay = False
+            return score, stay, hand
+        stay = 'surrender'
         return score, stay, hand
     elif answer is None or answer.content.lower() == '!stay':
         stay = True
@@ -644,15 +652,11 @@ async def cmd_blackjack(message, _):
         blackjack = True
         bet *= 1.5
         if dhand[2] not in hicards:
-            await sleep(0.2)
-            await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
-                                      (message.author, bet))
-            winnings = bet
-            add_money(message.author, winnings)
-            bjlist.remove(message.author)
+            await dofinalspam(message, pscore, dscore, int(bet), blackjack=True)
             return
         else:
-            dscore, dhand = await dealhand(message, dscore, cards, broke, dhand, player=False)
+            dscore += dhand[-3]
+            await domessage(message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
     while not blackjack:
         if stay is True or pscore == 21 or pscore > 21:
             break
@@ -660,23 +664,51 @@ async def cmd_blackjack(message, _):
         if stay == 'doubledown':
             bet += bet
             break
+        if stay == 'surrender':
+            bet /= 2
+            await dofinalspam(message, pscore, dscore, int(bet), surrender=True)
+            return
+    if not blackjack and len(dhand) == 6 and pscore < 21:
+        dscore += dhand[-3]
+        await domessage(message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
+    while 17 > dscore < pscore and not blackjack:
+        if pscore > 21:
+            break
+        await sleep(0.2)
+        dscore, dhand = await dealhand(message, dscore, cards, broke, dhand, player=False)
+        if dscore == pscore and dscore > 16:
+            print("If dscore is not over 16, this shouldnt happen", dscore, pscore)
+            break
+    await dofinalspam(message, pscore, dscore, bet)
+
+
+async def dofinalspam(message, pscore, dscore, bet, blackjack=False, surrender=False):
+    bjlist.remove(message.author)
+    if surrender:
+        await client.send_message(message.channel,
+                                  'DEALER: %s: Player surrenders and receives half of his bet back. ($%s)' % (
+                                  message.author, bet))
+        winnings = -bet
+        add_money(message.author, winnings)
+        return
 
     if pscore > 21:
         await sleep(0.2)
-        bjlist.remove(message.author)
         winnings = -bet
         add_money(message.author, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
                                   message.author, pscore, bet))
         return
-    while 17 > dscore < pscore and not blackjack:
+
+    if blackjack:
         await sleep(0.2)
-        dscore, dhand = await dealhand(message, dscore, cards, broke, dhand, player=False)
-        if dscore == pscore and dscore > 16:
-            print("If dscore is not over 16, this shouldnt happen", dscore, pscore)
-            break
-    bjlist.remove(message.author)
+        await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
+                                  (message.author, int(bet)))
+        winnings = int(bet)
+        add_money(message.author, winnings)
+        return
+
     if dscore > 21:
         await sleep(0.2)
         winnings = bet
