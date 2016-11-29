@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 from asyncio import sleep
 import aiohttp
 from lxml.html.soupparser import fromstring
+from difflib import SequenceMatcher
 import wolframalpha
 import threading
 import emoji
@@ -839,6 +840,21 @@ commands = {
     'randomquote': cmd_randomquote
 }
 
+async def suggestcmd(channel, arg, actualcmd):
+    await client.send_message(channel,
+                              "Command not found: %s - did you mean !%s?" % (arg, actualcmd))
+
+async def checkspelling(channel, arg):
+    allcommands = list(commands.items())
+    i = 0
+    for actualcmd in allcommands:
+        similarity = SequenceMatcher(None, allcommands[i][0], arg).quick_ratio()
+        if similarity > 0.7:
+            actualcmd = allcommands[i][0]
+            await suggestcmd(channel, arg, actualcmd)
+            return
+        i += 1
+
 # Dispacther for messages from the users.
 @client.event
 async def on_message(message):
@@ -848,11 +864,14 @@ async def on_message(message):
     cmd, arg = parse_command(message.content)
     if not cmd:
         return
-
     handler = commands.get(cmd)
     if handler:
-      await handler(message, arg)
-
+        await handler(message, arg)
+        return
+    if ((len(message.content) - 3) > len(max(commands, key = len))):
+        #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
+        return
+    await checkspelling(message.channel, cmd)
 # Create the local Dirs if needed.
 file_bool = os.path.exists("./bot_files")
 if not file_bool:
