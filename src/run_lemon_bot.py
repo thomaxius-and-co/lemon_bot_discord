@@ -183,8 +183,14 @@ async def cmd_youtube(message, text_to_search):
         await client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
-async def cmd_roll(message, _):
-    rand_roll = random.randint(0, 100)
+async def cmd_roll(message, arg):
+    if not arg.isdigit():
+        await client.send_message(message.channel, 'You need to type a number, for example !roll 100.')
+        return
+    if len(arg) > 20:
+        await client.send_message(message.channel, 'Sorry, the maximum amount of digits is 20.')
+        return
+    rand_roll = random.randint(0, int(arg))
     await client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
@@ -353,9 +359,9 @@ async def cmd_slots(message, _):
             await client.send_message(message.channel,
                                       'You have reached the doubling limit! You won %s' % (winnings))
             break
-        winnings, stay = await askifdouble(message, winnings)
         await client.send_message(message.channel,
                                   'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
+        winnings, stay = await askifdouble(message, winnings)
     if winnings > 0:
         add_money(player, winnings)
 
@@ -450,13 +456,13 @@ async def cmd_randomquote(themessage, input):
 
 # Function to set a users bet.
 async def cmd_bet(message, amount):
-    try:
-        amount = int(amount)
-        if amount < 1:
-            await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 2. Example: !bet 5')
-            return
-    except Exception:
-        await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 2. Example: !bet 5')
+    if not amount.isdigit():
+        await client.send_message(message.channel,
+                                  'Amount must be numeric and positive, for example !bet 10.')
+        return
+    amount = int(amount)
+    if amount < 1:
+        await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 1. Example: !bet 5')
         return
     set_bet(message.author, amount)
     await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
@@ -847,12 +853,14 @@ async def suggestcmd(channel, arg, actualcmd):
 async def checkspelling(channel, arg):
     allcommands = list(commands.items())
     i = 0
+    print(allcommands)
     for actualcmd in allcommands:
         similarity = SequenceMatcher(None, allcommands[i][0], arg).quick_ratio()
-        if similarity > 0.7:
+        if similarity > 0.5:
             actualcmd = allcommands[i][0]
             await suggestcmd(channel, arg, actualcmd)
             return
+        print(similarity,actualcmd,i)
         i += 1
 
 # Dispacther for messages from the users.
