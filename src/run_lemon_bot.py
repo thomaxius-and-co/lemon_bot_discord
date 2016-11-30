@@ -187,6 +187,9 @@ async def cmd_roll(message, arg):
     if not arg.isdigit():
         await client.send_message(message.channel, 'You need to type a number, for example !roll 100.')
         return
+    if arg == 0:
+        await client.send_message(message.channel, "There must be at least two numbers to choose from.")
+        return
     if len(arg) > 20:
         await client.send_message(message.channel, 'Sorry, the maximum amount of digits is 20.')
         return
