@@ -804,7 +804,7 @@ async def cmd_pickone(message, args):
 
 async def cmd_osu(message, user):
     results = await osu.user(user)
-    if len(results) == 0:
+    if not results:
         await client.send_message(message.channel, "User %s not found" % user)
         return
 
@@ -853,14 +853,12 @@ async def suggestcmd(channel, arg, actualcmd):
 async def checkspelling(channel, arg):
     allcommands = list(commands.items())
     i = 0
-    print(allcommands)
     for actualcmd in allcommands:
         similarity = SequenceMatcher(None, allcommands[i][0], arg).quick_ratio()
-        if similarity > 0.5:
+        if similarity > 0.7:
             actualcmd = allcommands[i][0]
             await suggestcmd(channel, arg, actualcmd)
             return
-        print(similarity,actualcmd,i)
         i += 1
 
 # Dispacther for messages from the users.
