@@ -1,6 +1,6 @@
 - name: Install postgres
   apt:
-    name: "{{ item })"
+    name: "{{ item }}"
   with_items:
     - postgresql
 
