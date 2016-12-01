@@ -13,6 +13,18 @@
       changed_when: False
 
   tasks:
+    - include: deployment_dependencies.yml
+
+    - name: Create group
+      group:
+        name: "{{ app_name }}"
+
+    - name: Create user
+      user:
+        name: "{{ app_name }}"
+
+    - include: postgres.yml
+
     - name: Install required packages
       apt:
         name: "{{ item }}"
@@ -34,16 +46,6 @@
         - wolframalpha
         - lxml
         - psycopg2
-
-    - name: Create group
-      group:
-        name: "{{ app_name }}"
-
-    - name: Create user
-      user:
-        name: "{{ app_name }}"
-
-    - include: postgres.yml
 
     - name: Copy source to server
       synchronize:
