@@ -184,6 +184,11 @@ async def cmd_youtube(message, text_to_search):
 
 # Rolling the odds for a user.
 async def cmd_roll(message, arg):
+    # Default to !roll 100 because why not
+    if arg is None:
+        await cmd_roll(message, "100")
+        return
+
     if not arg.isdigit():
         await client.send_message(message.channel, 'You need to type a number, for example !roll 100.')
         return
