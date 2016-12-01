@@ -42,6 +42,8 @@ import osu
 import database as db
 import datetime
 
+import archiver
+
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']
@@ -941,5 +943,5 @@ if not file_bool:
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-# Simple client login and starting the bot.
+client.loop.create_task(archiver.task(client))
 client.run(token)
