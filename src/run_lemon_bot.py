@@ -223,18 +223,42 @@ async def cmd_weather(message, zip_code):
         payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
         await client.send_message(message.channel, payload)
 
+async def domath(channel, input):
+    if len(input) < 3:
+        await client.send_message(channel, "Error: You need to input at least 3 digits, for example !math 5 + 5")
+        return
+    for char in input:
+        if char not in '1234567890+-/*':
+            await client.send_message(channel, "Error: Your calculation containts invalid character(s): %s" % char)
+            return
+    if input[0] in '/*+-':  # Can't make -9 or /9 etc
+        await client.send_message(channel, "Error: First digit must be numeric, for example !math 5 + 5.)")
+        return
+    i = 1
+    i2 = 2
+    for char in range(len(input) - 1):
+        await client.send_message(channel, input[i])
+        if input[i] not in '+-/*':
+            await client.send_message(channel, 'Error: Input after a number must be an operator, '
+                                                       'you have: %s and %s.', input[i2], input[i2])
+            return
+        if input[i2] not in '1234567890':
+            await client.send_message(channel, 'Error: Input after operator must be numeric, '
+                                                       'you have: %s and %s' % (input[i], input[i2]))
+            return
+        if input[-1] not in '1234567890':
+            await client.send_message(channel, "Error: No digit specified after operator (last %s)" % (input[-1]))
+            return
+        i += 2
+        i2 += 2
+        if i > (len(input) - 2):
+            break
+    return eval(input)
+
 # Simple math command.
 async def cmd_math(message, arg):
-    a,b,c = arg.split(' ')
-    if b == '+':
-        calculation = int(a) + int(c)
-    if b == '-':
-        calculation = int(a) - int(c)
-    if b == '*':
-        calculation = int(a) * int(c)
-    if b == '/':
-        calculation = int(a) / int(c)
-    await client.send_message(message.channel, '%s %s %s is %s' % (a, b, c, calculation))
+    result = await domath(message, arg.replace(" ",""))
+    await client.send_message(message.channel, '%s equals to %s)' % (arg, result))
 
 async def cmd_translate(message, arg):
     tolang,text = arg.split(' ', 1)
