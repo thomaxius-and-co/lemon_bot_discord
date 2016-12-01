@@ -257,8 +257,11 @@ async def domath(channel, input):
 
 # Simple math command.
 async def cmd_math(message, arg):
+    if not arg:
+        await client.send_message(message.channel, 'You need to specify at least 3 digits, for example !math 5 + 5.)')
+        return
     result = await domath(message.channel, arg.replace(" ",""))
-    await client.send_message(message.channel, '%s equals to %s)' % (arg, result))
+    await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
 async def cmd_translate(message, arg):
     tolang,text = arg.split(' ', 1)
