@@ -237,22 +237,18 @@ async def domath(channel, input):
     i = 1
     i2 = 2
     for char in range(len(input) - 1):
-        if input[i] not in '+-/*':
-            await client.send_message(channel, 'Error: Input after a number must be an operator, '
-                                                       'you have: %s and %s.', input[i2], input[i2])
-            return
-        if input[i2] not in '1234567890':
-            await client.send_message(channel, 'Error: Input after operator must be numeric, '
-                                                       'you have: %s and %s' % (input[i], input[i2]))
-            return
-        if input[-1] not in '1234567890':
-            await client.send_message(channel, "Error: No digit specified after operator (last %s)" % (input[-1]))
+        if input[-1] in '+-/*':
+            print("Error: No digit specified after operator (last %s)" % (input[-1]))
             return
         i += 2
         i2 += 2
         if i > (len(input) - 2):
             break
-    return eval(input)
+    try:
+        return eval(input)
+    except Exception:
+        await client.send_message(channel, "Error: There is an error in your calculation.")
+        return
 
 # Simple math command.
 async def cmd_math(message, arg):
@@ -260,6 +256,8 @@ async def cmd_math(message, arg):
         await client.send_message(message.channel, 'You need to specify at least 3 digits, for example !math 5 + 5.)')
         return
     result = await domath(message.channel, arg.replace(" ",""))
+    if not result:
+        return
     await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
 async def cmd_translate(message, arg):
