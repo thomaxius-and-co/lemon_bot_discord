@@ -2,7 +2,6 @@ dependencies:
   override:
     - pip install ansible==2.2.0.0
     - pip install dopy==0.3.7
-    - pip install psycopg2==2.6.2
 
 test:
   override:
