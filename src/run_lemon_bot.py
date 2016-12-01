@@ -237,7 +237,6 @@ async def domath(channel, input):
     i = 1
     i2 = 2
     for char in range(len(input) - 1):
-        await client.send_message(channel, input[i])
         if input[i] not in '+-/*':
             await client.send_message(channel, 'Error: Input after a number must be an operator, '
                                                        'you have: %s and %s.', input[i2], input[i2])
