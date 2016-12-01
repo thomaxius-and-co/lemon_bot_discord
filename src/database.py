@@ -7,8 +7,6 @@ def db_connect():
         os.environ["DATABASE_PASSWORD"]
     ))
 
-def
-
 def initialize_schema():
     with db_connect() as conn:
         with conn.cursor() as c:
