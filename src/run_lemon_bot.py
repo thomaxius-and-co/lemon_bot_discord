@@ -257,7 +257,7 @@ async def domath(channel, input):
 
 # Simple math command.
 async def cmd_math(message, arg):
-    result = await domath(message, arg.replace(" ",""))
+    result = await domath(message.channel, arg.replace(" ",""))
     await client.send_message(message.channel, '%s equals to %s)' % (arg, result))
 
 async def cmd_translate(message, arg):
