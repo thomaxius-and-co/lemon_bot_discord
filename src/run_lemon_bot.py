@@ -896,5 +896,9 @@ async def on_ready():
 file_bool = os.path.exists("./bot_files")
 if not file_bool:
     os.makedirs('./bot_files')
+
+# Database schema has to be initialized before running the bot
+db.initialize_schema()
+
 # Simple client login and starting the bot.
 client.run(token)
