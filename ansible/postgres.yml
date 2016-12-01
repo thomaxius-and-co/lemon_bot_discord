@@ -7,6 +7,7 @@
 - name: Create database
   postgresql_db:
     name: "{{ secrets.db.dbname }}"
+  become_user: postgres
 
 - name: Create database user
   postgresql_user:
@@ -14,3 +15,4 @@
     name: "{{ secrets.db.username }}"
     password: "{{ secrets.db.password }}"
     priv: "ALL"
+  become_user: postgres
