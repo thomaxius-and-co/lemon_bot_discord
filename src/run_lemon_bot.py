@@ -826,8 +826,25 @@ async def cmd_osu(message, user):
     reply = "%s (#%d) has %d pp and %.2f%% acc" % (username, rank, pp, acc)
     await client.send_message(message.channel, reply)
 
+async def cmd_sql(message, arg):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+
+    if arg is None:
+        return
+
+    with db.connect() as c:
+        c.execute(arg)
+        results = list(c.fetchmany(10))
+
+    result_strs = map(str, results)
+    msg = "\n".join(result_strs)
+    await client.send_message(message.channel, "```%s```" % msg)
 
 commands = {
+    'sql': cmd_sql,
     'enchant': cmd_enchant,
     'youtube': cmd_youtube,
     'roll': cmd_roll,
