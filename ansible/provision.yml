@@ -13,22 +13,6 @@
       changed_when: False
 
   tasks:
-    - name: Create group
-      group:
-        name: "{{ app_name }}"
-
-    - name: Create user
-      user:
-        name: "{{ app_name }}"
-
-    - include: postgres.yml
-
-    - name: Copy source to server
-      synchronize:
-        src: ../src
-        dest: "/home/{{ app_name }}"
-        delete: yes
-
     - name: Install required packages
       apt:
         name: "{{ item }}"
@@ -49,6 +33,22 @@
         - wolframalpha
         - lxml
         - psycopg2
+
+    - name: Create group
+      group:
+        name: "{{ app_name }}"
+
+    - name: Create user
+      user:
+        name: "{{ app_name }}"
+
+    - include: postgres.yml
+
+    - name: Copy source to server
+      synchronize:
+        src: ../src
+        dest: "/home/{{ app_name }}"
+        delete: yes
 
     - name: Create service
       template:
