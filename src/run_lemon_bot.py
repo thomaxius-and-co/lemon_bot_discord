@@ -39,6 +39,7 @@ import wolframalpha
 import threading
 import emoji
 import osu
+import database as db
 import datetime
 
 client = discord.Client()
@@ -886,6 +887,11 @@ async def on_message(message):
         #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
         return
     await checkspelling(message.channel, cmd)
+
+@client.event
+async def on_ready():
+    db.insert_start_time("Server started")
+
 # Create the local Dirs if needed.
 file_bool = os.path.exists("./bot_files")
 if not file_bool:

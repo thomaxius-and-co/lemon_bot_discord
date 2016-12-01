@@ -21,6 +21,8 @@
       user:
         name: "{{ app_name }}"
 
+    - include: postgres.yml
+
     - name: Copy source to server
       synchronize:
         src: ../src
@@ -46,6 +48,7 @@
         - bs4
         - wolframalpha
         - lxml
+        - psycopg2
 
     - name: Create service
       template:
