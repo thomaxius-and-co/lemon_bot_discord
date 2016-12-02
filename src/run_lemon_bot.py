@@ -37,6 +37,7 @@ from lxml.html.soupparser import fromstring
 from difflib import SequenceMatcher
 import wolframalpha
 import threading
+import psycopg2
 import emoji
 import osu
 import database as db
@@ -861,13 +862,16 @@ async def cmd_sql(message, arg):
     if arg is None:
         return
 
-    with db.connect() as c:
-        c.execute(arg)
-        results = list(c.fetchmany(10))
-
-    result_strs = map(str, results)
-    msg = "\n".join(result_strs)
-    await client.send_message(message.channel, "```%s```" % msg)
+    try:
+        with db.connect() as c:
+            c.execute(arg)
+            results = list(c.fetchmany(10))
+            result_strs = map(str, results)
+            msg = "\n".join(result_strs)
+            await client.send_message(message.channel, "```%s```" % msg)
+    except psycopg2.ProgrammingError as err:
+        await client.send_message(message.channel, "```ERROR: %s```" % err)
+        return
 
 commands = {
     'sql': cmd_sql,
