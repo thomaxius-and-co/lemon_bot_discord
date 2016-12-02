@@ -864,7 +864,7 @@ async def cmd_sql(message, arg):
 
     def limit_msg_length(template, content):
         max_len = 2000 - len(template % "")
-        return template % content[:max_len]
+        return template % content.replace("`", "")[:max_len]
 
     try:
         with db.connect() as c:
