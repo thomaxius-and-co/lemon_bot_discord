@@ -862,15 +862,20 @@ async def cmd_sql(message, arg):
     if arg is None:
         return
 
+    def limit_msg_length(template, content):
+        max_len = 2000 - len(template % "")
+        return template % content[:max_len]
+
     try:
         with db.connect() as c:
             c.execute(arg)
-            results = list(c.fetchmany(10))
-            result_strs = map(str, results)
-            msg = "\n".join(result_strs)
-            await client.send_message(message.channel, "```%s```" % msg)
+            results = c.fetchmany(100)
+            msg = "\n".join(map(str, results))
+            msg = limit_msg_length("```%s```", msg)
+            await client.send_message(message.channel, msg)
     except psycopg2.ProgrammingError as err:
-        await client.send_message(message.channel, "```ERROR: %s```" % err)
+        msg = limit_msg_length("```ERROR: %s```", str(err))
+        await client.send_message(message.channel, msg)
         return
 
 commands = {
