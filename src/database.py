@@ -2,7 +2,6 @@ import os
 from contextlib import contextmanager
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 @contextmanager
 def connect():
@@ -11,7 +10,7 @@ def connect():
         os.environ["DATABASE_USERNAME"],
         os.environ["DATABASE_PASSWORD"]
     )
-    with psycopg2.connect(connect_string, cursor_factory=RealDictCursor) as con:
+    with psycopg2.connect(connect_string) as con:
         with con.cursor() as c:
             yield c
 

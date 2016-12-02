@@ -81,7 +81,7 @@ async def archive_channel(channel_id):
             ON CONFLICT DO NOTHING;
         """, [channel_id])
         c.execute("SELECT message_id FROM channel_archiver_status WHERE channel_id = %s", [channel_id])
-        latest_id = c.fetchone()["message_id"]
+        latest_id = c.fetchone()[0]
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
             new_latest_id = all_messages[0]["id"]
