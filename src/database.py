@@ -23,6 +23,22 @@ def initialize_schema():
             );
         """)
 
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS casino_account (
+                discriminator TEXT NOT NULL,
+                balance NUMERIC NOT NULL,
+                PRIMARY KEY (discriminator)
+            )
+        """)
+
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS casino_bet (
+                discriminator TEXT NOT NULL,
+                bet NUMERIC NOT NULL,
+                PRIMARY KEY (discriminator)
+            );
+        """)
+
 def insert_start_time(message):
     with connect() as c:
         c.execute("""

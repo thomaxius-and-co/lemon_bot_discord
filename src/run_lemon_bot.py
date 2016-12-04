@@ -52,9 +52,6 @@ token = os.environ['LEMONBOT_TOKEN']
 client_id = os.environ['BING_CLIENTID']
 client_secret = os.environ['BING_SECRET']
 
-BANK_PATH = './bot_files/lemon_bot_bank.pkl'
-BET_PATH = './bot_files/lemon_bot_bets.pkl'
-
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
@@ -103,23 +100,36 @@ SLOT_PATTERN = [
 ]
 
 def get_balance(user):
-    bank = build_dict(BANK_PATH)
-    return bank.get(str(user), 0)
+    with db.connect() as c:
+        c.execute("SELECT balance FROM casino_account WHERE discriminator = %s", [str(user)])
+        balance = c.fetchone()
+        return int(balance[0]) if balance is not None else 0
 
 def add_money(user, amount):
-    total = get_balance(user) + amount
-    bank = build_dict(BANK_PATH)
-    bank[str(user)] = max(0, total)
-    save_obj(bank, BANK_PATH)
+    with db.connect() as c:
+        c.execute("""
+            INSERT INTO casino_account AS a
+            (discriminator, balance)
+            VALUES (%s, %s)
+            ON CONFLICT (discriminator) DO UPDATE
+            SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
+        """, [str(user), amount])
 
 def get_bet(user):
-    bets = build_dict(BET_PATH)
-    return bets.get(str(user), 0)
+    with db.connect() as c:
+        c.execute("SELECT bet FROM casino_bet WHERE discriminator = %s", [str(user)])
+        bet = c.fetchone()
+        return int(bet[0]) if bet is not None else 0
 
 def set_bet(user, amount):
-    bets = build_dict(BET_PATH)
-    bets[str(user)] = max(0, amount)
-    save_obj(bets, BET_PATH)
+    with db.connect() as c:
+        c.execute("""
+            INSERT INTO casino_bet AS b
+            (discriminator, bet)
+            VALUES (%s, %s)
+            ON CONFLICT (discriminator) DO UPDATE
+            SET bet = GREATEST(0, EXCLUDED.bet)
+        """, [str(user), amount])
 
 def parse(input):
     languages = ['fi', 'en', 'ru', 'se']
@@ -784,13 +794,21 @@ async def dofinalspam(message, pscore, dscore, bet, blackjack=False, surrender=F
 
 # Function to lookup the money and create a top 5 users.
 async def cmd_leader(message, _):
-    bank_dict = build_dict(BANK_PATH)
-    counter = 0
-    leader_list = []
-    for key in sorted(bank_dict, key=bank_dict.get, reverse=True)[:5]:
-        counter += 1
-        leader_list.append('#%s - %s - $%s' % (counter, key, bank_dict[key]))
-    await client.send_message(message.channel, '  |  '.join(leader_list))
+    with db.connect() as c:
+        c.execute("""
+            SELECT
+                row_number() OVER (ORDER BY balance DESC) AS rank,
+                discriminator,
+                balance
+            FROM casino_account
+            ORDER BY balance
+            DESC LIMIT 5
+        """)
+        leaders = c.fetchall()
+
+    if len(leaders) > 0:
+        msg = '  |  '.join(map(lambda u: '#%s - %s - $%s' % u, leaders))
+        await client.send_message(message.channel, msg)
 
 async def cmd_wolframalpha(message, query):
     print("Searching WolframAlpha for '%s'" % query)
@@ -944,13 +962,77 @@ async def on_message(message):
 async def on_ready():
     db.insert_start_time("Server started")
 
-# Create the local Dirs if needed.
-file_bool = os.path.exists("./bot_files")
-if not file_bool:
-    os.makedirs('./bot_files')
+def casino_in_database():
+    with db.connect() as c:
+        c.execute("SELECT count(*) > 0 FROM casino_account")
+        bank_migrated = c.fetchone()[0]
+        c.execute("SELECT count(*) > 0 FROM casino_bet")
+        bets_migrated = c.fetchone()[0]
+        return bank_migrated and bets_migrated
+
+def migrate_casino_to_database():
+    BANK_PATH = './bot_files/lemon_bot_bank.pkl'
+    BET_PATH = './bot_files/lemon_bot_bets.pkl'
+
+    print("Starting migration")
+
+    bank_dict = build_dict(BANK_PATH)
+    accounts = []
+    for k in bank_dict:
+        accounts.append((k, bank_dict[k]))
+
+    bet_dict = build_dict(BET_PATH)
+    bets = []
+    for k in bet_dict:
+        bets.append((k, bet_dict[k]))
+
+    with db.connect() as c:
+        for x in accounts:
+            print("Migrating account %s..." % str(x))
+            c.execute("""
+                INSERT INTO casino_account
+                (discriminator, balance)
+                VALUES (%s, %s)
+            """, x)
+        for x in bets:
+            print("Migrating bet %s..." % str(x))
+            c.execute("""
+                INSERT INTO casino_bet
+                (discriminator, bet)
+                VALUES (%s, %s)
+            """, x)
+
+    print("Migration is done!")
+
+    print("Following entries are in database")
+    with db.connect() as c:
+        print("ACCOUNTS")
+        c.execute("SELECT discriminator, balance FROM casino_account")
+        migrated_accounts = c.fetchall()
+        for x in migrated_accounts:
+            print(x)
+
+        print("BETS")
+        c.execute("SELECT discriminator, bet FROM casino_bet")
+        migrated_bets = c.fetchall()
+        for x in migrated_bets:
+            print(x)
+
+    if len(migrated_bets) == len(bets) and len(migrated_accounts) == len(accounts):
+        print("It's a success! Deleting old files")
+        with suppress(FileNotFoundError):
+            os.remove(BANK_PATH)
+            os.remove(BET_PATH)
+            os.rmdir('./bot_files')
+    else:
+        print("Something went horribly wrong. PLS FIX!")
 
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
+
+# TODO: Remove when migration is done
+if not casino_in_database():
+    migrate_casino_to_database()
 
 client.loop.create_task(archiver.task(client))
 client.run(token)
