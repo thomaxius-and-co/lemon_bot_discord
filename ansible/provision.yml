@@ -63,6 +63,11 @@
         - reload service
         - restart service
 
+    - name: enable and start service
+      service:
+        name: "{{ app_name }}"
+        state: started
+
   handlers:
     - name: reload service
       shell: systemctl daemon-reload
