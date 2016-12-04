@@ -52,18 +52,22 @@
         src: ../src
         dest: "/home/{{ app_name }}"
         delete: yes
+      notify:
+        - restart service
 
     - name: Create service
       template:
         src: templates/systemd.service.j2
         dest: "/etc/systemd/system/{{ app_name }}.service"
-      register: unit_file
+      notify:
+        - reload service
+        - restart service
 
-    - name: Reload units
+  handlers:
+    - name: reload service
       shell: systemctl daemon-reload
-      when: unit_file.changed
 
-    - name: Restart app
+    - name: restart service
       service:
         name: "{{ app_name }}"
         state: restarted
