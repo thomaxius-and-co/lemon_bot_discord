@@ -67,6 +67,7 @@
       service:
         name: "{{ app_name }}"
         state: started
+        enabled: yes
 
   handlers:
     - name: reload service

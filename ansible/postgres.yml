@@ -16,3 +16,9 @@
     password: "{{ secrets.db.password }}"
     priv: "ALL"
   become_user: postgres
+
+- name: enable and start postgres service
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
