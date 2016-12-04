@@ -793,7 +793,10 @@ async def cmd_wolframalpha(message, query):
         res = wolframalpha_client.query(query)
         answer = next(res.results).text
         await client.send_message(message.channel, answer)
-    except Exception:
+    except ConnectionResetError:
+        await client.send_message(message.channel, 'Sorry, WolframAlpha is slow as fuck right now')
+    except Exception as e:
+        print("ERROR", type(e), e)
         await client.send_message(message.channel, 'I don\'t know how to answer that')
 
 async def makedeck(blackjack=True):
