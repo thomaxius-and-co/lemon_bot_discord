@@ -120,5 +120,9 @@ async def task(client):
 
     # Store new messages every 15 minutes
     while True:
-        await run_archival()
+        try:
+            await run_archival()
+        except Exception as e:
+            print("Archival failed:")
+            print(e)
         await asyncio.sleep(15 * 60)
