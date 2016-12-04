@@ -140,32 +140,6 @@ def parse(input):
         return args
     return ['auto', 'fi', input]
 
-# Save the dict Object
-def save_obj(dict, file_path):
-    with open(file_path, 'wb') as f:
-        pickle.dump(dict, f, pickle.HIGHEST_PROTOCOL)
-
-
-# Load the pickle Object
-def load_obj(file_path):
-    file_bool = os.path.isfile(file_path)
-    if file_bool:
-        with open(file_path, 'rb') as f:
-            return pickle.load(f)
-    else:
-        return None
-
-
-# Build Dict and return
-def build_dict(file_path):
-    path_bool = os.path.isfile(file_path)
-    if not path_bool:
-        data_dict = {}
-    else:
-        data_dict = load_obj(file_path)
-    return data_dict
-
-
 def parse_command(content):
     if not content.startswith('!'):
         return None, None
@@ -962,77 +936,8 @@ async def on_message(message):
 async def on_ready():
     db.insert_start_time("Server started")
 
-def casino_in_database():
-    with db.connect() as c:
-        c.execute("SELECT count(*) > 0 FROM casino_account")
-        bank_migrated = c.fetchone()[0]
-        c.execute("SELECT count(*) > 0 FROM casino_bet")
-        bets_migrated = c.fetchone()[0]
-        return bank_migrated and bets_migrated
-
-def migrate_casino_to_database():
-    BANK_PATH = './bot_files/lemon_bot_bank.pkl'
-    BET_PATH = './bot_files/lemon_bot_bets.pkl'
-
-    print("Starting migration")
-
-    bank_dict = build_dict(BANK_PATH)
-    accounts = []
-    for k in bank_dict:
-        accounts.append((k, bank_dict[k]))
-
-    bet_dict = build_dict(BET_PATH)
-    bets = []
-    for k in bet_dict:
-        bets.append((k, bet_dict[k]))
-
-    with db.connect() as c:
-        for x in accounts:
-            print("Migrating account %s..." % str(x))
-            c.execute("""
-                INSERT INTO casino_account
-                (discriminator, balance)
-                VALUES (%s, %s)
-            """, x)
-        for x in bets:
-            print("Migrating bet %s..." % str(x))
-            c.execute("""
-                INSERT INTO casino_bet
-                (discriminator, bet)
-                VALUES (%s, %s)
-            """, x)
-
-    print("Migration is done!")
-
-    print("Following entries are in database")
-    with db.connect() as c:
-        print("ACCOUNTS")
-        c.execute("SELECT discriminator, balance FROM casino_account")
-        migrated_accounts = c.fetchall()
-        for x in migrated_accounts:
-            print(x)
-
-        print("BETS")
-        c.execute("SELECT discriminator, bet FROM casino_bet")
-        migrated_bets = c.fetchall()
-        for x in migrated_bets:
-            print(x)
-
-    if len(migrated_bets) == len(bets) and len(migrated_accounts) == len(accounts):
-        print("It's a success! Deleting old files")
-        with suppress(FileNotFoundError):
-            os.remove(BANK_PATH)
-            os.remove(BET_PATH)
-            os.rmdir('./bot_files')
-    else:
-        print("Something went horribly wrong. PLS FIX!")
-
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
-
-# TODO: Remove when migration is done
-if not casino_in_database():
-    migrate_casino_to_database()
 
 client.loop.create_task(archiver.task(client))
 client.run(token)
