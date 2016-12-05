@@ -44,6 +44,7 @@ import database as db
 import datetime
 
 import archiver
+import casino
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -69,67 +70,6 @@ BOT_ANSWERS = ["My choice is:", "I'll choose:", "I'm going with:", "The right ch
                "If I had to choose, I'd go with:",
                "This one is obvious. It is:", "This one is easy:", "Stupid question. It's:", "The correct choice is:",
                "Hmm. I'd go with:", "Good question. My choice is:"]
-bjlist = []
-hicards = ['K','A','J','Q','10']
-SLOT_PATTERN = [
-    emoji.FOUR_LEAF_CLOVER,
-    emoji.FOUR_LEAF_CLOVER,
-    emoji.MONEY_BAG,
-    emoji.MONEY_BAG,
-    emoji.MONEY_BAG,
-    emoji.POOP,
-    emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
-    emoji.WATERMELON,
-    emoji.WATERMELON,
-    emoji.WATERMELON,
-    emoji.WATERMELON,
-]
-
-def get_balance(user):
-    with db.connect() as c:
-        c.execute("SELECT balance FROM casino_account WHERE discriminator = %s", [str(user)])
-        balance = c.fetchone()
-        return int(balance[0]) if balance is not None else 0
-
-def add_money(user, amount):
-    with db.connect() as c:
-        c.execute("""
-            INSERT INTO casino_account AS a
-            (discriminator, balance)
-            VALUES (%s, %s)
-            ON CONFLICT (discriminator) DO UPDATE
-            SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
-        """, [str(user), amount])
-
-def get_bet(user):
-    with db.connect() as c:
-        c.execute("SELECT bet FROM casino_bet WHERE discriminator = %s", [str(user)])
-        bet = c.fetchone()
-        return int(bet[0]) if bet is not None else 0
-
-def set_bet(user, amount):
-    with db.connect() as c:
-        c.execute("""
-            INSERT INTO casino_bet AS b
-            (discriminator, bet)
-            VALUES (%s, %s)
-            ON CONFLICT (discriminator) DO UPDATE
-            SET bet = GREATEST(0, EXCLUDED.bet)
-        """, [str(user), amount])
 
 def parse(input):
     languages = ['fi', 'en', 'ru', 'se']
@@ -148,7 +88,7 @@ def parse_command(content):
 
 
 # function to call the BDO script and relay odds on enchanting.
-async def cmd_enchant(message, arg):
+async def cmd_enchant(client, message, arg):
     try:
         raw_data = arg.split(' ')
         enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
@@ -157,7 +97,7 @@ async def cmd_enchant(message, arg):
         await client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
 
 # Function to search for a youtube video and return a link.
-async def cmd_youtube(message, text_to_search):
+async def cmd_youtube(client, message, text_to_search):
     link_list = []
     print('Searching YouTube for: %s' % text_to_search)
     query = urllib.parse.quote(text_to_search)
@@ -171,10 +111,10 @@ async def cmd_youtube(message, text_to_search):
         await client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
-async def cmd_roll(message, arg):
+async def cmd_roll(client, message, arg):
     # Default to !roll 100 because why not
     if arg is None:
-        await cmd_roll(message, "100")
+        await cmd_roll(client, message, "100")
         return
 
     if not arg.isdigit():
@@ -190,13 +130,13 @@ async def cmd_roll(message, arg):
     await client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
-async def cmd_8ball(message, question):
+async def cmd_8ball(client, message, question):
     prediction = random.choice(EIGHT_BALL_OPTIONS)
     await client.send_message(message.channel, 'Question: [%s], %s' % (question, prediction))
 
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
-async def cmd_weather(message, zip_code):
+async def cmd_weather(client, message, zip_code):
     if not zip_code:
         await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
         return
@@ -238,7 +178,7 @@ async def domath(channel, input):
         return
 
 # Simple math command.
-async def cmd_math(message, arg):
+async def cmd_math(client, message, arg):
     if not arg:
         await client.send_message(message.channel, 'You need to specify at least 3 digits, for example !math 5 + 5.)')
         return
@@ -247,7 +187,7 @@ async def cmd_math(message, arg):
         return
     await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
-async def cmd_translate(message, arg):
+async def cmd_translate(client, message, arg):
     tolang,text = arg.split(' ', 1)
     if len(text) > 100: #maybe it's wise to put a limit on the lenght of the translations
         await client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
@@ -257,7 +197,7 @@ async def cmd_translate(message, arg):
     await client.send_message(message.channel, translation)
 
 # Ask clever bot a question.
-async def cmd_cleverbot(message, question):
+async def cmd_cleverbot(client, message, question):
     if not question:
         await client.send_message(message.channel, "You must specify a question!")
     cb1 = cleverbot.Cleverbot()
@@ -266,22 +206,22 @@ async def cmd_cleverbot(message, question):
 
 # this Spanks the user and calls them out on the server, with an '@' message.
 # Format ==> @User has been, INSERT_ITEM_HERE
-async def cmd_spank(message, target_user):
+async def cmd_spank(client, message, target_user):
     punishment = random.choice(SPANK_BANK)
     await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
 
-async def cmd_coin(message, _):
+async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
     await client.send_message(message.channel, "Just a moment, flipping the coin...")
     await sleep(.5)
     await client.send_message(message.channel, "The coin lands on: %s" % coin)
     return coin
 
-async def cmd_help(message, _):
+async def cmd_help(client, message, _):
     await client.send_message(message.channel, 'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Function to clear a chat Channel.
-async def cmd_clear(message, _):
+async def cmd_clear(client, message, _):
     perms = message.channel.permissions_for(message.author)
     if perms.administrator:
         await client.purge_from(message.channel)
@@ -289,7 +229,7 @@ async def cmd_clear(message, _):
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
 
 # Delete 50 of bots messages
-async def cmd_clearbot(message, _):
+async def cmd_clearbot(client, message, _):
     #It might be wise to make a separate command for each type of !clear, so there are no chances for mistakes.
     perms = message.channel.permissions_for(message.author)
     def isbot(message):
@@ -298,128 +238,6 @@ async def cmd_clearbot(message, _):
         await client.purge_from(message.channel, limit=50, check=isbot)
     else:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
-
-# Function to play the slots
-async def cmd_slots(message, _):
-    player = message.author
-    wheel_list = []
-    results_dict = {}
-    count = 1
-    stay = False
-    winnings = 0
-    bet = get_bet(player)
-    if bet < 1:
-        await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
-        return
-
-    balance = get_balance(player)
-    if balance == 0:
-        await client.send_message(message.channel, 'You need to run the !loan command.')
-        return
-
-    if bet > balance:
-        await client.send_message(message.channel,
-                                       'Your balance of $%s is to low, lower your bet amount of $%s' % (
-                                       balance, bet))
-        return
-    if bet > 1000:
-        await client.send_message(message.channel,
-                                       'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
-        return
-    add_money(player, -bet)
-    while count <= 4:
-        wheel_pick = random.choice(SLOT_PATTERN)
-        wheel_list.append(wheel_pick)
-        count += 1
-    last_step = ''
-    for wheel_step in wheel_list:
-        if not results_dict.get(wheel_step):
-            results_dict[wheel_step] = 1
-        if results_dict.get(wheel_step) and last_step == wheel_step:
-            data = results_dict.get(wheel_step)
-            results_dict[wheel_step] = data + 1
-        last_step = wheel_step
-    for k, v in results_dict.items():
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 4:
-            winnings = bet * 25
-            break
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 3:
-            winnings = bet * 10
-            break
-        if (k == emoji.WATERMELON) and v == 3:
-            winnings = bet * 20
-            break
-        if (k == emoji.WATERMELON) and v == 4:
-            winnings = bet * 50
-            break
-        if k == emoji.MONEY_BAG and v == 4:
-            winnings = bet * 500
-            break
-        if k == emoji.MONEY_BAG and v == 3:
-            winnings = bet * 100
-            break
-        if k == emoji.FOUR_LEAF_CLOVER and v == 4:
-            winnings = bet * 1000
-            break
-        if k == emoji.FOUR_LEAF_CLOVER and v == 3:
-            winnings = bet * 200
-            break
-        if k == emoji.POOP and v == 4:
-            winnings = bet * 10000
-            for spam in range (0, 10):
-                await client.send_message(message.channel,
-                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player, winnings))
-                await sleep(1)
-    wheel_payload = '%s Bet: $%s --> | ' % (player, bet) + ' - '.join(
-        wheel_list) + ' |' + ' Outcome: $%s' % winnings
-    await client.send_message(message.channel, wheel_payload)
-    while winnings > 0 and not stay:
-        doubletimes = +1
-        if doubletimes == 5:
-            await client.send_message(message.channel,
-                                      'You have reached the doubling limit! You won %s' % (winnings))
-            break
-        await client.send_message(message.channel,
-                                  'You won %s! Would you like to double? (Type !double or !take)' % (winnings))
-        winnings, stay = await askifdouble(message, winnings)
-    if winnings > 0:
-        add_money(player, winnings)
-
-async def askifheadsortails(message, winnings):
-    while True:
-        answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
-        if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
-            coin = await cmd_coin(message, winnings)
-            if coin.lower() == answer.content.lower():
-                winnings *= 2
-                await client.send_message(message.channel,
-                                          "You win! $%s" % winnings)
-                return winnings
-            else:
-                await client.send_message(message.channel,
-                                          "You lose!")
-                winnings = 0
-                return winnings
-def check(message):
-    return message.author == message.author
-
-async def askifdouble(message, winnings):
-    stay = True
-    player = message.author
-    answer = await client.wait_for_message(timeout=15, author=player, check=check)
-    if answer and answer.content.lower() == '!double':
-        await client.send_message(message.channel,
-                                  "Type 'heads' or 'tails'")
-        winnings = await askifheadsortails(message, winnings)
-        if winnings > 0:
-            stay = False
-            return winnings, stay
-    elif answer is None or answer.content.lower() == '!slots' or answer.content.lower() == '!take':
-        await client.send_message(message.channel,
-                                  "You took the money ($%s)" % winnings)
-        return winnings, stay
-    return winnings, stay
-
 
 async def getrandomdate(date2):
     date1 = datetime.date.today().toordinal()
@@ -474,316 +292,8 @@ async def cmd_randomquote(themessage, input):
     reply = '%s, -- %s, %s' % (msg, author, message.timestamp.replace(tzinfo=None))
     await client.edit_message(reply_message, reply)
 
-# Function to set a users bet.
-async def cmd_bet(message, amount):
-    if not amount or not amount.isdigit():
-        return await client.send_message(message.channel, 'Amount must be numeric and positive, for example !bet 10.')
 
-    amount = int(amount)
-    if amount < 1:
-        await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 1. Example: !bet 5')
-        return
-    set_bet(message.author, amount)
-    await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
-
-# Function to look at the currently Set bet.
-async def cmd_reviewbet(message, _):
-    bet = get_bet(message.author)
-    await client.send_message(message.channel,
-                                       '%s is currently betting: %s' % (message.author, bet))
-
-# function to loan players money -- ONLY UP TO -- > $50 dollars
-async def cmd_loan(message, _):
-    balance = get_balance(message.author)
-    if balance >= 50:
-        await client.send_message(message.channel, '%s you have $%s, you do not need a loan.' % (message.author, balance))
-        return
-
-    add_money(message.author, 50 - balance)
-    if balance == 0:
-        await client.send_message(message.channel, '%s, added $50' % message.author)
-    else:
-        await client.send_message(message.channel, '%s, added up to $50' % message.author)
-
-# Function to look up a users Money!
-async def cmd_bank(message, _):
-    balance = get_balance(message.author)
-    await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author, balance))
-    if balance == 0:
-        await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
-
-async def getcardrank(card, hand, score):
-    rank = card
-    letter = card
-    if card in ['K', 'J', 'Q', '10']:
-        rank = 10
-    if card == 'A':
-        if score > 10:
-            rank = 1
-            letter = 'a'
-        else:
-            rank = 11
-    if 'A' in hand and (score + int(rank)) > 21:
-        score -= 10
-        for n, i in enumerate(hand):
-            if i == 'A':
-                hand[n] = 'a'
-    score += int(rank)
-    return int(rank), score, hand, letter
-
-async def dealcard(cards, hand, nofcards, score):
-    for x in range(nofcards):
-        card1 = cards.pop()
-        rank, score, hand, letter = await getcardrank(card1[0], hand, score)
-        suit = card1[1]
-        hand += [rank, suit, letter]
-    return hand, score
-
-async def dealhand(message, score, cards, broke, hand, player=True):
-    if score == 0:
-        if player:
-            hand, score = await dealcard(cards, hand, 2, score)
-            await sleep(0.2)
-            await domessage(message, hand[1], hand[2], hand[4], hand[5], score, broke, firstround=True)
-            return score, hand
-        else:
-            hand, score = await dealcard(cards, hand, 2, score)
-            await domessage(message, hand[1], hand[2], None, None, score, None, player=False, firstround=True)
-            return hand[0], hand
-    else:
-        if player:
-            hand, score = await dealcard(cards, hand, 1, score)
-            await sleep(0.2)
-            await domessage(message, hand[-2], hand[-1], None, None, score, broke)
-            return score, hand
-        else:
-            hand, score = await dealcard(cards, hand, 1, score)
-            await sleep(0.2)
-            await domessage(message, hand[-2], hand[-1], None, None, score, None, player=False)
-            return score, hand
-
-async def domessage(message, card1suit, card1letter, card2suit, card2letter, score, broke,
-                    firstround=False, player=True):
-    if firstround:
-        if player:
-            msg = 'Available options: !hitme, !stay, !surrender, !doubledown'
-            if broke:
-                msg = 'Available options: !hitme, !stay, !surrender'
-            if score == 21:
-                msg = 'Blackjack!'
-            await client.send_message(message.channel,
-                                      "DEALER: %s: Your cards: \n"
-                                      "%s                     %s\n"
-                                      "    %s     and    %s\n"
-                                      "        %s                     %s        (%s total)\n"
-                                      "%s" % (
-                                      message.author, card1letter.upper(), card2letter.upper(), card1suit, card2suit, card1letter.upper(),
-                                      card2letter.upper(), score, msg))
-        else:
-            await client.send_message(message.channel,
-                                      "DEALER: Dealer's card is:\n"
-                                      " %s\n"
-                                      "    %s\n"
-                                      "        %s" % (
-                                          card1letter.upper(), card1suit, card1letter))
-    else:
-        if player:
-            msg = 'Available options: !hitme, !stay'
-            await client.send_message(message.channel,
-                "DEALER: Your card is: \n"
-                "%s\n"
-                "    %s\n"
-                "         %s       total: %s\n"
-                "%s" % (
-                    card1letter.upper(), card1suit, card1letter.upper(), score, msg))
-        else:
-            await client.send_message(message.channel,
-                                      "DEALER: Dealer's card is: \n"
-                                      "%s\n"
-                                      "    %s\n"
-                                      "         %s\n"
-                                      "                total: %s" % (
-                                          card1letter.upper(), card1suit, card1letter.upper(), score))
-
-
-async def getresponse(message, score, cards, broke, hand):
-    answer = await client.wait_for_message(timeout=25, author=message.author, check=check)
-    if answer and answer.content.lower() == '!hitme':
-        score, hand = await dealhand(message, score, cards, broke, hand)
-        stay = False
-        return score, stay, hand
-    if answer and answer.content.lower() == '!doubledown':
-        if broke:
-            await client.send_message(message.channel,
-                                      "You don't have enough money for doubledown.")
-            stay = False
-            return score, stay, hand
-        if len(hand) > 6:
-            await client.send_message(message.channel,
-                                      "Doubledown is only available on the first round.")
-            stay = False
-            return score, stay, hand
-        stay = 'doubledown'
-        broke = True
-        score, hand = await dealhand(message, score, cards, broke, hand)
-        return score, stay, hand
-    if answer and answer.content.lower() == '!surrender':
-        if len(hand) > 6:
-            await client.send_message(message.channel,
-                                      "Surrender is only available on the first round.")
-            stay = False
-            return score, stay, hand
-        stay = 'surrender'
-        return score, stay, hand
-    elif answer is None or answer.content.lower() == '!stay':
-        stay = True
-        return score, stay, hand
-    stay = False
-    return score, stay, hand
-
-
-async def cmd_blackjack(message, _):
-    broke = False
-    blackjack = False
-    cards = await makedeck(blackjack=True)
-    phand = []
-    dhand = []
-    if message.author in bjlist:
-        await client.send_message(message.channel,
-                                  'Cannot play: You have an unfinished game.')
-        return
-    bet = get_bet(message.author)
-    if bet < 1:
-        await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
-        return
-
-    balance = get_balance(message.author)
-    if balance == 0:
-        await client.send_message(message.channel, 'You need to run the !loan command.')
-        return
-    if bet > balance:
-        await client.send_message(message.channel,
-                                       'Your balance of $%s is to low, lower your bet amount of $%s' % (
-                                           balance, bet))
-        return
-    if bet * 2 > balance:
-        broke = True
-    stay = False
-    bjlist.append(message.author)
-    pscore = 0
-    dscore = 0
-    dscore, dhand = await dealhand(message, dscore, cards, broke, dhand, player=False)
-    pscore, phand = await dealhand(message, pscore, cards, broke, phand)
-    if pscore == 21:
-        blackjack = True
-        bet *= 1.5
-        if dhand[2] not in hicards:
-            await dofinalspam(message, pscore, dscore, int(bet), blackjack=True)
-            return
-        else:
-            dscore += dhand[-3]
-            await domessage(message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
-    while not blackjack:
-        if stay is True or pscore == 21 or pscore > 21:
-            break
-        pscore, stay, phand = await getresponse(message, pscore, cards, broke, phand)
-        if stay == 'doubledown':
-            bet += bet
-            break
-        if stay == 'surrender':
-            bet /= 2
-            await dofinalspam(message, pscore, dscore, int(bet), surrender=True)
-            return
-    if not blackjack and len(dhand) == 6 and pscore < 21:
-        dscore += dhand[-3]
-        await domessage(message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
-    while 17 > dscore < pscore and not blackjack:
-        if pscore > 21:
-            break
-        await sleep(0.2)
-        dscore, dhand = await dealhand(message, dscore, cards, broke, dhand, player=False)
-        if dscore == pscore and dscore > 16:
-            print("If dscore is not over 16, this shouldnt happen", dscore, pscore)
-            break
-    await dofinalspam(message, pscore, dscore, bet)
-
-
-async def dofinalspam(message, pscore, dscore, bet, blackjack=False, surrender=False):
-    bjlist.remove(message.author)
-    if surrender:
-        await client.send_message(message.channel,
-                                  'DEALER: %s: Player surrenders and receives half of his bet back. ($%s)' % (
-                                  message.author, bet))
-        winnings = -bet
-        add_money(message.author, winnings)
-        return
-
-    if pscore > 21:
-        await sleep(0.2)
-        winnings = -bet
-        add_money(message.author, winnings)
-        await client.send_message(message.channel,
-                                  'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
-                                  message.author, pscore, bet))
-        return
-
-    if blackjack:
-        await sleep(0.2)
-        await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
-                                  (message.author, int(bet)))
-        winnings = int(bet)
-        add_money(message.author, winnings)
-        return
-
-    if dscore > 21:
-        await sleep(0.2)
-        winnings = bet
-        add_money(message.author, winnings)
-        await client.send_message(message.channel,
-                                  'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (
-                                  message.author, pscore, dscore, bet))
-        return
-    if dscore > pscore:
-        await sleep(0.2)
-        winnings = -bet
-        add_money(message.author, winnings)
-        await client.send_message(message.channel,
-                                  'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (
-                                  message.author, pscore, dscore, bet))
-        return
-    if pscore > dscore:
-        await sleep(0.2)
-        winnings = bet
-        add_money(message.author, winnings)
-        await client.send_message(message.channel,
-                                  'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (
-                                  message.author, pscore, dscore, bet))
-    if pscore == dscore:
-        await sleep(0.2)
-        await client.send_message(message.channel,
-                                  'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (
-                                  message.author, pscore, dscore, bet))
-        return
-
-# Function to lookup the money and create a top 5 users.
-async def cmd_leader(message, _):
-    with db.connect() as c:
-        c.execute("""
-            SELECT
-                row_number() OVER (ORDER BY balance DESC) AS rank,
-                discriminator,
-                balance
-            FROM casino_account
-            ORDER BY balance
-            DESC LIMIT 5
-        """)
-        leaders = c.fetchall()
-
-    if len(leaders) > 0:
-        msg = '  |  '.join(map(lambda u: '#%s - %s - $%s' % u, leaders))
-        await client.send_message(message.channel, msg)
-
-async def cmd_wolframalpha(message, query):
+async def cmd_wolframalpha(client, message, query):
     print("Searching WolframAlpha for '%s'" % query)
 
     await client.send_typing(message.channel)
@@ -798,19 +308,7 @@ async def cmd_wolframalpha(message, query):
         print("ERROR", type(e), e)
         await client.send_message(message.channel, 'I don\'t know how to answer that')
 
-async def makedeck(blackjack=True):
-    cards = []
-    value = 1
-    if blackjack:
-        value = 6
-    for x in range(0, value):
-        for suit in [emoji.SPADES, emoji.HEARTS, emoji.CLUBS, emoji.DIAMONDS]:
-            for rank in ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']:
-                cards.append((rank, suit))
-    random.shuffle(cards)
-    return cards
-
-async def cmd_version(message, args):
+async def cmd_version(client, message, args):
     # todo: Make this function update automatically with some sort of github api.. Version
     # number should be commits divided by 1000.
     await client.send_message(message.channel, "\n".join([
@@ -818,7 +316,7 @@ async def cmd_version(message, args):
         "Changelog: Improvements to slots and blackjack",
     ]))
 
-async def cmd_pickone(message, args):
+async def cmd_pickone(client, message, args):
     if not args:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
                                                         ' by a comma, for example !pickone pizza, burger.')
@@ -832,7 +330,7 @@ async def cmd_pickone(message, args):
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
-async def cmd_osu(message, user):
+async def cmd_osu(client, message, user):
     results = await osu.user(user)
     if not results:
         await client.send_message(message.channel, "User %s not found" % user)
@@ -847,7 +345,7 @@ async def cmd_osu(message, user):
     reply = "%s (#%d) has %d pp and %.2f%% acc" % (username, rank, pp, acc)
     await client.send_message(message.channel, reply)
 
-async def cmd_sql(message, arg):
+async def cmd_sql(client, message, arg):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
@@ -883,17 +381,10 @@ commands = {
     'spank': cmd_spank,
     'coin': cmd_coin,
     'help': cmd_help,
-    'slots': cmd_slots,
     'clear': cmd_clear,
-    'bet': cmd_bet,
-    'reviewbet': cmd_reviewbet,
-    'loan': cmd_loan,
-    'bank': cmd_bank,
-    'leader': cmd_leader,
     'math': cmd_math,
     'wa': cmd_wolframalpha,
     'translate': cmd_translate,
-    'blackjack': cmd_blackjack,
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
@@ -927,7 +418,7 @@ async def on_message(message):
         return
     handler = commands.get(cmd)
     if handler:
-        await handler(message, arg)
+        await handler(client, message, arg)
         return
     if ((len(message.content) - 3) > len(max(commands, key = len))):
         #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
@@ -941,5 +432,7 @@ async def on_ready():
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-client.loop.create_task(archiver.task(client))
+for module in [casino, archiver]:
+    commands.update(module.register(client))
+
 client.run(token)

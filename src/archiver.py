@@ -126,3 +126,7 @@ async def task(client):
             print("Archival failed:")
             print(e)
         await asyncio.sleep(15 * 60)
+
+def register(client):
+    client.loop.create_task(task(client))
+    return {}
