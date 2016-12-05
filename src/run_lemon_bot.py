@@ -476,10 +476,9 @@ async def cmd_randomquote(themessage, input):
 
 # Function to set a users bet.
 async def cmd_bet(message, amount):
-    if not amount.isdigit():
-        await client.send_message(message.channel,
-                                  'Amount must be numeric and positive, for example !bet 10.')
-        return
+    if not amount or not amount.isdigit():
+        return await client.send_message(message.channel, 'Amount must be numeric and positive, for example !bet 10.')
+
     amount = int(amount)
     if amount < 1:
         await client.send_message(message.channel, 'You need to enter a positive integer, minimum being 1. Example: !bet 5')
