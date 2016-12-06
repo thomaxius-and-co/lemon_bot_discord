@@ -71,21 +71,24 @@ BOT_ANSWERS = ["My choice is:", "I'll choose:", "I'm going with:", "The right ch
                "This one is obvious. It is:", "This one is easy:", "Stupid question. It's:", "The correct choice is:",
                "Hmm. I'd go with:", "Good question. My choice is:"]
 
+languages = ['af', 'ar', 'bs-Latn', 'bg', 'ca', 'zh-CHS', 'zh-CHT', 'hr', 'cs', 'da', 'nl', 'en', 'et', 'fi',
+             'fr', 'de', 'el', 'ht', 'he', 'hi', 'mww', 'hu', 'id', 'it',
+             'ja', 'sw', 'tlh', 'tlh-Qaak', 'ko', 'lv', 'lt', 'ms', 'mt', 'no', 'fa', 'pl', 'pt',
+             'otq', 'ro', 'ru', 'sr-Cyrl', 'sr-Latn', 'sk', 'sl', 'es', 'sv', 'th', 'tr', 'uk', 'ur', 'vi', 'cy', 'yua']
+
 def parse(input):
-    languages = ['fi', 'en', 'ru', 'se']
     args = input.split(' ', 2)
     if len(args) < 3:
-        return ['auto', 'fi', input]
+        return [None, 'en', input]
     if args[0] in languages and args[1] in languages:
         return args
-    return ['auto', 'fi', input]
+    return [None, 'en', input]
 
 def parse_command(content):
     if not content.startswith('!'):
         return None, None
     cmd, *arg = content.strip('!').split(' ', 1)
     return cmd.lower(), arg[0] if arg else None
-
 
 # function to call the BDO script and relay odds on enchanting.
 async def cmd_enchant(client, message, arg):
@@ -188,12 +191,12 @@ async def cmd_math(client, message, arg):
     await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
 async def cmd_translate(client, message, arg):
-    tolang,text = arg.split(' ', 1)
-    if len(text) > 100: #maybe it's wise to put a limit on the lenght of the translations
+    if len(arg) > 100: #maybe it's wise to put a limit on the lenght of the translations
         await client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
         return
+    fromlang, tolang, input = parse(arg)
     translator = Translator(client_id, client_secret)
-    translation = translator.translate(text, tolang)
+    translation = translator.translate(input, tolang, fromlang)
     await client.send_message(message.channel, translation)
 
 # Ask clever bot a question.
