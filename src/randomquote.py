@@ -10,7 +10,7 @@ def random_quote_from_channel(channel_id):
         c.execute("""
             SELECT
                 m->>'content',
-                (m->>'timestamp')::timestamp,
+                (m->>'timestamp')::timestamptz AT TIME ZONE 'Europe/Helsinki',
                 m->'author'->>'username',
                 m->'mentions'
             FROM message
