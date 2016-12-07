@@ -4,13 +4,14 @@ from contextlib import contextmanager
 import psycopg2
 
 @contextmanager
-def connect():
+def connect(readonly = False):
     connect_string = "host=localhost dbname=%s user=%s password=%s" % (
         os.environ["DATABASE_NAME"],
         os.environ["DATABASE_USERNAME"],
         os.environ["DATABASE_PASSWORD"]
     )
     with psycopg2.connect(connect_string) as con:
+        con.set_session(readonly=readonly)
         with con.cursor() as c:
             yield c
 
