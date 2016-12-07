@@ -41,7 +41,6 @@ async def cmd_randomquote(client, themessage, input):
     else:
         content, timestamp, username, mentions = random_message
         sanitized = sanitize_message(content, mentions)
-        print(sanitized)
         await client.send_message(themessage.channel, "%s, -- %s, %s" % (sanitized, timestamp, username))
 
 def register(client):
