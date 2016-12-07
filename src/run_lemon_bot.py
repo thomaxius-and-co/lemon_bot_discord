@@ -259,7 +259,7 @@ async def sanitize(msg, id):
         id.remove(id[0])
     return msg.replace('<','').replace('>','')
 
-async def cmd_randomquote(themessage, input):
+async def cmd_randomquote(client, themessage, input):
     channel = themessage.channel
     if input:
         for server in client.servers:
@@ -392,7 +392,7 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'osu': cmd_osu,
-    'randomquote': cmd_randomquote
+    'randomquote': cmd_randomquote,
 }
 
 async def suggestcmd(channel, arg, actualcmd):
