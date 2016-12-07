@@ -45,6 +45,7 @@ import datetime
 
 import archiver
 import casino
+import randomquote
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -242,60 +243,6 @@ async def cmd_clearbot(client, message, _):
     else:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
 
-async def getrandomdate(date2):
-    date1 = datetime.date.today().toordinal()
-    date2 = date2
-    if date1 == date2:
-        fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2), datetime.datetime.min.time())
-        return fromdate
-    diff = random.randrange(int(date1) - int(date2))
-    fromdate = datetime.datetime.combine(datetime.date.fromordinal(date2 + diff), datetime.datetime.min.time())
-    return fromdate
-
-async def sanitize(msg, id):
-    while id:
-        user = await client.get_user_info(id[0])
-        msg = msg.replace(id[0], user.name)
-        id.remove(id[0])
-    return msg.replace('<','').replace('>','')
-
-async def cmd_randomquote(client, themessage, input):
-    channel = themessage.channel
-    if input:
-        for server in client.servers:
-            for channel in server.channels:
-                if channel.name == input:
-                    channel = channel
-                    break
-            else:
-                await client.send_message(themessage.channel, "Sorry, channel not found: %s, "
-                                                              "or you lack the permissions for that channel." % input)
-                return
-    reply_message = await client.send_message(themessage.channel, 'Please wait while I go and check the archives.')
-    hugelist = []
-    for x in range(10):
-        date = await getrandomdate(channel.created_at.toordinal())
-        async for message in client.logs_from(channel, limit=10, after=date):
-            if not message.author.bot:
-                if len(message.content) > 10:
-                    if not message.content.startswith('!'):
-                        hugelist.append(message)
-    if len(hugelist) == 0:
-        msg = 'Sorry, no quotes could be found'
-        if input:
-            msg = ('Sorry, no quotes could be found from channel: %s' % input)
-        await client.edit_message(reply_message, msg)
-        return
-    message = random.choice(hugelist)
-    msg = message.content
-    id = message.raw_mentions
-    if id:
-        msg = await sanitize(msg, id) #made a separate function for this cause henry likes separate functions
-    author = message.author
-    reply = '%s, -- %s, %s' % (msg, author, message.timestamp.replace(tzinfo=None))
-    await client.edit_message(reply_message, reply)
-
-
 async def cmd_wolframalpha(client, message, query):
     print("Searching WolframAlpha for '%s'" % query)
 
@@ -392,7 +339,6 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'osu': cmd_osu,
-    'randomquote': cmd_randomquote,
 }
 
 async def suggestcmd(channel, arg, actualcmd):
@@ -435,7 +381,7 @@ async def on_ready():
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-for module in [casino, archiver]:
+for module in [archiver, casino, randomquote]:
     commands.update(module.register(client))
 
 client.run(token)
