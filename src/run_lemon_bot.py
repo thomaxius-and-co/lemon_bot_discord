@@ -381,7 +381,7 @@ async def on_ready():
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-for module in [archiver, casino, randomquote, randomcurse]:
+for module in [archiver, casino, randomquote]:
     commands.update(module.register(client))
 
 client.run(token)
