@@ -5,7 +5,7 @@ def sanitize_message(content, mentions):
         content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
     return content
 
-def random_quote_from_channel(channel_id):
+def random_message_with_filter(filters, params=None):
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT
@@ -14,13 +14,11 @@ def random_quote_from_channel(channel_id):
                 m->'author'->>'username',
                 m->'mentions'
             FROM message
-            WHERE m->>'channel_id' = %s
+            WHERE length(m->>'content') > 6 AND m->'author'->>'bot' IS NULL {filters}
             ORDER BY random()
             LIMIT 1
-        """, [channel_id])
+        """.format(filters=filters), params)
         return c.fetchone()
-
-
 
 def make_word_filters(words):
     conditions = map("lower(m->>'content') LIKE '%{0}%'".format, words)
@@ -30,20 +28,10 @@ curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", 
 
 def random_curse():
     word_filters = make_word_filters(curses)
+    return random_message_with_filter("AND ({0})".format(word_filters))
 
-    with db.connect(readonly = True) as c:
-        c.execute("""
-            SELECT
-                m->>'content',
-                (m->>'timestamp')::timestamptz AT TIME ZONE 'Europe/Helsinki',
-                m->'author'->>'username',
-                m->'mentions'
-            FROM message
-            WHERE {word_filters} AND length(m->>'content') > 6 AND m->'author'->>'bot' IS NULL
-            ORDER BY random()
-            LIMIT 1
-        """.format(word_filters=word_filters))
-        return c.fetchone()
+def random_quote_from_channel(channel_id):
+    return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
 async def cmd_randomquote(client, themessage, input):
     channel = None
