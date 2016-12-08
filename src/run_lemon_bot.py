@@ -280,21 +280,6 @@ async def cmd_pickone(client, message, args):
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
-async def cmd_osu(client, message, user):
-    results = await osu.user(user)
-    if not results:
-        await client.send_message(message.channel, "User %s not found" % user)
-        return
-
-    data = results[0]
-    username = data["username"]
-    rank = int(data["pp_rank"])
-    pp = round(float(data["pp_raw"]))
-    acc = float(data["accuracy"])
-
-    reply = "%s (#%d) has %d pp and %.2f%% acc" % (username, rank, pp, acc)
-    await client.send_message(message.channel, reply)
-
 async def cmd_sql(client, message, arg):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
@@ -338,7 +323,6 @@ commands = {
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
-    'osu': cmd_osu,
 }
 
 async def suggestcmd(channel, arg, actualcmd):
@@ -381,7 +365,7 @@ async def on_ready():
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-for module in [archiver, casino, randomquote]:
+for module in [archiver, casino, randomquote, osu]:
     commands.update(module.register(client))
 
 client.run(token)
