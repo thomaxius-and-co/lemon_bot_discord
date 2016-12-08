@@ -20,7 +20,17 @@ def random_quote_from_channel(channel_id):
         """, [channel_id])
         return c.fetchone()
 
+
+
+def make_word_filters(words):
+    conditions = map("lower(m->>'content') LIKE '%{0}%'".format, words)
+    return " OR ".join(conditions)
+
+curses = [ "paska", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
+
 def random_curse():
+    word_filters = make_word_filters(curses)
+
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT
@@ -28,15 +38,11 @@ def random_curse():
                 (m->>'timestamp')::timestamptz AT TIME ZONE 'Europe/Helsinki',
                 m->'author'->>'username',
                 m->'mentions'
-        from message
-        where lower(m->>'content') like '%paska%'  or lower(m->>'content') like '%vitu%' or
-        lower(m->>'content') like '%kusipää%' or lower(m->>'content') like '%rotta%' or
-        lower(m->>'content') like '%saatana%' or lower(m->>'content') like '%helvet%' or lower(m->>'content') like '%kyrpä%'
-        or lower(m->>'content') like '%haista%' or lower(m->>'content') like '%sossupummi%'
-        and length(m->>'content') > 6 and m->'author'->>'bot' is null
-        order by random()
-        limit 1
-        """)
+            FROM message
+            WHERE {word_filters} AND length(m->>'content') > 6 AND m->'author'->>'bot' IS NULL
+            ORDER BY random()
+            LIMIT 1
+        """.format(word_filters=word_filters))
         return c.fetchone()
 
 async def cmd_randomquote(client, themessage, input):
