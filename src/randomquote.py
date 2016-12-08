@@ -26,7 +26,7 @@ def make_word_filters(words):
     conditions = map("lower(m->>'content') LIKE '%{0}%'".format, words)
     return " OR ".join(conditions)
 
-curses = [ "paska", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
+curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
 
 def random_curse():
     word_filters = make_word_filters(curses)
