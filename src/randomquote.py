@@ -14,7 +14,7 @@ def random_message_with_filter(filters, params=None):
                 m->'author'->>'username',
                 m->'mentions'
             FROM message
-            WHERE length(m->>'content') > 6 AND m->>'content' NOT LIKE '!%' AND m->'author'->>'bot' IS NULL {filters}
+            WHERE length(m->>'content') > 6 AND m->>'content' NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
             ORDER BY random()
             LIMIT 1
         """.format(filters=filters), params)
