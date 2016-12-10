@@ -47,7 +47,7 @@
         name: "{{ item }}"
         executable: pip3
       with_items:
-        - discord.py
+        - discord.py==0.15.1
         - cleverbot
         - requests
         - BingTranslator
