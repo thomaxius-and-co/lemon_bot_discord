@@ -46,6 +46,8 @@
         - wolframalpha
         - lxml
         - psycopg2
+        - python-dateutil
+        - pytz
 
     - name: Copy source to server
       synchronize:

@@ -39,6 +39,7 @@ import archiver
 import casino
 import osu
 import randomquote
+import feed
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -358,7 +359,7 @@ async def on_ready():
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 
-for module in [archiver, casino, randomquote, osu]:
+for module in [archiver, casino, randomquote, osu, feed]:
     commands.update(module.register(client))
 
 client.run(token)
