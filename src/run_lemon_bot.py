@@ -20,31 +20,24 @@
 # Improve blackjack
 
 import os
-import time
 import json
 import discord
 import random
 import urllib
-import pickle
 import cleverbot
-from contextlib import suppress
 import enchanting_chances as en
 from BingTranslator import Translator
 from bs4 import BeautifulSoup
 from asyncio import sleep
 import aiohttp
-from lxml.html.soupparser import fromstring
 from difflib import SequenceMatcher
 import wolframalpha
-import threading
 import psycopg2
-import emoji
-import osu
 import database as db
-import datetime
 
 import archiver
 import casino
+import osu
 import randomquote
 
 client = discord.Client()
