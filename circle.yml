@@ -1,12 +1,7 @@
-machine:
-  python:
-    version: 3.5.2
-
 dependencies:
   override:
     - pip install ansible==2.2.0.0
     - pip install dopy==0.3.7
-    - pip install pytest==3.0.5
 
 test:
   override:
