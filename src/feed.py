@@ -14,6 +14,18 @@ import emoji
 def time_to_datetime(struct_time):
     return datetime.fromtimestamp(time.mktime(struct_time))
 
+def get_date(entry):
+    if hasattr(entry, "published_parsed"):
+        sturct_time = entry.published_parsed
+    elif hasattr(entry, "created_parsed"):
+        sturct_time = entry.created_parsed
+    elif hasattr(entry, "updated_parsed"):
+        sturct_time = entry.updated_parsed
+    elif hasattr(entry, "expred_parsed"):
+        sturct_time = entry.expred_parsed
+
+    return time_to_datetime(sturct_time)
+
 def initialize_schema():
     with connect() as c:
         c.execute("""
@@ -39,7 +51,7 @@ def get_new_items(url, since):
         return {
             "title": e.title,
             "url": e.links[0].href,
-            "date": time_to_datetime(e.published_parsed),
+            "date": get_date(e),
         }
     d = feedparser.parse(url)
     return d.feed.title, d.feed.link, [e for e in map(parse_entry, d.entries) if e["date"] > since]
