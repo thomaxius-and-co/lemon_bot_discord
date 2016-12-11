@@ -25,44 +25,76 @@ def make_word_filters(words):
     return " OR ".join(conditions)
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
-hatewords = ['nigga', 'negro', 'manne', 'mustalainen', 'rättipää', 'ryssä', 'vinosilmä', 'jutku' ]
+hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä", "jutku", "neeke" ]
 
-def random_curse(filter):
+
+
+def random(filter, curses=True, racist=False):
     word_filters = make_word_filters(filter)
-    return random_message_with_filter("AND ({0})".format(word_filters))
+    if curses:
+        return random_message_with_filter("AND ({0})".format(word_filters))
+    if racist:
+        return doquery("AND ({0})".format(word_filters), spammer=False, racist=True)
 
 def random_quote_from_channel(channel_id):
     return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
-def doquery():
-    with db.connect(readonly = True) as c:
-        c.execute("""
-            SELECT m->'author'->>'username' AS User, count(*) as messages
-            FROM message
-            WHERE  lower(m->>'content') NOT LIKE '!%' and m->'author'->>'bot' is null
-            GROUP BY m->'author'->>'username'
-            ORDER BY count(*) DESC
-            limit 10;
-        """)
-        return c.fetchall()
+def doquery(filters, spammer=True, racist=False):
+    if spammer:
+        with db.connect(readonly = True) as c:
+            c.execute("""
+                SELECT m->'author'->>'username' AS User, count(*) as messages
+                FROM message
+                WHERE  lower(m->>'content') NOT LIKE '!%' and m->'author'->>'bot' is null
+                GROUP BY m->'author'->>'username'
+                ORDER BY count(*) DESC
+                limit 10;
+            """)
+            nicequery = makequerynice(c.fetchall(),title='spammers')
+            return nicequery
+    if racist:
+        with db.connect(readonly = True) as c:
+            c.execute("""
+                SELECT m->'author'->>'username' AS User, count(*) as messages
+                FROM message
+                WHERE  lower(m->>'content') NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
+                GROUP BY m->'author'->>'username'
+                ORDER BY count(*) DESC
+                limit 10;
+            """.format(filters=filters))
+            nicequery = makequerynice(c.fetchall(),title='racists')
+            return nicequery
+
+def makequerynice(uglyquery, title):
+    i = 0
+    l = uglyquery
+    l1 = []
+    for x in uglyquery:
+        reply = '**%s**, %s messages' % (l[i][0], l[i][1])
+        l1.append(reply)
+        i += 1
+    reply = ('Top 10 %s:\n'
+                                     '1: %s\n2: %s\n3: %s\n4: %s\n5: %s\n6: %s\n'
+                                     '7: %s\n8: %s\n9: %s\n10: %s' %
+                    (title, l1[0], l1[1], l1[2], l1[3], l1[4], l1[5], l1[6],
+                     l1[7], l1[8], l1[9]))
+    return reply
 
 async def cmd_top(client, message, input):
-    if input.lower() == 'spammers':
-        l = doquery()
-        i = 0
-        l1 = []
-        for x in l:
-            reply = '**%s**, %s messages' % (l[i][0], l[i][1])
-            l1.append(reply)
-            i += 1
-        await client.send_message(message.channel, 'Top 10 spammers:\n'
-                                                   '1: %s\n2: %s\n3: %s\n4: %s\n5: %s\n6: %s\n'
-                                                   '7: %s\n8: %s\n9: %s\n10: %s' %
-                                  (l1[0],l1[1],l1[2],l1[3],l1[4],l1[5],l1[6],
-                                                                           l1[7],l1[8],l1[9]))
+    input = input.lower()
+    if not input:
+        await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers, racists')
+        return
+    if input == 'spammers':
+        reply = doquery(None)
+        await client.send_message(message.channel, reply)
+        return
+    if input == 'racists':
+        reply = random(hatewords, curses=False, racist=True)
+        await client.send_message(message.channel, reply)
         return
     else:
-        await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers')
+        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists ')
         return
 
 async def cmd_randomquote(client, themessage, input):
@@ -90,7 +122,7 @@ async def cmd_randomquote(client, themessage, input):
 
 async def cmd_randomcurse(client, themessage, _):
     channel = themessage.channel
-    random_message = random_curse(curses)
+    random_message = random(curses)
     if random_message is None:
         await client.send_message(channel, "Sorry, no messages could be found")
     else:
