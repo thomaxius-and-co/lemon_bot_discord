@@ -56,7 +56,6 @@ def get_new_items(url, since):
     d = feedparser.parse(url)
     return d.feed.title, d.feed.link, [e for e in map(parse_entry, d.entries) if e["date"] > since]
 
-
 def make_embed(item):
     embed = discord.Embed(title = item["title"], url = item["url"])
     embed.set_footer(text=str(item["date"]))
@@ -102,6 +101,10 @@ async def cmd_feed(client, message, arg):
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
 
+    if arg == "list":
+        await cmd_feed_list(client, message, None)
+        return
+
     x = arg.split(" ", 1)
     if len(x) != 2:
         await client.add_reaction(message, emoji.CROSS_MARK)
@@ -114,6 +117,13 @@ async def cmd_feed(client, message, arg):
         await cmd_feed_remove(client, message, rest)
     else:
         await client.add_reaction(message, emoji.CROSS_MARK)
+
+async def cmd_feed_list(client, message, _):
+    with connect() as c:
+        c.execute("SELECT url FROM feed WHERE channel_id = %s ORDER BY feed_id", [message.channel.id])
+        feeds = c.fetchall()
+    msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
+    await client.send_message(message.channel, msg)
 
 async def cmd_feed_add(client, message, url):
     # TODO: Check the feed is valid
