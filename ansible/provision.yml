@@ -33,15 +33,6 @@
         - python3-pip
         - libpq-dev
 
-    - name: Remove old python dependencies
-      pip:
-        state: absent
-        name: "{{ item }}"
-        executable: pip3
-      with_items:
-        - python-dateutil
-        - pytz
-
     - name: Install pip dependencies
       pip:
         name: "{{ item }}"
