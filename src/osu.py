@@ -2,6 +2,8 @@ import os
 import json
 import aiohttp
 
+import command
+
 def make_query_string(params):
     return "?" + "&".join(map(lambda x: "=".join(x), params.items()))
 
@@ -10,7 +12,7 @@ async def call_api(endpoint, params):
     async with aiohttp.get(url) as r:
         return await r.json()
 
-async def user(name):
+async def get_user(name):
     return await call_api("get_user", {
         "k": os.environ["OSU_API_KEY"],
         "type": "u",
@@ -18,7 +20,7 @@ async def user(name):
         "event_days": "1",
     })
 
-async def user_best(name, limit):
+async def get_user_best(name, limit):
     if not (1 <= limit <= 100):
         raise Error("osu: invalid limit")
 
@@ -58,21 +60,23 @@ def format_accuracy(play):
     return round(float(hits) / float(max_hits) * 100, 2)
 
 async def cmd_osu(client, message, arg):
-    split = arg.split(" ", 1)
-    if len(split) > 1:
-        cmd, arg = split
-        if cmd == "user":
-            await cmd_osu_user(client, message, arg)
-        elif cmd == "best":
-            await cmd_osu_best(client, message, arg)
-        else:
-            # error
-            pass
-    else:
-        await cmd_osu_user(client, message, arg)
+    if arg is None:
+        return
+
+    subcommands = {
+        "user": cmd_osu_user,
+        "best": cmd_osu_best,
+    }
+
+    cmd, arg = command.parse(arg, prefix="")
+    handler = subcommands.get(cmd, None)
+    if handler is not None:
+        await handler(client, message, arg)
+    elif cmd:
+        await cmd_osu_user(client, message, cmd)
 
 async def cmd_osu_user(client, message, user):
-    results = await user(user)
+    results = await get_user(user)
     if not results:
         await client.send_message(message.channel, "User %s not found" % user)
         return
@@ -110,7 +114,7 @@ def format_mods(mods):
     return (s + " ").lstrip(" ")
 
 async def cmd_osu_best(client, message, user):
-    results = await user_best(user, 5)
+    results = await get_user_best(user, 5)
     if not results:
         await client.send_message(message.channel, "User %s not found" % user)
         return

@@ -8,7 +8,9 @@ import re
 from bs4 import BeautifulSoup
 import discord
 import feedparser
+
 from database import connect
+import command
 import emoji
 
 def time_to_datetime(struct_time):
@@ -101,22 +103,18 @@ async def cmd_feed(client, message, arg):
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
 
-    if arg == "list":
-        await cmd_feed_list(client, message, None)
-        return
+    subcommands = {
+        "list": cmd_feed_list,
+        "add": cmd_feed_add,
+        "remove": cmd_feed_remove,
+    }
 
-    x = arg.split(" ", 1)
-    if len(x) != 2:
+    cmd, arg = command.parse(arg, prefix="")
+    handler = subcommands.get(cmd, None)
+    if handler is None:
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
-
-    cmd, rest = x
-    if cmd == "add":
-        await cmd_feed_add(client, message, rest)
-    elif cmd == "remove":
-        await cmd_feed_remove(client, message, rest)
-    else:
-        await client.add_reaction(message, emoji.CROSS_MARK)
+    await handler(client, message, arg)
 
 async def cmd_feed_list(client, message, _):
     with connect() as c:

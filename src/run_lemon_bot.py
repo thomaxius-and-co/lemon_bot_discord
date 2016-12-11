@@ -34,6 +34,7 @@ from difflib import SequenceMatcher
 import wolframalpha
 import psycopg2
 import database as db
+import command
 
 import archiver
 import casino
@@ -78,12 +79,6 @@ def parse(input):
     if args[0] in languages and args[1] in languages:
         return args
     return [None, 'en', input]
-
-def parse_command(content):
-    if not content.startswith('!'):
-        return None, None
-    cmd, *arg = content.strip('!').split(' ', 1)
-    return cmd.lower(), arg[0] if arg else None
 
 # function to call the BDO script and relay odds on enchanting.
 async def cmd_enchant(client, message, arg):
@@ -340,7 +335,7 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    cmd, arg = parse_command(message.content)
+    cmd, arg = command.parse(message.content)
     if not cmd:
         return
     handler = commands.get(cmd)
