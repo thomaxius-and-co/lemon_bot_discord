@@ -25,9 +25,10 @@ def make_word_filters(words):
     return " OR ".join(conditions)
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
+hatewords = ['nigga', 'negro', 'manne', 'mustalainen', 'rättipää', 'ryssä', 'vinosilmä', 'jutku' ]
 
-def random_curse():
-    word_filters = make_word_filters(curses)
+def random_curse(filter):
+    word_filters = make_word_filters(filter)
     return random_message_with_filter("AND ({0})".format(word_filters))
 
 def random_quote_from_channel(channel_id):
@@ -89,7 +90,7 @@ async def cmd_randomquote(client, themessage, input):
 
 async def cmd_randomcurse(client, themessage, _):
     channel = themessage.channel
-    random_message = random_curse()
+    random_message = random_curse(curses)
     if random_message is None:
         await client.send_message(channel, "Sorry, no messages could be found")
     else:
