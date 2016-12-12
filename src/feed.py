@@ -28,18 +28,6 @@ def get_date(entry):
 
     return time_to_datetime(sturct_time)
 
-def initialize_schema():
-    with connect() as c:
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS feed (
-                feed_id SERIAL PRIMARY KEY,
-                url TEXT NOT NULL,
-                last_entry TIMESTAMP DEFAULT current_timestamp,
-                channel_id TEXT NOT NULL,
-                UNIQUE (url)
-            );
-        """)
-
 async def check_feeds(client):
     with connect() as c:
         c.execute("SELECT feed_id, url, last_entry, channel_id FROM feed")
@@ -147,7 +135,6 @@ async def cmd_feed_remove(client, message, url):
 
 def register(client):
     print("feed: registering")
-    initialize_schema()
     client.loop.create_task(task(client))
     return {
         "feed": cmd_feed,

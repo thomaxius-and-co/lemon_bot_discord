@@ -21,19 +21,19 @@ def random_message_with_filter(filters, params=None):
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT
-                m->>'content',
-                (m->>'timestamp')::timestamptz AT TIME ZONE 'Europe/Helsinki',
+                content,
+                ts::timestamptz AT TIME ZONE 'Europe/Helsinki',
                 m->'mentions',
                 m->'author'
             FROM message
-            WHERE length(m->>'content') > 6 AND m->>'content' NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
+            WHERE length(content) > 6 AND content NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
             ORDER BY random()
             LIMIT 1
         """.format(filters=filters), params)
         return c.fetchone()
 
 def make_word_filters(words):
-    conditions = map("lower(m->>'content') LIKE '%{0}%'".format, words)
+    conditions = map("lower(content) LIKE '%{0}%'".format, words)
     return " OR ".join(conditions)
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
@@ -57,7 +57,7 @@ def doquery(filters, spammer=True, racist=False):
             c.execute("""
                 SELECT m->'author'->>'username' AS User, count(*) as messages
                 FROM message
-                WHERE  lower(m->>'content') NOT LIKE '!%' and m->'author'->>'bot' is null
+                WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null
                 GROUP BY m->'author'->>'username'
                 ORDER BY count(*) DESC
                 limit 10;
@@ -69,7 +69,7 @@ def doquery(filters, spammer=True, racist=False):
             c.execute("""
                 SELECT m->'author'->>'username' AS User, count(*) as messages
                 FROM message
-                WHERE  lower(m->>'content') NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
+                WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
                 GROUP BY m->'author'->>'username'
                 ORDER BY count(*) DESC
                 limit 10;

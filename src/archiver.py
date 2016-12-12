@@ -31,24 +31,6 @@ async def get_channels(guild_id):
 async def get_user_guilds(user_id):
     return await get("users/%s/guilds" % user_id)
 
-def archiver_initialize_schema():
-    print("Initializing schema")
-    with db.connect() as c:
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS channel_archiver_status (
-                channel_id TEXT NOT NULL,
-                message_id TEXT NOT NULL,
-                PRIMARY KEY (channel_id)
-            );
-        """)
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS message (
-                message_id TEXT NOT NULL,
-                m JSONB NOT NULL,
-                PRIMARY KEY (message_id)
-            );
-        """)
-
 async def fetch_messages_from(channel_id, after_id):
     all_messages = []
     next_messages = await get_messages(channel_id, after_id)
@@ -63,13 +45,18 @@ async def fetch_messages_from(channel_id, after_id):
 def insert_message(c, message):
     sql = """
         INSERT INTO message
-        (message_id, m)
-        VALUES (%s, %s)
+        (message_id, ts, content, m)
+        VALUES (%s, %s, %s, %s)
         ON CONFLICT (message_id)
         DO UPDATE SET
             m = EXCLUDED.m
     """
-    c.execute(sql, [message["id"], json.dumps(message)])
+    c.execute(sql, [
+        message["id"],
+        message["timestamp"],
+        message["content"],
+        json.dumps(message),
+    ])
 
 
 async def archive_channel(channel_id):
@@ -115,7 +102,6 @@ async def run_archival():
         await archive_guild(guild["id"])
 
 async def task(client):
-    archiver_initialize_schema()
     await client.wait_until_ready()
 
     # Store new messages every 15 minutes
