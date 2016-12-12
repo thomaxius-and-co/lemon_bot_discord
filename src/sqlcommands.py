@@ -1,3 +1,5 @@
+import discord
+
 import database as db
 
 def sanitize_message(content, mentions):
@@ -5,14 +7,24 @@ def sanitize_message(content, mentions):
         content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
     return content
 
+async def send_quote(client, channel, random_message):
+    content, timestamp, mentions, author = random_message
+    sanitized = sanitize_message(content, mentions)
+    avatar_url = "https://cdn.discordapp.com/avatars/{id}/{avatar}.jpg".format(**author)
+
+    embed = discord.Embed(description=sanitized)
+    embed.set_author(name=author["username"], icon_url=avatar_url)
+    embed.set_footer(text=str(timestamp))
+    await client.send_message(channel, embed=embed)
+
 def random_message_with_filter(filters, params=None):
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT
                 m->>'content',
                 (m->>'timestamp')::timestamptz AT TIME ZONE 'Europe/Helsinki',
-                m->'author'->>'username',
-                m->'mentions'
+                m->'mentions',
+                m->'author'
             FROM message
             WHERE length(m->>'content') > 6 AND m->>'content' NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
             ORDER BY random()
@@ -116,9 +128,7 @@ async def cmd_randomquote(client, themessage, input):
     if random_message is None:
         await client.send_message(themessage.channel, "Sorry, no messages could be found")
     else:
-        content, timestamp, username, mentions = random_message
-        sanitized = sanitize_message(content, mentions)
-        await client.send_message(themessage.channel, "%s, -- %s, %s" % (sanitized, timestamp, username))
+        await send_quote(client, themessage.channel, random_message)
 
 async def cmd_randomcurse(client, themessage, _):
     channel = themessage.channel
@@ -126,9 +136,7 @@ async def cmd_randomcurse(client, themessage, _):
     if random_message is None:
         await client.send_message(channel, "Sorry, no messages could be found")
     else:
-        content, timestamp, username, mentions = random_message
-        sanitized = sanitize_message(content, mentions)
-        await client.send_message(channel, "%s, -- %s, %s" % (sanitized, timestamp, username))
+        await send_quote(client, channel, random_message)
 
 def register(client):
     return {
