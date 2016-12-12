@@ -41,41 +41,25 @@ hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä",
 
 
 
-def random(filter, curses=True, racist=False):
+def random(filter):
     word_filters = make_word_filters(filter)
-    if curses:
-        return random_message_with_filter("AND ({0})".format(word_filters))
-    if racist:
-        return doquery("AND ({0})".format(word_filters), spammer=False, racist=True)
+    return random_message_with_filter("AND ({0})".format(word_filters))
 
 def random_quote_from_channel(channel_id):
     return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
-def doquery(filters, spammer=True, racist=False):
-    if spammer:
-        with db.connect(readonly = True) as c:
-            c.execute("""
-                SELECT m->'author'->>'username' AS User, count(*) as messages
-                FROM message
-                WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null
-                GROUP BY m->'author'->>'username'
-                ORDER BY count(*) DESC
-                limit 10;
-            """)
-            nicequery = makequerynice(c.fetchall(),title='spammers')
-            return nicequery
-    if racist:
-        with db.connect(readonly = True) as c:
-            c.execute("""
-                SELECT m->'author'->>'username' AS User, count(*) as messages
-                FROM message
-                WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
-                GROUP BY m->'author'->>'username'
-                ORDER BY count(*) DESC
-                limit 10;
-            """.format(filters=filters))
-            nicequery = makequerynice(c.fetchall(),title='racists')
-            return nicequery
+def top_message_counts(filters=""):
+    with db.connect(readonly = True) as c:
+        c.execute("""
+            SELECT m->'author'->>'username' AS User, count(*) as messages
+            FROM message
+            WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
+            GROUP BY m->'author'->>'username'
+            ORDER BY count(*) DESC
+            limit 10;
+        """.format(filters=filters))
+        nicequery = makequerynice(c.fetchall(),title='racists')
+        return nicequery
 
 def makequerynice(uglyquery, title):
     i = 0
@@ -98,11 +82,12 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers, racists')
         return
     if input == 'spammers':
-        reply = doquery(None)
+        reply = top_message_counts()
         await client.send_message(message.channel, reply)
         return
     if input == 'racists':
-        reply = random(hatewords, curses=False, racist=True)
+        racists_filter = "AND ({0})".format(make_word_filters(hatewords))
+        reply = top_message_counts(racists_filter)
         await client.send_message(message.channel, reply)
         return
     else:
