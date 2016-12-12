@@ -347,10 +347,6 @@ async def on_message(message):
         return
     await checkspelling(message.channel, cmd)
 
-@client.event
-async def on_ready():
-    db.insert_start_time("Server started")
-
 # Database schema has to be initialized before running the bot
 db.initialize_schema()
 

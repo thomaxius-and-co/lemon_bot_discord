@@ -65,6 +65,11 @@ schema_migrations = {
         UPDATE message SET content = m->>'content';
         ALTER TABLE message ALTER COLUMN content SET NOT NULL;
     """,
+
+    # Remove old and unused start_times table
+    3: """
+        DROP TABLE start_times;
+    """,
 }
 
 @contextmanager
@@ -114,11 +119,3 @@ def initialize_schema():
             c.execute("INSERT INTO schema_version (version) VALUES (%s)", [new_version])
 
     print("database: schema is in up to date")
-
-def insert_start_time(message):
-    with connect() as c:
-        c.execute("""
-            INSERT INTO start_times (ts, message)
-            VALUES (current_timestamp, %s)
-        """, [message])
-
