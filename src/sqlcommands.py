@@ -17,7 +17,7 @@ async def send_quote(client, channel, random_message):
     embed.set_footer(text=str(timestamp))
     await client.send_message(channel, embed=embed)
 
-def random_message_with_filter(filters, params=None):
+def random_message_with_filter(filters, params):
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT
@@ -33,8 +33,9 @@ def random_message_with_filter(filters, params=None):
         return c.fetchone()
 
 def make_word_filters(words):
-    conditions = map("lower(content) LIKE '%{0}%'".format, words)
-    return " OR ".join(conditions)
+    conditions = " OR ".join(["lower(content) LIKE %s"] * len(words))
+    params = list(map("%{0}%".format, words))
+    return conditions, params
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
 hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä", "jutku", "neeke" ]
@@ -42,8 +43,8 @@ hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä",
 
 
 def random(filter):
-    word_filters = make_word_filters(filter)
-    return random_message_with_filter("AND ({0})".format(word_filters))
+    word_filters, params = make_word_filters(filter)
+    return random_message_with_filter("AND ({0})".format(word_filters), params)
 
 def random_quote_from_channel(channel_id):
     return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
