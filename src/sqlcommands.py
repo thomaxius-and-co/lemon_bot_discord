@@ -110,6 +110,17 @@ async def cmd_top(client, message, input):
         return
 
 async def cmd_randomquote(client, themessage, input):
+    if 'custom' in input.lower():
+        channel = themessage.channel
+        customwords = input.split(' ')
+        customwords.remove('custom')
+        customwords = ''.join(customwords)
+        random_message = random(customwords.split(','))
+        if random_message is None:
+            await client.send_message(channel, "Sorry, no messages could be found")
+            return
+        await send_quote(client, channel, random_message)
+        return
     channel = None
     if input is None:
         channel = themessage.channel
