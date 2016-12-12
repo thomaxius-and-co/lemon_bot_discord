@@ -78,10 +78,11 @@ def makequerynice(uglyquery, title):
     return reply
 
 async def cmd_top(client, message, input):
-    input = input.lower()
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers, racists')
         return
+
+    input = input.lower()
     if input == 'spammers':
         reply = top_message_counts()
         await client.send_message(message.channel, reply)
@@ -96,7 +97,7 @@ async def cmd_top(client, message, input):
         return
 
 async def cmd_randomquote(client, themessage, input):
-    if 'custom' in input.lower():
+    if input is not None and 'custom' in input.lower():
         channel = themessage.channel
         customwords = input.split(' ')
         customwords.remove('custom')
