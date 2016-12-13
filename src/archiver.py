@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import traceback
 
 import aiohttp
 
@@ -109,8 +110,8 @@ async def task(client):
         try:
             await run_archival()
         except Exception as e:
-            print("Archival failed:")
-            print(e)
+            print("ERROR: {0}".format(e))
+            traceback.print_exc()
         await asyncio.sleep(15 * 60)
 
 def register(client):
