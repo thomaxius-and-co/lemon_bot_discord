@@ -22,6 +22,7 @@
 import os
 import json
 import discord
+import logging
 import random
 import urllib
 import cleverbot
@@ -42,6 +43,7 @@ import osu
 import sqlcommands
 import feed
 
+logging.basicConfig(level=logging.DEBUG)
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']
