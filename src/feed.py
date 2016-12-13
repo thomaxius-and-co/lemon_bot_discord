@@ -29,9 +29,9 @@ def get_date(entry):
     return time_to_datetime(sturct_time)
 
 async def check_feeds(client):
-    with connect() as c:
-        c.execute("SELECT feed_id, url, last_entry, channel_id FROM feed")
-        feeds = c.fetchall()
+    async with connect() as c:
+        await c.execute("SELECT feed_id, url, last_entry, channel_id FROM feed")
+        feeds = await c.fetchall()
 
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
@@ -63,8 +63,8 @@ async def process_feed(client, id, url, last_entry, channel_id):
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
-        with connect() as c:
-            c.execute("""
+        async with connect() as c:
+            await c.execute("""
                 UPDATE feed
                 SET last_entry = %s
                 WHERE feed_id = %s
@@ -105,9 +105,9 @@ async def cmd_feed(client, message, arg):
     await handler(client, message, arg)
 
 async def cmd_feed_list(client, message, _):
-    with connect() as c:
-        c.execute("SELECT url FROM feed WHERE channel_id = %s ORDER BY feed_id", [message.channel.id])
-        feeds = c.fetchall()
+    async with connect() as c:
+        await c.execute("SELECT url FROM feed WHERE channel_id = %s ORDER BY feed_id", [message.channel.id])
+        feeds = await c.fetchall()
     msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
     await client.send_message(message.channel, msg)
 
@@ -115,8 +115,8 @@ async def cmd_feed_add(client, message, url):
     # TODO: Check the feed is valid
     # TODO: Find feeds from linked url
 
-    with connect() as c:
-        c.execute("INSERT INTO feed (url, channel_id) VALUES (%s, %s)", [url, message.channel.id])
+    async with connect() as c:
+        await c.execute("INSERT INTO feed (url, channel_id) VALUES (%s, %s)", [url, message.channel.id])
 
     print("feed: added feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)

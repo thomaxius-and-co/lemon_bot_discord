@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 
-import psycopg2
+import aiopg
 
 schema_migrations = {
     # Initial DB
@@ -72,26 +72,32 @@ schema_migrations = {
     """,
 }
 
-@contextmanager
-def connect(readonly = False):
-    connect_string = "host=localhost dbname=%s user=%s password=%s" % (
-        os.environ["DATABASE_NAME"],
-        os.environ["DATABASE_USERNAME"],
-        os.environ["DATABASE_PASSWORD"]
-    )
-    with psycopg2.connect(connect_string) as con:
-        con.set_session(readonly=readonly)
-        with con.cursor() as c:
-            yield c
+class connect:
+    def __init__(self, readonly = False):
+        self.readonly = readonly
 
-def table_exists(c, table_name):
-    c.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
+    async def __aenter__(self):
+        connect_string = "host=localhost dbname=%s user=%s password=%s" % (
+            os.environ["DATABASE_NAME"],
+            os.environ["DATABASE_USERNAME"],
+            os.environ["DATABASE_PASSWORD"]
+        )
+        self.con = await aiopg.connect(connect_string)
+        self.cursor = await self.con.cursor()
+        return self.cursor
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.cursor.close()
+        await self.con.close()
+
+async def table_exists(c, table_name):
+    await c.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
     return bool(c.rowcount)
 
-def get_current_schema_version(c):
-    if table_exists(c, "schema_version"):
-        c.execute("SELECT max(version) FROM schema_version;")
-        result = c.fetchone()
+async def get_current_schema_version(c):
+    if await table_exists(c, "schema_version"):
+        await c.execute("SELECT max(version) FROM schema_version;")
+        result = await c.fetchone()
         return result[0] if result is not None else 0
     else:
         return 0
@@ -106,16 +112,16 @@ def new_migrations(version):
     up_to = max(map(mig_version, not_applied))
     return not_applied, up_to
 
-def initialize_schema():
-    with connect() as c:
-        version = get_current_schema_version(c)
+async def initialize_schema():
+    async with connect() as c:
+        version = await get_current_schema_version(c)
         migrations, new_version = new_migrations(version)
 
         if len(migrations) > 0:
             for version, sql in migrations:
                 print("database: migrating to version {0}".format(version))
-                c.execute(sql)
+                await c.execute(sql)
 
-            c.execute("INSERT INTO schema_version (version) VALUES (%s)", [new_version])
+            await c.execute("INSERT INTO schema_version (version) VALUES (%s)", [new_version])
 
     print("database: schema is in up to date")

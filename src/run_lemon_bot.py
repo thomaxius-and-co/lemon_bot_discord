@@ -29,6 +29,7 @@ import cleverbot
 import enchanting_chances as en
 from BingTranslator import Translator
 from bs4 import BeautifulSoup
+import asyncio
 from asyncio import sleep
 import aiohttp
 from difflib import SequenceMatcher
@@ -285,9 +286,9 @@ async def cmd_sql(client, message, arg):
         return template % content.replace("`", "")[:max_len]
 
     try:
-        with db.connect(readonly = True) as c:
-            c.execute(arg)
-            results = c.fetchmany(100)
+        async with db.connect(readonly = True) as c:
+            await c.execute(arg)
+            results = await c.fetchmany(100)
             msg = "\n".join(map(str, results))
             msg = limit_msg_length("```%s```", msg)
             await client.send_message(message.channel, msg)
@@ -350,7 +351,8 @@ async def on_message(message):
     await checkspelling(message.channel, cmd)
 
 # Database schema has to be initialized before running the bot
-db.initialize_schema()
+loop = asyncio.get_event_loop()
+loop.run_until_complete(db.initialize_schema())
 
 for module in [archiver, casino, sqlcommands, osu, feed]:
     commands.update(module.register(client))

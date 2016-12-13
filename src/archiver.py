@@ -42,7 +42,7 @@ async def fetch_messages_from(channel_id, after_id):
 
     return all_messages
 
-def insert_message(c, message):
+async def insert_message(c, message):
     sql = """
         INSERT INTO message
         (message_id, ts, content, m)
@@ -51,7 +51,7 @@ def insert_message(c, message):
         DO UPDATE SET
             m = EXCLUDED.m
     """
-    c.execute(sql, [
+    await c.execute(sql, [
         message["id"],
         message["timestamp"],
         message["content"],
@@ -60,20 +60,20 @@ def insert_message(c, message):
 
 
 async def archive_channel(channel_id):
-    with db.connect() as c:
-        c.execute("""
+    async with db.connect() as c:
+        await c.execute("""
             INSERT INTO channel_archiver_status
             (channel_id, message_id)
             VALUES (%s, '0')
             ON CONFLICT DO NOTHING;
         """, [channel_id])
-        c.execute("SELECT message_id FROM channel_archiver_status WHERE channel_id = %s", [channel_id])
-        latest_id = c.fetchone()[0]
+        await c.execute("SELECT message_id FROM channel_archiver_status WHERE channel_id = %s", [channel_id])
+        latest_id = (await c.fetchone())[0]
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
             new_latest_id = all_messages[0]["id"]
 
-            c.execute("""
+            await c.execute("""
                 UPDATE channel_archiver_status
                 SET message_id = %s
                 WHERE channel_id = %s
@@ -81,7 +81,7 @@ async def archive_channel(channel_id):
 
 
             for message in all_messages:
-                insert_message(c, message)
+                await insert_message(c, message)
 
         print("Fetched total %s messages" % len(all_messages))
 

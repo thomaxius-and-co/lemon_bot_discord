@@ -17,9 +17,9 @@ async def send_quote(client, channel, random_message):
     embed.set_footer(text=str(timestamp))
     await client.send_message(channel, embed=embed)
 
-def random_message_with_filter(filters, params):
-    with db.connect(readonly = True) as c:
-        c.execute("""
+async def random_message_with_filter(filters, params):
+    async with db.connect(readonly = True) as c:
+        await c.execute("""
             SELECT
                 content,
                 ts::timestamptz AT TIME ZONE 'Europe/Helsinki',
@@ -30,7 +30,7 @@ def random_message_with_filter(filters, params):
             ORDER BY random()
             LIMIT 1
         """.format(filters=filters), params)
-        return c.fetchone()
+        return await c.fetchone()
 
 def make_word_filters(words):
     conditions = " OR ".join(["lower(content) LIKE %s"] * len(words))
@@ -42,16 +42,16 @@ hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä",
 
 
 
-def random(filter):
+async def random(filter):
     word_filters, params = make_word_filters(filter)
-    return random_message_with_filter("AND ({0})".format(word_filters), params)
+    return await random_message_with_filter("AND ({0})".format(word_filters), params)
 
-def random_quote_from_channel(channel_id):
-    return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
+async def random_quote_from_channel(channel_id):
+    return await random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
-def top_message_counts(title, filters, params):
-    with db.connect(readonly = True) as c:
-        c.execute("""
+async def top_message_counts(title, filters, params):
+    async with db.connect(readonly = True) as c:
+        await c.execute("""
             SELECT m->'author'->>'username' AS User, count(*) as messages
             FROM message
             WHERE  lower(content) NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
@@ -59,7 +59,7 @@ def top_message_counts(title, filters, params):
             ORDER BY count(*) DESC
             limit 10;
         """.format(filters=filters), params)
-        nicequery = makequerynice(c.fetchall(), title=title)
+        nicequery = makequerynice(await c.fetchall(), title=title)
         return nicequery
 
 def makequerynice(uglyquery, title):
@@ -84,13 +84,13 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == 'spammers':
-        reply = top_message_counts(input, "AND 1 = %s", [1])
+        reply = await top_message_counts(input, "AND 1 = %s", [1])
         await client.send_message(message.channel, reply)
         return
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
         racists_filter = "AND ({0})".format(filters)
-        reply = top_message_counts(input, racists_filter, params)
+        reply = await top_message_counts(input, racists_filter, params)
         await client.send_message(message.channel, reply)
         return
     else:
@@ -103,7 +103,7 @@ async def cmd_randomquote(client, themessage, input):
         customwords = input.split(' ')
         customwords.remove('custom')
         customwords = ''.join(customwords)
-        random_message = random(customwords.split(','))
+        random_message = await random(customwords.split(','))
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
             return
@@ -123,7 +123,7 @@ async def cmd_randomquote(client, themessage, input):
             await client.send_message(themessage.channel, "Sorry, I couldn't find such channel")
             return
 
-    random_message = random_quote_from_channel(channel.id)
+    random_message = await random_quote_from_channel(channel.id)
     if random_message is None:
         await client.send_message(themessage.channel, "Sorry, no messages could be found")
     else:
@@ -131,7 +131,7 @@ async def cmd_randomquote(client, themessage, input):
 
 async def cmd_randomcurse(client, themessage, _):
     channel = themessage.channel
-    random_message = random(curses)
+    random_message = await random(curses)
     if random_message is None:
         await client.send_message(channel, "Sorry, no messages could be found")
     else:

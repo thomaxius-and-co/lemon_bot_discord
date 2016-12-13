@@ -35,6 +35,13 @@
         - libxml2-dev # for lxml
         - libxslt1-dev # for lxml
 
+    - name: Remove old pip dependencies
+      pip:
+        name: "{{ item }}"
+        executable: pip3
+      with_items:
+        - psycopg2
+
     - name: Install pip dependencies
       pip:
         name: "{{ item }}"
@@ -47,7 +54,7 @@
         - bs4
         - wolframalpha
         - lxml
-        - psycopg2
+        - aiopg
         - feedparser
 
     - name: Copy source to server
