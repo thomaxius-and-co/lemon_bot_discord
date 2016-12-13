@@ -101,9 +101,11 @@ async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower():
         channel = themessage.channel
         customwords = input.split(' ')
-        customwords.remove('custom')
-        customwords = ''.join(customwords)
-        random_message = await random(customwords.split(','))
+        if len(customwords) > 50:
+            await client.send_message(channel, "Please broaden your query, max allowed words is 50.")
+            return
+        customwords.pop(0)
+        random_message = await random(''.join(customwords).split(','))
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
             return
