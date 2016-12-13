@@ -49,16 +49,16 @@ def random(filter):
 def random_quote_from_channel(channel_id):
     return random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
-def top_message_counts(filters=""):
+def top_message_counts(filters, params):
     with db.connect(readonly = True) as c:
         c.execute("""
             SELECT m->'author'->>'username' AS User, count(*) as messages
             FROM message
-            WHERE  lower(content) NOT LIKE '!%' and m->'author'->>'bot' is null {filters}
+            WHERE  lower(content) NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
             GROUP BY m->'author'->>'username'
             ORDER BY count(*) DESC
             limit 10;
-        """.format(filters=filters))
+        """.format(filters=filters), params)
         nicequery = makequerynice(c.fetchall(),title='racists')
         return nicequery
 
@@ -84,12 +84,13 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == 'spammers':
-        reply = top_message_counts()
+        reply = top_message_counts("AND 1 = %s", [1])
         await client.send_message(message.channel, reply)
         return
     if input == 'racists':
-        racists_filter = "AND ({0})".format(make_word_filters(hatewords))
-        reply = top_message_counts(racists_filter)
+        filters, params = make_word_filters(hatewords)
+        racists_filter = "AND ({0})".format(filters)
+        reply = top_message_counts(racists_filter, params)
         await client.send_message(message.channel, reply)
         return
     else:
