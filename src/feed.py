@@ -135,7 +135,7 @@ async def cmd_feed_remove(client, message, url):
 
 def register(client):
     print("feed: registering")
-    client.loop.create_task(task(client))
+    #client.loop.create_task(task(client))
     return {
         "feed": cmd_feed,
     }
