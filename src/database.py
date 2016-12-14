@@ -83,7 +83,7 @@ class connect:
             os.environ["DATABASE_PASSWORD"]
         )
         self.con = await aiopg.connect(connect_string)
-        self.con.set_session(readonly=readonly)
+        self.con.set_session(readonly=self.readonly)
         self.cursor = await self.con.cursor()
         return self.cursor
 
