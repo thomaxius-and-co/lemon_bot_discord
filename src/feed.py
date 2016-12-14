@@ -127,8 +127,8 @@ async def cmd_feed_remove(client, message, url):
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
 
-    with connect() as c:
-        c.execute("DELETE FROM feed WHERE url = %s", [url])
+    async with connect() as c:
+        await c.execute("DELETE FROM feed WHERE url = %s", [url])
 
     print("feed: removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
