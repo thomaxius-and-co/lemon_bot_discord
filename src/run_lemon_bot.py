@@ -258,6 +258,18 @@ async def cmd_version(client, message, args):
         "Changelog: Improvements to slots and blackjack",
     ]))
 
+async def cmd_status(client, message, input):
+    if not perms.administrator:
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+    if not input:
+        await client.send_message(message.channel, 'You need to specify a status. For example: !status I am online!' )
+        return
+    if len(input) > 30:
+        await client.send_message(message.channel, 'Maximum allowed lenght for status is 30 characters.' )
+        return
+    await client.change_presence(game=discord.Game(name=input))
+
 async def cmd_pickone(client, message, args):
     if not args:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
@@ -315,6 +327,7 @@ commands = {
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
+    'status': cmd_status
 }
 
 async def suggestcmd(channel, arg, actualcmd):
@@ -356,5 +369,9 @@ loop.run_until_complete(db.initialize_schema())
 
 for module in [archiver, casino, sqlcommands, osu, feed]:
     commands.update(module.register(client))
+
+@client.event
+async def on_ready():
+    await client.change_presence(game=discord.Game(name='is not working. - I am your worker. I am your slave.'))
 
 client.run(token)
