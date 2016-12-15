@@ -259,6 +259,7 @@ async def cmd_version(client, message, args):
     ]))
 
 async def cmd_status(client, message, input):
+    perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         return
@@ -372,6 +373,6 @@ for module in [archiver, casino, sqlcommands, osu, feed]:
 
 @client.event
 async def on_ready():
-    await client.change_presence(game=discord.Game(name='is not working. - I am your worker. I am your slave.'))
+    await client.change_presence(game=discord.Game(name='is not working - I am your worker. I am your slave.'))
 
 client.run(token)
