@@ -267,7 +267,7 @@ async def cmd_status(client, message, input):
         await client.send_message(message.channel, 'You need to specify a status. For example: !status I am online!' )
         return
     if len(input) > 30:
-        await client.send_message(message.channel, 'Maximum allowed lenght for status is 30 characters.' )
+        await client.send_message(message.channel, 'Maximum allowed length for status is 30 characters.' )
         return
     await client.change_presence(game=discord.Game(name=input))
 
@@ -373,6 +373,6 @@ for module in [archiver, casino, sqlcommands, osu, feed]:
 
 @client.event
 async def on_ready():
-    await client.change_presence(game=discord.Game(name='is not working - I am your worker. I am your slave.'))
+    await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
 
 client.run(token)
