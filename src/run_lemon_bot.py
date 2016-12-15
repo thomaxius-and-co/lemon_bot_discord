@@ -259,6 +259,7 @@ async def cmd_version(client, message, args):
     ]))
 
 async def cmd_status(client, message, input):
+    perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         return
