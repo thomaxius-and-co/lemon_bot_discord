@@ -52,11 +52,15 @@ async def random_quote_from_channel(channel_id):
 async def top_message_counts(title, filters, params):
     async with db.connect(readonly = True) as c:
         await c.execute("""
-            SELECT m->'author'->>'username' AS User, count(*) as messages
-            FROM message
-            WHERE  lower(content) NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
-            GROUP BY m->'author'->>'username'
-            ORDER BY count(*) DESC
+            with tmp as
+                (select m->'author'->>'username' as name,
+                count(*) / extract(epoch from current_timestamp - min((m->>'timestamp')::timestamptz)) * 60 * 60 * 24
+                as msg_per_day,
+                count(*) as messages
+                from message
+                WHERE  lower(content) NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
+                group by m->'author'->>'username')
+            select * from tmp order by msg_per_day desc
             limit 10;
         """.format(filters=filters), params)
         nicequery = makequerynice(await c.fetchall(), title=title)
@@ -67,7 +71,7 @@ def makequerynice(uglyquery, title):
     l = uglyquery
     l1 = []
     for x in uglyquery:
-        reply = '**%s**, %s messages' % (l[i][0], l[i][1])
+        reply = '**%s**, %s messages per day, %s messages total' % (l[i][0], format(l[i][1], '.2f'), l[i][2])
         l1.append(reply)
         i += 1
     reply = ('Top 10 %s:\n'
