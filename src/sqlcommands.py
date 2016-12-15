@@ -63,6 +63,8 @@ async def top_message_counts(title, filters, params):
             select * from tmp order by msg_per_day desc
             limit 10;
         """.format(filters=filters), params)
+        if c.rowcount <= 1:
+            return None
         nicequery = makequerynice(await c.fetchall(), title=title)
         return nicequery
 
@@ -70,15 +72,16 @@ def makequerynice(uglyquery, title):
     i = 0
     l = uglyquery
     l1 = []
+    rank = 1
     for x in uglyquery:
-        reply = '**%s**, %s messages per day, %s messages total' % (l[i][0], format(l[i][1], '.2f'), l[i][2])
-        l1.append(reply)
+        reply = '**%s**, %s: %s msg per day, %s msg total' % (
+                                                                               l[i][0], rank, format(l[i][1], '.2f'), l[i][2])
+        l1.append((reply))
         i += 1
-    reply = ('Top 10 %s:\n'
-                                     '1: %s\n2: %s\n3: %s\n4: %s\n5: %s\n6: %s\n'
-                                     '7: %s\n8: %s\n9: %s\n10: %s' %
-                    (title, l1[0], l1[1], l1[2], l1[3], l1[4], l1[5], l1[6],
-                     l1[7], l1[8], l1[9]))
+        rank += 1
+    number = len(l1)
+    reply = '\n'.join(l1)
+    reply = ('Top %s %s:\n%s' % (number, title, reply))
     return reply
 
 async def cmd_top(client, message, input):
@@ -89,12 +92,18 @@ async def cmd_top(client, message, input):
     input = input.lower()
     if input == 'spammers':
         reply = await top_message_counts(input, "AND 1 = %s", [1])
+        if not reply:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
         await client.send_message(message.channel, reply)
         return
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
         racists_filter = "AND ({0})".format(filters)
         reply = await top_message_counts(input, racists_filter, params)
+        if not reply:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
         await client.send_message(message.channel, reply)
         return
     else:
