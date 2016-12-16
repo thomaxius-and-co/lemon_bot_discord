@@ -44,7 +44,8 @@ def get_new_items(url, since):
             "date": get_date(e),
         }
     d = feedparser.parse(url)
-    return d.feed.title, d.feed.link, [e for e in map(parse_entry, d.entries) if e["date"] > since]
+    new_items = [e for e in map(parse_entry, d.entries) if e["date"] > since]
+    return d.feed.title, d.feed.link, sorted(new_items, key=lambda i: i["date"])
 
 def make_embed(item):
     embed = discord.Embed(title = item["title"], url = item["url"])
