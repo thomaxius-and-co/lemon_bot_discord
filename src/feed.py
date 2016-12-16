@@ -1,13 +1,13 @@
-from asyncio import sleep
+import asyncio
 import aiohttp
 from datetime import datetime
-#import pytz
 import time
 import traceback
 import re
 from bs4 import BeautifulSoup
 import discord
 import feedparser
+from threading import Thread
 
 from database import connect
 import command
@@ -59,7 +59,10 @@ async def process_feed(client, id, url, last_entry, channel_id):
         for item in new_items:
             embed = make_embed(item)
             embed.set_author(name=feed_title, url=feed_url)
-            await client.send_message(discord.Object(id=channel_id), embed=embed)
+
+            coroutine = client.send_message(discord.Object(id=channel_id), embed=embed)
+            future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
+            future.result()
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
@@ -71,13 +74,16 @@ async def process_feed(client, id, url, last_entry, channel_id):
             """, [max_timestamp, id])
 
 async def task(client):
-    await client.wait_until_ready()
+    # Wait until the client is ready
+    coroutine = client.wait_until_ready()
+    future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
+    future.result()
 
     # Check feeds every minute
     fetch_interval = 60
 
     while True:
-        await sleep(fetch_interval)
+        await asyncio.sleep(fetch_interval)
         try:
             print("feed: checking feeds")
             await check_feeds(client)
@@ -133,9 +139,14 @@ async def cmd_feed_remove(client, message, url):
     print("feed: removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
+def thread_func(client):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(task(client))
+
 def register(client):
     print("feed: registering")
-    #client.loop.create_task(task(client))
+    Thread(target=thread_func, args=(client,)).start()
     return {
         "feed": cmd_feed,
     }
