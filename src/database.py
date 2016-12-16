@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 
+import threading
 import aiopg
 
 schema_migrations = {
@@ -77,24 +78,45 @@ schema_migrations = {
     """,
 }
 
+_connection_pools = {}
+_connect_string = "host=localhost dbname=%s user=%s password=%s" % (
+    os.environ["DATABASE_NAME"],
+    os.environ["DATABASE_USERNAME"],
+    os.environ["DATABASE_PASSWORD"]
+)
+
+async def get_pool():
+    global _connection_pools
+    thread_id = threading.get_ident()
+    pool = _connection_pools.get(thread_id, None)
+    if pool is None:
+        pool = await aiopg.create_pool(_connect_string)
+        _connection_pools[thread_id] = pool
+    return pool
+
+async def close_pool():
+    global _connection_pools
+    thread_id = threading.get_ident()
+    pool = _connection_pools.get(thread_id, None)
+    if pool is not None:
+        pool.close()
+        await pool.wait_closed()
+        del _connection_pools[thread_id]
+
 class connect:
     def __init__(self, readonly = False):
         self.readonly = readonly
 
     async def __aenter__(self):
-        connect_string = "host=localhost dbname=%s user=%s password=%s" % (
-            os.environ["DATABASE_NAME"],
-            os.environ["DATABASE_USERNAME"],
-            os.environ["DATABASE_PASSWORD"]
-        )
-        self.con = await aiopg.connect(connect_string)
+        self.pool = await get_pool()
+        self.con = await self.pool.acquire()
         self.con.set_session(readonly=self.readonly)
         self.cursor = await self.con.cursor()
         return self.cursor
 
     async def __aexit__(self, exc_type, exc, tb):
         self.cursor.close()
-        await self.con.close()
+        await self.pool.release(self.con)
 
 async def table_exists(c, table_name):
     await c.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
