@@ -70,6 +70,11 @@ schema_migrations = {
     3: """
         DROP TABLE start_times;
     """,
+
+    # Add index for faster message content searches
+    4: """
+        CREATE INDEX message_content_trgm_idx ON message USING GIN (content gin_trgm_ops);
+    """,
 }
 
 class connect:

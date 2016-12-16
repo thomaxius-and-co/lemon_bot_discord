@@ -33,7 +33,7 @@ async def random_message_with_filter(filters, params):
         return await c.fetchone()
 
 def make_word_filters(words):
-    conditions = " OR ".join(["lower(content) LIKE %s"] * len(words))
+    conditions = " OR ".join(["content ILIKE %s"] * len(words))
     params = list(map("%{0}%".format, words))
     return conditions, params
 
@@ -58,7 +58,7 @@ async def top_message_counts(title, filters, params):
                 as msg_per_day,
                 count(*) as messages
                 from message
-                WHERE  lower(content) NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
+                WHERE content NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
                 group by m->'author'->>'username')
             select * from tmp order by msg_per_day desc
             limit 10;

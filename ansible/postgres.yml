@@ -17,6 +17,12 @@
     priv: "ALL"
   become_user: postgres
 
+- name: Add pg_trgm extension to support indexes for LIKE operator
+  postgresql_ext:
+    name: pg_trgm
+    db: "{{ secrets.db.dbname }}"
+  become_user: postgres
+
 - name: enable and start postgres service
   service:
     name: postgresql
