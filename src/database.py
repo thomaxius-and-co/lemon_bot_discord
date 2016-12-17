@@ -78,7 +78,8 @@ schema_migrations = {
     """,
 }
 
-_connection_pools = {}
+_pool_holder = threading.local()
+
 _connect_string = "host=localhost dbname=%s user=%s password=%s" % (
     os.environ["DATABASE_NAME"],
     os.environ["DATABASE_USERNAME"],
@@ -86,22 +87,20 @@ _connect_string = "host=localhost dbname=%s user=%s password=%s" % (
 )
 
 async def get_pool():
-    global _connection_pools
-    thread_id = threading.get_ident()
-    pool = _connection_pools.get(thread_id, None)
+    global _pool_holder
+    pool = getattr(_pool_holder, "pool", None)
     if pool is None:
         pool = await aiopg.create_pool(_connect_string)
-        _connection_pools[thread_id] = pool
+        setattr(_pool_holder, "pool", pool)
     return pool
 
 async def close_pool():
-    global _connection_pools
-    thread_id = threading.get_ident()
-    pool = _connection_pools.get(thread_id, None)
+    global _pool_holder
+    pool = getattr(_pool_holder, "pool", None)
     if pool is not None:
         pool.close()
         await pool.wait_closed()
-        del _connection_pools[thread_id]
+        setattr(_pool_holder, "pool", None)
 
 class connect:
     def __init__(self, readonly = False):

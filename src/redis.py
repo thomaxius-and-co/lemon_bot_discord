@@ -2,28 +2,27 @@ import aioredis
 import os
 import threading
 
-_connection_pools = {}
+
+_pool_holder = threading.local()
 
 def connection_details():
     return (os.environ["REDIS_HOST"], int(os.environ["REDIS_PORT"]))
 
 async def get_pool():
-    global _connection_pools
-    thread_id = threading.get_ident()
-    pool = _connection_pools.get(thread_id, None)
+    global _pool_holder
+    pool = getattr(_pool_holder, "pool", None)
     if pool is None:
         pool = await aioredis.create_pool(connection_details())
-        _connection_pools[thread_id] = pool
+        setattr(_pool_holder, "pool", pool)
     return pool
 
 async def close_pool():
-    global _connection_pools
-    thread_id = threading.get_ident()
-    pool = _connection_pools.get(thread_id, None)
+    global _pool_holder
+    pool = getattr(_pool_holder, "pool", None)
     if pool is not None:
         pool.close()
         await pool.wait_closed()
-        del _connection_pools[thread_id]
+        setattr(_pool_holder, "pool", None)
 
 class connect:
     def __init__(self):
