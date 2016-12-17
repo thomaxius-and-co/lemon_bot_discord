@@ -11,4 +11,11 @@ elif [ $env = "prd" ]; then
   ssh_command="ssh -t lemon"
 fi
 
-$ssh_command "journalctl -u lemon -n 100 -f"
+dump_file="$2"
+
+if [ -z "$dump_file" ]; then
+  echo "Usage $0 <env> <output_file>"
+  exit 1
+fi
+
+$ssh_command "sudo -u postgres pg_dump -Fc lemon" > "$dump_file"
