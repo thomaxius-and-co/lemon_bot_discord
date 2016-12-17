@@ -27,6 +27,7 @@
         name: "{{ app_name }}"
 
     - include: postgres.yml
+    - include: redis.yml
 
     - name: Install required packages
       apt:
