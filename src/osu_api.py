@@ -1,5 +1,7 @@
 import os
 import aiohttp
+import redis
+import json
 
 class User:
     def __init__(self, json):
@@ -125,9 +127,17 @@ async def user_best(name, limit):
     }))
 
 async def beatmaps(beatmap_id):
-    return map(Beatmap, await call_api("get_beatmaps", {
+    cache_key = "beatmaps:{0}".format(beatmap_id)
+    async with redis.connect() as r:
+        cached = await r.get(cache_key, encoding="utf-8")
+    if cached is not None:
+        return map(Beatmap, json.loads(cached))
+    raw = await call_api("get_beatmaps", {
         "k": os.environ["OSU_API_KEY"],
         "m": "0",
         "b": str(beatmap_id),
         "limit": "1",
-    }))
+    })
+    async with redis.connect() as r:
+        await r.set(cache_key, json.dumps(raw))
+    return map(Beatmap, raw)

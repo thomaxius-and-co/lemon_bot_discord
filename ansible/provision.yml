@@ -53,6 +53,7 @@
         - lxml
         - aiopg
         - feedparser
+        - aioredis
 
     - name: Copy source to server
       synchronize:
