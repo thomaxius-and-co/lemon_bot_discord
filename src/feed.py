@@ -12,6 +12,7 @@ from threading import Thread
 from database import connect
 import command
 import emoji
+import util
 
 def time_to_datetime(struct_time):
     return datetime.fromtimestamp(time.mktime(struct_time))
@@ -61,9 +62,7 @@ async def process_feed(client, id, url, last_entry, channel_id):
             embed = make_embed(item)
             embed.set_author(name=feed_title, url=feed_url)
 
-            coroutine = client.send_message(discord.Object(id=channel_id), embed=embed)
-            future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
-            future.result()
+            util.threadsafe(client, client.send_message(discord.Object(id=channel_id), embed=embed))
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
@@ -76,9 +75,7 @@ async def process_feed(client, id, url, last_entry, channel_id):
 
 async def task(client):
     # Wait until the client is ready
-    coroutine = client.wait_until_ready()
-    future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
-    future.result()
+    util.threadsafe(client, client.wait_until_ready())
 
     # Check feeds every minute
     fetch_interval = 60

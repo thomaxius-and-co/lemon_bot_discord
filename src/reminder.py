@@ -8,6 +8,7 @@ import pytz
 
 import emoji
 import database as db
+import util
 
 def register(client):
     print("reminder: registering")
@@ -50,9 +51,7 @@ def thread_func(client):
 
 async def task(client):
     # Wait until the client is ready
-    coroutine = client.wait_until_ready()
-    future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
-    future.result()
+    util.threadsafe(client, client.wait_until_ready())
 
     while True:
         await asyncio.sleep(1)
@@ -78,13 +77,8 @@ async def process_next_reminder(client):
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
-            coroutine = client.get_user_info(user_id)
-            future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
-            user = future.result()
-
-            coroutine = client.send_message(user, msg)
-            future = asyncio.run_coroutine_threadsafe(coroutine, client.loop)
-            future.result()
+            user = util.threadsafe(client, client.get_user_info(user_id))
+            util.threadsafe(client, client.send_message(user, msg))
 
             await c.execute("""
                 UPDATE reminder
