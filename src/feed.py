@@ -7,7 +7,6 @@ import re
 from bs4 import BeautifulSoup
 import discord
 import feedparser
-from threading import Thread
 
 from database import connect
 import command
@@ -137,14 +136,9 @@ async def cmd_feed_remove(client, message, url):
     print("feed: removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
-def thread_func(client):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(task(client))
-
 def register(client):
     print("feed: registering")
-    Thread(target=thread_func, args=(client,)).start()
+    util.start_task_thread(task(client))
     return {
         "feed": cmd_feed,
     }

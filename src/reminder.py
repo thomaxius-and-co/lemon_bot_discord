@@ -1,5 +1,4 @@
 import asyncio
-from threading import Thread
 import traceback
 
 import discord
@@ -12,7 +11,7 @@ import util
 
 def register(client):
     print("reminder: registering")
-    Thread(target=thread_func, args=(client,)).start()
+    util.start_task_thread(task(client))
     return {
         "remind": cmd_reminder,
         "remindme": cmd_reminder,
@@ -43,11 +42,6 @@ async def add_reminder(user_id, time, text, original_text):
             INSERT INTO reminder(user_id, ts, text, original_text)
             VALUES (%s, %s, %s, %s)
         """, [user_id, time, text, original_text])
-
-def thread_func(client):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(task(client))
 
 async def task(client):
     # Wait until the client is ready
