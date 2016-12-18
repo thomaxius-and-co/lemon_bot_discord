@@ -76,6 +76,18 @@ schema_migrations = {
     4: """
         CREATE INDEX message_content_trgm_idx ON message USING GIN (content gin_trgm_ops);
     """,
+
+    # Add table for reminders
+    5: """
+        CREATE TABLE reminder (
+            reminder_id SERIAL PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            ts TIMESTAMP NOT NULL,
+            text TEXT NOT NULL,
+            original_text TEXT NOT NULL,
+            reminded BOOL NOT NULL DEFAULT FALSE
+        );
+    """,
 }
 
 _pool_holder = threading.local()

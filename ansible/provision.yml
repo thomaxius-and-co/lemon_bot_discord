@@ -54,6 +54,8 @@
         - aiopg
         - feedparser
         - aioredis
+        - parsedatetime==2.1
+        - pytz==2016.10
 
     - name: Copy source to server
       synchronize:

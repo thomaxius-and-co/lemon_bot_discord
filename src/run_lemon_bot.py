@@ -43,6 +43,7 @@ import casino
 import osu
 import sqlcommands
 import feed
+import reminder
 
 logging.basicConfig(level=logging.DEBUG)
 client = discord.Client()
@@ -368,7 +369,7 @@ async def on_message(message):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [archiver, casino, sqlcommands, osu, feed]:
+for module in [archiver, casino, sqlcommands, osu, feed, reminder]:
     commands.update(module.register(client))
 
 @client.event
