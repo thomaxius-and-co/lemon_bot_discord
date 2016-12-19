@@ -24,11 +24,9 @@ import json
 import discord
 import logging
 import random
-import urllib
 import cleverbot
 import enchanting_chances as en
 from BingTranslator import Translator
-from bs4 import BeautifulSoup
 import asyncio
 from asyncio import sleep
 import aiohttp
@@ -44,6 +42,7 @@ import osu
 import sqlcommands
 import feed
 import reminder
+import youtube
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
@@ -92,20 +91,6 @@ async def cmd_enchant(client, message, arg):
         await client.send_message(message.channel, enchanting_results)
     except Exception:
         await client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
-
-# Function to search for a youtube video and return a link.
-async def cmd_youtube(client, message, text_to_search):
-    link_list = []
-    print('Searching YouTube for: %s' % text_to_search)
-    query = urllib.parse.quote(text_to_search)
-    url = "https://www.youtube.com/results?search_query=" + query
-    async with aiohttp.get(url) as r:
-        html = await r.text()
-        soup = BeautifulSoup(html, "lxml")
-        for vid in soup.findAll(attrs={'class': 'yt-uix-tile-link'}):
-            link_list.append('https://www.youtube.com' + vid['href'])
-        random_link = random.choice(link_list)
-        await client.send_message(message.channel, random_link)
 
 # Rolling the odds for a user.
 async def cmd_roll(client, message, arg):
@@ -314,7 +299,6 @@ async def cmd_sql(client, message, arg):
 commands = {
     'sql': cmd_sql,
     'enchant': cmd_enchant,
-    'youtube': cmd_youtube,
     'roll': cmd_roll,
     '8ball': cmd_8ball,
     'weather': cmd_weather,
@@ -369,7 +353,7 @@ async def on_message(message):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [archiver, casino, sqlcommands, osu, feed, reminder]:
+for module in [archiver, casino, sqlcommands, osu, feed, reminder, youtube]:
     commands.update(module.register(client))
 
 @client.event
