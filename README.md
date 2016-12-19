@@ -40,7 +40,6 @@ without recreating the VM you can run `vagrant provision`.
     * When you update dependencies, generate new requirements file using `pip freeze > requirements.txt`
   * Grab an API Key from, http://openweathermap.org
   * Also grab an API from https://www.wolframalpha.com/
-  * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
   * Set the following environment variables:
 
     * OPEN_WEATHER_APPID
@@ -73,7 +72,6 @@ without recreating the VM you can run `vagrant provision`.
 | !coin | Simple coin toss command, gives you a 50/50 chance. |
 | !8ball [question] | This returns the eightball prediction and the question the user asked. |
 | !spank [target_user] | This will return with a punishment for the target user. |
-| !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
 | !slots | runs the slots, and uses the users money from the bank.|
 | !clear | clears the chat log in that channel. |
