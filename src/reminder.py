@@ -3,6 +3,7 @@ import traceback
 
 import discord
 import parsedatetime
+from datetime import datetime
 import pytz
 
 import emoji
@@ -82,7 +83,9 @@ async def process_next_reminder(client):
 
 def parse_reminder(text):
     cal = parsedatetime.Calendar()
-    time_expressions = cal.nlp(text)
+
+    source_time = datetime.now(tz = pytz.timezone('Europe/Helsinki'))
+    time_expressions = cal.nlp(text, source_time)
     time_expressions = time_expressions if time_expressions else []
 
     reminders = map(lambda p: Reminder(text, p), time_expressions)
@@ -95,7 +98,7 @@ class Reminder:
 
         self.original_text = original_text
         self.time_text = time_text
-        self.time = self.utc_to_local(time)
+        self.time = time
 
         self.text = self.strip_middle(original_text, start, end)
 
@@ -105,6 +108,3 @@ class Reminder:
 
     def strip_middle(self, text, start, end):
         return text[:start].strip() + " " + text[end:].strip()
-
-    def utc_to_local(self, dt, tz = pytz.timezone('Europe/Helsinki')):
-        return tz.normalize(pytz.utc.localize(dt).astimezone(tz=tz))
