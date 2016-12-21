@@ -65,24 +65,29 @@ async def top_message_counts(title, filters, params):
         """.format(filters=filters), params)
         if c.rowcount <= 1:
             return None
-        nicequery = makequerynice(await c.fetchall(), title=title)
+        nicequery = await fixlist(await c.fetchall())
         return nicequery
 
-def makequerynice(uglyquery, title):
-    i = 0
-    l = uglyquery
-    l1 = []
+def check_length(x,i):
+    return len(x[i])
+
+async def fixlist(sequence):
+    maximum = sequence[0]
     rank = 1
-    for x in uglyquery:
-        reply = '**%s**, %s: %s msg per day, %s msg total' % (
-                                                                               l[i][0], rank, format(l[i][1], '.2f'), l[i][2])
-        l1.append((reply))
-        i += 1
-        rank += 1
-    number = len(l1)
-    reply = '\n'.join(l1)
-    reply = ('Top %s %s:\n%s' % (number, title, reply))
-    return reply
+    for item in sequence:
+        if check_length(item,0) > check_length(maximum,0):
+            maximum = item
+            lenght = len(maximum[0])
+    for item in sequence:
+        if lenght >= len(item[0]):
+            fixed = item[0].ljust(lenght+1).ljust(lenght+2,'|')
+            therank, thetotal = str(rank), str(item[2])
+            newitem = ('%s  #%s | %s| %s' % (fixed,therank.ljust(2), thetotal.ljust(6),round(item[1],2)))
+            rank += 1
+            pos = sequence.index(item)
+            sequence.remove(item)
+            sequence.insert(pos,newitem)
+    return sequence
 
 async def cmd_top(client, message, input):
     if not input:
@@ -95,7 +100,8 @@ async def cmd_top(client, message, input):
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
-        await client.send_message(message.channel, reply)
+            return
+        await client.send_message(message.channel, ('```Top 10 spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' + ('\n'.join(reply) + '```')))
         return
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
@@ -104,8 +110,8 @@ async def cmd_top(client, message, input):
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
-        await client.send_message(message.channel, reply)
-        return
+            return
+        await client.send_message(message.channel, ('```Top 10 racists\n NAME     | RANK | TOTAL | MSG PER DAY\n' + ('\n'.join(reply) + '```')))
     else:
         await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists ')
         return
