@@ -53,8 +53,7 @@ async def task(client):
         try:
             await process_next_reminder(client)
         except Exception as e:
-            print("ERROR: {0}".format(e))
-            traceback.print_exc()
+            await util.log_exception()
 
 async def process_next_reminder(client):
     async with db.connect() as c:

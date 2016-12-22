@@ -35,6 +35,7 @@ import wolframalpha
 import psycopg2
 import database as db
 import command
+import util
 
 import archiver
 import casino
@@ -334,20 +335,23 @@ async def checkspelling(channel, arg):
 # Dispacther for messages from the users.
 @client.event
 async def on_message(message):
-    if message.author.bot:
-        return
+    try:
+        if message.author.bot:
+            return
 
-    cmd, arg = command.parse(message.content)
-    if not cmd:
-        return
-    handler = commands.get(cmd)
-    if handler:
-        await handler(client, message, arg)
-        return
-    if ((len(message.content) - 3) > len(max(commands, key = len))):
-        #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
-        return
-    await checkspelling(message.channel, cmd)
+        cmd, arg = command.parse(message.content)
+        if not cmd:
+            return
+        handler = commands.get(cmd)
+        if handler:
+            await handler(client, message, arg)
+            return
+        if ((len(message.content) - 3) > len(max(commands, key = len))):
+            #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
+            return
+        await checkspelling(message.channel, cmd)
+    except Exception:
+        await util.log_exception()
 
 # Database schema has to be initialized before running the bot
 loop = asyncio.get_event_loop()

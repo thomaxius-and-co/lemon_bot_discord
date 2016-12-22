@@ -6,6 +6,7 @@ import traceback
 import aiohttp
 
 import database as db
+import util
 
 async def get(path):
     headers = {
@@ -109,9 +110,8 @@ async def task(client):
     while True:
         try:
             await run_archival()
-        except Exception as e:
-            print("ERROR: {0}".format(e))
-            traceback.print_exc()
+        except Exception:
+            await util.log_exception()
         await asyncio.sleep(15 * 60)
 
 def register(client):

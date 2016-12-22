@@ -85,9 +85,8 @@ async def task(client):
             print("feed: checking feeds")
             await check_feeds(client)
             print("feed: feeds checked")
-        except Exception as e:
-            print("ERROR: {0}".format(e))
-            traceback.print_exc()
+        except Exception:
+            await util.log_exception()
 
 async def cmd_feed(client, message, arg):
     if arg is None:
