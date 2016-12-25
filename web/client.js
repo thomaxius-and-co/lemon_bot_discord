@@ -2,9 +2,9 @@ const React = require('react')
 const ReactDOM = require('react-dom')
 
 const basePage = require('./pages/basePage')
-const frontPage = require('./pages/frontPage')
+const statisticsPage = require('./pages/statisticsPage')
 
-const currentPage = frontPage // TODO
+const currentPage = statisticsPage // TODO
 
 const App = React.createClass({
   componentWillMount: function() {

@@ -1,3 +1,4 @@
+const Promise = require('bluebird')
 const crypto = require('crypto')
 const path = require('path')
 const express = require('express')
@@ -5,8 +6,10 @@ const React = require('react')
 const ReactDOM = require('react-dom')
 const ReactDOMServer = require('react-dom/server')
 
+const db = require('./db')
+
 const basePage = require('./pages/basePage')
-const frontPage = require('./pages/frontPage')
+const statisticsPage = require('./pages/statisticsPage')
 
 const checksumPromise = filePath => new Promise((resolve, reject) => {
   require('fs').readFile(filePath, (error, fileContent) => {
@@ -33,14 +36,35 @@ const serveStaticResource = filePath => (req, res, next) => {
 
 const app = express()
 
+const buildInitialState = (path, params) => {
+  switch (path) {
+  case '/':
+    return Promise.join(
+      db.findMessageCount(),
+      totalMessages => ({
+        totalMessages,
+      })
+    )
+
+  default:
+    return Promise.resolve({})
+  }
+}
+
 app.get('*', (req, res, next) => {
   console.log(`Requested ${req.originalUrl}`)
   const path = req.originalUrl
   if (path === '/') {
-    const page = frontPage // TODO
-    checksumPromise(bundleJsFilePath).then(bundleJsChecksum => {
-      res.send(ReactDOMServer.renderToString(basePage(page, page.initialState, { bundleJsChecksum })))
-    })
+    const page = statisticsPage // TODO
+
+    Promise.join(
+      buildInitialState(path, req.query),
+      checksumPromise(bundleJsFilePath),
+      (state, bundleJsChecksum) => {
+        const initialState = Object.assign(page.initialState, state)
+        res.send(ReactDOMServer.renderToString(basePage(page, initialState, { bundleJsChecksum })))
+      }
+    ).catch(next)
   } else {
     next()
   }
