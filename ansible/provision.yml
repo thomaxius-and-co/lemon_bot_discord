@@ -70,7 +70,7 @@
         src: templates/systemd.service.j2
         dest: "/etc/systemd/system/{{ app_name }}.service"
       notify:
-        - reload service
+        - reload unit files
         - restart service
 
     - name: enable and start service
@@ -79,11 +79,24 @@
         state: started
         enabled: yes
 
+    - include: nodejs.yml
+    - include: web.yml
+
   handlers:
-    - name: reload service
+    - name: reload unit files
       shell: systemctl daemon-reload
+
+    - name: reload nginx config
+      service:
+        name: nginx
+        state: reloaded
 
     - name: restart service
       service:
         name: "{{ app_name }}"
+        state: restarted
+
+    - name: restart web service
+      service:
+        name: "{{ app_name }}-web"
         state: restarted
