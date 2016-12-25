@@ -1,0 +1,23 @@
+const React = require('react')
+const ReactDOM = require('react-dom')
+
+const basePage = require('./pages/basePage')
+const frontPage = require('./pages/frontPage')
+
+const currentPage = frontPage // TODO
+
+const App = React.createClass({
+  componentWillMount: function() {
+    const initialState = JSON.parse(document.getElementById('applicationState').getAttribute('data-state'))
+    // TODO: Update state
+    this.replaceState(initialState)
+  },
+
+  render: function() {
+    return this.state
+      ? basePage(currentPage, this.state, window.CHECKSUMS)
+      : React.DOM.span(null, 'Loading...')
+  },
+})
+
+window.onload = () => ReactDOM.render(React.createElement(App), document)
