@@ -7,10 +7,10 @@ const initialState = {
 }
 
 const renderPage = state =>
-  React.DOM.div(null,
-    React.DOM.h1(null, 'Discord bot statistics'),
-    React.DOM.p(null, `Total messages ${state.totalMessages}`)
-  )
+  <div>
+    <h1>Discord statistics</h1>
+    <p>Total messages {state.totalMessages}</p>
+  </div>
 
 module.exports = {
   pageTitle,

@@ -2,8 +2,6 @@ const Promise = require('bluebird')
 const crypto = require('crypto')
 const path = require('path')
 const express = require('express')
-const React = require('react')
-const ReactDOM = require('react-dom')
 const ReactDOMServer = require('react-dom/server')
 
 const db = require('./db')

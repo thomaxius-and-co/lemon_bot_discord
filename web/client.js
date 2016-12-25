@@ -16,8 +16,8 @@ const App = React.createClass({
   render: function() {
     return this.state
       ? basePage(currentPage, this.state, window.CHECKSUMS)
-      : React.DOM.span(null, 'Loading...')
+      : <span>Loading...</span>
   },
 })
 
-window.onload = () => ReactDOM.render(React.createElement(App), document)
+window.onload = () => ReactDOM.render(<App/>, document)
