@@ -91,7 +91,7 @@ async def cmd_enchant(client, message, arg):
         enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
         await client.send_message(message.channel, enchanting_results)
     except Exception:
-        await client.send_message(message.channel, 'Use the Format --> !enchant target_level fail_stacks')
+        await client.send_message(message.channel, 'Use the Format --> ```!enchant target_level fail_stacks```')
 
 # Rolling the odds for a user.
 async def cmd_roll(client, message, arg):
@@ -99,7 +99,7 @@ async def cmd_roll(client, message, arg):
     if arg is None:
         arg = '100'
     if not arg.isdigit():
-        await client.send_message(message.channel, 'You need to type a number, for example !roll 100.')
+        await client.send_message(message.channel, 'You need to type a number, for example ```!roll 100.```')
         return
     if arg == 0:
         await client.send_message(message.channel, "There must be at least two numbers to choose from.")
@@ -133,14 +133,14 @@ async def cmd_weather(client, message, zip_code):
 
 async def domath(channel, input):
     if len(input) < 3:
-        await client.send_message(channel, "Error: You need to input at least 3 digits, for example !math 5 + 5")
+        await client.send_message(channel, "Error: You need to input at least 3 digits, for example ```!math 5 + 5```")
         return
     for char in input:
         if char not in '1234567890+-/*()^':
             await client.send_message(channel, "Error: Your calculation containts invalid character(s): %s" % char)
             return
     if input[0] in '/*+-':  # Can't make -9 or /9 etc
-        await client.send_message(channel, "Error: First digit must be numeric, for example !math 5 + 5.)")
+        await client.send_message(channel, "Error: First digit must be numeric, for example ```!math 5 + 5.```")
         return
     i = 1
     i2 = 2
@@ -161,7 +161,7 @@ async def domath(channel, input):
 # Simple math command.
 async def cmd_math(client, message, arg):
     if not arg:
-        await client.send_message(message.channel, 'You need to specify at least 3 digits, for example !math 5 + 5.)')
+        await client.send_message(message.channel, 'You need to specify at least 3 digits, for example ```!math 5 + 5.```')
         return
     result = await domath(message.channel, arg.replace(" ",""))
     if not result:
@@ -170,8 +170,8 @@ async def cmd_math(client, message, arg):
 
 async def cmd_translate(client, message, arg):
     if not arg:
-        await client.send_message(message.channel, "Usage: !translate <text> or !translate <from language> "
-                                                   "<to language> <text>. \n If no 'to' or 'from' language is set, "
+        await client.send_message(message.channel, "Usage: ```!translate <text>``` or ```!translate <from language> "
+                                                   "<to language> <text>```. \n If no 'to' or 'from' language is set, "
                                                    "auto detection and english will be used.")
         return
     if len(arg) > 100: #maybe it's wise to put a limit on the lenght of the translations
@@ -206,24 +206,35 @@ async def cmd_coin(client, message, _):
 async def cmd_help(client, message, _):
     await client.send_message(message.channel, 'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
-# Function to clear a chat Channel.
+# Delete 50 messages from channel
 async def cmd_clear(client, message, _):
     perms = message.channel.permissions_for(message.author)
-    if perms.administrator:
-        await client.purge_from(message.channel)
-    else:
+    botperms = message.channel.permissions_for(client.user)
+    if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+    if not botperms.manage_messages:
+        await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
+        return
+    else:
+        await client.purge_from(message.channel, limit=50)
+
 
 # Delete 50 of bots messages
 async def cmd_clearbot(client, message, _):
-    #It might be wise to make a separate command for each type of !clear, so there are no chances for mistakes.
+    #It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
     perms = message.channel.permissions_for(message.author)
+    botperms = message.channel.permissions_for(client.user)
     def isbot(message):
         return message.author == client.user and message.author.bot #Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
-    if perms.administrator:
-        await client.purge_from(message.channel, limit=50, check=isbot)
-    else:
+    if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+    if not botperms.manage_messages:
+        await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
+        return
+    else:
+        await client.purge_from(message.channel, limit=50, check=isbot)
 
 async def cmd_wolframalpha(client, message, query):
     print("Searching WolframAlpha for '%s'" % query)
@@ -254,7 +265,7 @@ async def cmd_status(client, message, input):
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         return
     if not input:
-        await client.send_message(message.channel, 'You need to specify a status. For example: !status I am online!' )
+        await client.send_message(message.channel, 'You need to specify a status. For example: ```!status I am online!```' )
         return
     if len(input) > 30:
         await client.send_message(message.channel, 'Maximum allowed length for status is 30 characters.' )
@@ -264,12 +275,12 @@ async def cmd_status(client, message, input):
 async def cmd_pickone(client, message, args):
     if not args:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example !pickone pizza, burger.')
+                                                        ' by a comma, for example ```!pickone pizza, burger.```')
         return
     choices = args.split(",")
     if len(choices) < 2:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example !pickone pizza, burger.')
+                                                        ' by a comma, for example ```!pickone pizza, burger.```')
         return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
@@ -282,7 +293,7 @@ async def cmd_sql(client, message, arg):
         return
 
     if arg is None:
-        await client.send_message(message.channel, 'Usage: !sql <query>')
+        await client.send_message(message.channel, 'Usage: ```!sql <query>```')
         return
 
     def limit_msg_length(template, content):
