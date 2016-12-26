@@ -97,9 +97,7 @@ async def cmd_enchant(client, message, arg):
 async def cmd_roll(client, message, arg):
     # Default to !roll 100 because why not
     if arg is None:
-        await cmd_roll(client, message, "100")
-        return
-
+        arg = '100'
     if not arg.isdigit():
         await client.send_message(message.channel, 'You need to type a number, for example !roll 100.')
         return
@@ -138,7 +136,7 @@ async def domath(channel, input):
         await client.send_message(channel, "Error: You need to input at least 3 digits, for example !math 5 + 5")
         return
     for char in input:
-        if char not in '1234567890+-/*':
+        if char not in '1234567890+-/*()^':
             await client.send_message(channel, "Error: Your calculation containts invalid character(s): %s" % char)
             return
     if input[0] in '/*+-':  # Can't make -9 or /9 etc
@@ -171,6 +169,11 @@ async def cmd_math(client, message, arg):
     await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
 async def cmd_translate(client, message, arg):
+    if not arg:
+        await client.send_message(message.channel, "Usage: !translate <text> or !translate <from language> "
+                                                   "<to language> <text>. \n If no 'to' or 'from' language is set, "
+                                                   "auto detection and english will be used.")
+        return
     if len(arg) > 100: #maybe it's wise to put a limit on the lenght of the translations
         await client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
         return
@@ -279,6 +282,7 @@ async def cmd_sql(client, message, arg):
         return
 
     if arg is None:
+        await client.send_message(message.channel, 'Usage: !sql <query>')
         return
 
     def limit_msg_length(template, content):
