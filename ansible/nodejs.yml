@@ -13,3 +13,6 @@
 - name: Install nodejs
   apt: name=nodejs
 
+- name: Install jq for successful npm installs with only 512mb ram. This is a horrible hack. Please kill me.
+  apt: name=jq
+
