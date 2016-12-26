@@ -207,7 +207,7 @@ async def cmd_help(client, message, _):
     await client.send_message(message.channel, 'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Delete 50 messages from channel
-async def cmd_clear(client, message, input):
+async def cmd_clear(client, message, arg):
     limit = 50
     perms = message.channel.permissions_for(message.author)
     botperms = message.channel.permissions_for(message.channel.server.me)
@@ -217,13 +217,13 @@ async def cmd_clear(client, message, input):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    if input and input.isdigit():
-        limit = int(input)
+    if arg and arg.isdigit():
+        limit = int(arg)
     await client.purge_from(message.channel, limit=limit)
 
 
 # Delete 50 of bots messages
-async def cmd_clearbot(client, message, _):
+async def cmd_clearbot(client, message, arg):
     #It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
     limit = 50
     perms = message.channel.permissions_for(message.author)
@@ -236,8 +236,8 @@ async def cmd_clearbot(client, message, _):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    if input and input.isdigit():
-        limit = int(input)
+    if arg and arg.isdigit():
+        limit = int(arg)
     await client.purge_from(message.channel, limit=limit, check=isbot)
 
 async def cmd_wolframalpha(client, message, query):
