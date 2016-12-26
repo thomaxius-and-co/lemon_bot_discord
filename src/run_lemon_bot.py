@@ -209,7 +209,7 @@ async def cmd_help(client, message, _):
 # Delete 50 messages from channel
 async def cmd_clear(client, message, _):
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(client.user)
+    botperms = client.user.permissions_in(message.channel)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         return
@@ -224,7 +224,7 @@ async def cmd_clear(client, message, _):
 async def cmd_clearbot(client, message, _):
     #It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(client.user)
+    botperms = client.user.permissions_in(message.channel)
     def isbot(message):
         return message.author == client.user and message.author.bot #Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
     if not perms.administrator:
