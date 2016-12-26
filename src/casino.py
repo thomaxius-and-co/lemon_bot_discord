@@ -210,7 +210,7 @@ async def askifdouble(client, message, winnings):
 # Function to set a users bet.
 async def cmd_bet(client, message, amount):
     if not amount or not amount.isdigit():
-        return await client.send_message(message.channel, 'Amount must be numeric and positive, for example ```!bet 10.```')
+        return await client.send_message(message.channel, 'Amount must be numeric and positive, for example: ```!bet 10```')
 
     amount = int(amount)
     if amount < 1:

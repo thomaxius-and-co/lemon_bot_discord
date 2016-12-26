@@ -99,7 +99,7 @@ async def cmd_roll(client, message, arg):
     if arg is None:
         arg = '100'
     if not arg.isdigit():
-        await client.send_message(message.channel, 'You need to type a number, for example ```!roll 100.```')
+        await client.send_message(message.channel, 'You need to type a number, for example: ```!roll 100```')
         return
     if arg == 0:
         await client.send_message(message.channel, "There must be at least two numbers to choose from.")
@@ -133,14 +133,14 @@ async def cmd_weather(client, message, zip_code):
 
 async def domath(channel, input):
     if len(input) < 3:
-        await client.send_message(channel, "Error: You need to input at least 3 digits, for example ```!math 5 + 5```")
+        await client.send_message(channel, "Error: You need to input at least 3 digits, for example: ```!math 5 + 5```")
         return
     for char in input:
         if char not in '1234567890+-/*()^':
             await client.send_message(channel, "Error: Your calculation containts invalid character(s): %s" % char)
             return
     if input[0] in '/*+-':  # Can't make -9 or /9 etc
-        await client.send_message(channel, "Error: First digit must be numeric, for example ```!math 5 + 5.```")
+        await client.send_message(channel, "Error: First digit must be numeric, for example: ```!math 5 + 5```")
         return
     i = 1
     i2 = 2
@@ -161,7 +161,7 @@ async def domath(channel, input):
 # Simple math command.
 async def cmd_math(client, message, arg):
     if not arg:
-        await client.send_message(message.channel, 'You need to specify at least 3 digits, for example ```!math 5 + 5.```')
+        await client.send_message(message.channel, 'You need to specify at least 3 digits, for example: ```!math 5 + 5```')
         return
     result = await domath(message.channel, arg.replace(" ",""))
     if not result:
@@ -207,7 +207,8 @@ async def cmd_help(client, message, _):
     await client.send_message(message.channel, 'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Delete 50 messages from channel
-async def cmd_clear(client, message, _):
+async def cmd_clear(client, message, input):
+    limit = 50
     perms = message.channel.permissions_for(message.author)
     botperms = message.channel.permissions_for(message.channel.server.me)
     if not perms.administrator:
@@ -216,13 +217,15 @@ async def cmd_clear(client, message, _):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    else:
-        await client.purge_from(message.channel, limit=50)
+    if input and input.isdigit():
+        limit = int(input)
+    await client.purge_from(message.channel, limit=limit)
 
 
 # Delete 50 of bots messages
 async def cmd_clearbot(client, message, _):
     #It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
+    limit = 50
     perms = message.channel.permissions_for(message.author)
     botperms = message.channel.permissions_for(message.channel.server.me)
     def isbot(message):
@@ -233,8 +236,9 @@ async def cmd_clearbot(client, message, _):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    else:
-        await client.purge_from(message.channel, limit=50, check=isbot)
+    if input and input.isdigit():
+        limit = int(input)
+    await client.purge_from(message.channel, limit=limit, check=isbot)
 
 async def cmd_wolframalpha(client, message, query):
     print("Searching WolframAlpha for '%s'" % query)
@@ -275,12 +279,12 @@ async def cmd_status(client, message, input):
 async def cmd_pickone(client, message, args):
     if not args:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example ```!pickone pizza, burger.```')
+                                                        ' by a comma, for example: ```!pickone pizza, burger```')
         return
     choices = args.split(",")
     if len(choices) < 2:
         await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example ```!pickone pizza, burger.```')
+                                                        ' by a comma, for example: ```!pickone pizza, burger```')
         return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
