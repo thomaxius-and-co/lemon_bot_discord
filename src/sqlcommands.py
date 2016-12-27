@@ -69,20 +69,25 @@ async def top_message_counts(title, filters, params):
         return nicequery
 
 def check_length(x,i):
-    return len(x[i])
+    return len(str(x[i]))
 
 async def fixlist(sequence):
-    maximum = sequence[0]
+    maxnamelen = sequence[0]
+    maxnumberlen = 6
     rank = 1
     for item in sequence:
-        if check_length(item,0) > check_length(maximum,0):
-            maximum = item
-            lenght = len(maximum[0])
+        if check_length(item,0) > check_length(maxnamelen,0):
+            maxnamelen = item
+            namelen = len(maxnamelen[0])
+        if check_length(item, 2) > maxnumberlen:
+            maxnumberlen = len(str(item))
+
     for item in sequence:
-        if lenght >= len(item[0]):
-            fixed = item[0].ljust(lenght+1).ljust(lenght+2,'|')
+        if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
+            fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')
+            fixedtotal = str(item[2]).ljust(maxnumberlen)
             therank, thetotal = str(rank), str(item[2])
-            newitem = ('%s  #%s | %s| %s' % (fixed,therank.ljust(2), thetotal.ljust(6),round(item[1],2)))
+            newitem = ('%s  #%s | %s| %s' % (fixed,therank.ljust(2), fixedtotal,round(item[1],3)))
             rank += 1
             pos = sequence.index(item)
             sequence.remove(item)
@@ -101,7 +106,7 @@ async def cmd_top(client, message, input):
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        await client.send_message(message.channel, ('```Top 10 spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' + ('\n'.join(reply) + '```')))
+        await client.send_message(message.channel, ('```Top %s spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
         return
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
@@ -111,7 +116,7 @@ async def cmd_top(client, message, input):
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        await client.send_message(message.channel, ('```Top 10 racists\n NAME     | RANK | TOTAL | MSG PER DAY\n' + ('\n'.join(reply) + '```')))
+        await client.send_message(message.channel, ('```Top %s racists\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
     else:
         await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists ')
         return
