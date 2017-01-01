@@ -430,13 +430,12 @@ async def cmd_blackjack(client, message, _):
     if not blackjack and len(dhand) == 6 and pscore < 21:
         dscore += dhand[-3]
         await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
-    while 17 > dscore < pscore and not blackjack:
+    while 17 > dscore and not blackjack:
         if pscore > 21:
             break
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
-        if dscore == pscore and dscore > 16:
-            print("If dscore is not over 16, this shouldnt happen", dscore, pscore)
+        if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16):
             break
     await dofinalspam(client, message, pscore, dscore, bet)
 
