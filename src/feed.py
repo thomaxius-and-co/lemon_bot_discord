@@ -44,6 +44,9 @@ def get_new_items(url, since):
             "date": get_date(e),
         }
     d = feedparser.parse(url)
+    if not hasattr(d.feed, 'title'):
+      return None
+
     new_items = [e for e in map(parse_entry, d.entries) if e["date"] > since]
     return d.feed.title, d.feed.link, sorted(new_items, key=lambda i: i["date"])
 
@@ -54,7 +57,12 @@ def make_embed(item):
 
 async def process_feed(client, id, url, last_entry, channel_id):
     print("feed: processing feed '{0}'".format(url))
-    feed_title, feed_url, new_items = get_new_items(url, last_entry)
+    parsed = get_new_items(url, last_entry)
+    if parsed is None:
+      print("feed: feed missing title")
+      return
+
+    feed_title, feed_url, new_items = parsed
     if len(new_items) > 0:
         # Send messages
         for item in new_items:
