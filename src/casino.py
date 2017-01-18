@@ -378,13 +378,13 @@ async def getresponse(client, message, score, cards, broke, hand):
 async def cmd_blackjack(client, message, _):
     broke = False
     blackjack = False
-    cards = await makedeck(blackjack=True)
     phand = []
     dhand = []
     if message.author in bjlist:
         await client.send_message(message.channel,
                                   'Cannot play: You have an unfinished game.')
         return
+    cards = await makedeck(blackjack=True)
     bet = await get_bet(message.author)
     if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: ```!bet 5```')
@@ -417,10 +417,11 @@ async def cmd_blackjack(client, message, _):
             dscore += dhand[-3]
             await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
     while not blackjack:
-        if stay is True or pscore == 21 or pscore > 21:
-            if pscore > 21:
-                await dofinalspam(client, message, pscore, dscore, bet)
+        if stay is True or pscore == 21:
             break
+        if pscore > 21:
+            await dofinalspam(client, message, pscore, dscore, bet)
+            return
         pscore, stay, phand = await getresponse(client, message, pscore, cards, broke, phand)
         if stay == 'doubledown':
             bet += bet
