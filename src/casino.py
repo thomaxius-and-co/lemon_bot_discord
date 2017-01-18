@@ -418,6 +418,8 @@ async def cmd_blackjack(client, message, _):
             await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
     while not blackjack:
         if stay is True or pscore == 21 or pscore > 21:
+            if pscore > 21:
+                await dofinalspam(client, message, pscore, dscore, bet)
             break
         pscore, stay, phand = await getresponse(client, message, pscore, cards, broke, phand)
         if stay == 'doubledown':
