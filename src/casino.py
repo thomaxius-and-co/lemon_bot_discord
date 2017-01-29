@@ -83,6 +83,7 @@ async def cmd_slots(client, message, _):
     player = message.author
     wheel_list = []
     results_dict = {}
+    doubletimes = 0
     count = 1
     stay = False
     winnings = 0
@@ -153,7 +154,7 @@ async def cmd_slots(client, message, _):
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
     while winnings > 0 and not stay:
-        doubletimes = +1
+        doubletimes += 1
         if doubletimes == 5:
             await client.send_message(message.channel,
                                       'You have reached the doubling limit! You won %s' % (winnings))
@@ -425,6 +426,9 @@ async def cmd_blackjack(client, message, _):
         pscore, stay, phand = await getresponse(client, message, pscore, cards, broke, phand)
         if stay == 'doubledown':
             bet += bet
+            if pscore > 21:
+                await dofinalspam(client, message, pscore, dscore, bet)
+                return
             break
         if stay == 'surrender':
             bet /= 2
