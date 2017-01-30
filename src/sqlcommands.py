@@ -96,7 +96,8 @@ async def fixlist(sequence):
 
 async def cmd_top(client, message, input):
     if not input:
-        await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers, racists')
+        await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
+                                                   ' racists, custom <words separated by comma>')
         return
 
     input = input.lower()
@@ -108,6 +109,18 @@ async def cmd_top(client, message, input):
             return
         await client.send_message(message.channel, ('```Top %s spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
         return
+
+    if 'custom' in input:
+        customwords = getcustomwords(input)
+        filters, params = make_word_filters(customwords)
+        custom_filter = "AND ({0})".format(filters)
+        reply = await top_message_counts(input, custom_filter, params)
+        if not reply:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
+            return
+        await client.send_message(message.channel, ('```Top %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
+
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
         racists_filter = "AND ({0})".format(filters)
@@ -118,17 +131,21 @@ async def cmd_top(client, message, input):
             return
         await client.send_message(message.channel, ('```Top %s racists\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
     else:
-        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists ')
+        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists, custom <words separated by comma>')
         return
+
+async def getcustomwords(input):
+    customwords = input.split(' ')
+    if len(customwords) > 50:
+        await client.send_message(channel, "Please broaden your query, max allowed words is 50.")
+        return
+    customwords.pop(0)
+    return customwords
 
 async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower():
         channel = themessage.channel
-        customwords = input.split(' ')
-        if len(customwords) > 50:
-            await client.send_message(channel, "Please broaden your query, max allowed words is 50.")
-            return
-        customwords.pop(0)
+        customwords = getcustomwords(input)
         random_message = await random(''.join(customwords).split(','))
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
