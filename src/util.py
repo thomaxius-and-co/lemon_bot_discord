@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import sys
 import threading
 import traceback
 
@@ -14,6 +15,15 @@ async def log_exception():
     if webhook_url is not None:
         await post_exception(err_str)
 
+    # If the error is 'Event loop is closed' we crash the bot and let it restart
+    # A retarded solution to a retarded issue
+    error_message = str(sys.exc_info()[1])
+    if error_message == 'Event loop is closed':
+        msg = "Snipety snap! Event loop is closed! Committing sudoku in 3.. 2.. 1.."
+        print("util: {0}".format(msg))
+        if webhook_url is not None:
+            await post_exception(msg)
+        sys.exit()
 
 async def post_exception(err_str):
     data = {
