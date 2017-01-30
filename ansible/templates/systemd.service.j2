@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+Restart=on-success
 User={{ app_name }}
 Group={{ app_name }}
 ExecStart=/usr/bin/python3 -u /home/{{ app_name }}/src/run_lemon_bot.py
