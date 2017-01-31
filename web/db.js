@@ -11,8 +11,11 @@ const connectionDetails = {
 
 const db = pgp(connectionDetails)
 
-const findMessageCount = (req, res) =>
+const findMessageCount = () =>
   db.query('SELECT count(*)::numeric FROM message').then(rows => rows[0].count)
+
+const messagesInLastNDays = n =>
+  db.query(`SELECT count(*)::numeric FROM message WHERE ts > (current_timestamp - interval '${Number(n)} days')`).then(rows => rows[0].count)
 
 module.exports = {
   findMessageCount,
