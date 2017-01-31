@@ -120,6 +120,7 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
         await client.send_message(message.channel, ('```Top %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
+        return
 
     if input == 'racists':
         filters, params = make_word_filters(hatewords)
