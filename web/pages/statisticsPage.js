@@ -1,6 +1,6 @@
 const React = require('react')
 
-const pageTitle = 'Front Page'
+const pageTitle = 'Discord statistics'
 
 const initialState = {
   totalMessages: -1,
