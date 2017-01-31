@@ -40,9 +40,11 @@ const buildInitialState = (path, params) => {
     return Promise.join(
       db.findMessageCount(),
       db.messagesInLastNDays(7),
-      (totalMessages, messagesInLast7Days) => ({
+      db.messagesInLastNDays(30),
+      (totalMessages, messagesInLastWeek, messagesInLastMonth) => ({
         totalMessages,
-        messagesInLast7Days,
+        messagesInLastWeek,
+        messagesInLastMonth,
       })
     )
 
