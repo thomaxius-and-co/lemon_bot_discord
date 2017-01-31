@@ -73,7 +73,7 @@ def check_length(x,i):
 
 async def fixlist(sequence):
     maxnamelen = sequence[0]
-    maxnumberlen = 6
+    maxnumberlen = 6 # Todo: Fix this lazy ass coding
     rank = 1
     for item in sequence:
         if check_length(item,0) > check_length(maxnamelen,0):
