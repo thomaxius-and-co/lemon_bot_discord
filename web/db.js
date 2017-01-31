@@ -19,4 +19,5 @@ const messagesInLastNDays = n =>
 
 module.exports = {
   findMessageCount,
+  messagesInLastNDays,
 }
