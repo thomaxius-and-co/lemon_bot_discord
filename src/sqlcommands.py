@@ -65,7 +65,7 @@ async def top_message_counts(title, filters, params):
         """.format(filters=filters), params)
         if c.rowcount <= 1:
             return None
-        nicequery = await fixlist(await c.fetchall())
+        nicequery = fixlist(await c.fetchall())
         return nicequery
 
 def check_length(x,i):
@@ -75,7 +75,7 @@ def column_width(tuples, index, min_width):
     widest = max([check_length(x, index) for x in tuples])
     return max(min_width, widest)
 
-async def fixlist(sequence):
+def fixlist(sequence):
     rank = 1
     namelen = column_width(sequence, 0, 9)
     maxnumberlen = column_width(sequence, 2, 6)
