@@ -71,16 +71,14 @@ async def top_message_counts(title, filters, params):
 def check_length(x,i):
     return len(str(x[i]))
 
+def column_width(tuples, index, min_width):
+    widest = max([check_length(x, index) for x in tuples])
+    return max(min_width, widest)
+
 async def fixlist(sequence):
-    maxnamelen = sequence[0]
-    maxnumberlen = 6 # Todo: Fix this lazy ass coding
     rank = 1
-    for item in sequence:
-        if check_length(item,0) > check_length(maxnamelen,0):
-            maxnamelen = item
-            namelen = len(maxnamelen[0])
-        if check_length(item, 2) > maxnumberlen:
-            maxnumberlen = len(str(item))
+    namelen = column_width(sequence, 0, 9)
+    maxnumberlen = column_width(sequence, 2, 6)
 
     for item in sequence:
         if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
