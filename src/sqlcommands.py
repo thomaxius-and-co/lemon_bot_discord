@@ -38,7 +38,7 @@ def make_word_filters(words):
     return conditions, params
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
-hatewords = [ "nigga", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä", "jutku", "neeke" ]
+hatewords = [ "nigg", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä", "jutku", "neeke" ]
 
 
 
@@ -137,8 +137,6 @@ async def cmd_top(client, message, input):
 
 async def getcustomwords(input, message, client):
     customwords = input.split(' ')
-    print(customwords)
-    print(len(customwords))
     if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
