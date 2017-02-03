@@ -47,8 +47,10 @@ def get_new_items(url, since):
     if not hasattr(d.feed, 'title'):
       return None
 
+    feed_url = getattr(d.feed, 'link', None)
+
     new_items = [e for e in map(parse_entry, d.entries) if e["date"] > since]
-    return d.feed.title, d.feed.link, sorted(new_items, key=lambda i: i["date"])
+    return d.feed.title, feed_url, sorted(new_items, key=lambda i: i["date"])
 
 def make_embed(item):
     embed = discord.Embed(title = item["title"], url = item["url"])
@@ -67,7 +69,10 @@ async def process_feed(client, id, url, last_entry, channel_id):
         # Send messages
         for item in new_items:
             embed = make_embed(item)
-            embed.set_author(name=feed_title, url=feed_url)
+            if feed_url is None:
+              embed.set_author(name=feed_title)
+            else:
+              embed.set_author(name=feed_title, url=feed_url)
 
             util.threadsafe(client, client.send_message(discord.Object(id=channel_id), embed=embed))
 
