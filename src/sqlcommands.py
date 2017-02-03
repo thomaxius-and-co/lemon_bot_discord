@@ -109,7 +109,9 @@ async def cmd_top(client, message, input):
         return
 
     if 'custom' in input:
-        customwords = await getcustomwords(input, themessage, client)
+        customwords = await getcustomwords(input, message, client)
+        if not customwords:
+            return
         filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
         reply = await top_message_counts(input, custom_filter, params)
@@ -150,6 +152,8 @@ async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower():
         channel = themessage.channel
         customwords = await getcustomwords(input, themessage, client)
+        if not customwords:
+            return
         random_message = await random(''.join(customwords).split(','))
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
