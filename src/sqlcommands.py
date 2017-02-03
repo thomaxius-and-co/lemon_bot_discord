@@ -109,7 +109,7 @@ async def cmd_top(client, message, input):
         return
 
     if 'custom' in input:
-        customwords = await getcustomwords(input)
+        customwords = await getcustomwords(input, themessage, client)
         filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
         reply = await top_message_counts(input, custom_filter, params)
@@ -133,12 +133,15 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists, custom <words separated by comma>')
         return
 
-async def getcustomwords(input):
+async def getcustomwords(input, message, client):
     customwords = input.split(' ')
+    print(customwords)
+    print(len(customwords))
     if len(customwords) == 1:
+        await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
     if len(customwords) > 50:
-        await client.send_message(channel, "Please broaden your query, max allowed words is 50.")
+        await client.send_message(message.channel, "Please broaden your query, max allowed words is 50.")
         return
     customwords.pop(0)
     return customwords
@@ -146,7 +149,7 @@ async def getcustomwords(input):
 async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower():
         channel = themessage.channel
-        customwords = await getcustomwords(input)
+        customwords = await getcustomwords(input, themessage, client)
         random_message = await random(''.join(customwords).split(','))
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
