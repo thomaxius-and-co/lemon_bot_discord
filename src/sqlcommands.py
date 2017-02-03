@@ -135,6 +135,8 @@ async def cmd_top(client, message, input):
 
 async def getcustomwords(input):
     customwords = input.split(' ')
+    if len(customwords) == 1:
+        return
     if len(customwords) > 50:
         await client.send_message(channel, "Please broaden your query, max allowed words is 50.")
         return
