@@ -19,4 +19,4 @@ if [ -z "$dump_file" ]; then
   exit 1
 fi
 
-$ssh_command "sudo -u postgres pg_dump -Fc lemon" > "$dump_file"
+$ssh_command "sudo -iu postgres pg_dump -Fc lemon" > "$dump_file"
