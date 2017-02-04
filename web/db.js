@@ -17,7 +17,17 @@ const findMessageCount = () =>
 const messagesInLastNDays = n =>
   db.query(`SELECT count(*)::numeric FROM message WHERE ts > (current_timestamp - interval '${Number(n)} days')`).then(rows => rows[0].count)
 
+const findDailyMessageCounts = days =>
+  db.query(`
+    SELECT extract(epoch from ts::date) as epoch, count(*) as count
+    FROM message
+    GROUP BY ts::date
+    ORDER BY ts::date DESC
+    LIMIT ?
+  `, [days])
+
 module.exports = {
   findMessageCount,
   messagesInLastNDays,
+  findDailyMessageCounts,
 }

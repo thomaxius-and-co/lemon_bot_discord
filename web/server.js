@@ -41,10 +41,12 @@ const buildInitialState = (path, params) => {
       db.findMessageCount(),
       db.messagesInLastNDays(7),
       db.messagesInLastNDays(30),
-      (totalMessages, messagesInLastWeek, messagesInLastMonth) => ({
+      db.findDailyMessageCounts(30),
+      (totalMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
         totalMessages,
         messagesInLastWeek,
         messagesInLastMonth,
+        dailyMessageCounts,
       })
     )
 
