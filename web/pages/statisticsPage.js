@@ -17,7 +17,6 @@ const dailyMessageCountTable = dailyMessageCounts =>
         <td>{x.count}</td>
       </tr>
     )}
-    <tr>
   </table>
 
 const renderPage = state =>
