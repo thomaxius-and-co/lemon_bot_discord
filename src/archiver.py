@@ -44,15 +44,21 @@ async def fetch_messages_from(channel_id, after_id):
 
     return all_messages
 
+async def upsert_message(c, message):
+    await _upsert_message(c, message, "DO UPDATE SET ts = EXCLUDED.ts, content = EXCLUDED.content, m = EXCLUDED.m")
+
 async def insert_message(c, message):
+    await _upsert_message(c, message, "DO NOTHING")
+
+async def _upsert_message(c, message, upsert_clause):
     sql = """
         INSERT INTO message
         (message_id, ts, content, m)
         VALUES (%s, %s, %s, %s)
         ON CONFLICT (message_id)
-        DO UPDATE SET
-            m = EXCLUDED.m
-    """
+        {upsert_clause}
+    """.format(upsert_clause=upsert_clause)
+
     await c.execute(sql, [
         message["id"],
         message["timestamp"],
@@ -83,7 +89,7 @@ async def archive_channel(channel_id):
 
 
             for message in all_messages:
-                await insert_message(c, message)
+                await upsert_message(c, message)
 
         print("Fetched total %s messages" % len(all_messages))
 

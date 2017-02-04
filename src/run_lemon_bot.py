@@ -36,6 +36,7 @@ import psycopg2
 import database as db
 import command
 import util
+import zlib
 
 import archiver
 import casino
@@ -350,6 +351,21 @@ async def checkspelling(channel, arg):
             await suggestcmd(channel, arg, actualcmd)
             return
         i += 1
+
+def parse_raw_msg(msg):
+    if isinstance(msg, bytes):
+        msg = zlib.decompress(msg, 15, 10490000)
+        msg = msg.decode('utf-8')
+    return json.loads(msg)
+
+@client.event
+async def on_socket_raw_receive(raw_msg):
+    msg = parse_raw_msg(raw_msg)
+
+    if (msg["t"] == "MESSAGE_CREATE"):
+        print("main: insta-archiving a new message")
+        async with db.connect() as c:
+            await archiver.insert_message(c, msg["d"])
 
 # Dispacther for messages from the users.
 @client.event
