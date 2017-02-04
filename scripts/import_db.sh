@@ -3,7 +3,6 @@
 set -e
 
 dump_file="$(realpath "$1")"
-db_name="lemon"
 
 cd $(dirname "${BASH_SOURCE[0]}")
 
@@ -12,4 +11,4 @@ if [ -z "$dump_file" ]; then
   exit 1
 fi
 
-cat "$dump_file" | vagrant ssh -c "sudo -u postgres pg_restore -c -d $db_name"
+cat "$dump_file" | vagrant ssh -c "sudo -u postgres pg_restore -c -d lemon"
