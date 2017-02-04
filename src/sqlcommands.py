@@ -90,10 +90,7 @@ def fixlist(sequence):
             pos = sequence.index(item)
             sequence.remove(item)
             sequence.insert(pos,newitem)
-    # sequence:
-    # ['User1 |  #1  | 27    | 0.236',
-    #  'User2     |  #2  | 48    | 0.128',
-    #  'User3      |  #3  | 39    | 0.104', and so forth ]
+    # sequence: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 48    | and so forth
     return sequence
 
 async def cmd_top(client, message, input):
@@ -124,7 +121,10 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
         if len(customwords) < 5:
-            title = 'Top %s users of the word(s): %s' % (len(reply), ' '.join(customwords))
+            word = 'words'
+            if len(customwords) == 1:
+                word = 'word'
+            title = 'Top %s users of the %s: %s' % (len(reply), word,  ' '.join(customwords))
         else:
             title = 'Top %s' % len(reply)
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
