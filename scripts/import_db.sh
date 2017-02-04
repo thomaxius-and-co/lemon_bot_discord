@@ -1,10 +1,11 @@
 #!/bin/bash
 
 set -e
-cd $(dirname "${BASH_SOURCE[0]}")
 
-dump_file="$1"
+dump_file="$(realpath "$1")"
 db_name="lemon"
+
+cd $(dirname "${BASH_SOURCE[0]}")
 
 if [ -z "$dump_file" ]; then
   echo "Usage $0 <input_file>"

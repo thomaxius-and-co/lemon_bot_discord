@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-cd $(dirname "${BASH_SOURCE[0]}")
 
 env="${1:-local}"
 ssh_command="echo"
@@ -11,7 +10,9 @@ elif [ $env = "prd" ]; then
   ssh_command="ssh -t lemon"
 fi
 
-dump_file="$2"
+dump_file="$(realpath "$2")"
+
+cd $(dirname "${BASH_SOURCE[0]}")
 
 if [ -z "$dump_file" ]; then
   echo "Usage $0 <env> <output_file>"
