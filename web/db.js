@@ -23,8 +23,8 @@ const findDailyMessageCounts = days =>
     FROM message
     GROUP BY ts::date
     ORDER BY ts::date DESC
-    LIMIT ?
-  `, [days])
+    LIMIT ${Number(days)}
+  `)
 
 module.exports = {
   findMessageCount,
