@@ -13,7 +13,7 @@ const dailyMessageCountTable = dailyMessageCounts =>
   <table>
     {dailyMessageCounts.map(x =>
       <tr key={x.epoch}>
-        <td>{new Date(x.epoch)}</td>
+        <td>{String(new Date(x.epoch))}</td>
         <td>{x.count}</td>
       </tr>
     )}
