@@ -50,24 +50,42 @@ async def random(filter):
 async def random_quote_from_channel(channel_id):
     return await random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
 
+async def get_user_days_in_chat(c):
+    await c.execute("""
+        SELECT
+            m->'author'->>'id',
+            extract(epoch from current_timestamp - min(ts)) / 60 / 60 / 24
+        FROM message
+        GROUP BY m->'author'->>'id'
+    """)
+    result = {}
+    for row in (await c.fetchall()):
+        result[row[0]] = row[1]
+    return result
+
 async def top_message_counts(title, filters, params):
     async with db.connect(readonly = True) as c:
+        user_days_in_chat = await get_user_days_in_chat(c)
+
         await c.execute("""
-            with tmp as
-                (select m->'author'->>'username' as name,
-                count(*) / extract(epoch from current_timestamp - min((m->>'timestamp')::timestamptz)) * 60 * 60 * 24
-                as msg_per_day,
+            select
+                m->'author'->>'username' as name,
+                m->'author'->>'id' as user_id,
                 count(*) as messages
-                from message
-                WHERE content NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
-                group by m->'author'->>'username')
-            select * from tmp order by msg_per_day desc
-            limit 10;
+            from message
+            WHERE content NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
+            group by m->'author'->>'username', m->'author'->>'id'
         """.format(filters=filters), params)
         if c.rowcount <= 1:
             return None
-        nicequery = fixlist(await c.fetchall())
-        return nicequery
+        list_with_msg_per_day = []
+        for item in await c.fetchall():
+            name, user_id, message_count = item
+            msg_per_day = message_count / user_days_in_chat[user_id]
+            new_item = (name, msg_per_day, message_count)
+            list_with_msg_per_day.append(new_item)
+        top_ten = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:10]
+        return fixlist(top_ten)
 
 def check_length(x,i):
     return len(str(x[i]))
