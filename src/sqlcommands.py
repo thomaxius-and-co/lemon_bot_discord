@@ -38,10 +38,6 @@ def make_word_filters(words):
     return conditions, params
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
-hatewords = [ "nigg", "neger", "neeger", "ngr", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä",
-              "jutku", "neeke" ]
-
-
 
 async def random(filter):
     word_filters, params = make_word_filters(filter)
@@ -115,7 +111,7 @@ def fixlist(sequence):
 async def cmd_top(client, message, input):
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
-                                                   ' racists, custom <words separated by comma>')
+                                                   ' custom <words separated by comma>')
         return
 
     input = input.lower()
@@ -148,18 +144,8 @@ async def cmd_top(client, message, input):
             title = 'Top %s' % len(reply)
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
         return
-
-    if input == 'racists':
-        filters, params = make_word_filters(hatewords)
-        racists_filter = "AND ({0})".format(filters)
-        reply = await top_message_counts(input, racists_filter, params)
-        if not reply:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
-            return
-        await client.send_message(message.channel, ('```Top %s racists\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
     else:
-        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, racists, custom <words separated by comma>')
+        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, custom <words separated by comma>')
         return
 
 async def getcustomwords(input, message, client):

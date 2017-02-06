@@ -1,4 +1,4 @@
-# This is a bot for discord coded in python, and a fork of: https://github.com/lemon65/lemon_bot_discord
+# This is a bot for discord, coded in python, and a fork of: https://github.com/lemon65/lemon_bot_discord
 	* Basically, what is done is that it has been ported to support Python 3.5 
 	(Which is required by Discord.py v. 13). Not all features work, yet.
 
@@ -21,7 +21,7 @@
 	* Slot Machine
 	* Blackjack
    * Database functions:
-	* Auto retrieving and archiving messages from discord servers to local database
+	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
 
 ## Running locally with Vagrant
