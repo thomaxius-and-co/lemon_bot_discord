@@ -19,7 +19,9 @@ const messagesInLastNDays = n =>
 
 const findDailyMessageCounts = days =>
   db.query(`
-    SELECT extract(epoch from ts::date) as epoch, count(*) as count
+    SELECT
+      extract(epoch from ts::date) * 1000 as epoch,
+      count(*) as count
     FROM message
     GROUP BY ts::date
     ORDER BY ts::date DESC
