@@ -19,16 +19,20 @@ const formatDate = date => dateFormat.format(date)
 
 const dailyMessageCountTable = dailyMessageCounts =>
   <table>
-    <tr>
-        <td>Date</td>
-        <td>Messages</td>
-    </tr>
-    {dailyMessageCounts.map(x =>
-      <tr key={x.epoch}>
-        <td>{formatDate(new Date(x.epoch))}</td>
-        <td>{x.count}</td>
+    <thead>
+      <tr>
+          <td>Date</td>
+          <td>Messages</td>
       </tr>
-    )}
+    </thead>
+    <tbody>
+      {dailyMessageCounts.map(x =>
+        <tr key={x.epoch}>
+          <td>{formatDate(new Date(x.epoch))}</td>
+          <td>{x.count}</td>
+        </tr>
+      )}
+    </tbody>
   </table>
 
 const renderPage = state =>
