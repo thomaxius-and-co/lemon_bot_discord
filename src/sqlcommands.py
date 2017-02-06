@@ -38,7 +38,7 @@ def make_word_filters(words):
     return conditions, params
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
-hatewords = [ "nigg", "neger", "neeger", "ngr" "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä",
+hatewords = [ "nigg", "neger", "neeger", "ngr", "negro", "manne", "mustalainen", "rättipää", "ryssä", "vinosilmä",
               "jutku", "neeke" ]
 
 
