@@ -254,9 +254,9 @@ async def cmd_clearbot(client, message, arg):
         limit = int(arg)
     await client.send_message(message.channel, "This will delete %s of *bot's* messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author, check=isbot)
+    answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
     if answer and answer.content.lower() == 'yes':
-        await client.purge_from(message.channel, limit=limit)
+        await client.purge_from(message.channel, limit=limit, check=isbot)
         await client.send_message(message.channel,
                                   "%s messages succesfully deleted." % limit)
     elif answer is None or answer.content.lower() == 'no':

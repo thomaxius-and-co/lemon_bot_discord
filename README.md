@@ -1,4 +1,4 @@
-# This is a (crappy) fork of lemon bot for discord: https://github.com/lemon65/lemon_bot_discord
+# This is a bot for discord coded in python, and a fork of: https://github.com/lemon65/lemon_bot_discord
 	* Basically, what is done is that it has been ported to support Python 3.5 
 	(Which is required by Discord.py v. 13). Not all features work, yet.
 
@@ -20,6 +20,9 @@
    * Casino:
 	* Slot Machine
 	* Blackjack
+   * Database functions:
+	* Auto retrieving and archiving messages from discord servers to local database
+	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
 
 ## Running locally with Vagrant
 
@@ -40,6 +43,7 @@ without recreating the VM you can run `vagrant provision`.
     * When you update dependencies, generate new requirements file using `pip freeze > requirements.txt`
   * Grab an API Key from, http://openweathermap.org
   * Also grab an API from https://www.wolframalpha.com/
+  * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
   * Set the following environment variables:
 
     * OPEN_WEATHER_APPID
@@ -53,9 +57,15 @@ without recreating the VM you can run `vagrant provision`.
     hardcode them into run_lemon_bot.py
 
 ## Requirements:
-
-See `[ansible/provision.yml](ansible/provision.yml)`.
-
+   * Python 3.5.0
+   * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
+   * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
+   * Requests - http://docs.python-requests.org/en/master/
+   * pickle - https://docs.python.org/2/library/pickle.html
+   * discord.py - https://github.com/Rapptz/discord.py
+   * bingtranslator https://github.com/wilfilho/BingTranslator
+   * wolframalpha https://github.com/jaraco/wolframalpha
+ 
 ## Commands:
 | Commands        | description |
 | ------------- |:-------------:|
@@ -66,6 +76,7 @@ See `[ansible/provision.yml](ansible/provision.yml)`.
 | !coin | Simple coin toss command, gives you a 50/50 chance. |
 | !8ball [question] | This returns the eightball prediction and the question the user asked. |
 | !spank [target_user] | This will return with a punishment for the target user. |
+| !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
 | !weather [Zip Code] | This uses a Weather API to return weather information based on the zip code. |
 | !slots | runs the slots, and uses the users money from the bank.|
 | !clear | clears the chat log in that channel. |
@@ -82,6 +93,9 @@ See `[ansible/provision.yml](ansible/provision.yml)`.
 | !clearbot | Deletes 50 of bot messages. Only available to admins.
 | !pickone <arguments> | Picks a random choice out of X arguments
 | !version | Displays the bot's version.
+| !randomquote | Retrieves a random quote from the database. Optional argument: custom <words separated by comma>.
+| !randomcurse | Retrieves a random quote with a curse from the database. Configure in sqlcommands.py
+| !top <list> | Makes a top list of people who has used certain words the most. Available arguments: custom <words separated by comma>, racists, spammers.
 
 ## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
