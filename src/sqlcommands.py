@@ -33,8 +33,8 @@ async def random_message_with_filter(filters, params):
         return await c.fetchone()
 
 def make_word_filters(words):
-    conditions = " OR ".join(["content ILIKE %s"] * len(words))
-    params = list(map("%{0}%".format, words))
+    conditions = "content ~ %s"
+    params = ["|".join(words)]
     return conditions, params
 
 curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
