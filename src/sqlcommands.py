@@ -33,7 +33,7 @@ async def random_message_with_filter(filters, params):
         return await c.fetchone()
 
 def make_word_filters(words):
-    conditions = "content ~ %s"
+    conditions = "content ~* %s"
     params = ["|".join(words)]
     return conditions, params
 
