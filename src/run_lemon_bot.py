@@ -220,8 +220,21 @@ async def cmd_clear(client, message, arg):
         return
     if arg and arg.isdigit():
         limit = int(arg)
-    await client.purge_from(message.channel, limit=limit)
+    await client.send_message(message.channel, "This will delete %s messages from the channel. Type 'yes' to confirm, "
+                                               "or 'no' to cancel." % limit)
+    answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
+    if answer and answer.content.lower() == 'yes':
+        await client.purge_from(message.channel, limit=limit)
+        await client.send_message(message.channel,
+                                  "%s messages succesfully deleted." % limit)
+    elif answer is None or answer.content.lower() == 'no':
+        await client.send_message(message.channel,
+                                  "Deletion of messages cancelled.")
+    return
 
+
+def check(message):
+    return message.author == message.author
 
 # Delete 50 of bots messages
 async def cmd_clearbot(client, message, arg):
@@ -239,7 +252,18 @@ async def cmd_clearbot(client, message, arg):
         return
     if arg and arg.isdigit():
         limit = int(arg)
-    await client.purge_from(message.channel, limit=limit, check=isbot)
+    await client.send_message(message.channel, "This will delete %s of *bot's* messages from the channel. Type 'yes' to confirm, "
+                                               "or 'no' to cancel." % limit)
+    answer = await client.wait_for_message(timeout=60, author=message.author, check=isbot)
+    if answer and answer.content.lower() == 'yes':
+        await client.purge_from(message.channel, limit=limit)
+        await client.send_message(message.channel,
+                                  "%s messages succesfully deleted." % limit)
+    elif answer is None or answer.content.lower() == 'no':
+        await client.send_message(message.channel,
+                                  "Deletion of messages cancelled.")
+    return
+
 
 async def cmd_wolframalpha(client, message, query):
     print("Searching WolframAlpha for '%s'" % query)
