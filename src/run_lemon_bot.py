@@ -105,9 +105,6 @@ async def cmd_roll(client, message, arg):
     if arg == 0:
         await client.send_message(message.channel, "There must be at least two numbers to choose from.")
         return
-    if len(arg) > 20:
-        await client.send_message(message.channel, 'Sorry, the maximum amount of digits is 20.')
-        return
     rand_roll = random.randint(0, int(arg))
     await client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
 
@@ -295,9 +292,6 @@ async def cmd_status(client, message, input):
         return
     if not input:
         await client.send_message(message.channel, 'You need to specify a status. For example: ```!status I am online!```' )
-        return
-    if len(input) > 30:
-        await client.send_message(message.channel, 'Maximum allowed length for status is 30 characters.' )
         return
     await client.change_presence(game=discord.Game(name=input))
 
