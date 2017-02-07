@@ -124,7 +124,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, ('```Top %s spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
         return
 
-    if 'custom' in input:
+    if 'custom' in input[0:6]:
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
@@ -135,13 +135,12 @@ async def cmd_top(client, message, input):
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        if len(customwords) < 5:
-            word = 'words'
-            if len(customwords) == 1:
-                word = 'word'
-            title = 'Top %s users of the %s: %s' % (len(reply), word,  ' '.join(customwords))
+        if len(customwords) == 1:
+            word = 'word'
         else:
-            title = 'Top %s' % len(reply)
+            word = 'words'
+        title = 'Top %s users of the %s: %s' % (len(reply), word,  ' '.join(customwords))
+
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
         return
     else:
@@ -153,7 +152,7 @@ async def getcustomwords(input, message, client):
     customwords = input.split(' ')
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     lowest = (min(customwords, key=len))
-    if lowest == 0:
+    if len(lowest) == 0:
         customwords.remove(lowest)
     if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
@@ -162,7 +161,7 @@ async def getcustomwords(input, message, client):
     return customwords
 
 async def cmd_randomquote(client, themessage, input):
-    if input is not None and 'custom' in input.lower():
+    if input is not None and 'custom' in input.lower()[0:6]:
         channel = themessage.channel
         customwords = await getcustomwords(input, themessage, client)
         if not customwords:

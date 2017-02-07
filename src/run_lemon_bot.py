@@ -293,6 +293,9 @@ async def cmd_status(client, message, input):
     if not input:
         await client.send_message(message.channel, 'You need to specify a status. For example: ```!status I am online!```' )
         return
+    if len(input) > 128:
+        await client.send_message(message.channel, 'Maximum allowed length for status is 128 characters.' )
+        return
     await client.change_presence(game=discord.Game(name=input))
 
 async def cmd_pickone(client, message, args):
