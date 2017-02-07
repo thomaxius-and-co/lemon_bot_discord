@@ -139,7 +139,7 @@ async def cmd_top(client, message, input):
             word = 'word'
         else:
             word = 'words'
-        title = 'Top %s users of the %s: %s' % (len(reply), word,  ' '.join(customwords))
+        title = 'Top %s users of the %s: %s' % (len(reply), word, ', '.join(customwords))
 
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
         return
@@ -161,6 +161,7 @@ async def getcustomwords(input, message, client):
     while len((min(customwords, key=len))) == 0:
         customwords.remove(lowest)
     return customwords
+
 async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower()[0:6]:
         channel = themessage.channel
