@@ -128,7 +128,7 @@ async def cmd_top(client, message, input):
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
-        filters, params = make_word_filters(''.join(customwords).split(','))
+        filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
         reply = await top_message_counts(input, custom_filter, params)
         if not reply:
@@ -150,23 +150,25 @@ async def cmd_top(client, message, input):
 async def getcustomwords(input, message, client):
 
     customwords = input.split(' ')
-    # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
-    lowest = (min(customwords, key=len))
-    if len(lowest) == 0:
-        customwords.remove(lowest)
     if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
     customwords.pop(0)
-    return customwords
+    customwords = ''.join(customwords).split(',')
 
+    # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
+    lowest = (min(customwords, key=len))
+    while len((min(customwords, key=len))) == 0:
+        customwords.remove(lowest)
+    return customwords
 async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower()[0:6]:
         channel = themessage.channel
         customwords = await getcustomwords(input, themessage, client)
         if not customwords:
+            await client.send_message(channel, "You need to specify words to search for.")
             return
-        random_message = await random(''.join(customwords).split(','))
+        random_message = await random(customwords)
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
             return
