@@ -150,12 +150,11 @@ async def cmd_top(client, message, input):
 
 async def getcustomwords(input, message, client):
 
-    # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
-    lowest = (min(input, key=len))
-    if lowest == 0:
-        input.remove(lowest)
-
     customwords = input.split(' ')
+    # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
+    lowest = (min(customwords, key=len))
+    if lowest == 0:
+        customwords.remove(lowest)
     if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
