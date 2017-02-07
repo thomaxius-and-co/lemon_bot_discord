@@ -221,7 +221,7 @@ async def cmd_clear(client, message, arg):
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
     if answer and answer.content.lower() == 'yes':
-        await client.purge_from(message.channel, limit=limit)
+        await client.purge_from(message.channel, limit=limit+3)
         await client.send_message(message.channel,
                                   "%s messages succesfully deleted." % limit)
     elif answer is None or answer.content.lower() == 'no':
@@ -253,7 +253,7 @@ async def cmd_clearbot(client, message, arg):
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
     if answer and answer.content.lower() == 'yes':
-        await client.purge_from(message.channel, limit=limit, check=isbot)
+        await client.purge_from(message.channel, limit=limit+3, check=isbot)
         await client.send_message(message.channel,
                                   "%s messages succesfully deleted." % limit)
     elif answer is None or answer.content.lower() == 'no':
