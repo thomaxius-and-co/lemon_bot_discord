@@ -147,15 +147,12 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, custom <words separated by comma>')
         return
 
-async def getcustomwords(input, message, client):
+async def getcustomwords(input, message, client)
 
-    customwords = input.split(' ')
+    customwords = list(map(lambda x: x.strip(), input.replace('custom ', '', 1).split(',')))
     if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
-    customwords.pop(0)
-    customwords = ''.join(customwords).split(',')
-
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     lowest = (min(customwords, key=len))
     while len((min(customwords, key=len))) == 0:
