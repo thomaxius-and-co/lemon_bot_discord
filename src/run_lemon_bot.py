@@ -206,7 +206,7 @@ async def cmd_help(client, message, _):
 
 # Delete 50 messages from channel
 async def cmd_clear(client, message, arg):
-    limit = 50
+    limit = 10
     perms = message.channel.permissions_for(message.author)
     botperms = message.channel.permissions_for(message.channel.server.me)
     if not perms.administrator:
@@ -215,8 +215,11 @@ async def cmd_clear(client, message, arg):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    if arg and arg.isdigit():
+    if arg and arg.isdigit() and arg > 0:
         limit = int(arg)
+    else:
+        await client.send_message(message.channel, "Error: You need to input a positive amount.")
+        return
     await client.send_message(message.channel, "This will delete %s messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
@@ -236,7 +239,7 @@ def check(message):
 # Delete 50 of bots messages
 async def cmd_clearbot(client, message, arg):
     #It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
-    limit = 50
+    limit = 10
     perms = message.channel.permissions_for(message.author)
     botperms = message.channel.permissions_for(message.channel.server.me)
     def isbot(message):
@@ -249,7 +252,7 @@ async def cmd_clearbot(client, message, arg):
         return
     if arg and arg.isdigit():
         limit = int(arg)
-    await client.send_message(message.channel, "This will delete %s of *bot's* messages from the channel. Type 'yes' to confirm, "
+    await client.send_message(message.channel, "This will delete %s of **bot's** messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
     if answer and answer.content.lower() == 'yes':

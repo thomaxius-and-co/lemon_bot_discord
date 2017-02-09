@@ -148,7 +148,7 @@ async def cmd_top(client, message, input):
         return
 
 async def getcustomwords(input, message, client):
-
+    # todo: Fix this so that one can't search for empty words.
     customwords = list(map(lambda x: x.strip(), input.replace('custom ', '', 1).split(',')))
     if len(customwords) == 0:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
@@ -163,6 +163,8 @@ async def cmd_randomquote(client, themessage, input):
     if input is not None and 'custom' in input.lower()[0:6]:
         channel = themessage.channel
         customwords = await getcustomwords(input, themessage, client)
+        if not customwords:
+            return
         random_message = await random(customwords)
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
