@@ -11,5 +11,12 @@ function cleanup {
 
 trap cleanup EXIT
 
+function python_syntax_check {
+  [ ! -z $(which python3) ] && local py3="$(which python3)"
+  [ ! -z $(which python3.5) ] && local py3="$(which python3.5)"
+  find src -name "*.py" | xargs "$py3" -m py_compile
+}
+
 ansible-playbook --syntax-check ansible/deploy.yml
+python_syntax_check
 tox
