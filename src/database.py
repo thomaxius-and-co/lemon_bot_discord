@@ -88,6 +88,11 @@ schema_migrations = {
             reminded BOOL NOT NULL DEFAULT FALSE
         );
     """,
+
+    # Add index for message date to make statistics queries faster
+    6: """
+        CREATE INDEX message_ts_date_idx ON message ((ts::date));
+    """,
 }
 
 _pool_holder = threading.local()

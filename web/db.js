@@ -15,7 +15,16 @@ const findMessageCount = () =>
   db.query('SELECT count(*)::numeric FROM message').then(rows => rows[0].count)
 
 const messagesInLastNDays = n =>
-  db.query(`SELECT count(*)::numeric FROM message WHERE ts > (current_timestamp - interval '${Number(n)} days')`).then(rows => rows[0].count)
+  db.query(`
+    SELECT sum(daily.count) AS count
+    FROM (
+      SELECT count(*)::numeric AS count
+      FROM message
+      GROUP BY ts::date
+      ORDER BY ts::date DESC
+      LIMIT ${Number(n)}
+    ) AS daily
+  `).then(rows => rows[0].count)
 
 const findDailyMessageCounts = days =>
   db.query(`
