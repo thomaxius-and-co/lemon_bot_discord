@@ -394,19 +394,21 @@ async def on_socket_raw_receive(raw_msg):
 # Dispacther for messages from the users.
 @client.event
 async def on_message(message):
+    content = message.content
     try:
         if message.author.bot:
             return
 
-        cmd, arg = command.parse(message.content)
+        cmd, arg = command.parse(content)
         if not cmd:
             return
         handler = commands.get(cmd)
         if handler:
             await handler(client, message, arg)
             return
-        if ((len(message.content) - 3) > len(max(commands, key = len))):
-            #This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
+        command = content.split(' ') # So everything after the command is excluded, such as !top custom, etc.
+        if ((len(command[0]) - 3) > len(max(commands, key = len))):
+            # This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
             return
         await checkspelling(message.channel, cmd)
     except Exception:
