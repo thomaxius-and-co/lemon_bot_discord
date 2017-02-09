@@ -215,11 +215,11 @@ async def cmd_clear(client, message, arg):
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
         return
-    if arg and arg.isdigit() and arg > 0:
+    if arg and arg.isdigit():
+        if int(arg) < 1:
+            await client.send_message(message.channel, "You need to input a positive amount.")
+            return
         limit = int(arg)
-    else:
-        await client.send_message(message.channel, "Error: You need to input a positive amount.")
-        return
     await client.send_message(message.channel, "This will delete %s messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
