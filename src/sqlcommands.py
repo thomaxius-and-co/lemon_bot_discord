@@ -150,7 +150,7 @@ async def cmd_top(client, message, input):
 async def getcustomwords(input, message, client):
     # todo: Fix this so that one can't search for empty words.
     customwords = list(map(lambda x: x.strip(), input.replace('custom ', '', 1).split(',')))
-    if len(customwords) == 0:
+    if len(customwords) == 1:
         await client.send_message(message.channel, "You need to specify custom words to search for.")
         return
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
