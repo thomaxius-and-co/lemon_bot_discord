@@ -147,7 +147,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, custom <words separated by comma>')
         return
 
-async def getcustomwords(input, message, client)
+async def getcustomwords(input, message, client):
 
     customwords = list(map(lambda x: x.strip(), input.replace('custom ', '', 1).split(',')))
     if len(customwords) == 1:
