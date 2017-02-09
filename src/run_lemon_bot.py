@@ -407,7 +407,7 @@ async def on_message(message):
             await handler(client, message, arg)
             return
         usercommand = content.split(' ') # So everything after the command is excluded, such as !top custom, etc.
-        if ((len(command[0]) - 3) > len(max(commands, key = len))):
+        if ((len(usercommand[0]) - 3) > len(max(commands, key = len))):
             # This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
             return
         await checkspelling(message.channel, cmd)
