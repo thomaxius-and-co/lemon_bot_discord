@@ -14,7 +14,7 @@ const db = pgp(connectionDetails)
 const findMessageCount = () =>
   db.query('SELECT count(*)::numeric FROM message').then(rows => rows[0].count)
 
-const messagesInLastNDays = n =>
+const messagesInLastNDays = days =>
   db.query(`
     SELECT sum(daily.count) AS count
     FROM (
@@ -22,7 +22,7 @@ const messagesInLastNDays = n =>
       FROM message
       GROUP BY ts::date
       ORDER BY ts::date DESC
-      LIMIT ${Number(n)}
+      LIMIT ${Number(days)}
     ) AS daily
   `).then(rows => rows[0].count)
 
