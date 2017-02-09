@@ -23,7 +23,7 @@ async def log_exception():
         print("util: {0}".format(msg))
         if webhook_url is not None:
             await post_exception(msg)
-        sys.exit()
+        os._exit(0)
 
 async def post_exception(err_str):
     data = {
