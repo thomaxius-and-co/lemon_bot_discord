@@ -1,5 +1,5 @@
 import discord
-
+import re
 import database as db
 
 def sanitize_message(content, mentions):
@@ -59,19 +59,18 @@ async def get_user_days_in_chat(c):
         result[row[0]] = row[1]
     return result
 
-async def top_message_counts(title, filters, params):
+async def top_message_counts(filters, params, excludecommands):
     async with db.connect(readonly = True) as c:
         user_days_in_chat = await get_user_days_in_chat(c)
-
         await c.execute("""
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
                 count(*) as messages
             from message
-            WHERE content NOT LIKE '!%%' and m->'author'->>'bot' is null {filters}
+            WHERE m->'author'->>'bot' is null{excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
-        """.format(filters=filters), params)
+        """.format(filters=filters, excludecommands=excludecommands), params)
         if c.rowcount <= 1:
             return None
         list_with_msg_per_day = []
@@ -109,28 +108,37 @@ def fixlist(sequence):
     return sequence
 
 async def cmd_top(client, message, input):
+    excludecommands = " and content NOT LIKE '!%%'"
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
         return
-
+    if input[0] == '!':
+        excludecommands = ""
     input = input.lower()
-    if input == 'spammers':
-        reply = await top_message_counts(input, "AND 1 = %s", [1])
+
+    if input == ('spammers') or input == ('!spammers'):
+        reply = await top_message_counts("AND 1 = %s", [1], excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        await client.send_message(message.channel, ('```Top %s spammers\n NAME     | RANK | TOTAL | MSG PER DAY\n' % len(reply) + ('\n'.join(reply) + '```')))
+        if not excludecommands:
+            parameter = '(commands not included)'
+        else:
+            parameter = '(commands included)'
+        header = 'Top %s spammers %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % (len(reply), parameter)
+        body = '\n'.join(reply)
+        await client.send_message(message.channel, '``' + header + body + '``')
         return
 
-    if 'custom' in input[0:6]:
+    if input == ('custom') or input == ('!custom'):
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
         filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
-        reply = await top_message_counts(input, custom_filter, params)
+        reply = await top_message_counts(custom_filter, params, excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
@@ -139,17 +147,21 @@ async def cmd_top(client, message, input):
             word = 'word'
         else:
             word = 'words'
-        title = 'Top %s users of the %s: %s' % (len(reply), word, ', '.join(customwords))
+        if not excludecommands:
+            parameter = '(commands not included)'
+        else:
+            parameter = '(commands included)'
+        title = 'Top %s users of the %s: %s %s' % (len(reply), word, ', '.join(customwords), parameter)
 
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
         return
     else:
-        await client.send_message(message.channel, 'Unknown list. Availabe lists: spammers, custom <words separated by comma>')
+        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, custom <words separated by comma>')
         return
 
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
-    customwords = list(map(lambda x: x.strip(), input.replace('custom', '', 1).split(',')))
+    customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
     def checkifsmall(value):
         return len(value) > 0
     customwords = [word for word in customwords if checkifsmall(word)]
