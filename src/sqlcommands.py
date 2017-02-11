@@ -124,15 +124,15 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
         if not excludecommands:
-            parameter = '(commands not included)'
+            parameter = '(commandsincluded)'
         else:
-            parameter = '(commands included)'
+            parameter = '(commands not included)'
         header = 'Top %s spammers %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % (len(reply), parameter)
         body = '\n'.join(reply)
         await client.send_message(message.channel, '``' + header + body + '``')
         return
 
-    if input == ('custom') or input == ('!custom'):
+    if input[0:6] == ('custom') or input[0:7] == ('!custom'):
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
@@ -148,9 +148,9 @@ async def cmd_top(client, message, input):
         else:
             word = 'words'
         if not excludecommands:
-            parameter = '(commands not included)'
-        else:
             parameter = '(commands included)'
+        else:
+            parameter = '(commands not included)'
         title = 'Top %s users of the %s: %s %s' % (len(reply), word, ', '.join(customwords), parameter)
 
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
