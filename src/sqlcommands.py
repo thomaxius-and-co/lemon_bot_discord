@@ -124,7 +124,7 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
         if not excludecommands:
-            parameter = '(commandsincluded)'
+            parameter = '(commands included)'
         else:
             parameter = '(commands not included)'
         header = 'Top %s spammers %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % (len(reply), parameter)
