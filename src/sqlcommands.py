@@ -112,7 +112,7 @@ async def gettoplistforquotegame():
             from message
             WHERE m->'author'->>'bot' is null and length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-             AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'Toxin'
+             AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
             group by m->'author'->>'username', m->'author'->>'id'
         """)
         if c.rowcount <= 1:
