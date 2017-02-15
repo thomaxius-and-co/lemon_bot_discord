@@ -1,6 +1,9 @@
 import discord
 import re
 import database as db
+import random as rand
+
+playinglist = []
 
 def sanitize_message(content, mentions):
     for m in mentions:
@@ -32,6 +35,21 @@ async def random_message_with_filter(filters, params):
         """.format(filters=filters), params)
         return await c.fetchone()
 
+async def getquoteforquotegame(name):
+    async with db.connect(readonly = True) as c:
+        await c.execute("""
+            SELECT
+                content,
+                m->'author'->>'username'
+            FROM message
+            WHERE length(content) > 14 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
+             AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
+             AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' LIKE '{name}'
+            ORDER BY random()
+            LIMIT 1
+        """.format(name=name))
+        return await c.fetchone()
+
 def make_word_filters(words):
     conditions = "content ~* %s"
     params = ["|".join(words)]
@@ -57,9 +75,10 @@ async def get_user_days_in_chat(c):
     result = {}
     for row in (await c.fetchall()):
         result[row[0]] = row[1]
+# {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
     return result
 
-async def top_message_counts(filters, params, excludecommands):
+async def top_message_counts(filters, params, excludecommands, quotegame=False):
     async with db.connect(readonly = True) as c:
         user_days_in_chat = await get_user_days_in_chat(c)
         await c.execute("""
@@ -80,7 +99,10 @@ async def top_message_counts(filters, params, excludecommands):
             new_item = (name, msg_per_day, message_count)
             list_with_msg_per_day.append(new_item)
         top_ten = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:10]
-        return fixlist(top_ten)
+        if quotegame:
+            return [msgs[0] for msgs in top_ten if filterquietpeople(msgs)]
+        else:
+            return fixlist(top_ten)
 
 def check_length(x,i):
     return len(str(x[i]))
@@ -159,6 +181,9 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, 'Unknown list. Available lists: spammers, custom <words separated by comma>')
         return
 
+def filterquietpeople(tuple):
+    return tuple[2] > 1000
+
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
@@ -210,9 +235,74 @@ async def cmd_randomcurse(client, themessage, _):
     else:
         await send_quote(client, channel, random_message)
 
+
+async def cmd_whosaidit(client, message, _):
+    if message.author not in playinglist:
+        playinglist.append(message.author)
+    else:
+        await client.send_message(message.channel,
+                                  '%s: Cannot play: You already have an unfinished game.' % message.author)
+        return
+    await dowhosaidit(client, message, _)
+
+async def dowhosaidit(client, message, _):
+    channel = message.channel
+    excludecommands = " and content NOT LIKE '!%%'"
+    topten = await top_message_counts("AND 1 = %s", [1], excludecommands, quotegame=True)
+    if len(topten) < 4:
+        await client.send_message(channel,
+                                  'Not enough chat logged to play')
+        return
+    rand.shuffle(topten)
+    name = rand.choice(topten)
+    topten.remove(name)
+    quote = await getquoteforquotegame(name)
+    await send_question(client, message, topten, quote)
+
+async def send_question(client, message, topten, thequote):
+    quote = thequote[0]
+    name = thequote[1]
+    options = [topten[0].lower(), topten[1].lower(), name.lower()]
+    rand.shuffle(options)
+    await client.send_message(message.channel,
+                    "It's time to play 'Who said it?' !\n %s, who"
+                    " said the following:\n ""*%s*""\n Options: %s" % (message.author, quote, ', '.join(options)))
+    while True:
+        answer = await getresponse(client, name, options, message)
+        if answer:
+            if answer == 'correct':
+                await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author, name))
+                break
+            if answer == 'wrong':
+                await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author, name))
+                break
+        if not answer:
+            playinglist.remove(message.author) # Player didn't answer within the given time.
+            break
+    playinglist.remove(message.author)
+    return
+
+def check(message):
+    return message.author == message.author
+
+async def getresponse(client, name, options, message):
+    answer = await client.wait_for_message(timeout=25, author=message.author, check=check)
+    if answer and answer.content.lower() == name.lower():
+        answer = 'correct'
+        return answer
+    if answer and answer.content.lower() in options:
+        answer = 'wrong'
+        return answer
+    if answer:
+        return True
+    else:
+        return False
+
+
 def register(client):
     return {
         'randomquote': cmd_randomquote,
         'randomcurse': cmd_randomcurse,
+        'whosaidit': cmd_whosaidit,
         'top': cmd_top
     }
