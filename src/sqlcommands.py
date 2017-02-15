@@ -203,8 +203,7 @@ async def cmd_top(client, message, input):
         return
 
 def filterquietpeople(tuple):
-    return tuple[1] > 1000
-
+    return tuple[1] > 500
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
