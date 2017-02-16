@@ -80,6 +80,8 @@ async def get_user_days_in_chat(c):
     return result
 
 async def top_message_counts(filters, params, excludecommands):
+    sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
+
     async with db.connect(readonly = True) as c:
         user_days_in_chat = await get_user_days_in_chat(c)
         await c.execute("""
@@ -88,9 +90,9 @@ async def top_message_counts(filters, params, excludecommands):
                 m->'author'->>'id' as user_id,
                 count(*) as messages
             from message
-            WHERE m->'author'->>'bot' is null{excludecommands} {filters}
+            WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
-        """.format(filters=filters, excludecommands=excludecommands), params)
+        """.format(filters=filters, sql_excludecommands=sql_excludecommands), params)
         if c.rowcount <= 1:
             return None
         list_with_msg_per_day = []
@@ -151,25 +153,23 @@ def fixlist(sequence):
     return sequence
 
 async def cmd_top(client, message, input):
-    excludecommands = " and content NOT LIKE '!%%'"
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
         return
-    if input[0] == '!':
-        excludecommands = ""
-    input = input.lower()
 
+    excludecommands = input[0] != '!'
+
+    input = input.lower()
     if input == ('spammers') or input == ('!spammers'):
         reply = await top_message_counts("AND 1 = %s", [1], excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        if not excludecommands:
-            parameter = '(commands included)'
-        else:
-            parameter = '(commands not included)'
+
+        parameter = '(commands included)' if not excludecommands else '(commands not included)'
+
         header = 'Top %s spammers %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % (len(reply), parameter)
         body = '\n'.join(reply)
         await client.send_message(message.channel, '``' + header + body + '``')
@@ -186,14 +186,10 @@ async def cmd_top(client, message, input):
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
-        if len(customwords) == 1:
-            word = 'word'
-        else:
-            word = 'words'
-        if not excludecommands:
-            parameter = '(commands included)'
-        else:
-            parameter = '(commands not included)'
+
+        word = 'word' if len(customwords) == 1 else 'words'
+        parameter = '(commands not included)' if excludecommands else '(commands included)'
+
         title = 'Top %s users of the %s: %s %s' % (len(reply), word, ', '.join(customwords), parameter)
 
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
