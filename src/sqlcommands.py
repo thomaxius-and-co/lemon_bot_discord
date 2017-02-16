@@ -303,11 +303,8 @@ async def send_question(client, message, topten, thequote):
     playinglist.remove(message.author)
     return
 
-def check(message):
-    return message.author == message.author
-
 async def getresponse(client, name, options, message):
-    answer = await client.wait_for_message(timeout=10, author=message.author, check=check)
+    answer = await client.wait_for_message(timeout=10, author=message.author)
     if answer and answer.content.lower() == name.lower():
         answer = 'correct'
         return answer
