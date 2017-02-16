@@ -288,33 +288,27 @@ async def send_question(client, message, topten, thequote):
                     "It's time to play 'Who said it?' !\n %s, who"
                     " said the following:\n ""*%s*""\n Options: %s. You have 10 seconds to answer!"
                               % (message.author, sanitized, ', '.join(options)))
-    while True:
-        answer = await getresponse(client, name, options, message)
-        if answer:
-            if answer == 'correct':
-                await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author, name))
-                break
-            if answer == 'wrong':
-                await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author, name))
-                break
-        if not answer:
-            await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author, name))
-            break
+
+    answer = await getresponse(client, name, options, message)
+    if answer == 'correct':
+        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author, name))
+    elif answer == 'wrong':
+        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author, name))
+    else:
+        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author, name))
+
     playinglist.remove(message.author)
     return
 
 async def getresponse(client, name, options, message):
-    answer = await client.wait_for_message(timeout=10, author=message.author)
-    if answer and answer.content.lower() == name.lower():
-        answer = 'correct'
-        return answer
-    if answer and answer.content.lower() in options:
-        answer = 'wrong'
-        return answer
+    def is_response(message):
+        return message.content.lower() == name.lower() or message.content.lower() in options
+
+    answer = await client.wait_for_message(timeout=10, author=message.author, check=is_response)
     if answer:
-        return True
-    else:
-        return False
+        if answer.content == name.lower():
+            return 'correct'
+        return 'wrong'
 
 
 def register(client):
