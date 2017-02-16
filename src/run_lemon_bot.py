@@ -30,7 +30,7 @@ from BingTranslator import Translator
 import asyncio
 from asyncio import sleep
 import aiohttp
-from difflib import SequenceMatcher
+import difflib
 import wolframalpha
 import psycopg2
 import database as db
@@ -361,20 +361,11 @@ commands = {
     'status': cmd_status
 }
 
-async def suggestcmd(channel, arg, actualcmd):
-    await client.send_message(channel,
-                              "Command not found: %s - did you mean !%s?" % (arg, actualcmd))
 
-async def checkspelling(channel, arg):
-    allcommands = list(commands.items())
-    i = 0
-    for actualcmd in allcommands:
-        similarity = SequenceMatcher(None, allcommands[i][0], arg).quick_ratio()
-        if similarity > 0.7:
-            actualcmd = allcommands[i][0]
-            await suggestcmd(channel, arg, actualcmd)
-            return
-        i += 1
+async def checkspelling(channel, given_command):
+    matches = difflib.get_close_matches(given_command, commands.keys(), n=1, cutoff=0.7)
+    if len(matches) > 0:
+        await client.send_message(channel, "Command not found: %s - did you mean !%s?" % (given_command, matches[0]))
 
 def parse_raw_msg(msg):
     if isinstance(msg, bytes):
