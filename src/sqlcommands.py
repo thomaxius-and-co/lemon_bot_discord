@@ -302,7 +302,7 @@ async def getresponse(client, name, options, message):
 
     answer = await client.wait_for_message(timeout=10, channel=message.channel, author=message.author, check=is_response)
     if answer:
-        if answer.content == name.lower():
+        if answer.content.lower() == name.lower():
             return 'correct'
         return 'wrong'
 
