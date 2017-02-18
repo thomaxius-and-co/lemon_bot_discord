@@ -282,7 +282,7 @@ async def send_question(client, message, topten, thequote):
     rand.shuffle(options)
     await client.send_message(message.channel,
                     "It's time to play 'Who said it?' !\n %s, who"
-                    " said the following:\n ""*%s*""\n Options: %s. You have 10 seconds to answer!"
+                    " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
                               % (message.author, sanitized, ', '.join(options)))
 
     answer = await getresponse(client, name, options, message)
@@ -300,7 +300,7 @@ async def getresponse(client, name, options, message):
     def is_response(message):
         return message.content.lower() == name.lower() or message.content.lower() in options
 
-    answer = await client.wait_for_message(timeout=10, channel=message.channel, author=message.author, check=is_response)
+    answer = await client.wait_for_message(timeout=15, channel=message.channel, author=message.author, check=is_response)
     if answer:
         if answer.content.lower() == name.lower():
             return 'correct'
