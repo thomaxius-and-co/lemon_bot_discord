@@ -37,7 +37,7 @@ SLOT_PATTERN = [
 
 async def get_balance(user):
     async with db.connect() as c:
-        await c.execute("SELECT balance FROM casino_account WHERE discriminator = %s", [str(user)])
+        await c.execute("SELECT balance FROM casino_account WHERE user_id = %s", [str(user)])
         balance = await c.fetchone()
         return int(balance[0]) if balance is not None else 0
 
@@ -46,9 +46,9 @@ async def add_money(user, amount):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO casino_account AS a
-            (discriminator, balance)
+            (user_id, balance)
             VALUES (%s, %s)
-            ON CONFLICT (discriminator) DO UPDATE
+            ON CONFLICT (user_id) DO UPDATE
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
         """, [str(user), amount])
 
@@ -68,7 +68,7 @@ async def makedeck(blackjack=True):
 
 async def get_bet(user):
     async with db.connect() as c:
-        await c.execute("SELECT bet FROM casino_bet WHERE discriminator = %s", [str(user)])
+        await c.execute("SELECT bet FROM casino_bet WHERE user_id = %s", [str(user)])
         bet = await c.fetchone()
         return int(bet[0]) if bet is not None else 0
 
@@ -77,16 +77,16 @@ async def set_bet(user, amount):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO casino_bet AS b
-            (discriminator, bet)
+            (user_id, bet)
             VALUES (%s, %s)
-            ON CONFLICT (discriminator) DO UPDATE
+            ON CONFLICT (user_id) DO UPDATE
             SET bet = GREATEST(0, EXCLUDED.bet)
         """, [str(user), amount])
 
 
 # Function to play the slots
 async def cmd_slots(client, message, _):
-    player = message.author
+    player = message.author.id
     wheel_list = []
     results_dict = {}
     doubletimes = 0
@@ -232,26 +232,26 @@ async def cmd_bet(client, message, amount):
         await client.send_message(message.channel,
                                   'You need to enter a positive integer, minimum being 1. Example: ```!bet 5```')
         return
-    await set_bet(message.author, amount)
+    await set_bet(message.author.id, amount)
     await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
 
 
 # Function to look at the currently Set bet.
 async def cmd_reviewbet(client, message, _):
-    bet = await get_bet(message.author)
+    bet = await get_bet(message.author.id)
     await client.send_message(message.channel,
                               '%s is currently betting: %s' % (message.author, bet))
 
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
 async def cmd_loan(client, message, _):
-    balance = await get_balance(message.author)
+    balance = await get_balance(message.author.id)
     if balance >= 50:
         await client.send_message(message.channel,
                                   '%s you have $%s, you do not need a loan.' % (message.author, balance))
         return
 
-    await add_money(message.author, 50 - balance)
+    await add_money(message.author.id, 50 - balance)
     if balance == 0:
         await client.send_message(message.channel, '%s, added $50' % message.author)
     else:
@@ -260,7 +260,7 @@ async def cmd_loan(client, message, _):
 
 # Function to look up a users Money!
 async def cmd_bank(client, message, _):
-    balance = await get_balance(message.author)
+    balance = await get_balance(message.author.id)
     await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author, balance))
     if balance == 0:
         await client.send_message(message.channel, "Looks like you don't have any money, try the ```!loan``` command.")
@@ -410,12 +410,12 @@ async def cmd_blackjack(client, message, _):
                                   'Cannot play: You have an unfinished game.')
         return
     cards = await makedeck(blackjack=True)
-    bet = await get_bet(message.author)
+    bet = await get_bet(message.author.id)
     if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: ```!bet 5```')
         return
 
-    balance = await get_balance(message.author)
+    balance = await get_balance(message.author.id)
     if balance == 0:
         await client.send_message(message.channel, 'You need to run the !loan command.')
         return
@@ -489,13 +489,13 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
                                   'DEALER: %s: Player surrenders and receives half of his bet back. ($%s)' % (
                                       message.author, bet))
         winnings = -bet
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         return
 
     if pscore > 21:
         await sleep(0.2)
         winnings = -bet
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
                                       message.author, pscore, bet))
@@ -506,13 +506,13 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
                                   (message.author, int(bet)))
         winnings = int(bet)
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         return
 
     if dscore > 21:
         await sleep(0.2)
         winnings = bet
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (
                                       message.author, pscore, dscore, bet))
@@ -520,7 +520,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
     if dscore > pscore:
         await sleep(0.2)
         winnings = -bet
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (
                                       message.author, pscore, dscore, bet))
@@ -528,7 +528,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
     if pscore > dscore:
         await sleep(0.2)
         winnings = bet
-        await add_money(message.author, winnings)
+        await add_money(message.author.id, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (
                                       message.author, pscore, dscore, bet))
@@ -546,7 +546,7 @@ async def cmd_leader(client, message, _):
         await c.execute("""
             SELECT
                 row_number() OVER (ORDER BY balance DESC) AS rank,
-                discriminator,
+                user_id,
                 balance
             FROM casino_account
             ORDER BY balance
