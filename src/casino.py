@@ -86,19 +86,19 @@ async def set_bet(user, amount):
 
 # Function to play the slots
 async def cmd_slots(client, message, _):
-    player = message.author.id
+    player = message.author
     wheel_list = []
     results_dict = {}
     doubletimes = 0
     count = 1
     stay = False
     winnings = 0
-    bet = await get_bet(player)
+    bet = await get_bet(player.id)
     if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: ```!bet 5```')
         return
 
-    balance = await get_balance(player)
+    balance = await get_balance(player.id)
     if balance == 0:
         await client.send_message(message.channel, 'You need to run the ```!loan``` command.')
         return
@@ -112,7 +112,7 @@ async def cmd_slots(client, message, _):
         await client.send_message(message.channel,
                                   'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
-    await add_money(player, -bet)
+    await add_money(player.id, -bet)
     while count <= 4:
         wheel_pick = random.choice(SLOT_PATTERN)
         wheel_list.append(wheel_pick)
@@ -156,7 +156,7 @@ async def cmd_slots(client, message, _):
                 await client.send_message(message.channel,
                                           'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player, winnings))
                 await sleep(1)
-    wheel_payload = '%s Bet: $%s --> | ' % (player, bet) + ' - '.join(
+    wheel_payload = '%s Bet: $%s --> | ' % (player.name, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
     while winnings > 0 and not stay:
@@ -170,7 +170,7 @@ async def cmd_slots(client, message, _):
                                       winnings))
         winnings, stay = await askifdouble(client, message, winnings)
     if winnings > 0:
-        await add_money(player, winnings)
+        await add_money(player.id, winnings)
 
 
 # FIXME: Exact copy of cmd_coin in run_lemon_bot.py
@@ -209,7 +209,7 @@ async def askifdouble(client, message, winnings):
     answer = await client.wait_for_message(timeout=15, author=player, check=check)
     if answer and answer.content.lower() == '!double':
         await client.send_message(message.channel,
-                                  "Type 'heads' or 'tails'")
+                                  "Type heads or tails")
         winnings = await askifheadsortails(client, message, winnings)
         if winnings > 0:
             stay = False
