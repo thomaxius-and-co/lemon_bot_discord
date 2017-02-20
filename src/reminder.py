@@ -32,8 +32,8 @@ async def cmd_reminder(client, message, text):
     reply = "\n".join([
         "Hello, {message.author.mention}!",
         "I'll remind you about `{reminder.text}` at time `{reminder.time_text}`!",
-        "I interpreted that as `{reminder.time}`.",
-    ]).format(message=message, reminder=reminder)
+        "I interpreted that as `{helsinki_time}`.",
+    ]).format(message=message, reminder=reminder, helsinki_time=to_helsinki(reminder.time))
     await client.send_message(message.channel, reply)
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
@@ -80,10 +80,26 @@ async def process_next_reminder(client):
                 WHERE reminder_id = %s
             """, [id])
 
+def as_helsinki(time):
+    """Interpret a time without timezone as Europe/Helsinki without adjusting time"""
+    return pytz.timezone('Europe/Helsinki').localize(time)
+
+def to_helsinki(time):
+    """Translate existing time with timezone to Europe/Helsinki"""
+    return time.astimezone(tz=pytz.timezone('Europe/Helsinki'))
+
+def as_utc(time):
+    """Interpret a time without timezone as UTC without adjusting time"""
+    return pytz.utc.localize(time)
+
+def to_utc(time):
+    """Translate existing time with timezone to UTC"""
+    return time.astimezone(tz=pytz.utc)
+
 def parse_reminder(text):
     cal = parsedatetime.Calendar()
 
-    source_time = datetime.now(tz = pytz.timezone('Europe/Helsinki'))
+    source_time = to_helsinki(as_utc(datetime.now()))
     time_expressions = cal.nlp(text, source_time)
     time_expressions = time_expressions if time_expressions else []
 
@@ -97,7 +113,7 @@ class Reminder:
 
         self.original_text = original_text
         self.time_text = time_text
-        self.time = time
+        self.time = to_utc(as_helsinki(time))
 
         self.text = self.strip_middle(original_text, start, end)
 
