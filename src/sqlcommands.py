@@ -257,16 +257,17 @@ async def cmd_whosaidit(client, message, _):
         playinglist.append(message.author)
     else:
         await client.send_message(message.channel,
-                                  '%s: Cannot play: You already have an unfinished game.' % message.author)
+                                  '%s: Cannot play: You already have an unfinished game.' % message.author.name)
         return
     await dowhosaidit(client, message, _)
 
 async def dowhosaidit(client, message, _):
     channel = message.channel
     topten = await gettoplistforquotegame()
-    if len(topten) < 5:
+    if not topten or len(topten) < 5:
         await client.send_message(channel,
-                                  'Not enough chat logged to play')
+                                  'Not enough chat logged to play.')
+        playinglist.remove(message.author)
         return
     rand.shuffle(topten)
     name = rand.choice(topten)
@@ -283,16 +284,16 @@ async def send_question(client, message, topten, thequote):
     await client.send_message(message.channel,
                     "It's time to play 'Who said it?' !\n %s, who"
                     " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
-                              % (message.author, sanitized, ', '.join(options)))
+                              % (message.author.name, sanitized, ', '.join(options)))
 
     answer = await getresponse(client, name, options, message)
     if answer == 'correct':
-        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author, name))
+        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, name))
     elif answer == 'wrong':
-        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author, name))
+        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, name))
     else:
-        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author, name))
-
+        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, name))
+    await save_stats(message.author.id, answer=answer)
     playinglist.remove(message.author)
     return
 
@@ -306,6 +307,25 @@ async def getresponse(client, name, options, message):
             return 'correct'
         return 'wrong'
 
+async def save_stats(userid, answer=None):
+    if answer == 'correct':
+        async with db.connect() as c:
+            await c.execute("""
+                INSERT INTO whosaidit_stats AS a
+                (user_id, correct)
+                VALUES (%s, 1)
+                ON CONFLICT (user_id) DO UPDATE
+                SET correct = GREATEST(0, a.correct + EXCLUDED.correct)
+            """, [userid])
+    else:
+        async with db.connect() as c:
+            await c.execute("""
+                INSERT INTO whosaidit_stats AS a
+                (user_id, wrong)
+                VALUES (%s, 1)
+                ON CONFLICT (user_id) DO UPDATE
+                SET wrong = GREATEST(0, a.wrong + EXCLUDED.wrong)
+            """, [userid])
 
 def register(client):
     return {
