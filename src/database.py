@@ -167,6 +167,11 @@ schema_migrations = {
         -- Drop discriminator column
         ALTER TABLE casino_account DROP COLUMN discriminator;
     """,
+
+    # Fix incorrect reminder times
+    9: """
+        UPDATE reminder SET ts = ts - interval '2 hours';
+    """,
 }
 
 _pool_holder = threading.local()
