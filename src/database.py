@@ -18,6 +18,21 @@ schema_migrations = {
             message TEXT
         );
 
+
+        -- Casino
+        CREATE TABLE IF NOT EXISTS casino_account (
+            discriminator TEXT NOT NULL,
+            balance NUMERIC NOT NULL,
+            PRIMARY KEY (discriminator)
+        );
+
+        CREATE TABLE IF NOT EXISTS casino_bet (
+            discriminator TEXT NOT NULL,
+            bet NUMERIC NOT NULL,
+            PRIMARY KEY (discriminator)
+        );
+
+
         -- Archiver
         CREATE TABLE IF NOT EXISTS channel_archiver_status (
             channel_id TEXT NOT NULL,
