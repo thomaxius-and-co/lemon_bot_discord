@@ -50,42 +50,55 @@ async def upsert_message(c, message):
 async def insert_message(c, message):
     await _upsert_message(c, message, "DO NOTHING")
 
+def parse_ts(ts):
+    """Parses Discord timestamp into datetime accepted by asyncpg"""
+    import datetime
+    import pytz
+
+    has_ms = ts[19] == '.'
+    has_tz = ts[-6] in ['-', '+'] and ts[-3] == ':'
+
+
+    time_fmt = "%Y-%m-%dT%H:%M:%S"
+    if has_ms:
+        time_fmt += ".%f"
+    if has_tz:
+        time_fmt += "%z"
+
+    # Remove the ':' in '+00:00' if it exists because strptime doesn't understand it
+    if has_tz:
+        ts = ts[:-3] + ts[-2:]
+    return datetime.datetime.strptime(ts, time_fmt).astimezone(pytz.utc).replace(tzinfo=None)
+
 async def _upsert_message(c, message, upsert_clause):
     sql = """
         INSERT INTO message
         (message_id, ts, content, m)
-        VALUES (%s, %s, %s, %s)
+        VALUES ($1, $2, $3, $4)
         ON CONFLICT (message_id)
         {upsert_clause}
     """.format(upsert_clause=upsert_clause)
 
-    await c.execute(sql, [
-        message["id"],
-        message["timestamp"],
-        message["content"],
-        json.dumps(message),
-    ])
-
+    await c.execute(sql, message["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
 
 async def archive_channel(channel_id):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO channel_archiver_status
             (channel_id, message_id)
-            VALUES (%s, '0')
+            VALUES ($1, '0')
             ON CONFLICT DO NOTHING;
-        """, [channel_id])
-        await c.execute("SELECT message_id FROM channel_archiver_status WHERE channel_id = %s", [channel_id])
-        latest_id = (await c.fetchone())[0]
+        """, channel_id)
+        latest_id = await c.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
             new_latest_id = all_messages[0]["id"]
 
             await c.execute("""
                 UPDATE channel_archiver_status
-                SET message_id = %s
-                WHERE channel_id = %s
-            """, [new_latest_id, channel_id])
+                SET message_id = $1
+                WHERE channel_id = $2
+            """, new_latest_id, channel_id)
 
 
             for message in all_messages:

@@ -1,5 +1,6 @@
 import discord
 import re
+import json
 import database as db
 import random as rand
 
@@ -12,6 +13,8 @@ def sanitize_message(content, mentions):
 
 async def send_quote(client, channel, random_message):
     content, timestamp, mentions, author = random_message
+    mentions = json.loads(mentions)
+    author = json.loads(author)
     sanitized = sanitize_message(content, mentions)
     avatar_url = "https://cdn.discordapp.com/avatars/{id}/{avatar}.jpg".format(**author)
 
@@ -21,8 +24,8 @@ async def send_quote(client, channel, random_message):
     await client.send_message(channel, embed=embed)
 
 async def random_message_with_filter(filters, params):
-    async with db.connect(readonly = True) as c:
-        await c.execute("""
+    async with db.connect() as c:
+        return await c.fetchrow("""
             SELECT
                 content,
                 ts::timestamptz AT TIME ZONE 'Europe/Helsinki',
@@ -32,12 +35,11 @@ async def random_message_with_filter(filters, params):
             WHERE length(content) > 6 AND content NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
             ORDER BY random()
             LIMIT 1
-        """.format(filters=filters), params)
-        return await c.fetchone()
+        """.format(filters=filters), *params)
 
 async def getquoteforquotegame(name):
-    async with db.connect(readonly = True) as c:
-        await c.execute("""
+    async with db.connect() as c:
+        return await c.fetchrow("""
             SELECT
                 content,
                 m->'author'->>'username',
@@ -49,10 +51,9 @@ async def getquoteforquotegame(name):
             ORDER BY random()
             LIMIT 1
         """.format(name=name))
-        return await c.fetchone()
 
 def make_word_filters(words):
-    conditions = "content ~* %s"
+    conditions = "content ~* $1"
     params = ["|".join(words)]
     return conditions, params
 
@@ -63,10 +64,10 @@ async def random(filter):
     return await random_message_with_filter("AND ({0})".format(word_filters), params)
 
 async def random_quote_from_channel(channel_id):
-    return await random_message_with_filter("AND m->>'channel_id' = %s", [channel_id])
+    return await random_message_with_filter("AND m->>'channel_id' = $1", [channel_id])
 
 async def get_user_days_in_chat(c):
-    await c.execute("""
+    rows = await c.fetch("""
         SELECT
             m->'author'->>'id',
             extract(epoch from current_timestamp - min(ts)) / 60 / 60 / 24
@@ -74,7 +75,7 @@ async def get_user_days_in_chat(c):
         GROUP BY m->'author'->>'id'
     """)
     result = {}
-    for row in (await c.fetchall()):
+    for row in rows:
         result[row[0]] = row[1]
 # {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
     return result
@@ -82,9 +83,9 @@ async def get_user_days_in_chat(c):
 async def top_message_counts(filters, params, excludecommands):
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
 
-    async with db.connect(readonly = True) as c:
+    async with db.connect() as c:
         user_days_in_chat = await get_user_days_in_chat(c)
-        await c.execute("""
+        items = await c.fetch("""
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
@@ -93,10 +94,10 @@ async def top_message_counts(filters, params, excludecommands):
             WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
         """.format(filters=filters, sql_excludecommands=sql_excludecommands), params)
-        if c.rowcount <= 1:
+        if len(items) <= 1:
             return None
         list_with_msg_per_day = []
-        for item in await c.fetchall():
+        for item in items:
             name, user_id, message_count = item
             msg_per_day = message_count / user_days_in_chat[user_id]
             new_item = (name, msg_per_day, message_count)
@@ -105,8 +106,8 @@ async def top_message_counts(filters, params, excludecommands):
         return fixlist(top_ten)
 
 async def gettoplistforquotegame():
-    async with db.connect(readonly = True) as c:
-        await c.execute("""
+    async with db.connect() as c:
+        items = await c.fetch("""
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
@@ -117,10 +118,10 @@ async def gettoplistforquotegame():
              AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
             group by m->'author'->>'username', m->'author'->>'id'
         """)
-        if c.rowcount <= 1:
+        if len(items) <= 1:
             return None
         toplist = []
-        for item in await c.fetchall():
+        for item in items:
             name, user_id, message_count = item
             new_item = (name, message_count)
             toplist.append(new_item)
@@ -179,7 +180,7 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == ('spammers') or input == ('!spammers'):
-        reply = await top_message_counts("AND 1 = %s", [1], excludecommands)
+        reply = await top_message_counts("AND 1 = $1", [1], excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
@@ -229,7 +230,7 @@ async def cmd_top(client, message, input):
 
 async def getwhosaiditranking():
     async with db.connect(readonly = True) as c:
-        await c.execute("""
+        items = await c.fetch("""
         with name as (
                 select
                 m->'author'->>'id' as user_id,
@@ -241,10 +242,10 @@ async def getwhosaiditranking():
         from whosaidit_stats
         join name using (user_id) where (correct + wrong) > 19
         """)
-        if c.rowcount == 0:
+        if len(items) == 0:
             return None
         toplist = []
-        for item in await c.fetchall():
+        for item in items:
             pct, correct, total, name = item
             new_item = (name, correct, total, pct)
             toplist.append(new_item)
@@ -330,7 +331,7 @@ async def dowhosaidit(client, message, _):
 
 async def send_question(client, message, topten, thequote):
     name = thequote[1]
-    sanitized = sanitize_message(thequote[0], thequote[2])
+    sanitized = sanitize_message(thequote[0], json.loads(thequote[2]))
     options = [topten[0].lower(), topten[1].lower(), topten[2].lower(), topten[3].lower(),
                name.lower()]
     rand.shuffle(options)
@@ -366,19 +367,19 @@ async def save_stats(userid, answer=None):
             await c.execute("""
                 INSERT INTO whosaidit_stats AS a
                 (user_id, correct)
-                VALUES (%s, 1)
+                VALUES ($1, 1)
                 ON CONFLICT (user_id) DO UPDATE
                 SET correct = GREATEST(0, a.correct + EXCLUDED.correct)
-            """, [userid])
+            """, userid)
     else:
         async with db.connect() as c:
             await c.execute("""
                 INSERT INTO whosaidit_stats AS a
                 (user_id, wrong)
-                VALUES (%s, 1)
+                VALUES ($1, 1)
                 ON CONFLICT (user_id) DO UPDATE
                 SET wrong = GREATEST(0, a.wrong + EXCLUDED.wrong)
-            """, [userid])
+            """, userid)
 
 def register(client):
     return {

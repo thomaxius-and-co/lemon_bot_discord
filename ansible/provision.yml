@@ -39,6 +39,14 @@
         - libxml2-dev # for lxml
         - libxslt1-dev # for lxml
 
+    - name: Remove aiopg
+      pip:
+        state: absent
+        name: "{{ item }}"
+        executable: pip3
+      with_items:
+        - aiopg
+
     - name: Install pip dependencies
       pip:
         name: "{{ item }}"
@@ -51,11 +59,11 @@
         - bs4
         - wolframalpha
         - lxml
-        - aiopg
         - feedparser
         - aioredis
         - parsedatetime==2.1
         - pytz==2016.10
+        - asyncpg==0.8.4
 
     - name: Copy source to server
       synchronize:

@@ -30,8 +30,7 @@ def get_date(entry):
 
 async def check_feeds(client):
     async with connect() as c:
-        await c.execute("SELECT feed_id, url, last_entry, channel_id FROM feed")
-        feeds = await c.fetchall()
+        feeds = await c.fetch("SELECT feed_id, url, last_entry, channel_id FROM feed")
 
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
@@ -81,9 +80,9 @@ async def process_feed(client, id, url, last_entry, channel_id):
         async with connect() as c:
             await c.execute("""
                 UPDATE feed
-                SET last_entry = %s
-                WHERE feed_id = %s
-            """, [max_timestamp, id])
+                SET last_entry = $1
+                WHERE feed_id = $2
+            """, max_timestamp, id)
 
 async def task(client):
     # Wait until the client is ready
@@ -121,8 +120,7 @@ async def cmd_feed(client, message, arg):
 
 async def cmd_feed_list(client, message, _):
     async with connect() as c:
-        await c.execute("SELECT url FROM feed WHERE channel_id = %s ORDER BY feed_id", [message.channel.id])
-        feeds = await c.fetchall()
+        feeds = await c.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", message.channel.id)
     msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
     await client.send_message(message.channel, msg)
 
@@ -131,7 +129,7 @@ async def cmd_feed_add(client, message, url):
     # TODO: Find feeds from linked url
 
     async with connect() as c:
-        await c.execute("INSERT INTO feed (url, channel_id) VALUES (%s, %s)", [url, message.channel.id])
+        await c.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
 
     print("feed: added feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
@@ -143,7 +141,7 @@ async def cmd_feed_remove(client, message, url):
         return
 
     async with connect() as c:
-        await c.execute("DELETE FROM feed WHERE url = %s", [url])
+        await c.execute("DELETE FROM feed WHERE url = $1", url)
 
     print("feed: removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)

@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 
 import threading
-import aiopg
+import asyncpg
 
 schema_migrations = {
     # Initial DB
@@ -176,17 +176,17 @@ schema_migrations = {
 
 _pool_holder = threading.local()
 
-_connect_string = "host=localhost dbname=%s user=%s password=%s" % (
-    os.environ["DATABASE_NAME"],
+_connect_string = "postgres://%s:%s@localhost:5432/%s" % (
     os.environ["DATABASE_USERNAME"],
-    os.environ["DATABASE_PASSWORD"]
+    os.environ["DATABASE_PASSWORD"],
+    os.environ["DATABASE_NAME"]
 )
 
 async def get_pool():
     global _pool_holder
     pool = getattr(_pool_holder, "pool", None)
     if pool is None:
-        pool = await aiopg.create_pool(_connect_string)
+        pool = await asyncpg.create_pool(_connect_string)
         setattr(_pool_holder, "pool", pool)
     return pool
 
@@ -194,8 +194,7 @@ async def close_pool():
     global _pool_holder
     pool = getattr(_pool_holder, "pool", None)
     if pool is not None:
-        pool.close()
-        await pool.wait_closed()
+        await pool.close()
         setattr(_pool_holder, "pool", None)
 
 class connect:
@@ -205,22 +204,28 @@ class connect:
     async def __aenter__(self):
         self.pool = await get_pool()
         self.con = await self.pool.acquire()
-        self.con.set_session(readonly=self.readonly)
-        self.cursor = await self.con.cursor()
-        return self.cursor
+        if self.readonly:
+            self.tx = self.con.transaction(readonly=self.readonly, isolation='serializable')
+        else:
+            self.tx = self.con.transaction(readonly=self.readonly)
+        await self.tx.start()
+        return self.con
 
     async def __aexit__(self, exc_type, exc, tb):
-        self.cursor.close()
+        if exc_type is not None:
+            await self.tx.rollback()
+        else:
+            await self.tx.commit()
+
         await self.pool.release(self.con)
 
 async def table_exists(c, table_name):
-    await c.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
-    return bool(c.rowcount)
+    rows = await c.fetch("SELECT * FROM information_schema.tables WHERE table_name = $1", table_name)
+    return bool(len(rows))
 
 async def get_current_schema_version(c):
     if await table_exists(c, "schema_version"):
-        await c.execute("SELECT max(version) FROM schema_version;")
-        result = await c.fetchone()
+        result = await c.fetchrow("SELECT max(version) FROM schema_version")
         return result[0] if result is not None else 0
     else:
         return 0
@@ -245,6 +250,6 @@ async def initialize_schema():
                 print("database: migrating to version {0}".format(version))
                 await c.execute(sql)
 
-            await c.execute("INSERT INTO schema_version (version) VALUES (%s)", [new_version])
+            await c.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
 
     print("database: schema is in up to date")

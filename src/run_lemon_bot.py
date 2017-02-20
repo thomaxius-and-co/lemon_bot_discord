@@ -32,7 +32,6 @@ from asyncio import sleep
 import aiohttp
 import difflib
 import wolframalpha
-import psycopg2
 import database as db
 import command
 import util
@@ -331,12 +330,12 @@ async def cmd_sql(client, message, arg):
 
     try:
         async with db.connect(readonly = True) as c:
-            await c.execute(arg)
-            results = await c.fetchmany(100)
+            cur = await c.cursor(arg)
+            results = await cur.fetch(100)
             msg = "\n".join(map(str, results))
             msg = limit_msg_length("```%s```", msg)
             await client.send_message(message.channel, msg)
-    except (psycopg2.ProgrammingError, psycopg2.InternalError) as err:
+    except Exception as err:
         msg = limit_msg_length("```ERROR: %s```", str(err))
         await client.send_message(message.channel, msg)
         return

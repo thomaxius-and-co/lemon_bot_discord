@@ -37,9 +37,8 @@ SLOT_PATTERN = [
 
 async def get_balance(user):
     async with db.connect() as c:
-        await c.execute("SELECT balance FROM casino_account WHERE user_id = %s", [str(user)])
-        balance = await c.fetchone()
-        return int(balance[0]) if balance is not None else 0
+        balance = await c.fetchval("SELECT balance FROM casino_account WHERE user_id = $1", str(user))
+        return balance if balance is not None else 0
 
 
 async def add_money(user, amount):
@@ -47,10 +46,10 @@ async def add_money(user, amount):
         await c.execute("""
             INSERT INTO casino_account AS a
             (user_id, balance)
-            VALUES (%s, %s)
+            VALUES ($1, $2)
             ON CONFLICT (user_id) DO UPDATE
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
-        """, [str(user), amount])
+        """, str(user), amount)
 
 
 async def makedeck(blackjack=True):
@@ -68,9 +67,8 @@ async def makedeck(blackjack=True):
 
 async def get_bet(user):
     async with db.connect() as c:
-        await c.execute("SELECT bet FROM casino_bet WHERE user_id = %s", [str(user)])
-        bet = await c.fetchone()
-        return int(bet[0]) if bet is not None else 0
+        bet = await c.fetchval("SELECT bet FROM casino_bet WHERE user_id = $1", str(user))
+        return bet if bet is not None else 0
 
 
 async def set_bet(user, amount):
@@ -78,10 +76,10 @@ async def set_bet(user, amount):
         await c.execute("""
             INSERT INTO casino_bet AS b
             (user_id, bet)
-            VALUES (%s, %s)
+            VALUES ($1, $2)
             ON CONFLICT (user_id) DO UPDATE
             SET bet = GREATEST(0, EXCLUDED.bet)
-        """, [str(user), amount])
+        """, str(user), amount)
 
 
 # Function to play the slots
@@ -543,7 +541,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
 # Function to lookup the money and create a top 5 users.
 async def cmd_leader(client, message, _):
     async with db.connect() as c:
-        await c.execute("""
+        leaders = await c.fetch("""
             SELECT
                 row_number() OVER (ORDER BY balance DESC) AS rank,
                 user_id,
@@ -552,7 +550,6 @@ async def cmd_leader(client, message, _):
             ORDER BY balance
             DESC LIMIT 5
         """)
-        leaders = await c.fetchall()
 
     if len(leaders) > 0:
         msg = '  |  '.join(map(lambda u: '#%s - %s - $%s' % u, leaders))

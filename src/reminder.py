@@ -41,8 +41,8 @@ async def add_reminder(user_id, time, text, original_text):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO reminder(user_id, ts, text, original_text)
-            VALUES (%s, %s, %s, %s)
-        """, [user_id, time, text, original_text])
+            VALUES ($1, $2, $3, $4)
+        """, user_id, time, text, original_text)
 
 async def task(client):
     # Wait until the client is ready
@@ -57,17 +57,16 @@ async def task(client):
 
 async def process_next_reminder(client):
     async with db.connect() as c:
-        await c.execute("""
+        reminders = await c.fetch("""
             SELECT reminder_id, user_id, text
             FROM reminder
             WHERE ts < current_timestamp AND reminded = false
             ORDER BY ts ASC
         """)
-        reminders = await c.fetchall()
         if len(reminders) == 0:
             return
 
-        print("reminder: sending {0} reminders".format(c.rowcount))
+        print("reminder: sending {0} reminders".format(len(reminders)))
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
@@ -77,8 +76,8 @@ async def process_next_reminder(client):
             await c.execute("""
                 UPDATE reminder
                 SET reminded = true
-                WHERE reminder_id = %s
-            """, [id])
+                WHERE reminder_id = $1
+            """, id)
 
 def as_helsinki(time):
     """Interpret a time without timezone as Europe/Helsinki without adjusting time"""
