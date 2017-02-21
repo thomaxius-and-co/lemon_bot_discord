@@ -152,6 +152,23 @@ def fixlist(sequence):
     # sequence: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 48    | and so forth
     return sequence
 
+def fixlist1(sequence): # i am lazy today
+    rank = 1
+    namelen = column_width(sequence, 0, 9)
+    maxnumberlen = column_width(sequence, 2, 6)
+    print(sequence)
+    for item in sequence:
+        if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
+            fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')
+            fixedtotal = str(item[2]).ljust(maxnumberlen)
+            therank, thetotal, thecorrect = str(rank), str(item[2]), str(item[1])
+            newitem = ('%s  #%s | %s| %s| %s' % (fixed,therank.ljust(2), fixedtotal, thecorrect.ljust(8),round(item[3],3)))
+            rank += 1
+            pos = sequence.index(item)
+            sequence.remove(item)
+            sequence.insert(pos,newitem)
+    # sequence: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 48    | and so forth
+    return sequence
 async def cmd_top(client, message, input):
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
@@ -194,9 +211,45 @@ async def cmd_top(client, message, input):
 
         await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
         return
-    else:
-        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, custom <words separated by comma>')
+
+    if input == ('whosaidit'):
+        ranking = await getwhosaiditranking()
+        if not ranking:
+            await client.send_message(message.channel,
+                                      'Not enough players to form a toplist.')
+            return
+
+        title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (len(ranking))
+        await client.send_message(message.channel,
+                                  ('```%s \n NAME     | RANK | TOTAL | CORRECT | ACCUARCY %%\n' % title + ('\n'.join(ranking) + '```')))
         return
+    else:
+        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, custom <words separated by comma>')
+        return
+
+async def getwhosaiditranking():
+    async with db.connect(readonly = True) as c:
+        await c.execute("""
+        with name as (
+                select
+                m->'author'->>'id' as user_id,
+                (array_agg(distinct m->'author'->>'username'))[1] as username
+                from message
+                group by m->'author'->>'id')
+        select
+        (correct / (correct + wrong)) * 100, correct, correct + wrong, name.username
+        from whosaidit_stats
+        join name using (user_id) where (correct + wrong) > 19
+        """)
+        if c.rowcount == 0:
+            return None
+        toplist = []
+        for item in await c.fetchall():
+            pct, correct, total, name = item
+            new_item = (name, correct, total, pct)
+            toplist.append(new_item)
+        top_ten = sorted(toplist, key=lambda x: x[1], reverse=True)[:10]
+        return fixlist1(top_ten)
 
 def filterquietpeople(tuple):
     return tuple[1] > 500
