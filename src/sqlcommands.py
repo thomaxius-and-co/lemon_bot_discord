@@ -240,6 +240,7 @@ async def getwhosaiditranking():
             JOIN discord_user USING (user_id)
             WHERE (correct + wrong) > 19
             ORDER BY (correct / (correct + wrong)) * 100 DESC
+            LIMIT 10
         """)
         if len(items) == 0:
             return None
@@ -248,7 +249,6 @@ async def getwhosaiditranking():
             pct, correct, total, name = item
             new_item = (name, correct, total, pct)
             toplist.append(new_item)
-        top_ten = sorted(toplist, key=lambda x: x[1], reverse=True)[:10]
         return fixlist1(top_ten)
 
 def filterquietpeople(tuple):
