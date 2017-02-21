@@ -231,16 +231,11 @@ async def cmd_top(client, message, input):
 async def getwhosaiditranking():
     async with db.connect(readonly = True) as c:
         items = await c.fetch("""
-        with name as (
-                select
-                m->'author'->>'id' as user_id,
-                (array_agg(distinct m->'author'->>'username'))[1] as username
-                from message
-                group by m->'author'->>'id')
         select
-        (correct / (correct + wrong)) * 100, correct, correct + wrong, name.username
+        (correct / (correct + wrong)) * 100, correct, correct + wrong, name
         from whosaidit_stats
-        join name using (user_id) where (correct + wrong) > 19
+        join discord_user using (user_id)
+        where (correct + wrong) > 19
         """)
         if len(items) == 0:
             return None
