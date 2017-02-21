@@ -239,6 +239,7 @@ async def getwhosaiditranking():
             FROM whosaidit_stats
             JOIN discord_user USING (user_id)
             WHERE (correct + wrong) > 19
+            ORDER BY (correct / (correct + wrong)) * 100 DESC
         """)
         if len(items) == 0:
             return None
