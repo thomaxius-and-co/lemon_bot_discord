@@ -39,14 +39,6 @@
         - libxml2-dev # for lxml
         - libxslt1-dev # for lxml
 
-    - name: Remove aiopg
-      pip:
-        state: absent
-        name: "{{ item }}"
-        executable: pip3
-      with_items:
-        - aiopg
-
     - name: Install pip dependencies
       pip:
         name: "{{ item }}"
