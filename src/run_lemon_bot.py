@@ -376,10 +376,53 @@ def parse_raw_msg(msg):
 async def on_socket_raw_receive(raw_msg):
     msg = parse_raw_msg(raw_msg)
 
-    if (msg["t"] == "MESSAGE_CREATE"):
+    type = msg.get("t", None)
+    data = msg.get("d", None)
+
+    if (type == "MESSAGE_CREATE"):
         print("main: insta-archiving a new message")
         async with db.connect() as c:
-            await archiver.insert_message(c, msg["d"])
+            await archiver.insert_message(c, data)
+
+    elif (type == "GUILD_CREATE"):
+        print("main: updating users from GUILD_CREATE event")
+        members = data.get("members", [])
+        users = [m.get("user") for m in members]
+        await upsert_users(users)
+
+    elif (type == "GUILD_MEMBER_UPDATE"):
+        print("main: updating user from GUILD_MEMBER_UPDATE event")
+        user = data.get("user")
+        await upsert_users([user])
+
+    elif (type == "PRESENCE_UPDATE"):
+        print("main: updating user from PRESENCE_UPDATE event")
+        user = data.get("user")
+        await upsert_users([user])
+
+
+def is_full_user(user):
+    # XXX: Do we want to require discriminator and avatar also?
+    attrs = [ "id", "username" ]
+    return all(attr in user for attr in attrs)
+
+async def upsert_users(users):
+    if not all(is_full_user(user) for user in users):
+        print("main: not all users were full")
+        return
+
+    async with db.connect() as c:
+        for user in users:
+            print("user: updating", user)
+            await c.execute("""
+                INSERT INTO discord_user
+                (user_id, name, raw)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (user_id)
+                DO UPDATE SET
+                    name = EXCLUDED.name,
+                    raw = EXCLUDED.raw
+            """, user.get("id"), user.get("username"), json.dumps(user))
 
 # Dispacther for messages from the users.
 @client.event

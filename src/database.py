@@ -172,6 +172,16 @@ schema_migrations = {
     9: """
         UPDATE reminder SET ts = ts - interval '2 hours';
     """,
+
+    # Create table for user information
+    10: """
+        CREATE TABLE discord_user (
+            user_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            raw JSONB NOT NULL,
+            PRIMARY KEY (user_id)
+        );
+    """,
 }
 
 _pool_holder = threading.local()
