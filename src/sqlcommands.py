@@ -249,7 +249,7 @@ async def getwhosaiditranking():
             pct, correct, total, name = item
             new_item = (name, correct, total, pct)
             toplist.append(new_item)
-        return fixlist1(top_ten)
+        return fixlist1(toplist)
 
 def filterquietpeople(tuple):
     return tuple[1] > 500
