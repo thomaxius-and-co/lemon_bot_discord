@@ -11,3 +11,4 @@
   apt:
     name: do-agent
     update_cache: yes
+  ignore_errors: yes
