@@ -81,28 +81,31 @@ async def _upsert_message(c, message, upsert_clause):
 
     await c.execute(sql, message["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
 
+async def latest_message_id(c, channel_id):
+    latest_id = await c.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
+    if latest_id is None:
+        latest_id = "0"
+    return latest_id
+
+async def update_latest_message_id(c, channel_id, message_id):
+    await c.execute("""
+        INSERT INTO channel_archiver_status
+        (channel_id, message_id)
+        VALUES ($1, $2)
+        ON CONFLICT (channel_id)
+        DO UPDATE SET message_id = EXCLUDED.message_id
+    """, channel_id, message_id)
+
 async def archive_channel(channel_id):
     async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO channel_archiver_status
-            (channel_id, message_id)
-            VALUES ($1, '0')
-            ON CONFLICT DO NOTHING;
-        """, channel_id)
-        latest_id = await c.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
+        latest_id = await latest_message_id(c, channel_id)
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
-            new_latest_id = all_messages[0]["id"]
-
-            await c.execute("""
-                UPDATE channel_archiver_status
-                SET message_id = $1
-                WHERE channel_id = $2
-            """, new_latest_id, channel_id)
-
-
             for message in all_messages:
                 await upsert_message(c, message)
+
+            new_latest_id = all_messages[0]["id"]
+            await update_latest_message_id(c, channel_id, new_latest_id)
 
         print("Fetched total %s messages" % len(all_messages))
 
