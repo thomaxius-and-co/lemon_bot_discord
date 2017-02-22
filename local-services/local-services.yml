@@ -1,0 +1,8 @@
+- name: Configure local services
+  hosts: all
+  become: yes
+
+  tasks:
+    - debug: msg=test
+    - include: postgres.yml
+    - include: redis.yml
