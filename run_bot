@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+ROOT="$(dirname "${BASH_SOURCE[0]}")"
+
+function check_dependencies {
+  echo "+ Checking dependencies"
+
+  # TODO: Visual C++ build tools
+  # http://landinghub.visualstudio.com/visual-cpp-build-tools
+
+  if ! type python &> /dev/null; then
+    echo "- Please install python"
+    exit 1
+  fi
+
+  if ! type pip &> /dev/null; then
+    echo "- Pelase install pip"
+    exit 1
+  fi
+
+  if ! type virtualenv &> /dev/null; then
+    echo "+ Installing virtualenv"
+    pip install virtualenv > /dev/null
+  fi
+}
+
+function init_virtualenv {
+  echo "+ Initializing virtualenv"
+  if [ ! -d .venv ]; then
+    virtualenv "$ROOT/.venv" > /dev/null
+  fi
+  source "$ROOT/.venv/Scripts/activate"
+  pip install -r "$ROOT/src/requirements.txt"
+}
+
+function run_bot {
+  source secrets
+  python -u src/run_lemon_bot.py
+}
+
+check_dependencies
+init_virtualenv
+run_bot
