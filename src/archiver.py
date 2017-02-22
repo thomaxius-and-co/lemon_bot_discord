@@ -126,7 +126,8 @@ async def run_archival():
         await archive_guild(guild["id"])
 
 async def task(client):
-    await client.wait_until_ready()
+    # Wait until the client is ready
+    util.threadsafe(client, client.wait_until_ready())
 
     # Store new messages every 15 minutes
     while True:
@@ -137,5 +138,6 @@ async def task(client):
         await asyncio.sleep(15 * 60)
 
 def register(client):
-    client.loop.create_task(task(client))
+    print("archiver: registering")
+    util.start_task_thread(task(client))
     return {}
