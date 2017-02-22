@@ -11,4 +11,4 @@ elif [ $env = "prd" ]; then
   ssh_command="ssh -t lemon"
 fi
 
-$ssh_command "journalctl -u lemon -u lemon-web -n 100 -f"
+$ssh_command "journalctl -u lemon -n 100 -f"
