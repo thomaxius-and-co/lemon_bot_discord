@@ -54,9 +54,10 @@ async def getquoteforquotegame(name):
         """.format(name=name))
             if checkifproperquote(quote) > 6:
                 return quote
+        return None
 
 def checkifproperquote(quote):
-    return len(set(quote))
+    return len(set(quote[0]))
 
 def make_word_filters(words):
     conditions = "content ~* $1"
