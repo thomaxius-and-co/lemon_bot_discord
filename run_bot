@@ -28,10 +28,17 @@ function check_dependencies {
 
 function init_virtualenv {
   echo "+ Initializing virtualenv"
+
   if [ ! -d .venv ]; then
     virtualenv "$ROOT/.venv" > /dev/null
   fi
-  source "$ROOT/.venv/Scripts/activate"
+
+  if [ -f "$ROOT/.venv/Scripts/activate" ]; then
+    source "$ROOT/.venv/Scripts/activate"
+  elif [ -f "$ROOT/.venv/bin/activate" ]; then
+    source "$ROOT/.venv/bin/activate"
+  fi
+
   pip install -r "$ROOT/src/requirements.txt"
 }
 
