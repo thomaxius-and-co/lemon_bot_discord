@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+export ROOT=$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")
+
+function ssh_vm {
+  cd $ROOT/local-services
+
+  tmp=$(mktemp -t lemon)
+  vagrant ssh-config > $tmp
+  host="$(grep "^Host " $tmp | cut -d' ' -f2)"
+  ssh -t -F "$tmp" "$host" -- "$@"
+  rm -f "$tmp"
+
+  cd -
+}
