@@ -24,17 +24,28 @@
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
 
-## Running locally with Vagrant
+## Development
 
-Configure your secrets in `ansible/local-secrets.yml`. Use the
-`ansible/local-secrets.example.yml` as a template.
+### Requirements
 
-Start the VM with
+- Python 3
+- Virtualenv
+- Vagrant
+- Virtual Box
 
-    vagrant up
+On Windows you also need Visual C++ build tools from http://landinghub.visualstudio.com/visual-cpp-build-tools
 
-This creates the VM and provisions it using Ansible. To apply local changes
-without recreating the VM you can run `vagrant provision`.
+### Running the bot
+
+Configure your secrets in `secrets`. Use the `secrets.example` as a template.
+
+Initialize required services in VM by running
+
+    init_vm
+
+Start the bot by running
+
+    run_bot
 
 ## Installation
    * Git clone the Repo. 
