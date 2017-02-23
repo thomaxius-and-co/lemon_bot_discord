@@ -30,7 +30,11 @@ function init_virtualenv {
   echo "+ Initializing virtualenv"
 
   if [ ! -d .venv ]; then
-    virtualenv "$ROOT/.venv" > /dev/null
+    if type python3 &> /dev/null; then
+      virtualenv --python=python3 "$ROOT/.venv" > /dev/null
+    else
+      virtualenv "$ROOT/.venv" > /dev/null
+    fi
   fi
 
   if [ -f "$ROOT/.venv/Scripts/activate" ]; then
