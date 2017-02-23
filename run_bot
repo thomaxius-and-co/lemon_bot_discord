@@ -11,8 +11,10 @@ function check_dependencies {
   # http://landinghub.visualstudio.com/visual-cpp-build-tools
 
   if ! type python &> /dev/null; then
-    echo "- Please install python"
-    exit 1
+    if ! type python3 &> /dev/null; then
+      echo "- Please install python"
+      exit 1
+    fi
   fi
 
   if ! type pip &> /dev/null; then
