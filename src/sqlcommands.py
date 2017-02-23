@@ -39,7 +39,8 @@ async def random_message_with_filter(filters, params):
 
 async def getquoteforquotegame(name):
     async with db.connect() as c:
-        return await c.fetchrow("""
+        for properquote in range(0,6):
+            quote = await c.fetchrow("""
             SELECT
                 content,
                 m->'author'->>'username',
@@ -51,6 +52,11 @@ async def getquoteforquotegame(name):
             ORDER BY random()
             LIMIT 1
         """.format(name=name))
+            if checkifproperquote(quote) > 6:
+                return quote
+
+def checkifproperquote(quote):
+    return len(set(quote))
 
 def make_word_filters(words):
     conditions = "content ~* $1"
@@ -222,7 +228,7 @@ async def cmd_top(client, message, input):
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (len(ranking))
         await client.send_message(message.channel,
-                                  ('```%s \n NAME     | RANK | TOTAL | CORRECT | ACCUARCY %%\n' % title + ('\n'.join(ranking) + '```')))
+                                  ('```%s \n NAME     | RANK | TOTAL | CORRECT | ACCURACY %%\n' % title + ('\n'.join(ranking) + '```')))
         return
     else:
         await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, custom <words separated by comma>')
@@ -326,6 +332,12 @@ async def dowhosaidit(client, message, _):
     name = rand.choice(topten)
     topten.remove(name)
     quote = await getquoteforquotegame(name)
+    if not quote:
+        await client.send_message(channel,
+                                  'Not enough chat logged to play.') # I guess this is a pretty
+        #  rare occasion, # but just in case
+        playinglist.remove(message.author)
+        return
     await send_question(client, message, topten, quote)
 
 async def send_question(client, message, topten, thequote):
