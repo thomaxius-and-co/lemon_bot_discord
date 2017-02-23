@@ -3,6 +3,5 @@
   become: yes
 
   tasks:
-    - debug: msg=test
     - include: postgres.yml
     - include: redis.yml
