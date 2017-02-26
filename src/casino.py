@@ -544,9 +544,10 @@ async def cmd_leader(client, message, _):
         leaders = await c.fetch("""
             SELECT
                 row_number() OVER (ORDER BY balance DESC) AS rank,
-                user_id,
+                name,
                 balance
             FROM casino_account
+            JOIN discord_user USING (user_id)
             ORDER BY balance
             DESC LIMIT 5
         """)
