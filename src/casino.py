@@ -152,7 +152,7 @@ async def cmd_slots(client, message, _):
             winnings = bet * 10000
             for spam in range(0, 10):
                 await client.send_message(message.channel,
-                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player, winnings))
+                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings))
                 await sleep(1)
     wheel_payload = '%s Bet: $%s --> | ' % (player.name, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
@@ -238,7 +238,7 @@ async def cmd_bet(client, message, amount):
 async def cmd_reviewbet(client, message, _):
     bet = await get_bet(message.author)
     await client.send_message(message.channel,
-                              '%s is currently betting: %s' % (message.author, bet))
+                              '%s is currently betting: %s' % (message.author.name, bet))
 
 
 # function to loan players money -- ONLY UP TO -- > $50 dollars
@@ -246,20 +246,20 @@ async def cmd_loan(client, message, _):
     balance = await get_balance(message.author)
     if balance >= 50:
         await client.send_message(message.channel,
-                                  '%s you have $%s, you do not need a loan.' % (message.author, balance))
+                                  '%s you have $%s, you do not need a loan.' % (message.author.name, balance))
         return
 
     await add_money(message.author, 50 - balance)
     if balance == 0:
-        await client.send_message(message.channel, '%s, added $50' % message.author)
+        await client.send_message(message.channel, '%s, added $50' % message.author.name)
     else:
-        await client.send_message(message.channel, '%s, added up to $50' % message.author)
+        await client.send_message(message.channel, '%s, added up to $50' % message.author.name)
 
 
 # Function to look up a users Money!
 async def cmd_bank(client, message, _):
     balance = await get_balance(message.author)
-    await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author, balance))
+    await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author.name, balance))
     if balance == 0:
         await client.send_message(message.channel, "Looks like you don't have any money, try the ```!loan``` command.")
 
@@ -332,7 +332,7 @@ async def domessage(client, message, card1suit, card1letter, card2suit, card2let
                                       "    %s     and    %s\n"
                                       "        %s                     %s        (%s total)\n"
                                       "%s" % (
-                                          message.author, card1letter.upper(), card2letter.upper(), card1suit,
+                                          message.author.name, card1letter.upper(), card2letter.upper(), card1suit,
                                           card2suit, card1letter.upper(),
                                           card2letter.upper(), score, msg))
         else:
@@ -485,7 +485,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
     if surrender:
         await client.send_message(message.channel,
                                   'DEALER: %s: Player surrenders and receives half of his bet back. ($%s)' % (
-                                      message.author, bet))
+                                      message.author.name, bet))
         winnings = -bet
         await add_money(message.author, winnings)
         return
@@ -496,13 +496,13 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await add_money(message.author, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
-                                      message.author, pscore, bet))
+                                      message.author.name, pscore, bet))
         return
 
     if blackjack:
         await sleep(0.2)
         await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
-                                  (message.author, int(bet)))
+                                  (message.author.name, int(bet)))
         winnings = int(bet)
         await add_money(message.author, winnings)
         return
@@ -513,7 +513,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await add_money(message.author, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (
-                                      message.author, pscore, dscore, bet))
+                                      message.author.name, pscore, dscore, bet))
         return
     if dscore > pscore:
         await sleep(0.2)
@@ -521,7 +521,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await add_money(message.author, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (
-                                      message.author, pscore, dscore, bet))
+                                      message.author.name, pscore, dscore, bet))
         return
     if pscore > dscore:
         await sleep(0.2)
@@ -529,12 +529,12 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await add_money(message.author, winnings)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (
-                                      message.author, pscore, dscore, bet))
+                                      message.author.name, pscore, dscore, bet))
     if pscore == dscore:
         await sleep(0.2)
         await client.send_message(message.channel,
                                   'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (
-                                      message.author, pscore, dscore, bet))
+                                      message.author.name, pscore, dscore, bet))
         return
 
 

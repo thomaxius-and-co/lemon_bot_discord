@@ -105,7 +105,7 @@ async def cmd_roll(client, message, arg):
         await client.send_message(message.channel, "There must be at least two numbers to choose from.")
         return
     rand_roll = random.randint(0, int(arg))
-    await client.send_message(message.channel, '%s your roll is %s' % (message.author, rand_roll))
+    await client.send_message(message.channel, '%s your roll is %s' % (message.author.name, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
 async def cmd_8ball(client, message, question):
@@ -191,7 +191,7 @@ async def cmd_cleverbot(client, message, question):
 # Format ==> @User has been, INSERT_ITEM_HERE
 async def cmd_spank(client, message, target_user):
     punishment = random.choice(SPANK_BANK)
-    await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author))
+    await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author.name))
 
 async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
