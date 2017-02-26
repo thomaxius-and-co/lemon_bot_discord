@@ -552,7 +552,10 @@ async def cmd_leader(client, message, _):
         """)
 
     if len(leaders) > 0:
-        msg = '  |  '.join(map(lambda u: '#%s - %s - $%s' % u, leaders))
+        def format_leader(row):
+            return '#%s - %s - $%s' % (row[0], row[1], row[2])
+
+        msg = '  |  '.join(map(format_leader, leaders))
         await client.send_message(message.channel, msg)
 
 
