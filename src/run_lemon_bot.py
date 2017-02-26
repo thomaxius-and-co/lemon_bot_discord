@@ -360,12 +360,6 @@ commands = {
     'status': cmd_status
 }
 
-
-async def checkspelling(channel, given_command):
-    matches = difflib.get_close_matches(given_command, commands.keys(), n=1, cutoff=0.7)
-    if len(matches) > 0:
-        await client.send_message(channel, "Command not found: %s - did you mean !%s?" % (given_command, matches[0]))
-
 def parse_raw_msg(msg):
     if isinstance(msg, bytes):
         msg = zlib.decompress(msg, 15, 10490000)
@@ -435,17 +429,22 @@ async def on_message(message):
         cmd, arg = command.parse(content)
         if not cmd:
             return
+
         handler = commands.get(cmd)
+        if not handler:
+            handler = commands.get(autocorrect_command(cmd))
+
         if handler:
             await handler(client, message, arg)
             return
-        usercommand = content.split(' ') # So everything after the command is excluded, such as !top custom, etc.
-        if ((len(usercommand[0]) - 3) > len(max(commands, key = len))):
-            # This is to prevent checkspelling being called when someone tries to be funny and, for example, does !flkflklsdklfsdk
-            return
-        await checkspelling(message.channel, cmd)
+
     except Exception:
         await util.log_exception()
+
+def autocorrect_command(cmd):
+    matches = difflib.get_close_matches(cmd, commands.keys(), n=1, cutoff=0.7)
+    if len(matches) > 0:
+        return matches[0]
 
 # Database schema has to be initialized before running the bot
 loop = asyncio.get_event_loop()
