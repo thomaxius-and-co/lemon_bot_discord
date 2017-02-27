@@ -203,6 +203,18 @@ schema_migrations = {
         ALTER TABLE channel_archiver_status
         ADD FOREIGN KEY (message_id) REFERENCES message (message_id);
     """,
+
+    # Add additional records to game stats tables
+    12: """
+    ALTER TABLE casino_stats
+    ADD COLUMN losses_bj NUMERIC NOT NULL DEFAULT 0;
+
+    ALTER TABLE whosaidit_stats (
+    ADD COLUMN streak NUMERIC NOT NULL DEFAULT 0
+    ADD COLUMN record NUMERIC NOT NULL DEFAULT 0
+    );
+
+    """,
 }
 
 _pool_holder = threading.local()

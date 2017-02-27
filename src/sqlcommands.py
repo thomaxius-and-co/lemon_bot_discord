@@ -100,7 +100,7 @@ async def top_message_counts(filters, params, excludecommands):
             from message
             WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
-        """.format(filters=filters, sql_excludecommands=sql_excludecommands), params)
+        """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
         if len(items) <= 1:
             return None
         list_with_msg_per_day = []
