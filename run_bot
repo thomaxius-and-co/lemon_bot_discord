@@ -28,6 +28,13 @@ function check_dependencies {
   fi
 }
 
+function start_vm {
+  echo "+ Starting virtual machine"
+  pushd "$ROOT/local-services"
+  vagrant up
+  popd
+}
+
 function init_virtualenv {
   echo "+ Initializing virtualenv"
 
@@ -54,5 +61,6 @@ function run_bot {
 }
 
 check_dependencies
+start_vm
 init_virtualenv
 run_bot
