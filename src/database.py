@@ -209,10 +209,12 @@ schema_migrations = {
     ALTER TABLE casino_stats
     ADD COLUMN losses_bj NUMERIC NOT NULL DEFAULT 0;
 
-    ALTER TABLE whosaidit_stats (
-    ADD COLUMN streak NUMERIC NOT NULL DEFAULT 0
-    ADD COLUMN record NUMERIC NOT NULL DEFAULT 0
-    );
+    ALTER TABLE whosaidit_stats
+    ADD COLUMN streak NUMERIC NOT NULL DEFAULT 0;
+
+    ALTER TABLE whosaidit_stats
+    ADD COLUMN record NUMERIC NOT NULL DEFAULT 0;
+
 
     """,
 }
