@@ -206,8 +206,6 @@ schema_migrations = {
 
     # Add additional records to game stats tables
     12: """
-    ALTER TABLE casino_stats
-    ADD COLUMN losses_bj NUMERIC NOT NULL DEFAULT 0;
 
     ALTER TABLE whosaidit_stats
     ADD COLUMN streak NUMERIC NOT NULL DEFAULT 0;
