@@ -57,7 +57,7 @@ function init_virtualenv {
 
 function run_bot {
   source secrets
-  python -u src/run_lemon_bot.py
+  TZ=UTC python -u src/run_lemon_bot.py
 }
 
 check_dependencies
