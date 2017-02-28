@@ -53,11 +53,10 @@ async def add_money(user, amount):
 
 async def save_slots_stats(user, amount):
     await add_money(user, amount)
-    if slots:
-        if amount > 0:
-            await update_slots_stats(user, 1, 0, amount)
-        else:
-            await update_slots_stats(user, 0, 1, abs(amount))
+    if amount > 0:
+        await update_slots_stats(user, 1, 0, amount)
+    else:
+        await update_slots_stats(user, 0, 1, abs(amount))
             
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
