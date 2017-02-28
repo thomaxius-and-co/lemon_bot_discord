@@ -55,6 +55,10 @@ function init_virtualenv {
   pip install -r "$ROOT/src/requirements.txt"
 }
 
+function syntax_check {
+  find "$ROOT/src" -name="*.py" | xargs python -m py_compile
+}
+
 function run_bot {
   source secrets
   TZ=UTC python -u src/run_lemon_bot.py
@@ -63,4 +67,5 @@ function run_bot {
 check_dependencies
 start_vm
 init_virtualenv
+syntax_check
 run_bot
