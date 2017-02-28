@@ -141,12 +141,12 @@ async def cmd_slots(client, message, _):
     winnings = 0
     bet = await get_bet(player)
     if bet < 1:
-        await client.send_message(message.channel, 'You need set a valid bet, Example: ```!bet 5```')
+        await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
     balance = await get_balance(player)
     if balance == 0:
-        await client.send_message(message.channel, 'You need to run the ```!loan``` command.')
+        await client.send_message(message.channel, 'You need to run the !loan command.')
         return
 
     if bet > balance:
@@ -211,7 +211,7 @@ async def cmd_slots(client, message, _):
                                       'You have reached the doubling limit! You won %s' % (winnings))
             break
         await client.send_message(message.channel,
-                                  'You won %s! Would you like to double? (Type ```!double``` or ```!take```)' % (
+                                  'You won %s! Would you like to double? (Type !double or !take)' % (
                                       winnings))
         winnings, stay = await askifdouble(client, message, winnings)
     if winnings > 0:
@@ -256,7 +256,7 @@ async def askifdouble(client, message, winnings):
     answer = await client.wait_for_message(timeout=15, author=player, check=check)
     if answer and answer.content.lower() == '!double':
         await client.send_message(message.channel,
-                                  "Type heads or tails")
+                                  "Type 'heads' or 'tails'")
         winnings = await askifheadsortails(client, message, winnings)
         if winnings > 0:
             stay = False
@@ -272,12 +272,12 @@ async def askifdouble(client, message, winnings):
 async def cmd_bet(client, message, amount):
     if not amount or not amount.isdigit():
         return await client.send_message(message.channel,
-                                         'Amount must be numeric and positive, for example: ```!bet 10```')
+                                         'Amount must be numeric and positive, for example: !bet 10')
 
     amount = int(amount)
     if amount < 1:
         await client.send_message(message.channel,
-                                  'You need to enter a positive integer, minimum being 1. Example: ```!bet 5```')
+                                  'You need to enter a positive integer, minimum being 1. Example: !bet 5')
         return
     await set_bet(message.author, amount)
     await client.send_message(message.channel, '%s, set bet to: %s' % (message.author, amount))
@@ -310,7 +310,7 @@ async def cmd_bank(client, message, _):
     balance = await get_balance(message.author)
     await client.send_message(message.channel, 'User: %s, Balance: $%s' % (message.author.name, balance))
     if balance == 0:
-        await client.send_message(message.channel, "Looks like you don't have any money, try the ```!loan``` command.")
+        await client.send_message(message.channel, "Looks like you don't have any money, try the !loan command.")
 
 
 async def getcardrank(card, hand, score):
@@ -459,7 +459,7 @@ async def cmd_blackjack(client, message, _):
     cards = await makedeck(blackjack=True)
     bet = await get_bet(message.author)
     if bet < 1:
-        await client.send_message(message.channel, 'You need set a valid bet, Example: ```!bet 5```')
+        await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
         return
 
     balance = await get_balance(message.author)
