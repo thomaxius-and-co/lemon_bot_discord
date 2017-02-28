@@ -96,15 +96,21 @@ async def cmd_enchant(client, message, arg):
 
 # Rolling the odds for a user.
 async def cmd_roll(client, message, arg):
+    usage = (
+        "Usage: `!roll <max>`\n"
+        "Rolls a number in range `[0, max]`. Value `max` defaults to `100` if not given.\n"
+    )
+
     # Default to !roll 100 because why not
-    if arg is None:
-        arg = '100'
-    if not arg.isdigit():
-        await client.send_message(message.channel, 'You need to type a number, for example: ```!roll 100```')
+    arg = arg or '100'
+
+    def valid(arg):
+        return arg.isdigit() and int(arg) >= 1
+
+    if not valid(arg):
+        await client.send_message(message.channel, usage)
         return
-    if arg == 0:
-        await client.send_message(message.channel, "There must be at least two numbers to choose from.")
-        return
+
     rand_roll = random.randint(0, int(arg))
     await client.send_message(message.channel, '%s your roll is %s' % (message.author.name, rand_roll))
 
@@ -167,14 +173,20 @@ async def cmd_math(client, message, arg):
     await client.send_message(message.channel, '%s equals to %s' % (arg, result))
 
 async def cmd_translate(client, message, arg):
-    if not arg:
-        await client.send_message(message.channel, "Usage: ```!translate <text>``` or ```!translate <from language> "
-                                                   "<to language> <text>```. \n If no 'to' or 'from' language is set, "
-                                                   "auto detection and english will be used.")
+    usage = (
+        "Usage: `!translate [<from> <to>] <text>`\n"
+        "If `to` and `from` are not set, automatic detection is attempted and the text translated to english.\n"
+        "Maximum of 100 characters is allowed.\n"
+    )
+
+    def valid(arg):
+        return 0 < len(arg) < 100
+
+    arg = arg.strip()
+    if not valid(arg):
+        await client.send_message(message.channel, usage)
         return
-    if len(arg) > 100: #maybe it's wise to put a limit on the lenght of the translations
-        await client.send_message(message.channel, "Your text is too long: Max allowed is 100 characters.")
-        return
+
     fromlang, tolang, input = parse(arg)
     translator = Translator(client_id, client_secret)
     translation = translator.translate(input, tolang, fromlang)
@@ -182,8 +194,19 @@ async def cmd_translate(client, message, arg):
 
 # Ask clever bot a question.
 async def cmd_cleverbot(client, message, question):
-    if not question:
-        await client.send_message(message.channel, "You must specify a question!")
+    usage = (
+        "Usage: `!cleverbot <question>`\n"
+        "Ask cleverbot a question.\n"
+    )
+
+    def valid(question):
+        return len(question) > 0
+
+    question = question.strip()
+    if not valid(question):
+        await client.send_message(message.channel, usage)
+        return
+
     cb1 = cleverbot.Cleverbot()
     answer = cb1.ask(question)
     await client.send_message(message.channel, answer)
@@ -266,7 +289,19 @@ async def cmd_clearbot(client, message, arg):
 
 
 async def cmd_wolframalpha(client, message, query):
+    usage = (
+        "Usage: `!wa <query>`\n"
+        "Searches WolframAlpha with given query\n"
+    )
+
+    def valid(query):
+        return len(query.strip()) > 0
+
     print("Searching WolframAlpha for '%s'" % query)
+
+    if not valid(query):
+        await client.send_message(message.channel, usage)
+        return
 
     await client.send_typing(message.channel)
 
@@ -302,27 +337,39 @@ async def cmd_status(client, message, input):
     await client.change_presence(game=discord.Game(name=input))
 
 async def cmd_pickone(client, message, args):
-    if not args:
-        await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example: ```!pickone pizza, burger```')
+    usage = (
+        "Usage: `!pickone <opt1>, <opt2>, ..., <optN>`\n"
+        "Chooses one of the given comma separated options\n"
+    )
+
+    def valid(args):
+        return len(args.split(",")) >= 2
+
+    if not valid(args):
+        await client.send_message(message.channel, usage)
         return
+
     choices = args.split(",")
-    if len(choices) < 2:
-        await client.send_message(message.channel, 'You need to specify at least 2 arguments separated'
-                                                        ' by a comma, for example: ```!pickone pizza, burger```')
-        return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
 
-async def cmd_sql(client, message, arg):
+async def cmd_sql(client, message, query):
+    usage = (
+        "Usage: `!sql <query>`\n"
+    )
+
+    def valid(query):
+        return len(query) > 0
+
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         return
 
-    if arg is None:
-        await client.send_message(message.channel, 'Usage: ```!sql <query>```')
+    query = query.strip()
+    if not valid(query):
+        await client.send_message(message.channel, usage)
         return
 
     def limit_msg_length(template, content):
@@ -331,7 +378,7 @@ async def cmd_sql(client, message, arg):
 
     try:
         async with db.connect(readonly = True) as c:
-            cur = await c.cursor(arg)
+            cur = await c.cursor(query)
             results = await cur.fetch(100)
             msg = "\n".join(map(str, results))
             msg = limit_msg_length("```%s```", msg)
