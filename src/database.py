@@ -215,6 +215,19 @@ schema_migrations = {
 
 
     """,
+
+    # See above
+    13: """
+
+    ALTER TABLE casino_stats
+    ADD COLUMN losses_slots NUMERIC NOT NULL DEFAULT 0;
+
+    ALTER TABLE casino_stats
+    ADD COLUMN biggestwin_slots NUMERIC NOT NULL DEFAULT 0;
+
+    ALTER TABLE casino_stats
+    ADD COLUMN bj_blackjack NUMERIC NOT NULL DEFAULT 0;
+    """,
 }
 
 _pool_holder = threading.local()

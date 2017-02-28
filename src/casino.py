@@ -51,6 +51,55 @@ async def add_money(user, amount):
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
         """, user.id, amount)
 
+async def save_slots_stats(user, amount):
+    await add_money(user, amount)
+    if slots:
+        if amount > 0:
+            await update_slots_stats(user, 1, 0, amount)
+        else:
+            await update_slots_stats(user, 0, 1, abs(amount))
+            
+async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
+    if amount:
+        await add_money(user, amount)
+    if win:
+        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 0)
+    if loss:
+        await update_blackjack_stats(user, 0, abs(amount), 1, 0, 0, 0)
+    if tie:
+        await update_blackjack_stats(user, 0, 0, 0, 1, 0, 0)
+    if surrender:
+        await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0)
+    if blackjack:
+        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1)
+
+
+async def update_slots_stats(user, wins, losses, amount):
+    async with db.connect() as c:
+        await c.execute("""
+            INSERT INTO casino_stats AS a
+            (user_id, wins_slots, losses_slots, moneyspent_slots)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (user_id) DO UPDATE SET
+            wins_slots = GREATEST(0, a.wins_slots + EXCLUDED.wins_slots),
+            losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
+            moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots)
+        """, user.id, wins, losses, amount)
+
+async def update_blackjack_stats(user, wins, amount, losses, ties, surrenders, blackjack):
+    async with db.connect() as c:
+        await c.execute("""
+            INSERT INTO casino_stats AS a
+            (user_id, wins_bj, losses_bj, moneyspent_bj, ties, surrenders, bj_blackjack)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (user_id) DO UPDATE SET
+            wins_bj = GREATEST(0, a.wins_bj + EXCLUDED.wins_bj),
+            losses_bj = GREATEST(0, a.losses_bj + EXCLUDED.losses_bj),
+            moneyspent_blackjack = GREATEST(0, a.moneyspent_blackjack + EXCLUDED.moneyspent_blackjack),
+            ties = GREATEST(0, a.ties + EXCLUDED.ties),
+            surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
+            blackjack = GREATEST(0, a.blackjack + EXCLUDED.blackjack)
+        """, user.id, wins, losses, amount, losses, ties, surrenders, blackjack)
 
 async def makedeck(blackjack=True):
     cards = []
@@ -110,7 +159,6 @@ async def cmd_slots(client, message, _):
         await client.send_message(message.channel,
                                   'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
-    await add_money(player, -bet)
     while count <= 4:
         wheel_pick = random.choice(SLOT_PATTERN)
         wheel_list.append(wheel_pick)
@@ -168,7 +216,9 @@ async def cmd_slots(client, message, _):
                                       winnings))
         winnings, stay = await askifdouble(client, message, winnings)
     if winnings > 0:
-        await add_money(player, winnings)
+        await save_slots_stats(player, winnings)
+    else:
+        await save_slots_stats(player, -bet)
 
 
 # FIXME: Exact copy of cmd_coin in run_lemon_bot.py
@@ -487,13 +537,13 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
                                   'DEALER: %s: Player surrenders and receives half of his bet back. ($%s)' % (
                                       message.author.name, bet))
         winnings = -bet
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, surrender=True)
         return
 
     if pscore > 21:
         await sleep(0.2)
         winnings = -bet
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, loss=True)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player is BUST! House wins! (Total score: %s) \n You lose $%s' % (
                                       message.author.name, pscore, bet))
@@ -504,13 +554,13 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await client.send_message(message.channel, 'DEALER: %s: Player wins with a blackjack! \n You win $%s' %
                                   (message.author.name, int(bet)))
         winnings = int(bet)
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, blackjack=True)
         return
 
     if dscore > 21:
         await sleep(0.2)
         winnings = bet
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, win=True)
         await client.send_message(message.channel,
                                   'DEALER: %s: Dealer is bust! Player wins! Player score %s, dealer score %s \n You win $%s' % (
                                       message.author.name, pscore, dscore, bet))
@@ -518,7 +568,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
     if dscore > pscore:
         await sleep(0.2)
         winnings = -bet
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, loss=True)
         await client.send_message(message.channel,
                                   'DEALER: %s: House wins! Player score %s, dealer score %s \n You lose $%s' % (
                                       message.author.name, pscore, dscore, bet))
@@ -526,7 +576,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
     if pscore > dscore:
         await sleep(0.2)
         winnings = bet
-        await add_money(message.author, winnings)
+        await save_blackjack_stats(message.author, winnings, win=True)
         await client.send_message(message.channel,
                                   'DEALER: %s: Player wins! Player score %s, dealer score %s \n You win $%s' % (
                                       message.author.name, pscore, dscore, bet))
@@ -535,6 +585,7 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         await client.send_message(message.channel,
                                   'DEALER: %s: It is a push! Player: %s, house %s. Your bet of %s is returned.' % (
                                       message.author.name, pscore, dscore, bet))
+        await save_blackjack_stats(message.author, None, tie=True)
         return
 
 
