@@ -42,7 +42,7 @@ async def add_reminder(user_id, time, text, original_text):
         await c.execute("""
             INSERT INTO reminder(user_id, ts, text, original_text)
             VALUES ($1, $2, $3, $4)
-        """, user_id, time, text, original_text)
+        """, user_id, time.replace(tzinfo=None), text, original_text)
 
 async def task(client):
     # Wait until the client is ready
