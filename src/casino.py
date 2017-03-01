@@ -94,7 +94,7 @@ async def update_blackjack_stats(user, wins, amount, losses, ties, surrenders, b
             ON CONFLICT (user_id) DO UPDATE SET
             wins_bj = GREATEST(0, a.wins_bj + EXCLUDED.wins_bj),
             losses_bj = GREATEST(0, a.losses_bj + EXCLUDED.losses_bj),
-            moneyspent_blackjack = GREATEST(0, a.moneyspent_blackjack + EXCLUDED.moneyspent_blackjack),
+            moneyspent_bj = GREATEST(0, a.moneyspent_bj + EXCLUDED.moneyspent_bj),
             ties = GREATEST(0, a.ties + EXCLUDED.ties),
             surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
             blackjack = GREATEST(0, a.blackjack + EXCLUDED.blackjack)
