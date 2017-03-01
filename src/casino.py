@@ -54,7 +54,7 @@ async def add_money(user, amount):
 async def save_slots_stats(user, amount):
     await add_money(user, amount)
     if amount > 0:
-        await update_slots_stats(user, 1, 0, amount)
+        await update_slots_stats(user, 1, 0, -amount) # Win, the money you win are deducted from money spent
     else:
         await update_slots_stats(user, 0, 1, abs(amount))
             
@@ -62,7 +62,7 @@ async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=Fa
     if amount:
         await add_money(user, amount)
     if win:
-        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 0)
+        await update_blackjack_stats(user, 1, -amount, 0, 0, 0, 0)
     if loss:
         await update_blackjack_stats(user, 0, abs(amount), 1, 0, 0, 0)
     if tie:
@@ -70,7 +70,7 @@ async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=Fa
     if surrender:
         await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0)
     if blackjack:
-        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1)
+        await update_blackjack_stats(user, 1, -amount, 0, 0, 0, 1) # A blackjack also counts as a win
 
 
 async def update_slots_stats(user, wins, losses, amount):
@@ -97,7 +97,7 @@ async def update_blackjack_stats(user, wins, amount, losses, ties, surrenders, b
             moneyspent_bj = GREATEST(0, a.moneyspent_bj + EXCLUDED.moneyspent_bj),
             ties = GREATEST(0, a.ties + EXCLUDED.ties),
             surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
-            blackjack = GREATEST(0, a.blackjack + EXCLUDED.blackjack)
+            bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack)
         """, user.id, wins, losses, amount, losses, ties, surrenders, blackjack)
 
 async def makedeck(blackjack=True):
