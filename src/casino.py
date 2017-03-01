@@ -521,6 +521,8 @@ async def cmd_blackjack(client, message, _):
         dscore += dhand[-3] # Sum the second card into existing score. 'dhand' contains suit, rank and letter of the card.
         await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
     while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)): # Deal dealer's cards
+        if dscore > pscore: # Meaning the dealer already has a higher hand than the player, even though they just have one card
+            break
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
         if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (dscore > pscore): # Dealer is bust or has a higher score than the player
@@ -606,7 +608,7 @@ async def cmd_leader(client, message, _):
         def format_leader(row):
             return '#%s - %s - $%s' % (row[0], row[1], row[2])
 
-        msg = '  |  '.join(map(format_leader, leaders))
+        msg = '  |  \n'.join(map(format_leader, leaders))
         await client.send_message(message.channel, msg)
 
 
