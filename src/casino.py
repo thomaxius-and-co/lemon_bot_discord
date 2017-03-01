@@ -516,13 +516,14 @@ async def cmd_blackjack(client, message, _):
             bet /= 2
             await dofinalspam(client, message, pscore, dscore, int(bet), surrender=True)
             return
+    if dscore > pscore:  # Meaning the dealer already has a higher hand than the player, even though they just have one card
+        await dofinalspam(client, message, pscore, dscore, bet)
+        return
 
     if not blackjack and len(dhand) == 6 and pscore < 21: # 'lenght of dhand is 6' means that dealer has two cards in hand.
         dscore += dhand[-3] # Sum the second card into existing score. 'dhand' contains suit, rank and letter of the card.
         await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
     while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)): # Deal dealer's cards
-        if dscore > pscore: # Meaning the dealer already has a higher hand than the player, even though they just have one card
-            break
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
         if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (dscore > pscore): # Dealer is bust or has a higher score than the player
