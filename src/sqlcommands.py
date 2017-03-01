@@ -146,7 +146,7 @@ def fixlist(sequence):
     rank = 1
     namelen = column_width(sequence, 0, 9)
     maxnumberlen = column_width(sequence, 2, 6)
-
+    # [('user1', 0.02364078343135754, 27), ('user2', 0.0443600322285603, 10)] sequence before changes
     for item in sequence:
         if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
             fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')
@@ -157,14 +157,13 @@ def fixlist(sequence):
             pos = sequence.index(item)
             sequence.remove(item)
             sequence.insert(pos,newitem)
-    # sequence: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 48    | and so forth
+    # sequence after changes: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 10    | 0.044']
     return sequence
 
 def fixlist1(sequence): # i am lazy today
     rank = 1
     namelen = column_width(sequence, 0, 9)
     maxnumberlen = column_width(sequence, 2, 6)
-    print(sequence)
     for item in sequence:
         if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
             fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')

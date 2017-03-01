@@ -57,7 +57,7 @@ async def save_slots_stats(user, amount):
         await update_slots_stats(user, 1, 0, -amount) # Win, the money you win are deducted from money spent
     else:
         await update_slots_stats(user, 0, 1, abs(amount))
-            
+
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
         await add_money(user, amount)
@@ -523,7 +523,7 @@ async def cmd_blackjack(client, message, _):
     while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)): # Deal dealer's cards
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
-        if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or dscore > 21: # Dealer is bust
+        if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (dscore > pscore): # Dealer is bust or has a higher score than the player
             break
     # Tell the results of the game with the arguments that were generated from the mess above
     await dofinalspam(client, message, pscore, dscore, bet)
