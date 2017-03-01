@@ -98,7 +98,7 @@ async def update_blackjack_stats(user, wins, amount, losses, ties, surrenders, b
             ties = GREATEST(0, a.ties + EXCLUDED.ties),
             surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
             bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack)
-        """, user.id, wins, losses, amount, losses, ties, surrenders, blackjack)
+        """, user.id, wins, losses, amount, ties, surrenders, blackjack)
 
 async def makedeck(blackjack=True):
     cards = []
