@@ -26,7 +26,7 @@ class Play:
         self.json = json
         self.beatmap_id = int(json["beatmap_id"])
         self.full_combo = json["perfect"] != "0"
-        self.rank = parse_rank(json["rank"])
+        self.rank = self.parse_rank(json["rank"])
         self.mods_raw = int(json["enabled_mods"])
         self.score = int(json["score"])
         self.pp = float(json["pp"])
@@ -36,7 +36,7 @@ class Play:
 
         self._beatmap = None
 
-    def parse_rank(rank):
+    def parse_rank(self, rank):
         return "SS" if rank == "X" else rank
 
     @property
