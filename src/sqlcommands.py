@@ -2,6 +2,7 @@ import discord
 import re
 import json
 import database as db
+import columnmaker
 import random as rand
 
 playinglist = []
@@ -96,7 +97,8 @@ async def top_message_counts(filters, params, excludecommands):
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
-                count(*) as messages
+                count(*) as messages,
+                concat('#', row_number() OVER (ORDER BY  count(*) desc)) AS rank
             from message
             WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
@@ -105,12 +107,12 @@ async def top_message_counts(filters, params, excludecommands):
             return None
         list_with_msg_per_day = []
         for item in items:
-            name, user_id, message_count = item
+            name, user_id, message_count, rank = item
             msg_per_day = message_count / user_days_in_chat[user_id]
-            new_item = (name, msg_per_day, message_count)
+            new_item = (name, rank, message_count, round(msg_per_day,3))
             list_with_msg_per_day.append(new_item)
-        top_ten = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:10]
-        return fixlist(top_ten)
+        top_ten = sorted(list_with_msg_per_day, key=lambda x: x[1])[:10]
+        return columnmaker.columnmaker(['NAME','RANK','TOTAL','MSG PER DAY'], top_ten), len(top_ten)
 
 async def gettoplistforquotegame():
     async with db.connect() as c:
@@ -132,50 +134,12 @@ async def gettoplistforquotegame():
             name, user_id, message_count = item
             new_item = (name, message_count)
             toplist.append(new_item)
-        top_ten = sorted(toplist, key=lambda x: x[1], reverse=True)[:15]
+        top_ten = sorted(toplist, key=lambda x: x[1])[:15]
         return [msgs[0] for msgs in top_ten if filterquietpeople(msgs)]
 
 def check_length(x,i):
     return len(str(x[i]))
 
-def column_width(tuples, index, min_width):
-    widest = max([check_length(x, index) for x in tuples])
-    return max(min_width, widest)
-
-def fixlist(sequence):
-    rank = 1
-    namelen = column_width(sequence, 0, 9)
-    maxnumberlen = column_width(sequence, 2, 6)
-    # [('user1', 0.02364078343135754, 27), ('user2', 0.0443600322285603, 10)] sequence before changes
-    for item in sequence:
-        if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
-            fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')
-            fixedtotal = str(item[2]).ljust(maxnumberlen)
-            therank, thetotal = str(rank), str(item[2])
-            newitem = ('%s  #%s | %s| %s' % (fixed,therank.ljust(2), fixedtotal,round(item[1],3)))
-            rank += 1
-            pos = sequence.index(item)
-            sequence.remove(item)
-            sequence.insert(pos,newitem)
-    # sequence after changes: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 10    | 0.044']
-    return sequence
-
-def fixlist1(sequence): # i am lazy today
-    rank = 1
-    namelen = column_width(sequence, 0, 9)
-    maxnumberlen = column_width(sequence, 2, 6)
-    for item in sequence:
-        if (namelen >= len(item[0]) or (maxnumberlen >= len(str(item[1])))):
-            fixed = item[0].ljust(namelen+1).ljust(namelen+2,'|')
-            fixedtotal = str(item[2]).ljust(maxnumberlen)
-            therank, thetotal, thecorrect = str(rank), str(item[2]), str(item[1])
-            newitem = ('%s  #%s | %s| %s| %s' % (fixed,therank.ljust(2), fixedtotal, thecorrect.ljust(8),round(item[3],3)))
-            rank += 1
-            pos = sequence.index(item)
-            sequence.remove(item)
-            sequence.insert(pos,newitem)
-    # sequence: ['user1 |  #1  | 27    | 0.236', 'user2     |  #2  | 48    | and so forth
-    return sequence
 async def cmd_top(client, message, input):
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
@@ -186,17 +150,15 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == ('spammers') or input == ('!spammers'):
-        reply = await top_message_counts("AND 1 = $1", [1], excludecommands)
+        reply, amountofpeople = await top_message_counts("AND 1 = $1", [1], excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
 
         parameter = '(commands included)' if not excludecommands else '(commands not included)'
-
-        header = 'Top %s spammers %s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % (len(reply), parameter)
-        body = '\n'.join(reply)
-        await client.send_message(message.channel, '``' + header + body + '``')
+        header = 'Top %s spammers %s\n' % (amountofpeople, parameter)
+        await client.send_message(message.channel, '``' + header + reply + '``')
         return
 
     if input[0:6] == ('custom') or input[0:7] == ('!custom'):
@@ -205,7 +167,7 @@ async def cmd_top(client, message, input):
             return
         filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
-        reply = await top_message_counts(custom_filter, params, excludecommands)
+        reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
         if not reply:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
@@ -214,21 +176,21 @@ async def cmd_top(client, message, input):
         word = 'word' if len(customwords) == 1 else 'words'
         parameter = '(commands not included)' if excludecommands else '(commands included)'
 
-        title = 'Top %s users of the %s: %s %s' % (len(reply), word, ', '.join(customwords), parameter)
+        title = 'Top %s users of the %s: %s %s' % (amountofpeople, word, ', '.join(customwords), parameter)
 
-        await client.send_message(message.channel, ('```%s \n NAME     | RANK | TOTAL | MSG PER DAY\n' % title + ('\n'.join(reply) + '```')))
+        await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
         return
 
     if input == ('whosaidit'):
-        ranking = await getwhosaiditranking()
+        ranking, amountofpeople = await getwhosaiditranking()
         if not ranking:
             await client.send_message(message.channel,
                                       'Not enough players to form a toplist.')
             return
 
-        title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (len(ranking))
+        title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
         await client.send_message(message.channel,
-                                  ('```%s \n NAME     | RANK | TOTAL | CORRECT | ACCURACY %%\n' % title + ('\n'.join(ranking) + '```')))
+                                  ('```%s \n' % title + ranking + '```'))
         return
     else:
         await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, custom <words separated by comma>')
@@ -241,21 +203,22 @@ async def getwhosaiditranking():
                 (correct / (correct + wrong)) * 100,
                 correct,
                 correct + wrong,
-                name
+                name,
+                concat('#', row_number() OVER (ORDER BY  (correct / (correct + wrong)) * 100 desc)) AS rank
             FROM whosaidit_stats
             JOIN discord_user USING (user_id)
             WHERE (correct + wrong) > 19
-            ORDER BY (correct / (correct + wrong)) * 100 DESC
+            ORDER BY rank ASC
             LIMIT 10
         """)
         if len(items) == 0:
             return None
         toplist = []
         for item in items:
-            pct, correct, total, name = item
-            new_item = (name, correct, total, pct)
+            pct, correct, total, name, rank = item
+            new_item = (name, rank, correct, total, pct)
             toplist.append(new_item)
-        return fixlist1(toplist)
+        return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
 
 def filterquietpeople(tuple):
     return tuple[1] > 500
