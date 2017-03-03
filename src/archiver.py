@@ -132,7 +132,7 @@ async def main():
             await run_archival()
         except Exception:
             await util.log_exception()
-        await asyncio.sleep(1 * 60)
+        await asyncio.sleep(15 * 60)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
