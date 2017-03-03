@@ -65,8 +65,6 @@ def make_word_filters(words):
     params = ["|".join(words)]
     return conditions, params
 
-curses = [ "paska", "vittu", "vitu", "kusipää", "rotta", "saatana", "helvet", "kyrpä", "haista", "sossupummi" ]
-
 async def random(filter):
     word_filters, params = make_word_filters(filter)
     return await random_message_with_filter("AND ({0})".format(word_filters), params)
@@ -97,8 +95,7 @@ async def top_message_counts(filters, params, excludecommands):
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
-                count(*) as messages,
-                concat('#', row_number() OVER (ORDER BY  count(*) desc)) AS rank
+                count(*) as messages
             from message
             WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
@@ -107,12 +104,21 @@ async def top_message_counts(filters, params, excludecommands):
             return None
         list_with_msg_per_day = []
         for item in items:
-            name, user_id, message_count, rank = item
+            name, user_id, message_count = item
             msg_per_day = message_count / user_days_in_chat[user_id]
-            new_item = (name, rank, message_count, round(msg_per_day,3))
+            new_item = (name, message_count, round(msg_per_day,3))
             list_with_msg_per_day.append(new_item)
-        top_ten = sorted(list_with_msg_per_day, key=lambda x: x[1])[:10]
+        top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
         return columnmaker.columnmaker(['NAME','RANK','TOTAL','MSG PER DAY'], top_ten), len(top_ten)
+
+def addranktolist(listwithoutrank):
+    rank = 1
+    newlst = []
+    for item in listwithoutrank:
+        a, b, c = item
+        newlst.append((a, '#' + str(rank), b, c))
+        rank += 1
+    return newlst
 
 async def gettoplistforquotegame():
     async with db.connect() as c:
@@ -265,15 +271,6 @@ async def cmd_randomquote(client, themessage, input):
     else:
         await send_quote(client, themessage.channel, random_message)
 
-async def cmd_randomcurse(client, themessage, _):
-    channel = themessage.channel
-    random_message = await random(curses)
-    if random_message is None:
-        await client.send_message(channel, "Sorry, no messages could be found")
-    else:
-        await send_quote(client, channel, random_message)
-
-
 async def cmd_whosaidit(client, message, _):
     if message.author not in playinglist:
         playinglist.append(message.author)
@@ -358,7 +355,6 @@ async def save_stats(userid, answer=None):
 def register(client):
     return {
         'randomquote': cmd_randomquote,
-        'randomcurse': cmd_randomcurse,
         'whosaidit': cmd_whosaidit,
         'top': cmd_top
     }
