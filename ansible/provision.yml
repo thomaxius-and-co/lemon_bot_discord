@@ -63,15 +63,20 @@
         dest: "/home/{{ app_name }}"
         delete: yes
       notify:
-        - restart service
+        - restart services
 
-    - name: Create service
+    - name: Create services
       template:
-        src: templates/systemd.service.j2
-        dest: "/etc/systemd/system/{{ app_name }}.service"
+        src: "templates/{{ item.template }}.service.j2"
+        dest: "/etc/systemd/system/{{ item.service }}.service"
+      with_items:
+        - template: systemd
+          service: "{{ app_name }}"
+        - template: archiver
+          service: "{{ app_name }}-archiver"
       notify:
         - reload unit files
-        - restart service
+        - restart services
 
     - name: enable and start service
       service:
@@ -91,10 +96,13 @@
         name: nginx
         state: reloaded
 
-    - name: restart service
+    - name: restart services
       service:
-        name: "{{ app_name }}"
+        name: "{{ item }}"
         state: restarted
+      with_items:
+        - "{{ app_name }}"
+        - "{{ app_name }}-archiver"
 
     - name: restart web service
       service:

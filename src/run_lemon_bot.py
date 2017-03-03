@@ -498,7 +498,7 @@ def autocorrect_command(cmd):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [archiver, casino, sqlcommands, osu, feed, reminder, youtube, lan]:
+for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan]:
     commands.update(module.register(client))
 
 @client.event

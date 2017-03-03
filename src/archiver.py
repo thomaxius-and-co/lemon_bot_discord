@@ -125,19 +125,15 @@ async def run_archival():
         print("Archiving guild %s" % guild["name"])
         await archive_guild(guild["id"])
 
-async def task(client):
-    # Wait until the client is ready
-    util.threadsafe(client, client.wait_until_ready())
-
+async def main():
     # Store new messages every 15 minutes
     while True:
         try:
             await run_archival()
         except Exception:
             await util.log_exception()
-        await asyncio.sleep(15 * 60)
+        await asyncio.sleep(1 * 60)
 
-def register(client):
-    print("archiver: registering")
-    util.start_task_thread(task(client))
-    return {}
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
