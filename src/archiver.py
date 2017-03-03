@@ -8,6 +8,11 @@ import aiohttp
 import database as db
 import util
 
+ERROR_MISSING_ACCESS = 50001
+
+def response_is_error(response):
+    return type(response) is dict and 'code' in response
+
 async def get(path):
     headers = {
         "Authorization": "Bot %s" % os.environ["LEMONBOT_TOKEN"],
@@ -22,29 +27,44 @@ async def get(path):
             await asyncio.sleep(body["retry_after"] / 1000.0)
             return await get(path)
 
-        return await r.json()
+        response = await r.json()
+
+    if response_is_error(response):
+        return None, response
+    else:
+        return response, None
 
 async def get_messages(channel_id, after):
-    messages = await get("channels/%s/messages?after=%s&limit=100" % (channel_id, after))
-    if type(messages) is not list:
-        print('archiver: unexpected messages:', messages)
-    return messages
-
+    return await get("channels/%s/messages?after=%s&limit=100" % (channel_id, after))
 
 async def get_channels(guild_id):
-    return await get("guilds/%s/channels" % guild_id)
+    response, error = await get("guilds/%s/channels" % guild_id)
+    return response
 
 async def get_user_guilds(user_id):
-    return await get("users/%s/guilds" % user_id)
+    response, error = await get("users/%s/guilds" % user_id)
+    return response
 
 async def fetch_messages_from(channel_id, after_id):
     all_messages = []
-    next_messages = await get_messages(channel_id, after_id)
+    next_messages, error = await get_messages(channel_id, after_id)
+    if error:
+        if error['code'] == ERROR_MISSING_ACCESS:
+            print('archiver: tried to archive a channel we no longer have access to')
+            return []
+        else:
+            raise error
 
     while len(next_messages) > 0:
         all_messages = next_messages + all_messages
         last_id = next_messages[0]["id"]
-        next_messages = await get_messages(channel_id, last_id)
+        next_messages, error = await get_messages(channel_id, last_id)
+        if error:
+            if error['code'] == ERROR_MISSING_ACCESS:
+                print('archiver: tried to archive a channel we no longer have access to')
+                break
+            else:
+                raise error
 
     return all_messages
 
