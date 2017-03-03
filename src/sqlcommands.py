@@ -38,6 +38,62 @@ async def random_message_with_filter(filters, params):
             LIMIT 1
         """.format(filters=filters), *params)
 
+async def getblackjacktoplist():
+    async with db.connect() as c:
+        items = await c.fetch("""
+            SELECT
+                (wins_bj / (wins_bj + losses_bj)) * 100,
+                wins_bj,
+                wins_bj + losses_bj,
+                name,
+                losses_bj,
+                surrenders,
+                ties,
+                moneyspent_bj,
+                concat('#', row_number() OVER (ORDER BY  (wins_bj / (wins_bj + losses_bj)) * 100 desc)) AS rank
+            FROM casino_stats
+            JOIN discord_user USING (user_id)
+            WHERE (wins_bj + losses_bj) > 1
+            ORDER BY (wins_bj / (wins_bj + losses_bj)) * 100 DESC
+            LIMIT 10
+        """)
+    if len(items) == 0:
+        return None
+    toplist = []
+    for item in items:
+        pct, wins, total, name, losses, surrenders, ties, moneyspent, rank = item
+        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(pct))
+        toplist.append(new_item)
+    toplist = addsymboltolist(toplist,8,' %')
+    return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'SURRENDERS', 'TIES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
+
+async def getslotstoplist():
+    async with db.connect() as c:
+        items = await c.fetch("""
+            SELECT
+                (wins_slots / (wins_slots + losses_slots)) * 100,
+                wins_slots,
+                wins_slots + losses_slots,
+                name,
+                losses_slots,
+                moneyspent_slots,
+                concat('#', row_number() OVER (ORDER BY  (wins_slots / (wins_slots + losses_slots)) * 100 desc)) AS rank
+            FROM casino_stats
+            JOIN discord_user USING (user_id)
+            WHERE (wins_slots + losses_slots) > 1
+            ORDER BY (wins_slots / (wins_slots + losses_slots)) * 100 DESC
+            LIMIT 10
+        """)
+    if len(items) == 0:
+        return None
+    toplist = []
+    for item in items:
+        pct, wins, total, name, losses, moneyspent, rank = item
+        new_item = (name, rank, total, wins, losses, moneyspent, round(pct))
+        toplist.append(new_item)
+    toplist = addsymboltolist(toplist,6,' %')
+    return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
+
 async def getquoteforquotegame(name):
     async with db.connect() as c:
         for properquote in range(0,6):
@@ -120,6 +176,16 @@ def addranktolist(listwithoutrank):
         rank += 1
     return newlst
 
+def addsymboltolist(lst, position, symbol):
+    newlst = []
+    for item in lst:
+        olditem = list(item)
+        singleitem = olditem[position]
+        newitem = str(singleitem) + symbol
+        olditem.remove(singleitem)
+        olditem.append(newitem)
+        newlst.append(tuple(olditem))
+    return newlst
 async def gettoplistforquotegame():
     async with db.connect() as c:
         items = await c.fetch("""
@@ -164,7 +230,7 @@ async def cmd_top(client, message, input):
 
         parameter = '(commands included)' if not excludecommands else '(commands not included)'
         header = 'Top %s spammers %s\n' % (amountofpeople, parameter)
-        await client.send_message(message.channel, '``' + header + reply + '``')
+        await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
     if input[0:6] == ('custom') or input[0:7] == ('!custom'):
@@ -198,8 +264,31 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel,
                                   ('```%s \n' % title + ranking + '```'))
         return
+
+    if input == ('blackjack') or input == ('bj'):
+        reply, amountofpeople = await getblackjacktoplist()
+        if not reply:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
+            return
+
+        header = 'Top %s blackjack players (need 20 games to qualify)\n' % (amountofpeople)
+        await client.send_message(message.channel, '```' + header + reply + '```')
+        return
+
+    if input == ('slots'):
+        reply, amountofpeople = await getslotstoplist()
+        if not reply:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
+            return
+
+        header = 'Top %s slots players (need 20 games to qualify)\n' % (amountofpeople)
+        await client.send_message(message.channel, '```' + header + reply + '```')
+        return
+
     else:
-        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, custom <words separated by comma>')
+        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, blackjack, slots, custom <words separated by comma>')
         return
 
 async def getwhosaiditranking():
