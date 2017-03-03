@@ -62,7 +62,7 @@ async def getblackjacktoplist():
     toplist = []
     for item in items:
         pct, wins, total, name, losses, surrenders, ties, moneyspent, rank = item
-        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(pct))
+        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(pct, 3))
         toplist.append(new_item)
     toplist = addsymboltolist(toplist,8,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'SURRENDERS', 'TIES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
@@ -89,7 +89,7 @@ async def getslotstoplist():
     toplist = []
     for item in items:
         pct, wins, total, name, losses, moneyspent, rank = item
-        new_item = (name, rank, total, wins, losses, moneyspent, round(pct))
+        new_item = (name, rank, total, wins, losses, moneyspent, round(pct, 3))
         toplist.append(new_item)
     toplist = addsymboltolist(toplist,6,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
