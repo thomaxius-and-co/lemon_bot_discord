@@ -15,9 +15,6 @@
   tasks:
     - include: deployment_dependencies.yml
 
-    - include: digital_ocean_agent.yml
-      when: secrets.digital_ocean_api_token is defined
-
     - name: Create group
       group:
         name: "{{ app_name }}"
