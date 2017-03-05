@@ -22,12 +22,12 @@ async def cmd_osu(client, message, arg):
         await cmd_osu_user(client, message, cmd)
 
 async def cmd_osu_user(client, message, user):
-    results = await api.user(user)
-    if not results:
+    result = next(await api.user(user), None)
+    if not result:
         await client.send_message(message.channel, "User %s not found" % user)
         return
 
-    reply = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=next(results))
+    reply = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=result)
     await client.send_message(message.channel, reply)
 
 async def cmd_osu_best(client, message, user):
