@@ -5,39 +5,22 @@ import aiohttp
 import command
 import osu_api as api
 
-async def cmd_osu(client, message, arg):
-    if arg is None:
-        return
+async def cmd_osu(client, message, user):
+    user_info = next(await api.user(user), None)
 
-    subcommands = {
-        "user": cmd_osu_user,
-        "best": cmd_osu_best,
-    }
-
-    cmd, arg = command.parse(arg, prefix="")
-    handler = subcommands.get(cmd, None)
-    if handler is not None:
-        await handler(client, message, arg)
-    elif cmd:
-        await cmd_osu_user(client, message, cmd)
-
-async def cmd_osu_user(client, message, user):
-    result = next(await api.user(user), None)
-    if not result:
+    if not user_info:
         await client.send_message(message.channel, "User %s not found" % user)
         return
 
-    reply = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=result)
-    await client.send_message(message.channel, reply)
+    user_line = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=user_info)
 
-async def cmd_osu_best(client, message, user):
-    results = await api.user_best(user, 5)
-    if not results:
-        await client.send_message(message.channel, "User %s not found" % user)
+    scores = await api.user_best(user, 5)
+    if not scores:
+        await client.send_message(message.channel, "No scores found for user %s" % user)
         return
 
     plays = []
-    for i, play in enumerate(results):
+    for i, play in enumerate(scores):
         bm = await play.beatmap()
 
         template = "\n".join([
@@ -52,7 +35,7 @@ async def cmd_osu_best(client, message, user):
             mods = (play.mods + " ").lstrip(" "),
         ))
 
-    reply = "```%s```" % "\n".join(plays)
+    reply = "**{user_line}**\n```{plays}```".format(user_line=user_line, plays="\n".join(plays))
     await client.send_message(message.channel, reply)
 
 def register(client):
