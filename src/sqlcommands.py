@@ -63,23 +63,23 @@ async def getblackjacktoplist():
     toplist = []
     for item in items:
         pct, wins, total, name, losses, surrenders, ties, moneyspent, moneywon, rank = item
-        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, moneywon, round(pct, 3))
+        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(moneywon), round(pct, 3))
         toplist.append(new_item)
-    toplist = addsymboltolist(toplist,8,' %')
+    # toplist = addsymboltolist(toplist,9,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getslotstoplist():
     async with db.connect() as c:
         items = await c.fetch("""
             SELECT
-                (wins_slots / (wins_slots + losses_slots)) * 100,
-                wins_slots,
-                wins_slots + losses_slots,
                 name,
+                concat('#', row_number() OVER (ORDER BY  (wins_slots / (wins_slots + losses_slots)) * 100 desc)) AS rank,
+                wins_slots + losses_slots,
+                wins_slots,
                 losses_slots,
                 moneyspent_slots,
                 moneywon_slots,
-                concat('#', row_number() OVER (ORDER BY  (wins_slots / (wins_slots + losses_slots)) * 100 desc)) AS rank
+                (wins_slots / (wins_slots + losses_slots)) * 100
             FROM casino_stats
             JOIN discord_user USING (user_id)
             WHERE (wins_slots + losses_slots) > 1
@@ -90,10 +90,10 @@ async def getslotstoplist():
         return None, None
     toplist = []
     for item in items:
-        pct, wins, total, name, losses, moneyspent, moneywon, rank = item
+        name, rank, total, wins, losses, moneyspent, moneywon, pct = item
         new_item = (name, rank, total, wins, losses, moneyspent, moneywon, round(pct, 3))
         toplist.append(new_item)
-    toplist = addsymboltolist(toplist,6,' %')
+    # toplist = addsymboltolist(toplist,7,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getquoteforquotegame(name):

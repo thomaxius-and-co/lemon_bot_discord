@@ -77,8 +77,8 @@ async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO casino_stats AS a
-            (user_id, wins_slots, losses_slots, moneyspent_slots, moneywon)
-            VALUES ($1, $2, $3, $4)
+            (user_id, wins_slots, losses_slots, moneyspent_slots, moneywon_slots)
+            VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (user_id) DO UPDATE SET
             wins_slots = GREATEST(0, a.wins_slots + EXCLUDED.wins_slots),
             losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
