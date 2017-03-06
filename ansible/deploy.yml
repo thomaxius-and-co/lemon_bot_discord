@@ -29,6 +29,7 @@
         image_id: "{{ droplet_image }}"
         ssh_key_ids: "{{ do_ssh_key.ssh_key.id }}"
         monitoring: yes
+        backups_enabled: yes
       register: droplet
 
     - name: Add new droplet to host group
