@@ -50,6 +50,7 @@ async def getblackjacktoplist():
                 surrenders,
                 ties,
                 moneyspent_bj,
+                moneywon_bj,
                 concat('#', row_number() OVER (ORDER BY  (wins_bj / (wins_bj + losses_bj)) * 100 desc)) AS rank
             FROM casino_stats
             JOIN discord_user USING (user_id)
@@ -58,14 +59,14 @@ async def getblackjacktoplist():
             LIMIT 10
         """)
     if len(items) == 0:
-        return None
+        return None, None
     toplist = []
     for item in items:
-        pct, wins, total, name, losses, surrenders, ties, moneyspent, rank = item
-        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(pct, 3))
+        pct, wins, total, name, losses, surrenders, ties, moneyspent, moneywon, rank = item
+        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, moneywon, round(pct, 3))
         toplist.append(new_item)
     toplist = addsymboltolist(toplist,8,' %')
-    return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'SURRENDERS', 'TIES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
+    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getslotstoplist():
     async with db.connect() as c:
@@ -77,6 +78,7 @@ async def getslotstoplist():
                 name,
                 losses_slots,
                 moneyspent_slots,
+                moneywon_slots,
                 concat('#', row_number() OVER (ORDER BY  (wins_slots / (wins_slots + losses_slots)) * 100 desc)) AS rank
             FROM casino_stats
             JOIN discord_user USING (user_id)
@@ -85,14 +87,14 @@ async def getslotstoplist():
             LIMIT 10
         """)
     if len(items) == 0:
-        return None
+        return None, None
     toplist = []
     for item in items:
-        pct, wins, total, name, losses, moneyspent, rank = item
-        new_item = (name, rank, total, wins, losses, moneyspent, round(pct, 3))
+        pct, wins, total, name, losses, moneyspent, moneywon, rank = item
+        new_item = (name, rank, total, wins, losses, moneyspent, moneywon, round(pct, 3))
         toplist.append(new_item)
     toplist = addsymboltolist(toplist,6,' %')
-    return columnmaker.columnmaker(['NAME', 'RANK', 'TOTAL', 'WINS', 'LOSSES', 'MONEY SPENT', 'WIN PCT %'], toplist), len(toplist)
+    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getquoteforquotegame(name):
     async with db.connect() as c:
@@ -255,7 +257,7 @@ async def cmd_top(client, message, input):
 
     if input == ('whosaidit'):
         ranking, amountofpeople = await getwhosaiditranking()
-        if not ranking:
+        if not ranking or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough players to form a toplist.')
             return
@@ -267,9 +269,9 @@ async def cmd_top(client, message, input):
 
     if input == ('blackjack') or input == ('bj'):
         reply, amountofpeople = await getblackjacktoplist()
-        if not reply:
+        if not reply or not amountofpeople:
             await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+                                      'Not enough players to form a toplist. (need 20 games to qualify).')
             return
 
         header = 'Top %s blackjack players (need 20 games to qualify)\n' % (amountofpeople)
@@ -278,9 +280,9 @@ async def cmd_top(client, message, input):
 
     if input == ('slots'):
         reply, amountofpeople = await getslotstoplist()
-        if not reply:
+        if not reply or not amountofpeople:
             await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+                                      'Not enough players to form a toplist. (need 20 games to qualify')
             return
 
         header = 'Top %s slots players (need 20 games to qualify)\n' % (amountofpeople)

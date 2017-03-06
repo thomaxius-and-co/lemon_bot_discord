@@ -54,51 +54,53 @@ async def add_money(user, amount):
 async def save_slots_stats(user, amount):
     await add_money(user, amount)
     if amount > 0:
-        await update_slots_stats(user, 1, 0, -amount) # Win, the money you win are deducted from money spent
+        await update_slots_stats(user, 1, 0, amount, amount)
     else:
-        await update_slots_stats(user, 0, 1, abs(amount))
+        await update_slots_stats(user, 0, 1, abs(amount), 0)
 
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
         await add_money(user, amount)
     if win:
-        await update_blackjack_stats(user, 1, -amount, 0, 0, 0, 0)
+        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 0, amount)
     if loss:
-        await update_blackjack_stats(user, 0, abs(amount), 1, 0, 0, 0)
+        await update_blackjack_stats(user, 0, abs(amount), 1, 0, 0, 0, 0)
     if tie:
-        await update_blackjack_stats(user, 0, 0, 0, 1, 0, 0)
+        await update_blackjack_stats(user, 0, 0, 0, 1, 0, 0, 0)
     if surrender:
-        await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0)
+        await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0, 0)
     if blackjack:
-        await update_blackjack_stats(user, 1, -amount, 0, 0, 0, 1) # A blackjack also counts as a win
+        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1, amount) # A blackjack also counts as a win
 
 
-async def update_slots_stats(user, wins, losses, amount):
+async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO casino_stats AS a
-            (user_id, wins_slots, losses_slots, moneyspent_slots)
+            (user_id, wins_slots, losses_slots, moneyspent_slots, moneywon)
             VALUES ($1, $2, $3, $4)
             ON CONFLICT (user_id) DO UPDATE SET
             wins_slots = GREATEST(0, a.wins_slots + EXCLUDED.wins_slots),
             losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
-            moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots)
-        """, user.id, wins, losses, amount)
+            moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots),
+            moneywon_slots = GREATEST(0, a.moneywon_slots + EXCLUDED.moneywon_slots)
+        """, user.id, wins, losses, moneyspent, moneywon)
 
-async def update_blackjack_stats(user, wins, amount, losses, ties, surrenders, blackjack):
+async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrenders, blackjack, moneywon):
     async with db.connect() as c:
         await c.execute("""
             INSERT INTO casino_stats AS a
-            (user_id, wins_bj, losses_bj, moneyspent_bj, ties, surrenders, bj_blackjack)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (user_id, wins_bj, losses_bj, moneyspent_bj, ties, surrenders, bj_blackjack, moneywon_bj)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             ON CONFLICT (user_id) DO UPDATE SET
             wins_bj = GREATEST(0, a.wins_bj + EXCLUDED.wins_bj),
             losses_bj = GREATEST(0, a.losses_bj + EXCLUDED.losses_bj),
             moneyspent_bj = GREATEST(0, a.moneyspent_bj + EXCLUDED.moneyspent_bj),
             ties = GREATEST(0, a.ties + EXCLUDED.ties),
             surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
-            bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack)
-        """, user.id, wins, losses, amount, ties, surrenders, blackjack)
+            bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack),
+            moneywon_bj = GREATEST(0, a.moneywon_bj + EXCLUDED.moneywon_bj)
+        """, user.id, wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
 
 async def makedeck(blackjack=True):
     cards = []
