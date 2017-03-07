@@ -151,6 +151,7 @@ async def get_jackpot():
             SELECT jackpot from casino_jackpot
             """)
 # Function to play the slots
+async def cmd_slots(client, message, _, debug=False):
     player = message.author
     jackpot = await get_jackpot()
     jackpotamount = jackpot['jackpot']
