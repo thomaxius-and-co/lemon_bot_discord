@@ -56,6 +56,7 @@ async def save_slots_stats(user, amount):
     if amount > 0:
         await update_slots_stats(user, 1, 0, amount, amount)
     else:
+        await update_jackpot(user, abs(amount) / 5)  # 20% of bet will go to jackpot
         await update_slots_stats(user, 0, 1, abs(amount), 0)
 
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
@@ -71,6 +72,18 @@ async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=Fa
         await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0, 0)
     if blackjack:
         await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1, amount) # A blackjack also counts as a win
+
+async def update_jackpot(user, amount, win=False):
+    async with db.connect() as c:
+        if win:
+            await c.execute("""
+                UPDATE casino_jackpot SET jackpot = 0
+                """)
+            # todo: await updatejackpothistory(user, amount)
+        else:
+            await c.execute("""
+                UPDATE casino_jackpot SET jackpot = jackpot + $1
+                """, amount)
 
 
 async def update_slots_stats(user, wins, losses, moneyspent, moneywon):

@@ -280,18 +280,27 @@ async def cmd_top(client, message, input):
 
     if input == ('slots'):
         reply, amountofpeople = await getslotstoplist()
+        jackpot = await get_jackpot()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough players to form a toplist. (need 20 games to qualify')
             return
 
         header = 'Top %s slots players (need 20 games to qualify)\n' % (amountofpeople)
-        await client.send_message(message.channel, '```' + header + reply + '```')
+        jackpot = '\nCurrent jackpot: %s$' % (jackpot['jackpot'])
+        await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
 
     else:
         await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, blackjack, slots, custom <words separated by comma>')
         return
+
+
+async def get_jackpot():
+    async with db.connect() as c:
+        return await c.fetchrow("""
+            SELECT jackpot from casino_jackpot
+            """)
 
 async def getwhosaiditranking():
     async with db.connect(readonly = True) as c:
