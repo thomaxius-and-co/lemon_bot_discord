@@ -86,6 +86,7 @@ async def update_jackpot(user, amount, win=False):
                 """, amount)
 
 
+
 async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
     async with db.connect() as c:
         await c.execute("""
@@ -144,10 +145,16 @@ async def set_bet(user, amount):
             SET bet = GREATEST(0, EXCLUDED.bet)
         """, user.id, amount)
 
-
+async def get_jackpot():
+    async with db.connect() as c:
+        return await c.fetchrow("""
+            SELECT jackpot from casino_jackpot
+            """)
 # Function to play the slots
-async def cmd_slots(client, message, _):
     player = message.author
+    jackpot = await get_jackpot()
+    jackpotamount = jackpot['jackpot']
+    jackpotwinner = False
     wheel_list = []
     results_dict = {}
     doubletimes = 0
@@ -173,10 +180,13 @@ async def cmd_slots(client, message, _):
         await client.send_message(message.channel,
                                   'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
-    while count <= 4:
-        wheel_pick = random.choice(SLOT_PATTERN)
-        wheel_list.append(wheel_pick)
-        count += 1
+    if not debug:
+        while count <= 4:
+            wheel_pick = random.choice(SLOT_PATTERN)
+            wheel_list.append(wheel_pick)
+            count += 1
+    else:
+        wheel_list = [emoji.POOP,emoji.POOP,emoji.POOP,emoji.POOP]
     last_step = ''
     for wheel_step in wheel_list:
         if not results_dict.get(wheel_step):
@@ -211,14 +221,20 @@ async def cmd_slots(client, message, _):
             winnings = bet * 200
             break
         if k == emoji.POOP and v == 4:
-            winnings = bet * 10000
-            for spam in range(0, 10):
-                await client.send_message(message.channel,
-                                          'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings))
-                await sleep(1)
+            winnings = (bet * 2000) + jackpotamount
+            jackpotwinner = True
+
+
     wheel_payload = '%s Bet: $%s --> | ' % (player.name, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
+    if jackpotwinner:
+        if jackpotamount > 0:
+            await update_jackpot(player.id, jackpotamount, win=True)
+        for spam in range(0, 10):
+            await client.send_message(message.channel,
+                                      'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings + bet))
+            await sleep(1)
     while winnings > 0 and not stay:
         doubletimes += 1
         if doubletimes == 5:
@@ -229,6 +245,8 @@ async def cmd_slots(client, message, _):
                                   'You won %s! Would you like to double? (Type !double or !take)' % (
                                       winnings))
         winnings, stay = await askifdouble(client, message, winnings)
+    if debug:
+        return
     if winnings > 0:
         await save_slots_stats(player, winnings)
     else:
