@@ -179,12 +179,15 @@ async def get_jackpot():
             SELECT jackpot from casino_jackpot
             """)
 # Function to play the slots
-async def cmd_slots(client, message, _, debug=False):
+async def cmd_slots(client, message, arg, debug=False):
     lite = False # in lite mode, there is no doubling or emoji's
-    if _ == 'lite' or 'l':
+    if arg == 'lite' or arg == 'l':
         lite = True
     player = message.author
     jackpot = await get_jackpot()
+    pattern = SLOT_PATTERN
+    if lite:
+        pattern = SLOT_PATTERN_LITE
     jackpotamount = jackpot['jackpot']
     jackpotwinner = False
     wheel_list = []
@@ -212,11 +215,9 @@ async def cmd_slots(client, message, _, debug=False):
         await client.send_message(message.channel,
                                   'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
-    if lite:
-        SLOT_PATTERN = SLOT_PATTERN_LITE
     if not debug:
         while count <= 4:
-            wheel_pick = random.choice(SLOT_PATTERN)
+            wheel_pick = random.choice(pattern)
             wheel_list.append(wheel_pick)
             count += 1
     else:

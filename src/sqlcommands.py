@@ -82,7 +82,7 @@ async def getslotstoplist():
                 (wins_slots / (wins_slots + losses_slots)) * 100
             FROM casino_stats
             JOIN discord_user USING (user_id)
-            WHERE (wins_slots + losses_slots) > 1
+            WHERE (wins_slots + losses_slots) > 100
             ORDER BY (wins_slots / (wins_slots + losses_slots)) * 100 DESC
             LIMIT 10
         """)
@@ -283,10 +283,10 @@ async def cmd_top(client, message, input):
         jackpot = await get_jackpot()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
-                                      'Not enough players to form a toplist. (need 20 games to qualify')
+                                      'Not enough players to form a toplist. (need 100 games to qualify')
             return
 
-        header = 'Top %s slots players (need 20 games to qualify)\n' % (amountofpeople)
+        header = 'Top %s slots players (need 100 games to qualify)\n' % (amountofpeople)
         jackpot = '\nCurrent jackpot: %s$' % (jackpot['jackpot'])
         await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
