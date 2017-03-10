@@ -79,13 +79,13 @@ async def add_money(user, amount):
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
         """, user.id, amount)
 
-async def save_slots_stats(user, amount):
-    await add_money(user, amount)
-    if amount > 0:
-        await update_slots_stats(user, 1, 0, amount, amount)
+async def save_slots_stats(user, bet, winnings):
+    await add_money(user, bet)
+    if winnings > 0:
+        await update_slots_stats(user, 1, 0, bet, winnings)
     else:
-        await update_jackpot(user, abs(amount) / 5)  # 20% of bet will go to jackpot
-        await update_slots_stats(user, 0, 1, abs(amount), 0)
+        await update_jackpot(user, abs(bet) / 5)  # 20% of bet will go to jackpot
+        await update_slots_stats(user, 0, 1, abs(bet), 0)
 
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
@@ -286,9 +286,9 @@ async def cmd_slots(client, message, arg, debug=False):
     if debug:
         return
     if winnings > 0:
-        await save_slots_stats(player, winnings)
+        await save_slots_stats(player, winnings, winnings)
     else:
-        await save_slots_stats(player, -bet)
+        await save_slots_stats(player, -bet, 0)
 
 
 # FIXME: Exact copy of cmd_coin in run_lemon_bot.py
