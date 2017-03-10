@@ -318,11 +318,11 @@ async def getwhosaiditranking():
             LIMIT 10
         """)
         if len(items) == 0:
-            return None
+            return None, None
         toplist = []
         for item in items:
             pct, correct, total, name, rank = item
-            new_item = (name, rank, correct, total, pct)
+            new_item = (name, rank, correct, total, round(pct,3))
             toplist.append(new_item)
         return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
 

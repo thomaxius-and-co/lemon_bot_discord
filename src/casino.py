@@ -14,26 +14,54 @@ SLOT_PATTERN = [
     emoji.MONEY_BAG,
     emoji.POOP,
     emoji.CHERRIES,
-    emoji.LEMON,
-    emoji.GRAPES,
+    emoji.CHERRIES,
+    emoji.CHERRIES,
+    emoji.CHERRIES,
+    emoji.CHERRIES,
     emoji.CHERRIES,
     emoji.LEMON,
-    emoji.GRAPES,
-    emoji.CHERRIES,
+    emoji.LEMON,
+    emoji.LEMON,
+    emoji.LEMON,
     emoji.LEMON,
     emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
     emoji.GRAPES,
-    emoji.CHERRIES,
-    emoji.LEMON,
+    emoji.GRAPES,
+    emoji.GRAPES,
     emoji.GRAPES,
     emoji.WATERMELON,
     emoji.WATERMELON,
     emoji.WATERMELON,
     emoji.WATERMELON,
 ]
-
+SLOT_PATTERN_LITE = [
+    'Four leaf clover',
+    'Four leaf clover',
+    'Money bag',
+    'Money bag',
+    'Money bag',
+    'Poop',
+    'Cherries',
+    'Cherries',
+    'Cherries',
+    'Cherries',
+    'Cherries',
+    'Cherries',
+    'Lemon',
+    'Lemon',
+    'Lemon',
+    'Lemon',
+    'Lemon',
+    'Grapes',
+    'Grapes',
+    'Grapes',
+    'Grapes',
+    'Grapes',
+    'Watermelon',
+    'Watermelon',
+    'Watermelon',
+    'Watermelon',
+]
 
 async def get_balance(user):
     async with db.connect() as c:
@@ -152,6 +180,9 @@ async def get_jackpot():
             """)
 # Function to play the slots
 async def cmd_slots(client, message, _, debug=False):
+    lite = False # in lite mode, there is no doubling or emoji's
+    if _ == 'lite' or 'l':
+        lite = True
     player = message.author
     jackpot = await get_jackpot()
     jackpotamount = jackpot['jackpot']
@@ -181,6 +212,8 @@ async def cmd_slots(client, message, _, debug=False):
         await client.send_message(message.channel,
                                   'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
         return
+    if lite:
+        SLOT_PATTERN = SLOT_PATTERN_LITE
     if not debug:
         while count <= 4:
             wheel_pick = random.choice(SLOT_PATTERN)
@@ -197,31 +230,33 @@ async def cmd_slots(client, message, _, debug=False):
             results_dict[wheel_step] = data + 1
         last_step = wheel_step
     for k, v in results_dict.items():
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 4:
+        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES or k == 'Cherries' or k ==
+            'Lemon' or k == 'Grapes') and v == 4:
             winnings = bet * 25
             break
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES) and v == 3:
+        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES or k == 'Cherries' or
+                    k == 'Lemon' or k =='Grapes') and v == 3:
             winnings = bet * 10
             break
-        if (k == emoji.WATERMELON) and v == 3:
+        if (k == emoji.WATERMELON or k == 'Watermelon') and v == 3:
             winnings = bet * 20
             break
-        if (k == emoji.WATERMELON) and v == 4:
+        if (k == emoji.WATERMELON or k == 'Watermelon') and v == 4:
             winnings = bet * 50
             break
-        if k == emoji.MONEY_BAG and v == 4:
+        if (k == emoji.MONEY_BAG or k == 'Money bag') and v == 4:
             winnings = bet * 500
             break
-        if k == emoji.MONEY_BAG and v == 3:
+        if (k == emoji.MONEY_BAG or k == 'Money bag') and v == 3:
             winnings = bet * 100
             break
-        if k == emoji.FOUR_LEAF_CLOVER and v == 4:
+        if (k == emoji.FOUR_LEAF_CLOVER or k == 'Four leaf clover') and v == 4:
             winnings = bet * 1000
             break
-        if k == emoji.FOUR_LEAF_CLOVER and v == 3:
+        if (k == emoji.FOUR_LEAF_CLOVER or k == 'Four leaf clover') and v == 3:
             winnings = bet * 200
             break
-        if k == emoji.POOP and v == 4:
+        if (k == emoji.POOP or k == 'Poop') and v == 4:
             winnings = (bet * 2000) + jackpotamount
             jackpotwinner = True
 
@@ -236,16 +271,17 @@ async def cmd_slots(client, message, _, debug=False):
             await client.send_message(message.channel,
                                       'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings + bet))
             await sleep(1)
-    while winnings > 0 and not stay:
-        doubletimes += 1
-        if doubletimes == 5:
+    if not lite:
+        while winnings > 0 and not stay:
+            doubletimes += 1
+            if doubletimes == 5:
+                await client.send_message(message.channel,
+                                          'You have reached the doubling limit! You won %s' % (winnings))
+                break
             await client.send_message(message.channel,
-                                      'You have reached the doubling limit! You won %s' % (winnings))
-            break
-        await client.send_message(message.channel,
-                                  'You won %s! Would you like to double? (Type !double or !take)' % (
-                                      winnings))
-        winnings, stay = await askifdouble(client, message, winnings)
+                                      'You won %s! Would you like to double? (Type !double or !take)' % (
+                                          winnings))
+            winnings, stay = await askifdouble(client, message, winnings)
     if debug:
         return
     if winnings > 0:
