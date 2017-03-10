@@ -285,7 +285,7 @@ async def cmd_slots(client, message, arg, debug=False):
     if debug:
         return
     if winnings > 0:
-        await save_slots_stats(player, winnings, winnings)
+        await save_slots_stats(player, winnings, bet)
     else:
         await save_slots_stats(player, -bet, 0)
 
