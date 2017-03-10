@@ -80,7 +80,7 @@ async def add_money(user, amount):
         """, user.id, amount)
 
 async def save_slots_stats(user, bet, winnings):
-    await add_money(user, bet)
+    await add_money(user, winnings)
     if winnings > 0:
         await update_slots_stats(user, 1, 0, bet, winnings)
     else:
@@ -272,21 +272,20 @@ async def cmd_slots(client, message, arg, debug=False):
             await client.send_message(message.channel,
                                       'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings + bet))
             await sleep(1)
-    if not lite:
-        while winnings > 0 and not stay:
-            doubletimes += 1
-            if doubletimes == 5:
-                await client.send_message(message.channel,
-                                          'You have reached the doubling limit! You won %s' % (winnings))
-                break
+    while winnings > 0 and not stay and not lite:
+        doubletimes += 1
+        if doubletimes == 5:
             await client.send_message(message.channel,
-                                      'You won %s! Would you like to double? (Type !double or !take)' % (
-                                          winnings))
-            winnings, stay = await askifdouble(client, message, winnings)
+                                      'You have reached the doubling limit! You won %s' % (winnings))
+            break
+        await client.send_message(message.channel,
+                                  'You won %s! Would you like to double? (Type !double or !take)' % (
+                                      winnings))
+        winnings, stay = await askifdouble(client, message, winnings)
     if debug:
         return
     if winnings > 0:
-        await save_slots_stats(player, bet, winnings)
+        await save_slots_stats(player, winnings, winnings)
     else:
         await save_slots_stats(player, -bet, 0)
 
