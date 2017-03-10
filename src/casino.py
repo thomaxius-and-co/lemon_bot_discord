@@ -79,13 +79,13 @@ async def add_money(user, amount):
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
         """, user.id, amount)
 
-async def save_slots_stats(user, bet, winnings):
-    await add_money(user, winnings)
+async def save_slots_stats(user, amount, winnings):
+    await add_money(user, amount)
     if winnings > 0:
-        await update_slots_stats(user, 1, 0, bet, winnings)
+        await update_slots_stats(user, 1, 0, amount, winnings)
     else:
-        await update_jackpot(user, abs(bet) / 5)  # 20% of bet will go to jackpot
-        await update_slots_stats(user, 0, 1, abs(bet), 0)
+        await update_jackpot(user, abs(amount) / 5)  # 20% of bet will go to jackpot
+        await update_slots_stats(user, 0, 1, abs(amount), 0)
 
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
