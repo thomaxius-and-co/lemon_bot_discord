@@ -388,6 +388,13 @@ async def cmd_sql(client, message, query):
         await client.send_message(message.channel, msg)
         return
 
+async def cmd_randomcolor(client, message, _):
+    hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+    random.shuffle(hex)
+    hexcode = ''.join(hex[0:6])
+    link = 'http://www.colorcombos.com/images/colors/%s.png' % hexcode
+    await client.send_message(message.channel, link)
+
 commands = {
     'sql': cmd_sql,
     'enchant': cmd_enchant,
@@ -405,7 +412,8 @@ commands = {
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
-    'status': cmd_status
+    'status': cmd_status,
+    'randomcolor': cmd_randomcolor
 }
 
 def parse_raw_msg(msg):
