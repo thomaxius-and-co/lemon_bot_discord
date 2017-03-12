@@ -389,10 +389,9 @@ async def cmd_sql(client, message, query):
         return
 
 async def cmd_randomcolor(client, message, _):
-    hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
-    random.shuffle(hex)
-    hexcode = ''.join(hex[0:6])
-    link = 'http://www.colorcombos.com/images/colors/%s.png' % hexcode
+    char = '0123456789ABCDEF'
+    randchars = ''.join(random.choice(char) for _ in range(6))
+    link = 'http://www.colorcombos.com/images/colors/%s.png' % randchars
     await client.send_message(message.channel, link)
 
 commands = {
