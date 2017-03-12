@@ -389,6 +389,7 @@ async def cmd_sql(client, message, query):
         return
 
 async def cmd_randomcolor(client, message, _):
+    # Credits to colorcombos.com
     char = '0123456789ABCDEF'
     randchars = ''.join(random.choice(char) for _ in range(6))
     link = 'http://www.colorcombos.com/images/colors/%s.png' % randchars
