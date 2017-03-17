@@ -6,6 +6,7 @@ import database as db
 
 bjlist = []
 hicards = ['K', 'A', 'J', 'Q', '10']
+
 SLOT_PATTERN = [
     emoji.FOUR_LEAF_CLOVER,
     emoji.FOUR_LEAF_CLOVER,
@@ -33,6 +34,7 @@ SLOT_PATTERN = [
     emoji.WATERMELON,
     emoji.WATERMELON,
     emoji.WATERMELON,
+    emoji.STAR
 ]
 SLOT_PATTERN_LITE = [
     'Four leaf clover',
@@ -61,7 +63,27 @@ SLOT_PATTERN_LITE = [
     'Watermelon',
     'Watermelon',
     'Watermelon',
+    'Star'
 ]
+
+prizeMultipliers = {
+    (3, 'Grapes'): 10,
+    (3, 'Cherries'): 10,
+    (3, 'Lemon'): 10,
+    (3, 'Watermelon'): 20,
+    (3, 'Money bag'): 100,
+    (3, 'Four leaf clover'): 200,
+    (4, 'Grapes'): 25,
+    (4, 'Cherries'): 25,
+    (4, 'Lemon'): 25,
+    (4, 'Watermelon'): 50,
+    (4, 'Money bag'): 500,
+    (4, 'Four leaf clover'): 1000,
+    (4, 'Poop'): 2000,
+    (4, 'Star'): 2000,
+
+}
+
 
 async def get_balance(user):
     async with db.connect() as c:
@@ -79,14 +101,16 @@ async def add_money(user, amount):
             SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
         """, user.id, amount)
 
+
 async def save_slots_stats(user, amounttobankaccount, winnings):
     await add_money(user, amounttobankaccount)
     if winnings > 0:
-        await update_slots_stats(user, 1, 0, winnings, amounttobankaccount) # In this case, winnings is the bet
+        await update_slots_stats(user, 1, 0, winnings, amounttobankaccount)  # In this case, winnings is the bet
         # and amounttobankaccount the actual winnings
     else:
         await update_jackpot(user, abs(amounttobankaccount) / 5)  # 20% of bet will go to jackpot
         await update_slots_stats(user, 0, 1, abs(amounttobankaccount), 0)
+
 
 async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=False, tie=False, blackjack=False):
     if amount:
@@ -100,7 +124,8 @@ async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=Fa
     if surrender:
         await update_blackjack_stats(user, 0, abs(amount), 0, 0, 1, 0, 0)
     if blackjack:
-        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1, amount) # A blackjack also counts as a win
+        await update_blackjack_stats(user, 1, amount, 0, 0, 0, 1, amount)  # A blackjack also counts as a win
+
 
 async def update_jackpot(user, amount, win=False):
     async with db.connect() as c:
@@ -115,7 +140,6 @@ async def update_jackpot(user, amount, win=False):
                 """, amount)
 
 
-
 async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
     async with db.connect() as c:
         await c.execute("""
@@ -128,6 +152,7 @@ async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
             moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots),
             moneywon_slots = GREATEST(0, a.moneywon_slots + EXCLUDED.moneywon_slots)
         """, user.id, wins, losses, moneyspent, moneywon)
+
 
 async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrenders, blackjack, moneywon):
     async with db.connect() as c:
@@ -144,6 +169,7 @@ async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrender
             bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack),
             moneywon_bj = GREATEST(0, a.moneywon_bj + EXCLUDED.moneywon_bj)
         """, user.id, wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
+
 
 async def makedeck(blackjack=True):
     cards = []
@@ -174,14 +200,19 @@ async def set_bet(user, amount):
             SET bet = GREATEST(0, EXCLUDED.bet)
         """, user.id, amount)
 
+
 async def get_jackpot():
     async with db.connect() as c:
         return await c.fetchrow("""
             SELECT jackpot from casino_jackpot
             """)
+
+
 # Function to play the slots
 async def cmd_slots(client, message, arg, debug=False):
-    lite = False # in lite mode, there is no doubling or emoji's
+    winnings = 0
+    lite = False
+    litequilavent = dict(zip(SLOT_PATTERN, SLOT_PATTERN_LITE))
     if arg == 'lite' or arg == 'l':
         lite = True
     player = message.author
@@ -190,13 +221,11 @@ async def cmd_slots(client, message, arg, debug=False):
     if lite:
         pattern = SLOT_PATTERN_LITE
     jackpotamount = jackpot['jackpot']
-    jackpotwinner = False
     wheel_list = []
-    results_dict = {}
     doubletimes = 0
-    count = 1
+    if debug:
+        pattern = ['Star', 'Star', 'Star', 'Star']
     stay = False
-    winnings = 0
     bet = await get_bet(player)
     if bet < 1:
         await client.send_message(message.channel, 'You need set a valid bet, Example: !bet 5')
@@ -207,72 +236,71 @@ async def cmd_slots(client, message, arg, debug=False):
         await client.send_message(message.channel, 'You need to run the !loan command.')
         return
 
+    if bet > 1000:
+        await client.send_message(message.channel,
+                                  'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
+        return
+
     if bet > balance:
         await client.send_message(message.channel,
                                   'Your balance of $%s is to low, lower your bet amount of $%s' % (
                                       balance, bet))
         return
-    if bet > 1000:
-        await client.send_message(message.channel,
-                                  'Please lower your bet. (The maximum allowed bet for slots is 1000.)')
-        return
-    if not debug:
-        while count <= 4:
-            wheel_pick = random.choice(pattern)
-            wheel_list.append(wheel_pick)
-            count += 1
-    else:
-        wheel_list = [emoji.POOP,emoji.POOP,emoji.POOP,emoji.POOP]
-    last_step = ''
-    for wheel_step in wheel_list:
-        if not results_dict.get(wheel_step):
-            results_dict[wheel_step] = 1
-        if results_dict.get(wheel_step) and last_step == wheel_step:
-            data = results_dict.get(wheel_step)
-            results_dict[wheel_step] = data + 1
-        last_step = wheel_step
-    for k, v in results_dict.items():
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES or k == 'Cherries' or k ==
-            'Lemon' or k == 'Grapes') and v == 4:
-            winnings = bet * 25
-            break
-        if (k == emoji.CHERRIES or k == emoji.LEMON or k == emoji.GRAPES or k == 'Cherries' or
-                    k == 'Lemon' or k =='Grapes') and v == 3:
-            winnings = bet * 10
-            break
-        if (k == emoji.WATERMELON or k == 'Watermelon') and v == 3:
-            winnings = bet * 20
-            break
-        if (k == emoji.WATERMELON or k == 'Watermelon') and v == 4:
-            winnings = bet * 50
-            break
-        if (k == emoji.MONEY_BAG or k == 'Money bag') and v == 4:
-            winnings = bet * 500
-            break
-        if (k == emoji.MONEY_BAG or k == 'Money bag') and v == 3:
-            winnings = bet * 100
-            break
-        if (k == emoji.FOUR_LEAF_CLOVER or k == 'Four leaf clover') and v == 4:
-            winnings = bet * 1000
-            break
-        if (k == emoji.FOUR_LEAF_CLOVER or k == 'Four leaf clover') and v == 3:
-            winnings = bet * 200
-            break
-        if (k == emoji.POOP or k == 'Poop') and v == 4:
-            winnings = (bet * 2000) + jackpotamount
-            jackpotwinner = True
 
+    def getwinnings(most_common, bet, inrow):
+        winnings = prizeMultipliers.get((inrow, most_common)) * bet
+        return winnings
+
+    def most_common(lst):
+        most_common = max(lst, key=lst.count)
+        amount = lst.count(most_common)
+        if (amount < 4) and ('Star' in lst or emoji.STAR in lst):
+            while 'Star' in lst:
+                lst.remove('Star')
+            while emoji.STAR in lst:
+                lst.remove(emoji.STAR)
+        return max(lst, key=lst.count), lst.count(most_common)
+
+    def checkifthreeidentical(x):
+        return len(set(x[1:])) == 1 or len(set(x[:-1])) == 1
+
+    def checkiffouridentical(x):
+        if emoji.STAR in x and (x.count(emoji.STAR) < 4) or 'Star' in x and (x.count('Star') < 4):
+            return len(set(x)) == 2
+        return len(set(x)) == 1 or len(set(x)) == 1
+
+    for x in range(0, 4):
+        wheel_pick = random.choice(pattern)
+        wheel_list.append(wheel_pick)
+
+    most_common, amount = most_common(wheel_list[:])
+
+    if not lite:
+        most_common = litequilavent.get(most_common)
+
+    four = checkiffouridentical(wheel_list)
+    if four:
+        winnings = getwinnings(most_common, bet, 4)
+
+    if not four:
+        three = checkifthreeidentical(wheel_list)
+        if three and most_common not in ['Poop', 'Star', emoji.STAR, emoji.POOP]:
+            winnings = getwinnings(most_common, bet, 3)
 
     wheel_payload = '%s Bet: $%s --> | ' % (player.name, bet) + ' - '.join(
         wheel_list) + ' |' + ' Outcome: $%s' % winnings
     await client.send_message(message.channel, wheel_payload)
-    if jackpotwinner:
+
+    if amount == 4 and most_common in ['Star', emoji.STAR]:
         if jackpotamount > 0:
+            print(jackpotamount)
             await update_jackpot(player.id, jackpotamount, win=True)
-        for spam in range(0, 10):
+        for spam in range(0, 3):
             await client.send_message(message.channel,
-                                      'HE HAS DONE IT! %s has won the jackpot! of %s!' % (player.name, winnings + bet))
+                                      'HE HAS DONE IT! %s has won the jackpot of %s!' % (
+                                      player.name, winnings + jackpotamount))
             await sleep(1)
+
     while winnings > 0 and not stay and not lite:
         doubletimes += 1
         if doubletimes == 5:
@@ -283,8 +311,6 @@ async def cmd_slots(client, message, arg, debug=False):
                                   'You won %s! Would you like to double? (Type !double or !take)' % (
                                       winnings))
         winnings, stay = await askifdouble(client, message, winnings)
-    if debug:
-        return
     if winnings > 0:
         await save_slots_stats(player, winnings, bet)
     else:
@@ -572,7 +598,7 @@ async def cmd_blackjack(client, message, _):
             await dofinalspam(client, message, pscore, dscore, bet)
             return
         pscore, stay, phand = await getresponse(client, message, pscore, cards, broke,
-                                                phand) # This returns stay, which can be 'surrender', 'doubledown', 'true'.
+                                                phand)  # This returns stay, which can be 'surrender', 'doubledown', 'true'.
 
         # Player decides to do a doubledown, doubling his bet.
         if stay == 'doubledown':
@@ -591,13 +617,16 @@ async def cmd_blackjack(client, message, _):
         await dofinalspam(client, message, pscore, dscore, bet)
         return
 
-    if not blackjack and len(dhand) == 6 and pscore < 21: # 'lenght of dhand is 6' means that dealer has two cards in hand.
-        dscore += dhand[-3] # Sum the second card into existing score. 'dhand' contains suit, rank and letter of the card.
+    if not blackjack and len(
+            dhand) == 6 and pscore < 21:  # 'lenght of dhand is 6' means that dealer has two cards in hand.
+        dscore += dhand[
+            -3]  # Sum the second card into existing score. 'dhand' contains suit, rank and letter of the card.
         await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
-    while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)): # Deal dealer's cards
+    while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)):  # Deal dealer's cards
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
-        if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (dscore > pscore): # Dealer is bust or has a higher score than the player
+        if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (
+            dscore > pscore):  # Dealer is bust or has a higher score than the player
             break
     # Tell the results of the game with the arguments that were generated from the mess above
     await dofinalspam(client, message, pscore, dscore, bet)
