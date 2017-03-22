@@ -1,4 +1,6 @@
 const React = require('react')
+const moment = require('moment')
+require('moment-timezone')
 
 const pageTitle = 'Discord statistics'
 
@@ -9,7 +11,7 @@ const initialState = {
   dailyMessageCounts: [],
 }
 
-const formatDate = epochMs => moment(epochMs).format('YYYY-MM-DD')
+const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
 
 const dailyMessageCountTable = dailyMessageCounts =>
   <table>
