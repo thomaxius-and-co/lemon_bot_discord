@@ -45,6 +45,7 @@ import feed
 import reminder
 import youtube
 import lan
+import steam
 
 logging.basicConfig(level=logging.DEBUG)
 client = discord.Client()
@@ -506,7 +507,7 @@ def autocorrect_command(cmd):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan]:
+for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam]:
     commands.update(module.register(client))
 
 @client.event
