@@ -376,10 +376,16 @@ async def cmd_emojicommands(client, message, arg):
     x = 1
     if arg.lower() == 'list':
         for emoji in client.get_all_emojis():
-            emojilist.append(str(x) + ': ' + str(emoji))
-            emojilist.append(':' + emoji.name + ':\n')
-            x += 1
-        await client.send_message(message.channel, ''.join(emojilist))
+            if emoji:
+                emojilist.append(str(x) + ': ' + str(emoji))
+                emojilist.append(':' + emoji.name + ':\n')
+                x += 1
+        if not emojilist:
+            await client.send_message(message.channel, 'No emoji found.')
+            return
+        else:
+            msg = ''.join(emojilist)
+            await client.send_message(message.channel, msg)
     else:
         await client.send_message(message.channel, 'Usage: !emoji <list>')  # obv more features will be added later
         return
