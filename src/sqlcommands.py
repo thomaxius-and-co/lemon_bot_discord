@@ -374,12 +374,15 @@ async def cmd_randomquote(client, themessage, input):
 async def cmd_emojicommands(client, message, arg):
     emojilist = []
     x = 1
-    for emoji in client.get_all_emojis():
-        emojilist.append(str(x)+': ' + str(emoji))
-        emojilist.append(':'+emoji.name+':\n')
-        x += 1
     if arg.lower() == 'list':
+        for emoji in client.get_all_emojis():
+            emojilist.append(str(x) + ': ' + str(emoji))
+            emojilist.append(':' + emoji.name + ':\n')
+            x += 1
         await client.send_message(message.channel, ''.join(emojilist))
+    else:
+        await client.send_message(message.channel, 'Usage: !emoji <list>')  # obv more features will be added later
+        return
 
 
 
