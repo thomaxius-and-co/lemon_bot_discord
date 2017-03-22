@@ -9,13 +9,7 @@ const initialState = {
   dailyMessageCounts: [],
 }
 
-const dateFormat = new Intl.DateTimeFormat('fi', {
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-})
-
-const formatDate = date => dateFormat.format(date)
+const formatDate = epochMs => moment(epochMs).format('YYYY-MM-DD')
 
 const dailyMessageCountTable = dailyMessageCounts =>
   <table>
@@ -28,7 +22,7 @@ const dailyMessageCountTable = dailyMessageCounts =>
     <tbody>
       {dailyMessageCounts.map(x =>
         <tr key={x.epoch}>
-          <td>{formatDate(new Date(x.epoch))}</td>
+          <td>{formatDate(x.epoch)}</td>
           <td>{x.count}</td>
         </tr>
       )}
