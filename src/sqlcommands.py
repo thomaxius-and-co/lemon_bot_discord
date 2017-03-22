@@ -371,6 +371,18 @@ async def cmd_randomquote(client, themessage, input):
     else:
         await send_quote(client, themessage.channel, random_message)
 
+async def cmd_emojicommands(client, message, arg):
+    emojilist = []
+    x = 1
+    for emoji in client.get_all_emojis():
+        emojilist.append(str(x)+': ' + str(emoji))
+        emojilist.append(':'+emoji.name+':\n')
+        x += 1
+    if arg.lower() == 'list':
+        await client.send_message(message.channel, ''.join(emojilist))
+
+
+
 async def cmd_whosaidit(client, message, _):
     if message.author not in playinglist:
         playinglist.append(message.author)
@@ -456,5 +468,6 @@ def register(client):
     return {
         'randomquote': cmd_randomquote,
         'whosaidit': cmd_whosaidit,
-        'top': cmd_top
+        'top': cmd_top,
+        'emoji': cmd_emojicommands
     }
