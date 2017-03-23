@@ -1,6 +1,7 @@
 import discord
 import re
 import json
+from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
@@ -377,15 +378,26 @@ async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'list':
         for emoji in client.get_all_emojis():
             if emoji:
-                emojilist.append(str(x) + ': ' + str(emoji))
-                emojilist.append(':' + emoji.name + ':\n')
+                rankandemoji = str(x) + ': ' + str(emoji)
+                emojiname = ' :' + emoji.name + ':\n'
+                emojilist.append((rankandemoji,emojiname))
                 x += 1
         if not emojilist:
             await client.send_message(message.channel, 'No emoji found.')
             return
         else:
-            msg = ''.join(emojilist)
-            await client.send_message(message.channel, msg)
+            if len(''.join(map(str, emojilist))) > 1999:
+                emojilist2 = emojilist[:len(emojilist)//2]
+                emojilist3 = emojilist[len(emojilist)//2:]
+                firstpart = ''.join(map(''.join,emojilist2))
+                secondpart = ''.join(map(''.join,emojilist3))
+                await client.send_message(message.channel, firstpart)
+                await sleep(0.5)
+                await client.send_message(message.channel, secondpart)
+            else:
+                msg = ''.join(map("".join,emojilist))
+                await client.send_message(message.channel, msg)
+
     else:
         await client.send_message(message.channel, 'Usage: !emoji <list>')  # obv more features will be added later
         return
