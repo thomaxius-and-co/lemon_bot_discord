@@ -372,34 +372,70 @@ async def cmd_randomquote(client, themessage, input):
     else:
         await send_quote(client, themessage.channel, random_message)
 
-async def cmd_emojicommands(client, message, arg):
+async def doemojilist(client, message):
     emojilist = []
     x = 1
-    if arg.lower() == 'list':
-        for emoji in client.get_all_emojis():
-            if emoji:
-                rankandemoji = str(x) + ': ' + str(emoji)
-                emojiname = ' :' + emoji.name + ':\n'
-                emojilist.append((rankandemoji,emojiname))
-                x += 1
-        if not emojilist:
-            await client.send_message(message.channel, 'No emoji found.')
-            return
-        else:
-            if len(''.join(map(str, emojilist))) > 1999:
-                emojilist2 = emojilist[:len(emojilist)//2]
-                emojilist3 = emojilist[len(emojilist)//2:]
-                firstpart = ''.join(map(''.join,emojilist2))
-                secondpart = ''.join(map(''.join,emojilist3))
-                await client.send_message(message.channel, firstpart)
-                await sleep(0.5)
-                await client.send_message(message.channel, secondpart)
-            else:
-                msg = ''.join(map("".join,emojilist))
-                await client.send_message(message.channel, msg)
-
+    for emoji in client.get_all_emojis():
+        if emoji:
+            rankandemoji = str(x) + ': ' + str(emoji)
+            emojiname = ' :' + emoji.name + ':\n'
+            emojilist.append((rankandemoji, emojiname))
+            x += 1
+    if not emojilist:
+        await client.send_message(message.channel, 'No emoji found.')
+        return
     else:
-        await client.send_message(message.channel, 'Usage: !emoji <list>')  # obv more features will be added later
+        if len(''.join(map(str, emojilist))) > 1999:  # If the emoji message exceeds 2000 characters, split it in half
+            emojilist2 = emojilist[:len(emojilist) // 2]
+            emojilist3 = emojilist[len(emojilist) // 2:]
+            firstpart = ''.join(map(''.join, emojilist2))
+            secondpart = ''.join(map(''.join, emojilist3))
+            await client.send_message(message.channel, firstpart)
+            await sleep(0.5)
+            await client.send_message(message.channel, secondpart)
+        else:
+            msg = ''.join(map(''.join, emojilist))
+            await client.send_message(message.channel, msg)
+
+async def getserveremojis(client):
+    emojilist = []
+    for emoji in client.get_all_emojis():
+        if emoji:
+            emojilist.append(str(emoji))
+    return emojilist
+
+async def getemojis(emojilist):
+    emojiswithusage = []
+    for emoji in emojilist:
+        async with db.connect() as c:
+            count = await c.fetchval("""
+            select count(*)
+             from message
+             where content ~ $1 AND m->'author'->>'bot' IS NULL""", emoji)
+            if not count:
+                return None
+            emojiswithusage.append((emoji, str(count)))
+    leastusedtopten = sorted(emojiswithusage, key=lambda x: x[1])[:20]
+    return leastusedtopten
+
+async def showleastusedemojis(client, message):
+    emojilist = await getserveremojis(client)
+    if not emojilist:
+        await client.send_message(message.channel, 'No emoji found.')
+        return
+    leastusedtopten = await getemojis(emojilist)
+    await client.send_message(message.channel, '\n'.join(map(''.join, leastusedtopten)))
+
+
+
+async def cmd_emojicommands(client, message, arg):
+    if arg.lower() == 'leastused':
+        await showleastusedemojis(client, message)
+        return
+    if arg.lower() == 'list':
+        await doemojilist(client, message)
+    else:
+        await client.send_message(message.channel, 'Usage: !emoji <list> or <leastused>')  # obv more features will be added later
         return
 
 
