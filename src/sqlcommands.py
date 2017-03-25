@@ -108,10 +108,10 @@ async def getquoteforquotegame(name):
             FROM message
             WHERE length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-             AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' LIKE '{name}'
+             AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' LIKE $1
             ORDER BY random()
             LIMIT 1
-        """.format(name=name))
+        """, name)
             if checkifproperquote(quote) > 6:
                 return quote
         return None
