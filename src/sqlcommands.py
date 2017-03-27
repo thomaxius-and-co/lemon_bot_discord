@@ -1,6 +1,7 @@
 import discord
 import re
 import json
+import time_util
 from asyncio import sleep
 import database as db
 import columnmaker
@@ -378,8 +379,9 @@ async def doemojilist(client, message):
     for emoji in client.get_all_emojis():
         if emoji:
             rankandemoji = str(x) + ': ' + str(emoji)
-            emojiname = ' :' + emoji.name + ':\n'
-            emojilist.append((rankandemoji, emojiname))
+            emojiname = ' :' + emoji.name + ': '
+            created_at = time_util.to_helsinki(emoji.created_at) # Waiting for brother Henry to implement converttoguildtimezone(time)
+            emojilist.append((rankandemoji, emojiname, str(created_at)[:10]+'\n'))
             x += 1
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
@@ -414,8 +416,8 @@ async def getemojis(emojilist):
              where content ~ $1 AND m->'author'->>'bot' IS NULL""", emoji)
             if not count:
                 return None
-            emojiswithusage.append((emoji.ljust(3), count))
-    leastusedtopten = sorted(emojiswithusage, key=lambda x: x[1])[:20]
+            emojiswithusage.append((emoji, count))
+    leastusedtopten = sorted(emojiswithusage, key=lambda x: x[1])[:25]
     return leastusedtopten
 
 async def showleastusedemojis(client, message):
@@ -425,7 +427,7 @@ async def showleastusedemojis(client, message):
         return
     leastusedtopten = await getemojis(emojilist)
     await client.send_message(message.channel, 'Least used emojis:'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0], ',' + str(x[1]).rjust(3)) for x in leastusedtopten ]))
+                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in leastusedtopten ]))
                               + '\n(emoji, number of times used)')
 
 
