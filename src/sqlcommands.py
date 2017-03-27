@@ -1,12 +1,10 @@
 import discord
 import re
 import json
-import time_util
 from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
-from datetime import date
 
 playinglist = []
 
