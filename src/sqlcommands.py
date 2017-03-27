@@ -380,7 +380,7 @@ async def doemojilist(client, message):
         if emoji:
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
-            created_at = time_util.to_helsinki(emoji.created_at) # Waiting for brother Henry to implement converttoguildtimezone(time)
+            created_at = emoji.created_at # Waiting for brother Henry to implement converttoguildtimezone(time)
             emojilist.append((rankandemoji, emojiname, str(created_at)[:10]+'\n'))
             x += 1
     if not emojilist:
