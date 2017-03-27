@@ -6,6 +6,7 @@ from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
+from datetime import date
 
 playinglist = []
 
@@ -380,8 +381,8 @@ async def doemojilist(client, message):
         if emoji:
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
-            created_at = emoji.created_at # Waiting for brother Henry to implement converttoguildtimezone(time)
-            emojilist.append((rankandemoji, emojiname, str(created_at)[:10]+'\n'))
+            created_at = emoji.created_at.date() # Waiting for brother Henry to implement converttoguildtimezone(time)
+            emojilist.append((rankandemoji, emojiname, str(created_at)+'\n'))
             x += 1
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
