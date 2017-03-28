@@ -1,10 +1,12 @@
 import discord
 import re
 import json
+import time_util
 from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
+from datetime import date
 
 playinglist = []
 
@@ -386,17 +388,15 @@ async def doemojilist(client, message):
         await client.send_message(message.channel, 'No emoji found.')
         return
     else:
-        if len(''.join(map(str, emojilist))) > 1999:  # If the emoji message exceeds 2000 characters, split it in half
-            emojilist2 = emojilist[:len(emojilist) // 2]
-            emojilist3 = emojilist[len(emojilist) // 2:]
-            firstpart = ''.join(map(''.join, emojilist2))
-            secondpart = ''.join(map(''.join, emojilist3))
-            await client.send_message(message.channel, firstpart)
-            await sleep(0.5)
-            await client.send_message(message.channel, secondpart)
-        else:
-            msg = ''.join(map(''.join, emojilist))
-            await client.send_message(message.channel, msg)
+        msg = ''
+        for item in emojilist:
+            if (len(msg) + len(''.join(map(''.join, item)))) > 1999:
+                await client.send_message(message.channel, msg)
+                msg = ''
+            msg += ''.join(map(''.join, item))
+            if item == emojilist[-1]:
+                await client.send_message(message.channel, msg)
+
 
 async def getserveremojis(client):
     emojilist = []
