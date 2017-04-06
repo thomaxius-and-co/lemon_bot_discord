@@ -413,9 +413,10 @@ async def getemojis(emojilist):
             select count(*)
              from message
              where content ~ $1 AND m->'author'->>'bot' IS NULL""", emoji)
-            if not count:
-                return None
-            emojiswithusage.append((emoji, count))
+            if count > 0:
+                emojiswithusage.append((emoji, count))
+    if not emojiswithusage:
+        return None
     leastusedtopten = sorted(emojiswithusage, key=lambda x: x[1])[:25]
     return leastusedtopten
 
@@ -425,7 +426,10 @@ async def showleastusedemojis(client, message):
         await client.send_message(message.channel, 'No emoji found.')
         return
     leastusedtopten = await getemojis(emojilist)
-    await client.send_message(message.channel, 'Least used emojis:'
+    if not leastusedtopten:
+        await client.send_message(message.channel, 'No emoji has been used.')
+        return
+    await client.send_message(message.channel, 'Least used emoji:'
                                                '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in leastusedtopten ]))
                               + '\n(emoji, number of times used)')
 
