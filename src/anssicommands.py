@@ -1,17 +1,13 @@
 # Anssi's first command!!
 
-import random
-import time
-import discord
-
-choices=["Todellakin\n","Kyllä\n","Varmaan\n","Ehkä\n","Todennäköisesti ei\n","Ei\n","Ei todellakaan\n","En tiedä\n","Kysy myöhemmin\n","Eipä ollu\n"]
+choices=["Todellakin","Kyllä","Lopeta heti kyseleminen","Ehkä","Todennäköisesti ei","Ei","Ei todellakaan","En tiedä","Juuh joo","Juuh ei","Varmasti","Lol ei"]
 
 
 async def cmd_ask(client, message, _):
     while True:
-        for i in range(0,2):
-            await client.send_message(message.channel, " :thinking: \n")
-            time.sleep(1)
+        for i in range(0,1):
+            await client.send_message(message.channel, " :thinking: ")
+            time.sleep(2)
         await client.send_message(message.channel, random.choice(choices))
         break
 
