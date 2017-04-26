@@ -8,8 +8,6 @@ choices=["Todellakin\n","Kyllä\n","Varmaan\n","Ehkä\n","Todennäköisesti ei\n
 
 
 async def cmd_ask(client, message, _):
-    choices = ["Todellakin\n", "Kyllä\n", "Varmaan\n", "Ehkä\n", "Todennäköisesti ei\n", "Ei\n", "Ei todellakaan\n",
-               "En tiedä\n", "Kysy myöhemmin\n", "Eipä ollu\n"]
     while True:
         for i in range(0,2):
             await client.send_message(message.channel, " :thinking: \n")
