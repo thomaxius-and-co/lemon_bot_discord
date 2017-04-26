@@ -1,4 +1,6 @@
 # Anssi's first command!!
+import time
+import random
 
 choices=["Todellakin","Kyllä","Lopeta heti kyseleminen","Ehkä","Todennäköisesti ei","Ei","Ei todellakaan","En tiedä","Juuh joo","Juuh ei","Varmasti","Lol ei"]
 
