@@ -5,7 +5,7 @@ import asyncio
 
 default_choices =["Kyllä", "Ei", "Ehkä"]
 is_choices =["On", "Ei ole" , "Ehkä"]
-from_choices =["Koska perseestä tulee paskaa", "Koska maailma ei ole valmis", "Koska botti on rikki"]
+from_choices =["Pyllystä", "Sun mutsista", "Sossusta", "Kaupasta", "No vittu just sieltä", "Säkylästä"]
 when_choices =["Viimeksi joulukuussa" , "Sitten kun anps voi hyvin" , "Ei vittu ikinä"]
 why_choices =["Koska säkylän pystykorvat" , "Kukaan ei tiedä" , "Se on jumalan suunnitelma"]
 where_choices =["Helvetin perseessä" , "Jumalan selän takana" , "Nyrkki perseessä thaimaassa"]
@@ -14,6 +14,7 @@ async def cmd_ask(client, message, question):
     if not question:
         await client.send_message(message.channel, 'kys pls')
         return
+
     if question.lower().startswith("onko"):
         choices = is_choices
     elif question.lower().startswith("mistä"):
@@ -25,7 +26,8 @@ async def cmd_ask(client, message, question):
     elif question.lower().startswith("missä"):
         choices = where_choices
     else:
-        choices = default_choices        
+        choices = default_choices
+
     await asyncio.sleep(2)
     await client.send_message(message.channel, random.choice(choices) + " :thinking: ")
 
