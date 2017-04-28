@@ -37,23 +37,23 @@ async def cmd_ask(client, message, question):
         choices = where_choices
     elif question.lower().startswith("kuka"):
         choices = who_choices
-    elif question.lower(.startswith("miten") or question.lower().startswith("kuinka"):
+    elif question.lower().startswith("miten") or question.lower().startswith("kuinka"):
         choices = how_choices
-    elif question.lower(.startswith("mikä"):
+    elif question.lower().startswith("mikä"):
         choices = what_choices
-    elif question.lower(.startswith("millainen") or question.lower().startswith("minkälainen"):
+    elif question.lower().startswith("millainen") or question.lower().startswith("minkälainen"):
         choices = whatlike_choices
-    elif question.lower(.startswith("oletko"):
+    elif question.lower().startswith("oletko"):
         choices = areyou_choices
-    elif question.lower(.startswith("olemmeko"): 
+    elif question.lower().startswith("olemmeko"): 
         choices = arewe_choices               
-    elif question.lower(.startswith("ovatko"):                    
+    elif question.lower().startswith("ovatko"):                    
         choices = arethey_choices                
-    elif question.lower(.startswith("milloin valloitat")
+    elif question.lower().startswith("milloin valloitat"):
         choices = worldDomination_choices
-    elif question.lower(.startswith("sataako"):                    
+    elif question.lower().startswith("sataako"):                    
         choices = rain_choices                
-    elif question.lower(.startswith("millainen sää"):
+    elif question.lower().startswith("millainen sää"):
         choices = weather_choices                
     else:
         choices = default_choices
