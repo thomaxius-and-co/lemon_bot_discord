@@ -3,12 +3,12 @@ import time
 import random
 import asyncio
 
-choices=["Todellakin","Kyllä","Lopeta heti kyseleminen","Ehkä","Todennäköisesti ei","Ei","Ei todellakaan","En tiedä","Juuh joo","Juuh ei","Varmasti","Lol ei"]
+choices=["Todennäköisesti kyllä","Kyllä","Ei","Todennäköisesti ei","Ei todellakaan","En tiedä","Jooh","Juuh ei","Varmasti","Lol ei"]
 
 async def cmd_ask(client, message, _):
-    await client.send_message(message.channel, " :thinking: ")
+    await client.send_message(message.channel)
     await asyncio.sleep(2)
-    await client.send_message(message.channel, random.choice(choices))
+    await client.send_message(message.channel, random.choice(choices) + " :thinking: ")
 
 def register(client):
     return {
