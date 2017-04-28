@@ -3,12 +3,33 @@ import time
 import random
 import asyncio
 
-choices=["Todellakin","Kyllä","Lopeta heti kyseleminen","Ehkä","Todennäköisesti ei","Ei","Ei todellakaan","En tiedä","Juuh joo","Juuh ei","Varmasti","Lol ei"]
+default_choices =["Kyllä", "Ei", "Ehkä"]
+is_choices =["On", "Ei ole" , "Ehkä"]
+from_choices =["Koska perseestä tulee paskaa", "Koska maailma ei ole valmis", "Koska botti on rikki"]
+when_choices =["Viimeksi joulukuussa" , "Sitten kun anps voi hyvin" , "Ei vittu ikinä"]
+why_choices =["Koska säkylän pystykorvat" , "Kukaan ei tiedä" , "Se on jumalan suunnitelma"]
+where_choices =["Helvetin perseessä" , "Jumalan selän takana" , "Nyrkki perseessä thaimaassa"]
 
-async def cmd_ask(client, message, _):
-    await client.send_message(message.channel, " :thinking: ")
+async def cmd_ask(client, message, question):
+    if not question:
+        await client.send_message(message.channel, 'kys pls')
+        return
+    if question.lower().startswith("onko"):
+        choices = is_choices
+    elif question.lower().startswith("mistä"):
+        choices = from_choices
+    elif question.lower().startswith("milloin"):
+        choices = when_choices
+    elif question.lower().startswith("miksi"):
+        or question.lower().startswith("minkä takia")
+        or question.lower().startswith("miks")
+        choices = why_choices
+    elif question.lower().startswith("missä"):
+        choices = where_choices
+    else:
+        choices = default_choices        
     await asyncio.sleep(2)
-    await client.send_message(message.channel, random.choice(choices))
+    await client.send_message(message.channel, random.choice(choices) + " :thinking: ")
 
 def register(client):
     return {
