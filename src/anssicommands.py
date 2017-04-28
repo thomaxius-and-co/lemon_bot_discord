@@ -5,8 +5,10 @@ import asyncio
 
 default_choices =["Kyllä", "Ei", "Ehkä"]
 is_choices =["On", "Ei ole" , "Ehkä"]
-where_choices =["Koska perseestä tulee paskaa", "Koska maailma ei ole valmis", "Koska botti on rikki"]
+from_choices =["Koska perseestä tulee paskaa", "Koska maailma ei ole valmis", "Koska botti on rikki"]
 when_choices =["Viimeksi joulukuussa" , "Sitten kun anps voi hyvin" , "Ei vittu ikinä"]
+why_choices =["Koska säkylän pystykorvat" , "Kukaan ei tiedä" , "Se on jumalan suunnitelma"]
+where_choices =["Helvetin perseessä" , "Jumalan selän takana" , "Nyrkki perseessä thaimaassa"]
 
 async def cmd_ask(client, message, question):
     if not question:
@@ -15,9 +17,15 @@ async def cmd_ask(client, message, question):
     if question.lower().startswith("onko"):
         choices = is_choices
     elif question.lower().startswith("mistä"):
-        choices = where_choices
+        choices = from_choices
     elif question.lower().startswith("milloin"):
         choices = when_choices
+    elif question.lower().startswith("miksi"):
+        or question.lower().startswith("minkä takia")
+        or question.lower().startswith("miks")
+        choices = why_choices
+    elif question.lower().startswith("missä"):
+        choices = where_choices
     else:
         choices = default_choices        
     await asyncio.sleep(2)
