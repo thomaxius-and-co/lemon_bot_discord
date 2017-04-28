@@ -20,9 +20,7 @@ async def cmd_ask(client, message, question):
         choices = from_choices
     elif question.lower().startswith("milloin"):
         choices = when_choices
-    elif question.lower().startswith("miksi"):
-        or question.lower().startswith("minkä takia")
-        or question.lower().startswith("miks")
+    elif question.lower().startswith("miksi") or question.lower().startswith("minkä takia"):
         choices = why_choices
     elif question.lower().startswith("missä"):
         choices = where_choices
