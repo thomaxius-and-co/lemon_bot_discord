@@ -24,7 +24,6 @@ import json
 import discord
 import logging
 import random
-import cleverbot
 import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
@@ -193,25 +192,6 @@ async def cmd_translate(client, message, arg):
     translator = Translator(client_id, client_secret)
     translation = translator.translate(input, tolang, fromlang)
     await client.send_message(message.channel, translation)
-
-# Ask clever bot a question.
-async def cmd_cleverbot(client, message, question):
-    usage = (
-        "Usage: `!cleverbot <question>`\n"
-        "Ask cleverbot a question.\n"
-    )
-
-    def valid(question):
-        return len(question) > 0
-
-    question = question.strip()
-    if not valid(question):
-        await client.send_message(message.channel, usage)
-        return
-
-    cb1 = cleverbot.Cleverbot()
-    answer = cb1.ask(question)
-    await client.send_message(message.channel, answer)
 
 # this Spanks the user and calls them out on the server, with an '@' message.
 # Format ==> @User has been, INSERT_ITEM_HERE
@@ -403,7 +383,6 @@ commands = {
     'roll': cmd_roll,
     '8ball': cmd_8ball,
     'weather': cmd_weather,
-    'cleverbot': cmd_cleverbot,
     'spank': cmd_spank,
     'coin': cmd_coin,
     'help': cmd_help,

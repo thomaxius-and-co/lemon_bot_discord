@@ -9,7 +9,6 @@
 
 ## Features:
    * Youtube Integration
-   * CleverBot Integration
    * Magic EightBall
    * Weather by ZipCode
    * Currency system
@@ -69,7 +68,6 @@ Start the bot by running
 
 ## Requirements:
    * Python 3.5.0
-   * cleverbot 0.2.1 - https://pypi.python.org/pypi/cleverbot
    * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
    * pickle - https://docs.python.org/2/library/pickle.html
    * discord.py - https://github.com/Rapptz/discord.py
@@ -80,7 +78,6 @@ Start the bot by running
 | Commands        | description |
 | ------------- |:-------------:|
 | !youtube [search_term]| Searches youtube for text that the user passes, then gives back a link to one of the videos. |
-| !cleverbot [question] |  This will reach out to the cleverbot API and return an Answer. |
 | !enchant [target_level][fail_stacks] |  this is a Black Desert command that figures out the enchanting chances for black stone upgrades. |
 | !roll |  This rolls from 0-100, and returns the users name and the roll value. |
 | !coin | Simple coin toss command, gives you a 50/50 chance. |

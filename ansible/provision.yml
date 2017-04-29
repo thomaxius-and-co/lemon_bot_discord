@@ -36,13 +36,20 @@
         - libxml2-dev # for lxml
         - libxslt1-dev # for lxml
 
+    - name: Remove unneeded dependencies
+      pip:
+        name: "{{ item }}"
+        state: absent
+        executable: pip3
+      with_items:
+        - cleverbot
+
     - name: Install pip dependencies
       pip:
         name: "{{ item }}"
         executable: pip3
       with_items:
         - discord.py==0.16.6
-        - cleverbot
         - requests
         - BingTranslator
         - bs4

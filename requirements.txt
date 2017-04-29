@@ -4,7 +4,6 @@ beautifulsoup4==4.5.1
 BingTranslator==0.1
 bs4==0.0.1
 chardet==2.3.0
-cleverbot==1.1.0
 discord.py==0.16.6
 future==0.16.0
 inflect==0.2.5
