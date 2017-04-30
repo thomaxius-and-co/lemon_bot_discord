@@ -35,7 +35,7 @@ import database as db
 import command
 import util
 import zlib
-
+import tableresetter
 import archiver
 import casino
 import osu
@@ -486,6 +486,7 @@ def autocorrect_command(cmd):
 # Database schema has to be initialized before running the bot
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
+loop.run_until_complete(tableresetter.main())
 
 for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands]:
     commands.update(module.register(client))
