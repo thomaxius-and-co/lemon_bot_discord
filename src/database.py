@@ -251,12 +251,6 @@ schema_migrations = {
         );
     INSERT INTO casino_jackpot (jackpot) VALUES (0);
     """,
-    16: """
-
-    CREATE TABLE resetdate (
-        nextresetdate timestamp NOT NULL
-        );
-    """,
 }
 
 _pool_holder = threading.local()
