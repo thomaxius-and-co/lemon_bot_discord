@@ -2,15 +2,17 @@
 
 import database as db
 import datetime
+import asyncio
+import util
 
 async def main():
     resetdate = await get_reset_date_from_db()
-    print('next reset date:', resetdate['max'])
     if resetdate['max']:
-        print('apparently there is a resetdate, maybe later we will do something instead of printing this')
-        return
+        print('Next reset date:', resetdate['max'])
+        await scheduleareset(resetdate['max'])
     if not resetdate['max']:
-        await generatenewdate(nodateindb=True)
+        date = await generatenewdate()
+        await set_reset_date_to_db(date)
         print('No reset date in database, generating one..')
 
 async def get_reset_date_from_db():
@@ -24,9 +26,22 @@ async def set_reset_date_to_db(date):
         await c.execute("""
             INSERT INTO resetdate (nextresetdate) VALUES ($1);
             """, date)
-        print('Reset date set: date')
+        print('Reset date set:',date)
 
-async def generatenewdate(nodateindb=False):
-    if nodateindb:
-        newdate = (datetime.datetime.today() + datetime.timedelta(days=7)).replace(hour=12, minute=0, second=0, microsecond=0)
-        await set_reset_date_to_db(newdate)
+async def generatenewdate():
+    date = (datetime.datetime.today() + datetime.timedelta(days=7)).replace(hour=12, minute=0, second=0, microsecond=0)
+    return date
+
+async def scheduleareset(resetdate):
+    diffinseconds = (resetdate - datetime.datetime.today()).total_seconds()
+    # diffinseconds = diffinseconds + 60 - diffinseconds # debug
+    print('Falling asleep for %s seconds' % (diffinseconds))
+    await asyncio.sleep(diffinseconds)
+    newdate = await generatenewdate()
+    await set_reset_date_to_db(newdate)
+
+def register(client):
+    print("tableresetter: registering")
+    util.start_task_thread(main())
+    return {
+    }
