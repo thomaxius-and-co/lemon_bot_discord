@@ -191,6 +191,7 @@ def addsymboltolist(lst, position, symbol):
         olditem.append(newitem)
         newlst.append(tuple(olditem))
     return newlst
+
 async def gettoplistforquotegame():
     async with db.connect() as c:
         items = await c.fetch("""
@@ -204,7 +205,8 @@ async def gettoplistforquotegame():
              AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
             group by m->'author'->>'username', m->'author'->>'id'
         """)
-        if len(items) <= 1:
+        print('Toplist:', items)
+        if len(items) == 0:
             return None
         toplist = []
         for item in items:
@@ -458,7 +460,7 @@ async def cmd_whosaidit(client, message, _):
 async def dowhosaidit(client, message, _):
     channel = message.channel
     topten = await gettoplistforquotegame()
-    if not topten or len(topten) < 5:
+    if not topten or (len(topten) < 5):
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
         playinglist.remove(message.author)
