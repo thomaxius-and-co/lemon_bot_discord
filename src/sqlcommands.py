@@ -206,7 +206,7 @@ async def gettoplistforquotegame():
             group by m->'author'->>'username', m->'author'->>'id'
         """)
         print('Toplist:', items)
-        if len(items) == 0:
+        if len(items) <= 1:
             return None
         toplist = []
         for item in items:
@@ -471,7 +471,7 @@ async def dowhosaidit(client, message, _):
     quote = await getquoteforquotegame(name)
     if not quote:
         await client.send_message(channel,
-                                  'Not enough chat logged to play.') # I guess this is a pretty
+                                  'Not enough chat logged to play. %s, %s' % (name, topten)) # I guess this is a pretty
         #  rare occasion, # but just in case
         playinglist.remove(message.author)
         return
