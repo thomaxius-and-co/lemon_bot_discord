@@ -194,11 +194,9 @@ def addsymboltolist(lst, position, symbol):
 
 async def checkifenoughmsgstoplay():
     async with db.connect() as c:
-        return await c.fetch("""
+        items = await c.fetch("""
             select
-                m->'author'->>'username' as name,
-                m->'author'->>'id' as user_id,
-                count(*) as messages
+                m->'author'->>'username' as name
             from message
             WHERE m->'author'->>'bot' is null and length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
@@ -206,6 +204,8 @@ async def checkifenoughmsgstoplay():
             group by m->'author'->>'username', m->'author'->>'id'
             having count(*) >= 500
             """)
+        return [item['name'] for item in items]
+
 
 
 def check_length(x,i):
@@ -323,8 +323,6 @@ async def getwhosaiditranking():
             toplist.append(new_item)
         return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
 
-def filterquietpeople(tuple):
-    return tuple[1] > 500
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
@@ -451,15 +449,15 @@ async def cmd_whosaidit(client, message, _):
 
 async def dowhosaidit(client, message, _):
     channel = message.channel
-    enoughmsgs = await checkifenoughmsgstoplay()
-    if not enoughmsgs or len(enoughmsgs) < 5:
+    listofspammers = await checkifenoughmsgstoplay()
+    if not listofspammers or len(listofspammers) < 5:
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
         playinglist.remove(message.author)
         return
-    rand.shuffle(topten)
-    name = rand.choice(topten)
-    topten.remove(name)
+    rand.shuffle(listofspammers)
+    name = rand.choice(listofspammers)
+    listofspammers.remove(name)
     quote = await getquoteforquotegame(name)
     if not quote:
         await client.send_message(channel,
@@ -467,12 +465,12 @@ async def dowhosaidit(client, message, _):
         #  rare occasion, # but just in case
         playinglist.remove(message.author)
         return
-    await send_question(client, message, topten, quote)
+    await send_question(client, message, listofspammers, quote)
 
-async def send_question(client, message, topten, thequote):
+async def send_question(client, message, listofspammers, thequote):
     name = thequote[1]
     sanitized = sanitize_message(thequote[0], json.loads(thequote[2]))
-    options = [topten[0].lower(), topten[1].lower(), topten[2].lower(), topten[3].lower(),
+    options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(), listofspammers[3].lower(),
                name.lower()]
     rand.shuffle(options)
     await client.send_message(message.channel,
