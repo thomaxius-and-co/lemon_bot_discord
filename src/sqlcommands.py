@@ -192,9 +192,9 @@ def addsymboltolist(lst, position, symbol):
         newlst.append(tuple(olditem))
     return newlst
 
-async def gettoplistforquotegame():
+async def checkifenoughmsgstoplay():
     async with db.connect() as c:
-        items = await c.fetch("""
+        return await c.fetch("""
             select
                 m->'author'->>'username' as name,
                 m->'author'->>'id' as user_id,
@@ -204,25 +204,9 @@ async def gettoplistforquotegame():
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
              AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
             group by m->'author'->>'username', m->'author'->>'id'
-        """)
-        if len(items) <= 1:
-            return None
-        toplist = []
-        for item in items:
-            name, user_id, message_count = item
-            new_item = (name, message_count)
-            toplist.append(new_item)
-        print('items:', items)
-        print('toplist before changes:',toplist)
-        top_ten = sorted(toplist, key=lambda x: x[1])[:15]
-        print('top_ten (toplist after getting sorted:', top_ten)
-        return [msgs[0] for msgs in top_ten if filterquietpeople(msgs)]
+            having count(*) >= 500
+            """)
 
-def filterquietpeople(tuple):
-    print(tuple)
-    if tuple[1] > 500:
-        print('this tuple is over 500')
-    return tuple[1] > 500
 
 def check_length(x,i):
     return len(str(x[i]))
@@ -339,6 +323,8 @@ async def getwhosaiditranking():
             toplist.append(new_item)
         return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
 
+def filterquietpeople(tuple):
+    return tuple[1] > 500
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
@@ -465,9 +451,8 @@ async def cmd_whosaidit(client, message, _):
 
 async def dowhosaidit(client, message, _):
     channel = message.channel
-    topten = await gettoplistforquotegame()
-    if not topten or len(topten) < 5:
-        print('topten after getting returned:',topten)
+    enoughmsgs = await checkifenoughmsgstoplay()
+    if not enoughmsgs or len(enoughmsgs) < 5:
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
         playinglist.remove(message.author)
