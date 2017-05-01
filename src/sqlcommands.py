@@ -205,7 +205,6 @@ async def gettoplistforquotegame():
              AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
             group by m->'author'->>'username', m->'author'->>'id'
         """)
-        print('Toplist:', items)
         if len(items) <= 1:
             return None
         toplist = []
@@ -213,8 +212,17 @@ async def gettoplistforquotegame():
             name, user_id, message_count = item
             new_item = (name, message_count)
             toplist.append(new_item)
+        print('items:', items)
+        print('toplist before changes:',toplist)
         top_ten = sorted(toplist, key=lambda x: x[1])[:15]
+        print('top_ten (toplist after getting sorted:', top_ten)
         return [msgs[0] for msgs in top_ten if filterquietpeople(msgs)]
+
+def filterquietpeople(tuple):
+    print(tuple)
+    if tuple[1] > 500:
+        print('this tuple is over 500')
+    return tuple[1] > 500
 
 def check_length(x,i):
     return len(str(x[i]))
@@ -331,8 +339,6 @@ async def getwhosaiditranking():
             toplist.append(new_item)
         return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
 
-def filterquietpeople(tuple):
-    return tuple[1] > 500
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
@@ -460,9 +466,10 @@ async def cmd_whosaidit(client, message, _):
 async def dowhosaidit(client, message, _):
     channel = message.channel
     topten = await gettoplistforquotegame()
-    if not topten or (len(topten) < 5):
+    if not topten or len(topten) < 5:
+        print('topten after getting returned:',topten)
         await client.send_message(channel,
-                                  'Not enough chat logged to play 1. %s, %s' % (len(topten), topten))
+                                  'Not enough chat logged to play.')
         playinglist.remove(message.author)
         return
     rand.shuffle(topten)
@@ -471,7 +478,7 @@ async def dowhosaidit(client, message, _):
     quote = await getquoteforquotegame(name)
     if not quote:
         await client.send_message(channel,
-                                  'Not enough chat logged to play 2. %s, %s' % (name, topten)) # I guess this is a pretty
+                                  'Not enough chat logged to play.') # I guess this is a pretty
         #  rare occasion, # but just in case
         playinglist.remove(message.author)
         return
