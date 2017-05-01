@@ -462,7 +462,7 @@ async def dowhosaidit(client, message, _):
     topten = await gettoplistforquotegame()
     if not topten or (len(topten) < 5):
         await client.send_message(channel,
-                                  'Not enough chat logged to play.')
+                                  'Not enough chat logged to play 1. %s, %s' % (len(topten), topten))
         playinglist.remove(message.author)
         return
     rand.shuffle(topten)
@@ -471,7 +471,7 @@ async def dowhosaidit(client, message, _):
     quote = await getquoteforquotegame(name)
     if not quote:
         await client.send_message(channel,
-                                  'Not enough chat logged to play. %s, %s' % (name, topten)) # I guess this is a pretty
+                                  'Not enough chat logged to play 2. %s, %s' % (name, topten)) # I guess this is a pretty
         #  rare occasion, # but just in case
         playinglist.remove(message.author)
         return
