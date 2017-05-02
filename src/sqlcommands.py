@@ -6,7 +6,7 @@ from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
-from datetime import date
+from datetime import datetime
 
 playinglist = []
 
@@ -106,7 +106,8 @@ async def getquoteforquotegame(name):
             SELECT
                 content,
                 m->'author'->>'username',
-                m->'mentions'
+                m->'mentions',
+                message_id
             FROM message
             WHERE length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
@@ -468,24 +469,26 @@ async def dowhosaidit(client, message, _):
     await send_question(client, message, listofspammers, quote)
 
 async def send_question(client, message, listofspammers, thequote):
-    name = thequote[1]
-    sanitized = sanitize_message(thequote[0], json.loads(thequote[2]))
+    correctname = thequote[1]
+    message_id = thequote[3]
+    sanitizedquestion = sanitize_message(thequote[0], json.loads(thequote[2]))
     options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(), listofspammers[3].lower(),
-               name.lower()]
+               correctname.lower()]
     rand.shuffle(options)
     await client.send_message(message.channel,
                     "It's time to play 'Who said it?' !\n %s, who"
                     " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
-                              % (message.author.name, sanitized, ', '.join(options)))
+                              % (message.author.name, sanitizedquestion, ', '.join(options)))
 
-    answer = await getresponse(client, name, options, message)
-    if answer == 'correct':
-        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, name))
-    elif answer == 'wrong':
-        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, name))
+    answer = await getresponse(client, correctname, options, message)
+    if answer[0] == 'correct':
+        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, correctname))
+    elif answer[0] == 'wrong':
+        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
-        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, name))
-    await save_stats(message.author.id, answer=answer)
+        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
+    await save_stats(message.author.id, answer=answer[0])
+    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer[0])
     playinglist.remove(message.author)
     return
 
@@ -495,10 +498,12 @@ async def getresponse(client, name, options, message):
 
     answer = await client.wait_for_message(timeout=15, channel=message.channel, author=message.author, check=is_response)
     if answer:
-        if answer.content.lower() == name.lower():
-            return 'correct'
-        return 'wrong'
+        theanswer = answer.content.lower()
+        if theanswer == name.lower():
+            return 'correct', theanswer
+        return 'wrong', theanswer
 
+# redundant
 async def save_stats(userid, answer=None):
     if answer == 'correct':
         async with db.connect() as c:
@@ -518,6 +523,31 @@ async def save_stats(userid, answer=None):
                 ON CONFLICT (user_id) DO UPDATE
                 SET wrong = GREATEST(0, a.wrong + EXCLUDED.wrong)
             """, userid)
+
+async def save_stats_history(userid, message_id, sanitizedquestion, correctname, answer):
+    if correctname == answer:
+        print('Correct, adding to database')
+        async with db.connect() as c:
+            await c.execute("""
+                INSERT INTO whosaidit_stats_history AS a
+                (user_id, message_id, quote, correctname, playeranswer, correct, streak, losestreak, time, week)
+                VALUES ($1, $2, $3, $4, $5, 1, 1, 0, $8, $9)
+                ON CONFLICT (user_id) DO UPDATE
+                SET streak = GREATEST(0, a.streak + EXCLUDED.streak),
+                SET losestreak = 0
+            """, userid, message_id, sanitizedquestion, correctname, answer, datetime.today(), datetime.today().isocalendar()[1])
+        print('Correct added to database succesfully')
+    else:
+        async with db.connect() as c:
+            await c.execute("""
+                INSERT INTO whosaidit_stats_history AS a
+                (user_id, message_id, quote, correctname, playeranswer, correct, streak, losestreak, time, week)
+                VALUES ($1, $2, $3, $4, $5, 0, 0, 1, $8, $9)
+                ON CONFLICT (user_id) DO UPDATE
+                SET losestreak = GREATEST(0, a.losestreak + EXCLUDED.losestreak),
+                SET winstreak = 0
+            """, userid, message_id, sanitizedquestion, correctname, answer, datetime.today(), datetime.today().isocalendar()[1])
+            print('Wrong added to database succesfully')
 
 def register(client):
     return {

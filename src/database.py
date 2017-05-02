@@ -251,11 +251,28 @@ schema_migrations = {
         );
     INSERT INTO casino_jackpot (jackpot) VALUES (0);
     """,
+
     16: """
 
     CREATE TABLE resetdate (
         nextresetdate timestamp NOT NULL
         );
+    """,
+
+    17: """
+    CREATE TABLE whosaidit_stats_history (
+    user_id NOT NULL REFERENCES discord_user(user_id),
+    message_id NUMERIC NOT NULL,
+    quote TEXT NOT NULL,
+    correctname TEXT NOT NULL,
+    playeranswer TEXT NOT NULL,
+    correct NUMERIC NOT NULL DEFAULT 0,
+    streak NUMERIC NOT NULL DEFAULT 0,
+    losestreak NUMERIC NOT NULL DEFAULT 0,
+    time timestamp NOT NULL,
+    week NUMERIC NOT NULL,
+    PRIMARY KEY (user_id)
+    );
     """,
 }
 
