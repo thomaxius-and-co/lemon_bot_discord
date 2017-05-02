@@ -530,22 +530,16 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
         async with db.connect() as c:
             await c.execute("""
                 INSERT INTO whosaidit_stats_history AS a
-                (user_id, message_id, quote, correctname, playeranswer, correct, streak, losestreak, time, week)
-                VALUES ($1, $2, $3, $4, $5, 1, 1, 0, $8, $9)
-                ON CONFLICT (user_id) DO UPDATE
-                SET streak = GREATEST(0, a.streak + EXCLUDED.streak),
-                SET losestreak = 0
+                (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
+                VALUES ($1, $2, $3, $4, $5, 1, $8, $9)
             """, userid, message_id, sanitizedquestion, correctname, answer, datetime.today(), datetime.today().isocalendar()[1])
         print('Correct added to database succesfully')
     else:
         async with db.connect() as c:
             await c.execute("""
                 INSERT INTO whosaidit_stats_history AS a
-                (user_id, message_id, quote, correctname, playeranswer, correct, streak, losestreak, time, week)
-                VALUES ($1, $2, $3, $4, $5, 0, 0, 1, $8, $9)
-                ON CONFLICT (user_id) DO UPDATE
-                SET losestreak = GREATEST(0, a.losestreak + EXCLUDED.losestreak),
-                SET winstreak = 0
+                (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
+                VALUES ($1, $2, $3, $4, $5, 0, $8, $9)
             """, userid, message_id, sanitizedquestion, correctname, answer, datetime.today(), datetime.today().isocalendar()[1])
             print('Wrong added to database succesfully')
 
