@@ -59,7 +59,7 @@
         - aioredis
         - parsedatetime==2.1
         - pytz==2016.10
-        - asyncpg==0.8.4
+        - asyncpg==0.10.1
 
     - name: Copy source to server
       synchronize:
