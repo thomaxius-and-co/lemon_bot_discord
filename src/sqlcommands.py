@@ -162,8 +162,8 @@ async def top_message_counts(filters, params, excludecommands):
             WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
             group by m->'author'->>'username', m->'author'->>'id'
         """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
-        if len(items) <= 1:
-            return None
+        if not items:
+            return None, None
         list_with_msg_per_day = []
         for item in items:
             name, user_id, message_count = item
@@ -223,7 +223,7 @@ async def cmd_top(client, message, input):
     input = input.lower()
     if input == ('spammers') or input == ('!spammers'):
         reply, amountofpeople = await top_message_counts("AND 1 = $1", [1], excludecommands)
-        if not reply:
+        if not reply or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
@@ -240,7 +240,7 @@ async def cmd_top(client, message, input):
         filters, params = make_word_filters(customwords)
         custom_filter = "AND ({0})".format(filters)
         reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
-        if not reply:
+        if not reply or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
             return
