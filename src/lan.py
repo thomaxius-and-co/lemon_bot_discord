@@ -20,7 +20,7 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_lan(client, message, query):
-    lan = to_utc(as_helsinki(datetime(2017, 4, 14, 10, 0)))
+    lan = to_utc(as_helsinki(datetime(2017, 11, 17, 16, 0)))
     now = as_utc(datetime.now())
     delta = lan - now
 
