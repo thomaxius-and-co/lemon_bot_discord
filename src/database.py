@@ -274,6 +274,14 @@ schema_migrations = {
     );
     """,
 
+    18: """
+    CREATE TABLE whosaidit_weekly_winners (
+    user_id TEXT NOT NULL REFERENCES discord_user(user_id),
+    wins NUMERIC NOT NULL DEFAULT 0,
+    losses NUMERIC NOT NULL DEFAULT 0,
+    time timestamp NOT NULL
+    );
+    """,
 }
 
 _pool_holder = threading.local()
