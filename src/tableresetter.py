@@ -58,7 +58,6 @@ async def getwinner():
         select user_id, name, wins, losses,  wins + losses  as total, wins::float / (wins + losses) * 100 as pct
         from score
         join discord_user using (user_id)
-        where (wins + losses) > 20
         order by pct desc""")
         if not topthree or (len(topthree) < 3):
             return None
