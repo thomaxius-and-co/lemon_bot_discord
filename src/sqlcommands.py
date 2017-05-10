@@ -115,11 +115,20 @@ async def getquoteforquotegame(name):
             ORDER BY random()
             LIMIT 1
         """, name)
-            if checkifproperquote(quote) > 6:
+            if (checkifproperquote(quote)):
                 return quote
         return None
 
+
+
+
 def checkifproperquote(quote):
+    return is_gibberish(quote) < 6 or is_emoji(quote)
+
+def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+    return quote.startswith(':') and quote.endswith(':')
+
+def is_gibberish(quote): #checks if quote cosnsits of 6 different letters
     return len(set(quote[0]))
 
 def make_word_filters(words):
@@ -303,18 +312,18 @@ async def get_jackpot():
 async def getwhosaiditranking():
     async with db.connect(readonly = True) as c:
         items = await c.fetch("""
-            SELECT
-                (correct / (correct + wrong)) * 100,
-                correct,
-                correct + wrong,
-                name,
-                concat('#', row_number() OVER (ORDER BY  (correct / (correct + wrong)) * 100 desc)) AS rank
-            FROM whosaidit_stats
-            JOIN discord_user USING (user_id)
-            WHERE (correct + wrong) > 19
-            ORDER BY rank ASC
-            LIMIT 10
-        """)
+        with score as (
+                  select
+                    user_id,
+                    sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+                    sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
+                  from whosaidit_stats_history where date_trunc('week', time) = date_trunc('week', current_timestamp)
+                  group by user_id)
+                select wins::float / (wins + losses) * 100, wins, wins + losses, name, concat('#', row_number() OVER (ORDER BY  (wins / (wins + losses)) * 100 desc)) AS rank
+                from score
+                join discord_user using (user_id)
+                where (wins + losses) > 19
+                order by wins::float / (wins + losses) * 100 desc)""")
         if len(items) == 0:
             return None, None
         toplist = []
