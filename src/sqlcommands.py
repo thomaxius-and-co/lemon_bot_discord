@@ -330,7 +330,7 @@ async def getwhosaiditranking():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by (wins::float / (wins + losses) * 100 desc) + 0.20 * wins""")
+                order by (wins::float / (wins + losses) * 100) + 0.20 * wins desc""")
         if len(items) == 0:
             return None, None
         toplist = []
