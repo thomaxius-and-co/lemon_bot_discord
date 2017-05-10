@@ -116,6 +116,7 @@ async def getquoteforquotegame(name):
             LIMIT 1
         """, name)
             if (checkifproperquote(quote['content'])):
+                print('quotegame: this quote is ok according to me:', quote['content'])
                 return quote
         return None
 
