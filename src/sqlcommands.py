@@ -317,9 +317,15 @@ async def getwhosaiditranking():
                     user_id,
                     sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
                     sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
-                  from whosaidit_stats_history where date_trunc('week', time) = date_trunc('week', current_timestamp)
+                  from whosaidit_stats_history
+                  where date_trunc('week', time) = date_trunc('week', current_timestamp)
                   group by user_id)
-                select wins::float / (wins + losses) * 100, wins, wins + losses, name, concat('#', row_number() OVER (ORDER BY  (wins / (wins + losses)) * 100 desc)) AS rank
+                select
+                    wins::float / (wins + losses) * 100 as ratio,
+                    wins,
+                    wins + losses as total,
+                    name,
+                    concat('#', row_number() OVER (ORDER BY wins::float / (wins + losses) * 100 desc)) AS rank
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
