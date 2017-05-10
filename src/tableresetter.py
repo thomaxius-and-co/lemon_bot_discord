@@ -6,6 +6,8 @@ import asyncio
 import util
 
 async def main(debug=True):
+    if debug:
+        await doawardceremony()
     resetdate = await get_reset_date_from_db()
     if resetdate['max']:
         print('Next reset date:', resetdate['max'])
@@ -14,8 +16,6 @@ async def main(debug=True):
         date = await generatenewdate()
         await set_reset_date_to_db(date)
         print('No reset date in database, generating one..')
-    if debug:
-        await doawardceremony()
 
 
 async def get_reset_date_from_db():
