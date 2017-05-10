@@ -322,6 +322,7 @@ async def getwhosaiditranking():
                   group by user_id)
                 select
                     wins::float / (wins + losses) * 100 as ratio,
+                    0.20 * wins as bonusratio,
                     wins,
                     wins + losses as total,
                     name,
@@ -329,15 +330,15 @@ async def getwhosaiditranking():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by wins::float / (wins + losses) * 100 desc""")
+                order by (wins::float / (wins + losses) * 100 desc) + 0.20 * wins""")
         if len(items) == 0:
             return None, None
         toplist = []
         for item in items:
-            pct, correct, total, name, rank = item
-            new_item = (name, rank, correct, total, round(pct,3))
+            pct, bonuspct, correct,  total, name, rank = item
+            new_item = (name, rank, correct, total, round(pct,3), bonuspct)
             toplist.append(new_item)
-        return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY'], toplist), len(toplist)
+        return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
 
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
