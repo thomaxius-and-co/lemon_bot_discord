@@ -115,7 +115,7 @@ async def getquoteforquotegame(name):
             ORDER BY random()
             LIMIT 1
         """, name)
-            if (checkifproperquote(quote)):
+            if (checkifproperquote(quote['content'])):
                 return quote
         return None
 
