@@ -123,7 +123,7 @@ async def getquoteforquotegame(name):
 
 
 def checkifproperquote(quote):
-    return is_gibberish(quote) < 6 or is_emoji(quote)
+    return is_gibberish(quote) < 6 or is_emoji(str(quote))
 
 def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
     return quote.startswith(':') and quote.endswith(':')
@@ -323,7 +323,7 @@ async def getwhosaiditranking():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by wins::float / (wins + losses) * 100 desc)""")
+                order by wins::float / (wins + losses) * 100 desc""")
         if len(items) == 0:
             return None, None
         toplist = []
