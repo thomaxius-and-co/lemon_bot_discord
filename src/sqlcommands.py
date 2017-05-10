@@ -496,13 +496,12 @@ async def send_question(client, message, listofspammers, thequote):
                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
     answer = await getresponse(client, correctname, options, message)
-    if answer[0] == 'correct':
+    if answer and answer[0] == 'correct':
         await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, correctname))
-    elif answer[0] == 'wrong':
+    elif answer and answer[0] == 'wrong':
         await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
-    await save_stats(message.author.id, answer=answer[0])
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer[0])
     playinglist.remove(message.author)
     return
@@ -519,25 +518,7 @@ async def getresponse(client, name, options, message):
         return 'wrong', theanswer
 
 # redundant
-async def save_stats(userid, answer=None):
-    if answer == 'correct':
-        async with db.connect() as c:
-            await c.execute("""
-                INSERT INTO whosaidit_stats AS a
-                (user_id, correct)
-                VALUES ($1, 1)
-                ON CONFLICT (user_id) DO UPDATE
-                SET correct = GREATEST(0, a.correct + EXCLUDED.correct)
-            """, userid)
-    else:
-        async with db.connect() as c:
-            await c.execute("""
-                INSERT INTO whosaidit_stats AS a
-                (user_id, wrong)
-                VALUES ($1, 1)
-                ON CONFLICT (user_id) DO UPDATE
-                SET wrong = GREATEST(0, a.wrong + EXCLUDED.wrong)
-            """, userid)
+
 
 async def save_stats_history(userid, message_id, sanitizedquestion, correctname, answer):
     correct = correctname == answer
