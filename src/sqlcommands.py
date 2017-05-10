@@ -322,7 +322,7 @@ async def getwhosaiditranking():
             pct, correct, total, name, rank = item
             new_item = (name, rank, correct, total, round(pct,3))
             toplist.append(new_item)
-        return columnmaker.columnmaker(['NAME','RANK','TOTAL','CORRECT', 'ACCURACY'], toplist), len(toplist)
+        return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY'], toplist), len(toplist)
 
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
