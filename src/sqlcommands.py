@@ -109,14 +109,13 @@ async def getquoteforquotegame(name):
                 m->'mentions',
                 message_id
             FROM message
-            WHERE length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
+            WHERE length(content) > 12 AND length(content) < 1000 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
              AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
              AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' LIKE $1
             ORDER BY random()
             LIMIT 1
         """, name)
             if (checkifproperquote(quote['content'])):
-                print('quotegame: this quote is ok according to me:', quote['content'])
                 return quote
         return None
 
@@ -314,7 +313,7 @@ async def getwhosaiditranking():
     async with db.connect(readonly = True) as c:
         items = await c.fetch("""
         with score as (
-                  select
+                select
                     user_id,
                     sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
                     sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
@@ -323,7 +322,7 @@ async def getwhosaiditranking():
                   group by user_id)
                 select
                     wins::float / (wins + losses) * 100 as ratio,
-                    0.20 * wins as bonusratio,
+                    case when (0.20 * wins) > 20 then 20 else 0.20 * wins end as bonuspct,
                     wins,
                     wins + losses as total,
                     name,
@@ -331,7 +330,7 @@ async def getwhosaiditranking():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by (wins::float / (wins + losses) * 100) + 0.20 * wins desc""")
+                order by (wins::float / (wins + losses) * 100) + case when (0.20 * wins) > 20 then 20 else 0.20 * wins end desc""")
         if len(items) == 0:
             return None, None
         toplist = []
@@ -498,14 +497,13 @@ async def send_question(client, message, listofspammers, thequote):
                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
     answer = await getresponse(client, correctname, options, message)
-    if answer and answer == 'correct':
+    if answer and answer[0] == 'correct':
         await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, correctname))
-    elif answer and answer == 'wrong':
+    elif answer and answer[0] == 'wrong':
         await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
-        answer = 'wrong'
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
-    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
+    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer[0])
     playinglist.remove(message.author)
     return
 
@@ -517,8 +515,11 @@ async def getresponse(client, name, options, message):
     if answer:
         theanswer = answer.content.lower()
         if theanswer == name.lower():
-            return 'correct'
-        return 'wrong'
+            return 'correct', theanswer
+        return 'wrong', theanswer
+
+# redundant
+
 
 async def save_stats_history(userid, message_id, sanitizedquestion, correctname, answer):
     correct = correctname == answer
