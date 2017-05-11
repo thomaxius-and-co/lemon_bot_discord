@@ -322,7 +322,7 @@ async def getwhosaiditranking():
                   group by user_id)
                 select
                     wins::float / (wins + losses) * 100 as ratio,
-                    case when (0.20 * wins) > 20 then 20 else 0.20 * wins end as bonuspct,
+                    least(0.20 * wins, 20) as bonuspct,
                     wins,
                     wins + losses as total,
                     name,
@@ -330,7 +330,7 @@ async def getwhosaiditranking():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by (wins::float / (wins + losses) * 100) + case when (0.20 * wins) > 20 then 20 else 0.20 * wins end desc""")
+                order by (wins::float / (wins + losses) * 100) + least(0.20 * wins, 20) desc""")
         if len(items) == 0:
             return None, None
         toplist = []
