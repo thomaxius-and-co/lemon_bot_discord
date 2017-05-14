@@ -122,13 +122,13 @@ async def getquoteforquotegame(name):
 
 
 def checkifproperquote(quote):
-    return is_gibberish(quote) < 6 or is_emoji(str(quote) or is_custom_emoji(str(quote)))
+    return is_gibberish(quote) < 6 or is_emoji(str(quote)) or is_custom_emoji(str(quote))
 
 def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
     return quote.startswith('<:') and quote.endswith('>')
 
 def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
-    return quote.startswith("':") and quote.endswith(":'")
+    return quote.startswith(":") and quote.endswith(":")
 
 def is_gibberish(quote): #checks if quote cosnsits of 6 different letters
     return len(set(quote[0]))
