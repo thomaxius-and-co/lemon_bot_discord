@@ -23,11 +23,7 @@ async def main():
 async def get_reset_date_from_db():
     async with db.connect() as c:
         return await c.fetchrow("""
-            select *
-            from resetdate
-            where date_trunc('week', nextresetdate) = date_trunc('week', current_timestamp - interval '3 hour')
-            order by nextresetdate desc
-            limit 1
+            select nextresetdate as newestdate from resetdate where date_trunc('week', nextresetdate) = date_trunc('week', current_timestamp - interval '3 hour') order by nextresetdate desc limit 1
             """)
 
 async def set_reset_date_to_db(date):
