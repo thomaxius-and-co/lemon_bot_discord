@@ -4,7 +4,7 @@ import json
 import database as db
 import columnmaker
 import random as rand
-from tablerestter import get_time_until_reset
+from tableresetter import get_time_until_reset
 from datetime import datetime
 
 
@@ -358,7 +358,7 @@ async def getcustomwords(input, message, client):
 async def cmd_randomquote(client, themessage, input):
     channel = themessage.channel
     if themessage.author in playinglist:
-        await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit)")
+        await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit.)")
         return
     if input is not None and 'custom' in input.lower()[0:6]:
         customwords = await getcustomwords(input, themessage, client)
