@@ -6,9 +6,9 @@ import asyncio
 import util
 import datetime
 import tableresetter
-from math import floor
-
+from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
+
 
 async def main():
     resetdate = await get_reset_date_from_db()
@@ -99,7 +99,7 @@ async def get_time_until_reset():
     now = as_utc(datetime.datetime.now())
     delta = timeuntilreset - now
     template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
-    msg = template.format(*time_util.delta_to_tuple(delta))
+    msg = template.format(*delta_to_tuple(delta))
     return msg
 
 
