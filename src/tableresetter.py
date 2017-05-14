@@ -4,6 +4,11 @@ import database as db
 import datetime
 import asyncio
 import util
+import datetime
+import tableresetter
+from math import floor
+
+from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 async def main():
     resetdate = await get_reset_date_from_db()
@@ -14,7 +19,6 @@ async def main():
         date = await generatenewdate()
         await set_reset_date_to_db(date)
         print('No reset date in database, generating one..')
-
 
 async def get_reset_date_from_db():
     async with db.connect() as c:
@@ -88,6 +92,15 @@ async def addintotrophytable(winner):
             """, user_id, wins, losses, date)
         print("tableresetter: Added this week's whosaidit winner into "
               "the database:%s, %s wins, %s losses, %s" % (user_id, wins, losses, date))
+
+async def get_time_until_reset():
+    date = await get_reset_date_from_db()
+    timeuntilreset = to_helsinki(as_utc(date))
+    now = as_utc(datetime.datetime.now())
+    delta = timeuntilreset - now
+    template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
+    msg = template.format(*time_util.delta_to_tuple(delta))
+    return msg
 
 
 def register(client):
