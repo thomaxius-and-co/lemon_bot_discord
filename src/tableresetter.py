@@ -12,10 +12,10 @@ from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 async def main():
     resetdate = await get_reset_date_from_db()
-    if resetdate['max']:
-        print('Next reset date:', resetdate['max'])
-        await scheduleareset(resetdate['max'])
-    if not resetdate['max']:
+    if resetdate['newestdate']:
+        print('Next reset date:', resetdate['newestdate'])
+        await scheduleareset(resetdate['newestdate'])
+    if not resetdate['newestdate']:
         date = await generatenewdate()
         await set_reset_date_to_db(date)
         print('No reset date in database, generating one..')
@@ -23,7 +23,7 @@ async def main():
 async def get_reset_date_from_db():
     async with db.connect() as c:
         return await c.fetchrow("""
-            SELECT max(nextresetdate) from resetdate
+            SELECT max(nextresetdate) as newestdate from resetdate
             """)
 
 async def set_reset_date_to_db(date):
@@ -95,7 +95,7 @@ async def addintotrophytable(winner):
 
 async def get_time_until_reset():
     date = await get_reset_date_from_db()
-    timeuntilreset = to_helsinki(as_utc(date))
+    timeuntilreset = to_helsinki(as_utc(date['newestdate']))
     now = as_utc(datetime.datetime.now())
     delta = timeuntilreset - now
     template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"

@@ -273,7 +273,7 @@ async def cmd_top(client, message, input):
             return
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
-        msg = get_time_until_reset() # fetches time until reset in a fancy message from tableresetter -module
+        msg = await get_time_until_reset() # fetches time until reset in a fancy message from tableresetter -module
         await client.send_message(message.channel,
                                   ('```%s \n' % title + ranking + msg + '```'))
         return
