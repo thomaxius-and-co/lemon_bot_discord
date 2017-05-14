@@ -7,6 +7,7 @@ import util
 
 async def main(debug=True):
     if debug:
+        await set_reset_date_to_db(datetime.datetime.today().replace(hour=12, minute=0, second=0, microsecond=0))
         await doawardceremony()
     resetdate = await get_reset_date_from_db()
     if resetdate['max']:
@@ -48,17 +49,25 @@ async def getwinner():
     async with db.connect() as c:
         topthree = await c.fetchrow("""
         with score as (
-          select
-            user_id,
-            sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
-            sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
-          from whosaidit_stats_history where date_trunc('week', time) = date_trunc('week', current_timestamp - interval '1 week')
-          group by user_id
-        )
-        select user_id, name, wins, losses,  wins + losses  as total, wins::float / (wins + losses) * 100 as pct
-        from score
-        join discord_user using (user_id)
-        order by pct desc""")
+                select
+                    user_id,
+                    sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+                    sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
+                  from whosaidit_stats_history
+                  where date_trunc('week', time) = date_trunc('week', current_timestamp - interval '1 week')
+                  group by user_id)
+                select
+                    wins::float / (wins + losses) * 100 as ratio,
+                    least(0.20 * wins, 20) as bonuspct,
+                    wins,
+                    wins + losses as total,
+                    name,
+                    concat('#', row_number() OVER (ORDER BY (wins::float / (wins + losses) * 100)+ least(0.20* wins, 20) desc)) AS rank
+                from score
+                join discord_user using (user_id)
+                where (wins + losses) > 19
+                order by rank asc)
+                limit 3""")
         if not topthree or (len(topthree) < 3):
             return None
         return topthree[0]
