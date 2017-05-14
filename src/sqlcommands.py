@@ -502,6 +502,7 @@ async def send_question(client, message, listofspammers, thequote):
     elif answer and answer == 'wrong':
         await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
+        answer = 'wrong'
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
     playinglist.remove(message.author)
