@@ -10,9 +10,9 @@ from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 
-async def main(debug=True):
+async def main(debug=False):
     if debug:
-        await set_reset_date_to_db(datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))
+        await doawardceremony()
     resetdate = await get_reset_date_from_db()
     if resetdate['newestdate']:
         print('Next reset date:', resetdate['newestdate'])
@@ -25,7 +25,7 @@ async def main(debug=True):
 async def get_reset_date_from_db():
     async with db.connect() as c:
         return await c.fetchrow("""
-            select nextresetdate as newestdate from resetdate where date_trunc('week', nextresetdate) = date_trunc('week', current_timestamp - interval '3 hour') order by nextresetdate desc limit 1
+            SELECT max(nextresetdate) as newestdate from resetdate
             """)
 
 async def set_reset_date_to_db(date):
@@ -36,7 +36,7 @@ async def set_reset_date_to_db(date):
         print('Reset date set:',date)
 
 async def generatenewdate():
-    date = (datetime.datetime.today() + datetime.timedelta(days=6)).replace(hour=24, minute=0, second=0, microsecond=0)
+    date = (datetime.datetime.today() + datetime.timedelta(days=7)).replace(hour=00, minute=0, second=0, microsecond=0)
     return date
 
 async def scheduleareset(resetdate):
@@ -71,6 +71,7 @@ async def getwinner():
                 where (wins + losses) > 19
                 order by rank asc
                 limit 3""")
+        print(topthree, topthree[0], 'Top three and the winner')
         if not topthree or (len(topthree) < 3):
             return None
         return topthree[0]
@@ -85,6 +86,7 @@ async def doawardceremony():
 
 async def addintotrophytable(winner):
     user_id, wins, losses = winner[0], winner[2], winner[3]
+    print(user_id, wins, losses, 'userid, wins, losses')
     date = datetime.datetime.now()
     async with db.connect() as c:
         await c.execute("""
