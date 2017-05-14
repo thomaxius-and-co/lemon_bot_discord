@@ -5,10 +5,7 @@ import datetime
 import asyncio
 import util
 
-async def main(debug=True):
-    if debug:
-        await set_reset_date_to_db(datetime.datetime.today().replace(hour=12, minute=0, second=0, microsecond=0))
-        await doawardceremony()
+async def main():
     resetdate = await get_reset_date_from_db()
     if resetdate['max']:
         print('Next reset date:', resetdate['max'])
