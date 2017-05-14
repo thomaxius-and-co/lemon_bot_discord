@@ -30,7 +30,7 @@ async def set_reset_date_to_db(date):
         print('Reset date set:',date)
 
 async def generatenewdate():
-    date = (datetime.datetime.today() + datetime.timedelta(days=7)).replace(hour=12, minute=0, second=0, microsecond=0)
+    date = (datetime.datetime.today() + datetime.timedelta(days=6)).replace(hour=12, minute=0, second=0, microsecond=0)
     return date
 
 async def scheduleareset(resetdate):

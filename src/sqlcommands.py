@@ -497,13 +497,13 @@ async def send_question(client, message, listofspammers, thequote):
                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
     answer = await getresponse(client, correctname, options, message)
-    if answer and answer[0] == 'correct':
+    if answer and answer == 'correct':
         await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, correctname))
-    elif answer and answer[0] == 'wrong':
+    elif answer and answer == 'wrong':
         await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
-    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer[0])
+    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
     playinglist.remove(message.author)
     return
 
@@ -515,8 +515,8 @@ async def getresponse(client, name, options, message):
     if answer:
         theanswer = answer.content.lower()
         if theanswer == name.lower():
-            return 'correct', theanswer
-        return 'wrong', theanswer
+            return 'correct'
+        return 'wrong'
 
 # redundant
 
