@@ -1,12 +1,11 @@
 import discord
 import re
 import json
-import time_util
-from asyncio import sleep
 import database as db
 import columnmaker
 import random as rand
 from datetime import datetime
+
 
 playinglist = []
 
@@ -123,10 +122,13 @@ async def getquoteforquotegame(name):
 
 
 def checkifproperquote(quote):
-    return is_gibberish(quote) < 6 or is_emoji(str(quote))
+    return is_gibberish(quote) < 6 or is_emoji(str(quote) or is_custom_emoji(str(quote)))
+
+def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+    return quote.startswith('<:') and quote.endswith('>')
 
 def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
-    return quote.startswith(':') and quote.endswith(':')
+    return quote.startswith("':") and quote.endswith(":'")
 
 def is_gibberish(quote): #checks if quote cosnsits of 6 different letters
     return len(set(quote[0]))
@@ -352,8 +354,11 @@ async def getcustomwords(input, message, client):
     return customwords
 
 async def cmd_randomquote(client, themessage, input):
+    channel = themessage.channel
+    if themessage.author in playinglist:
+        await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit)")
+        return
     if input is not None and 'custom' in input.lower()[0:6]:
-        channel = themessage.channel
         customwords = await getcustomwords(input, themessage, client)
         if not customwords:
             return
