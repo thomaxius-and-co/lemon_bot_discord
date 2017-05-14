@@ -10,7 +10,9 @@ from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 
-async def main():
+async def main(debug=True):
+    if debug:
+        await set_reset_date_to_db(datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))
     resetdate = await get_reset_date_from_db()
     if resetdate['newestdate']:
         print('Next reset date:', resetdate['newestdate'])
@@ -34,7 +36,7 @@ async def set_reset_date_to_db(date):
         print('Reset date set:',date)
 
 async def generatenewdate():
-    date = (datetime.datetime.today() + datetime.timedelta(days=6)).replace(hour=12, minute=0, second=0, microsecond=0)
+    date = (datetime.datetime.today() + datetime.timedelta(days=6)).replace(hour=24, minute=0, second=0, microsecond=0)
     return date
 
 async def scheduleareset(resetdate):
@@ -67,7 +69,7 @@ async def getwinner():
                 from score
                 join discord_user using (user_id)
                 where (wins + losses) > 19
-                order by rank asc)
+                order by rank asc
                 limit 3""")
         if not topthree or (len(topthree) < 3):
             return None
