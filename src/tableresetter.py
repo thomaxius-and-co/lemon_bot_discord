@@ -10,7 +10,7 @@ from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 
-async def main(debug=False):
+async def main(debug=True):
     if debug:
         await doawardceremony()
     resetdate = await get_reset_date_from_db()
