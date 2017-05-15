@@ -267,10 +267,6 @@ async def cmd_top(client, message, input):
 
     if input == ('whosaidit'):
         ranking, amountofpeople = await getwhosaiditranking()
-        msg = await get_time_until_reset()  # fetches time until reset in a fancy message from tableresetter -module
-        print(msg,'msg is here')
-        await client.send_message(message.channel,
-                                  ('```%s \n' % str(msg) + '```'))
         if not ranking or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough players to form a toplist.')
