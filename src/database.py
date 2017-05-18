@@ -319,7 +319,7 @@ async def fetch(sql, *args):
     async with pool.acquire() as con:
         return await con.fetch(sql, *args)
 
-async def fetchrow(sqy, *args):
+async def fetchrow(sql, *args):
     pool = await get_pool()
     async with pool.acquire() as con:
         return await con.fetchrow(sql, *args)

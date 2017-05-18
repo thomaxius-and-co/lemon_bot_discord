@@ -64,10 +64,10 @@ async def getwinner():
             where (wins + losses) > 19
             order by rank asc
             limit 3""")
-        print(topthree, topthree[0], 'Top three and the winner')
-        if not topthree or (len(topthree) < 3):
-            return None
-        return topthree[0]
+    print(topthree, topthree[0], 'Top three and the winner')
+    if not topthree or (len(topthree) < 3):
+        return None
+    return topthree[0]
 
 
 async def doawardceremony():
