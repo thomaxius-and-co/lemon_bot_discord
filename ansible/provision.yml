@@ -44,30 +44,18 @@
       with_items:
         - cleverbot
 
-    - name: Install pip dependencies
-      pip:
-        name: "{{ item }}"
-        executable: pip3
-      with_items:
-        - discord.py==0.16.6
-        - requests
-        - BingTranslator
-        - bs4
-        - wolframalpha
-        - lxml
-        - feedparser
-        - aioredis
-        - parsedatetime==2.1
-        - pytz==2016.10
-        - asyncpg==0.10.1
-      notify:
-        - restart services
-
     - name: Copy source to server
       synchronize:
         src: ../src
         dest: "/home/{{ app_name }}"
         delete: yes
+      notify:
+        - restart services
+
+    - name: Install Python dependencies
+      pip:
+        requirements: "/home/{{ app_name }}/src/requirements.txt"
+        executable: pip3
       notify:
         - restart services
 
