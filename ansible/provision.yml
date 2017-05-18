@@ -60,6 +60,8 @@
         - parsedatetime==2.1
         - pytz==2016.10
         - asyncpg==0.10.1
+      notify:
+        - restart services
 
     - name: Copy source to server
       synchronize:
