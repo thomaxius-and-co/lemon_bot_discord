@@ -359,8 +359,8 @@ async def cmd_sql(client, message, query):
         return template % content.replace("`", "")[:max_len]
 
     try:
-        async with db.connect(readonly = True) as c:
-            cur = await c.cursor(query)
+        async with db.transaction(readonly=True) as tx:
+            cur = await tx.cursor(query)
             results = await cur.fetch(100)
             msg = "\n".join(map(str, results))
             msg = limit_msg_length("```%s```", msg)
@@ -412,8 +412,7 @@ async def on_socket_raw_receive(raw_msg):
 
     if (type == "MESSAGE_CREATE"):
         print("main: insta-archiving a new message")
-        async with db.connect() as c:
-            await archiver.insert_message(c, data)
+        await archiver.insert_message(db, data)
 
     elif (type == "GUILD_CREATE"):
         print("main: updating users from GUILD_CREATE event")
@@ -442,10 +441,10 @@ async def upsert_users(users):
         print("main: not all users were full")
         return
 
-    async with db.connect() as c:
+    async with db.transaction() as tx:
         for user in users:
             print("user: updating", user)
-            await c.execute("""
+            await tx.execute("""
                 INSERT INTO discord_user
                 (user_id, name, raw)
                 VALUES ($1, $2, $3)

@@ -307,7 +307,29 @@ async def close_pool():
         await pool.close()
         setattr(_pool_holder, "pool", None)
 
-class connect:
+# Database API
+
+async def execute(sql, *args):
+    pool = await get_pool()
+    async with pool.acquire() as con:
+        return await con.execute(sql, *args)
+
+async def fetch(sql, *args):
+    pool = await get_pool()
+    async with pool.acquire() as con:
+        return await con.fetch(sql, *args)
+
+async def fetchrow(sqy, *args):
+    pool = await get_pool()
+    async with pool.acquire() as con:
+        return await con.fetchrow(sql, *args)
+
+async def fetchval(sql, *args):
+    pool = await get_pool()
+    async with pool.acquire() as con:
+        return await con.fetchval(sql, *args)
+
+class transaction:
     def __init__(self, readonly = False):
         self.readonly = readonly
 
@@ -329,13 +351,15 @@ class connect:
 
         await self.pool.release(self.con)
 
-async def table_exists(c, table_name):
-    rows = await c.fetch("SELECT * FROM information_schema.tables WHERE table_name = $1", table_name)
+# Migration stuff
+
+async def table_exists(tx, table_name):
+    rows = await tx.fetch("SELECT * FROM information_schema.tables WHERE table_name = $1", table_name)
     return bool(len(rows))
 
-async def get_current_schema_version(c):
-    if await table_exists(c, "schema_version"):
-        result = await c.fetchrow("SELECT max(version) FROM schema_version")
+async def get_current_schema_version(tx):
+    if await table_exists(tx, "schema_version"):
+        result = await tx.fetchrow("SELECT max(version) FROM schema_version")
         return result[0] if result is not None else 0
     else:
         return 0
@@ -351,8 +375,8 @@ def new_migrations(version):
     return not_applied, up_to
 
 async def initialize_schema():
-    async with connect() as c:
-        version = await get_current_schema_version(c)
+    async with transaction() as tx:
+        version = await get_current_schema_version(tx)
         migrations, new_version = new_migrations(version)
 
         if len(migrations) > 0:
@@ -360,6 +384,6 @@ async def initialize_schema():
                 print("database: migrating to version {0}".format(version))
                 await c.execute(sql)
 
-            await c.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
+            await tx.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
 
     print("database: schema is in up to date")

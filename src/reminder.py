@@ -38,11 +38,10 @@ async def cmd_reminder(client, message, text):
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
 async def add_reminder(user_id, time, text, original_text):
-    async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO reminder(user_id, ts, text, original_text)
-            VALUES ($1, $2, $3, $4)
-        """, user_id, time.replace(tzinfo=None), text, original_text)
+    await db.execute("""
+        INSERT INTO reminder(user_id, ts, text, original_text)
+        VALUES ($1, $2, $3, $4)
+    """, user_id, time.replace(tzinfo=None), text, original_text)
 
 async def task(client):
     # Wait until the client is ready
@@ -56,8 +55,8 @@ async def task(client):
             await util.log_exception()
 
 async def process_next_reminder(client):
-    async with db.connect() as c:
-        reminders = await c.fetch("""
+    async with db.transaction() as tx:
+        reminders = await tx.fetch("""
             SELECT reminder_id, user_id, text
             FROM reminder
             WHERE ts < current_timestamp AND reminded = false
@@ -73,7 +72,7 @@ async def process_next_reminder(client):
             user = util.threadsafe(client, client.get_user_info(user_id))
             util.threadsafe(client, client.send_message(user, msg))
 
-            await c.execute("""
+            await tx.execute("""
                 UPDATE reminder
                 SET reminded = true
                 WHERE reminder_id = $1

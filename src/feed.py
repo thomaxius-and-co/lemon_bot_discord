@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import discord
 import feedparser
 
-from database import connect
+import database as db
 import command
 import emoji
 import util
@@ -29,8 +29,7 @@ def get_date(entry):
     return time_to_datetime(sturct_time)
 
 async def check_feeds(client):
-    async with connect() as c:
-        feeds = await c.fetch("SELECT feed_id, url, last_entry, channel_id FROM feed")
+    feeds = await db.fetch("SELECT feed_id, url, last_entry, channel_id FROM feed")
 
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
@@ -77,12 +76,11 @@ async def process_feed(client, id, url, last_entry, channel_id):
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
-        async with connect() as c:
-            await c.execute("""
-                UPDATE feed
-                SET last_entry = $1
-                WHERE feed_id = $2
-            """, max_timestamp, id)
+        await db.execute("""
+            UPDATE feed
+            SET last_entry = $1
+            WHERE feed_id = $2
+        """, max_timestamp, id)
 
 async def task(client):
     # Wait until the client is ready
@@ -119,8 +117,7 @@ async def cmd_feed(client, message, arg):
     await handler(client, message, arg)
 
 async def cmd_feed_list(client, message, _):
-    async with connect() as c:
-        feeds = await c.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", message.channel.id)
+    feeds = await db.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", message.channel.id)
     msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
     await client.send_message(message.channel, msg)
 
@@ -128,8 +125,7 @@ async def cmd_feed_add(client, message, url):
     # TODO: Check the feed is valid
     # TODO: Find feeds from linked url
 
-    async with connect() as c:
-        await c.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
+    await db.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
 
     print("feed: added feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
@@ -140,8 +136,7 @@ async def cmd_feed_remove(client, message, url):
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
 
-    async with connect() as c:
-        await c.execute("DELETE FROM feed WHERE url = $1", url)
+    await db.execute("DELETE FROM feed WHERE url = $1", url)
 
     print("feed: removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)

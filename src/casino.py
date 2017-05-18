@@ -86,21 +86,18 @@ prizeMultipliers = {
 
 
 async def get_balance(user):
-    async with db.connect() as c:
-        balance = await c.fetchval("SELECT balance FROM casino_account WHERE user_id = $1", user.id)
-        return balance if balance is not None else 0
+    balance = await db.fetchval("SELECT balance FROM casino_account WHERE user_id = $1", user.id)
+    return balance if balance is not None else 0
 
 
 async def add_money(user, amount):
-    async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO casino_account AS a
-            (user_id, balance)
-            VALUES ($1, $2)
-            ON CONFLICT (user_id) DO UPDATE
-            SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
-        """, user.id, amount)
-
+    await db.execute("""
+        INSERT INTO casino_account AS a
+        (user_id, balance)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE
+        SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
+    """, user.id, amount)
 
 async def save_slots_stats(user, amounttobankaccount, winnings):
     await add_money(user, amounttobankaccount)
@@ -128,47 +125,40 @@ async def save_blackjack_stats(user, amount, surrender=False, win=False, loss=Fa
 
 
 async def update_jackpot(user, amount, win=False):
-    async with db.connect() as c:
-        if win:
-            await c.execute("""
-                UPDATE casino_jackpot SET jackpot = 0
-                """)
-            # todo: await updatejackpothistory(user, amount)
-        else:
-            await c.execute("""
-                UPDATE casino_jackpot SET jackpot = jackpot + $1
-                """, amount)
+    if win:
+        await db.execute("UPDATE casino_jackpot SET jackpot = 0")
+        # todo: await updatejackpothistory(user, amount)
+    else:
+        await db.execute("UPDATE casino_jackpot SET jackpot = jackpot + $1", amount)
 
 
 async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
-    async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO casino_stats AS a
-            (user_id, wins_slots, losses_slots, moneyspent_slots, moneywon_slots)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (user_id) DO UPDATE SET
-            wins_slots = GREATEST(0, a.wins_slots + EXCLUDED.wins_slots),
-            losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
-            moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots),
-            moneywon_slots = GREATEST(0, a.moneywon_slots + EXCLUDED.moneywon_slots)
-        """, user.id, wins, losses, moneyspent, moneywon)
+    await db.execute("""
+        INSERT INTO casino_stats AS a
+        (user_id, wins_slots, losses_slots, moneyspent_slots, moneywon_slots)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (user_id) DO UPDATE SET
+        wins_slots = GREATEST(0, a.wins_slots + EXCLUDED.wins_slots),
+        losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
+        moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots),
+        moneywon_slots = GREATEST(0, a.moneywon_slots + EXCLUDED.moneywon_slots)
+    """, user.id, wins, losses, moneyspent, moneywon)
 
 
 async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrenders, blackjack, moneywon):
-    async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO casino_stats AS a
-            (user_id, wins_bj, losses_bj, moneyspent_bj, ties, surrenders, bj_blackjack, moneywon_bj)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            ON CONFLICT (user_id) DO UPDATE SET
-            wins_bj = GREATEST(0, a.wins_bj + EXCLUDED.wins_bj),
-            losses_bj = GREATEST(0, a.losses_bj + EXCLUDED.losses_bj),
-            moneyspent_bj = GREATEST(0, a.moneyspent_bj + EXCLUDED.moneyspent_bj),
-            ties = GREATEST(0, a.ties + EXCLUDED.ties),
-            surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
-            bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack),
-            moneywon_bj = GREATEST(0, a.moneywon_bj + EXCLUDED.moneywon_bj)
-        """, user.id, wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
+    await db.execute("""
+        INSERT INTO casino_stats AS a
+        (user_id, wins_bj, losses_bj, moneyspent_bj, ties, surrenders, bj_blackjack, moneywon_bj)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (user_id) DO UPDATE SET
+        wins_bj = GREATEST(0, a.wins_bj + EXCLUDED.wins_bj),
+        losses_bj = GREATEST(0, a.losses_bj + EXCLUDED.losses_bj),
+        moneyspent_bj = GREATEST(0, a.moneyspent_bj + EXCLUDED.moneyspent_bj),
+        ties = GREATEST(0, a.ties + EXCLUDED.ties),
+        surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
+        bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack),
+        moneywon_bj = GREATEST(0, a.moneywon_bj + EXCLUDED.moneywon_bj)
+    """, user.id, wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
 
 
 async def makedeck(blackjack=True):
@@ -185,27 +175,22 @@ async def makedeck(blackjack=True):
 
 
 async def get_bet(user):
-    async with db.connect() as c:
-        bet = await c.fetchval("SELECT bet FROM casino_bet WHERE user_id = $1", user.id)
-        return bet if bet is not None else 0
+    bet = await db.fetchval("SELECT bet FROM casino_bet WHERE user_id = $1", user.id)
+    return bet if bet is not None else 0
 
 
 async def set_bet(user, amount):
-    async with db.connect() as c:
-        await c.execute("""
-            INSERT INTO casino_bet AS b
-            (user_id, bet)
-            VALUES ($1, $2)
-            ON CONFLICT (user_id) DO UPDATE
-            SET bet = GREATEST(0, EXCLUDED.bet)
-        """, user.id, amount)
+    await db.execute("""
+        INSERT INTO casino_bet AS b
+        (user_id, bet)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE
+        SET bet = GREATEST(0, EXCLUDED.bet)
+    """, user.id, amount)
 
 
 async def get_jackpot():
-    async with db.connect() as c:
-        return await c.fetchrow("""
-            SELECT jackpot from casino_jackpot
-            """)
+    return await db.fetchrow("SELECT jackpot from casino_jackpot")
 
 
 # Function to play the slots
@@ -693,17 +678,16 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
 
 # Function to lookup the money and create a top 5 users.
 async def cmd_leader(client, message, _):
-    async with db.connect() as c:
-        leaders = await c.fetch("""
-            SELECT
-                row_number() OVER (ORDER BY balance DESC) AS rank,
-                name,
-                balance
-            FROM casino_account
-            JOIN discord_user USING (user_id)
-            ORDER BY balance
-            DESC LIMIT 5
-        """)
+    leaders = await db.fetch("""
+        SELECT
+            row_number() OVER (ORDER BY balance DESC) AS rank,
+            name,
+            balance
+        FROM casino_account
+        JOIN discord_user USING (user_id)
+        ORDER BY balance
+        DESC LIMIT 5
+    """)
 
     if len(leaders) > 0:
         def format_leader(row):

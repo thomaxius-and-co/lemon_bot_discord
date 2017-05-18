@@ -68,11 +68,11 @@ async def fetch_messages_from(channel_id, after_id):
 
     return all_messages
 
-async def upsert_message(c, message):
-    await _upsert_message(c, message, "DO UPDATE SET ts = EXCLUDED.ts, content = EXCLUDED.content, m = EXCLUDED.m")
+async def upsert_message(tx, message):
+    await _upsert_message(tx, message, "DO UPDATE SET ts = EXCLUDED.ts, content = EXCLUDED.content, m = EXCLUDED.m")
 
-async def insert_message(c, message):
-    await _upsert_message(c, message, "DO NOTHING")
+async def insert_message(tx, message):
+    await _upsert_message(tx, message, "DO NOTHING")
 
 def parse_ts(ts):
     """Parses Discord timestamp into datetime accepted by asyncpg"""
@@ -94,7 +94,7 @@ def parse_ts(ts):
         ts = ts[:-3] + ts[-2:]
     return datetime.datetime.strptime(ts, time_fmt).astimezone(pytz.utc).replace(tzinfo=None)
 
-async def _upsert_message(c, message, upsert_clause):
+async def _upsert_message(tx, message, upsert_clause):
     sql = """
         INSERT INTO message
         (message_id, ts, content, m)
@@ -103,16 +103,16 @@ async def _upsert_message(c, message, upsert_clause):
         {upsert_clause}
     """.format(upsert_clause=upsert_clause)
 
-    await c.execute(sql, message["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
+    await tx.execute(sql, message["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
 
-async def latest_message_id(c, channel_id):
-    latest_id = await c.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
+async def latest_message_id(tx, channel_id):
+    latest_id = await tx.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
     if latest_id is None:
         latest_id = "0"
     return latest_id
 
-async def update_latest_message_id(c, channel_id, message_id):
-    await c.execute("""
+async def update_latest_message_id(tx, channel_id, message_id):
+    await tx.execute("""
         INSERT INTO channel_archiver_status
         (channel_id, message_id)
         VALUES ($1, $2)
@@ -121,15 +121,15 @@ async def update_latest_message_id(c, channel_id, message_id):
     """, channel_id, message_id)
 
 async def archive_channel(channel_id):
-    async with db.connect() as c:
-        latest_id = await latest_message_id(c, channel_id)
+    async with db.transaction() as tx:
+        latest_id = await latest_message_id(tx, channel_id)
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
             for message in all_messages:
-                await upsert_message(c, message)
+                await upsert_message(tx, message)
 
             new_latest_id = all_messages[0]["id"]
-            await update_latest_message_id(c, channel_id, new_latest_id)
+            await update_latest_message_id(tx, channel_id, new_latest_id)
 
         print("Fetched total %s messages" % len(all_messages))
 
