@@ -421,7 +421,7 @@ async def getserveremojis(client):
             emojilist.append(str(emoji))
     return emojilist
 
-async def getemojis(emojilist):
+async def get_least_used_emojis(emojilist):
     emojiswithusage = []
     for emoji in emojilist:
         async with db.connect() as c:
@@ -432,27 +432,55 @@ async def getemojis(emojilist):
             emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
-    leastusedtopten = sorted(emojiswithusage, key=lambda x: x[1])[:25]
-    return leastusedtopten
+    least_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1])[:25]
+    return least_used_top_twentyfive
+
+async def get_most_used_emojis(emojilist):
+    emojiswithusage = []
+    for emoji in emojilist:
+        async with db.connect() as c:
+            count = await c.fetchval("""
+            select count(*)
+             from message
+             where content ~ $1 AND m->'author'->>'bot' IS NULL""", emoji)
+            emojiswithusage.append((emoji, count))
+    if not emojiswithusage:
+        return None
+    most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1], reverse=True)[:25]
+    return most_used_top_twentyfive
 
 async def showleastusedemojis(client, message):
     emojilist = await getserveremojis(client)
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
         return
-    leastusedtopten = await getemojis(emojilist)
-    if not leastusedtopten:
+    least_used_top_twentyfive = await get_least_used_emojis(emojilist)
+    if not least_used_top_twentyfive:
         await client.send_message(message.channel, 'No emoji has been used.')
         return
     await client.send_message(message.channel, 'Top 25 least used emoji:'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in leastusedtopten ]))
+                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in least_used_top_twentyfive ]))
                               + '\n(emoji, number of times used)')
 
-
+async def showmostusedemojis(client, message):
+    emojilist = await getserveremojis(client)
+    if not emojilist:
+        await client.send_message(message.channel, 'No emoji found.')
+        return
+    most_used_top_twentyfive = await get_most_used_emojis(emojilist)
+    if not most_used_top_twentyfive:
+        await client.send_message(message.channel, 'No emoji has been used.')
+        return
+    await client.send_message(message.channel, 'Top 25 most used emoji:'
+                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in most_used_top_twentyfive ]))
+                              + '\n(emoji, number of times used)')
 
 async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'leastused':
         await showleastusedemojis(client, message)
+        return
+    if arg.lower() == 'mostused':
+        await showmostusedemojis(client, message)
         return
     if arg.lower() == 'list':
         await doemojilist(client, message)
