@@ -336,10 +336,7 @@ class transaction:
     async def __aenter__(self):
         self.pool = await get_pool()
         self.con = await self.pool.acquire()
-        if self.readonly:
-            self.tx = self.con.transaction(readonly=self.readonly, isolation='serializable')
-        else:
-            self.tx = self.con.transaction(readonly=self.readonly)
+        self.tx = self.con.transaction(readonly=self.readonly, isolation='serializable' if self.readonly else 'read_committed')
         await self.tx.start()
         return self.con
 
