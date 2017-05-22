@@ -347,8 +347,7 @@ async def getwhosaiditranking():
     return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
 
 async def get_whosaidit_weekly_ranking():
-    async with db.connect(readonly = True) as c:
-        items = await c.fetch("""
+    items = await db.fetch("""
     -- week_score = score per pelaaja per viikko
         with week_score as (
           select
@@ -377,14 +376,14 @@ async def get_whosaidit_weekly_ranking():
         -- Valitaan vain rivit, joilla score on viikon paras score, eli voittajat
         where score = weeks_best_score and players >= 3
         order by dateadded desc""")
-        if len(items) == 0:
-            return None, None
-        toplist = []
-        for item in items:
-            dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
-            new_item = (await get_week_with_year(dateadded), name, round(score), wins, losses, total)
-            toplist.append(new_item)
-        return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
+    if len(items) == 0:
+        return None, None
+    toplist = []
+    for item in items:
+        dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
+        new_item = (await get_week_with_year(dateadded), name, round(score), wins, losses, total)
+        toplist.append(new_item)
+    return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
 async def get_week_with_year(datetimeobject):
     return datetimeobject.strftime("%Y") + '/' + datetimeobject.strftime("%V") #Week number/year todo: fix the issue of last year's days being problematic
