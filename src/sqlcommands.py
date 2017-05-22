@@ -227,7 +227,7 @@ async def cmd_top(client, message, input):
     excludecommands = input[0] != '!'
 
     input = input.lower()
-    if input == ('spammers') or input == ('!spammers'):
+    if input == 'spammers' or input == '!spammers':
         reply, amountofpeople = await top_message_counts("AND 1 = $1", [1], excludecommands)
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
@@ -239,7 +239,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input[0:6] == ('custom') or input[0:7] == ('!custom'):
+    if input[0:6] == 'custom' or input[0:7] == '!custom':
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
@@ -259,7 +259,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
         return
 
-    if input == ('whosaidit'):
+    if input == 'whosaidit':
         ranking, amountofpeople = await getwhosaiditranking()
         if not ranking or not amountofpeople:
             await client.send_message(message.channel,
@@ -272,7 +272,7 @@ async def cmd_top(client, message, input):
                                   ('```%s \n' % title + ranking + '\n' + msg + '```'))
         return
 
-    if input == ('whosaidit weekly'):
+    if input == 'whosaidit weekly':
         ranking, amountofpeople = await getwhosaiditranking()
         weekly_winners_list = await get_whosaidit_weekly_ranking()
         if not ranking or not amountofpeople or not weekly_winners_list:
@@ -284,7 +284,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel,
                                   ('```%s \n' % title + ranking + '\n' + weekly_winners_list + '```'))
         return
-    if input == ('blackjack') or input == ('bj'):
+    if input == 'blackjack' or input == 'bj':
         reply, amountofpeople = await getblackjacktoplist()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
@@ -295,7 +295,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input == ('slots'):
+    if input == 'slots':
         reply, amountofpeople = await getslotstoplist()
         jackpot = await get_jackpot()
         if not reply or not amountofpeople:
