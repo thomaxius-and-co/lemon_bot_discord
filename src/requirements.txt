@@ -2,7 +2,7 @@ BingTranslator==0.1
 aioredis==0.2.9
 asyncpg==0.10.1
 bs4==0.0.1
-discord.py==0.16.6
+discord.py==0.16.8
 feedparser==5.2.1
 lxml==3.6.4
 parsedatetime==2.1
