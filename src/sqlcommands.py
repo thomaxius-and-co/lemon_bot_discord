@@ -381,11 +381,11 @@ async def get_whosaidit_weekly_ranking():
     toplist = []
     for item in items:
         dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
-        new_item = (await get_week_with_year(dateadded), name, round(score), wins, losses, total)
+        new_item = (get_week_with_year(dateadded), name, round(score), wins, losses, total)
         toplist.append(new_item)
     return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
-async def get_week_with_year(datetimeobject):
+def get_week_with_year(datetimeobject):
     return datetimeobject.strftime("%Y") + '/' + datetimeobject.strftime("%V") #Week number/year todo: fix the issue of last year's days being problematic
 
 async def getcustomwords(input, message, client):
