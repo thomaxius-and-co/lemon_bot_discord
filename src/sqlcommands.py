@@ -272,6 +272,18 @@ async def cmd_top(client, message, input):
                                   ('```%s \n' % title + ranking + '\n' + msg + '```'))
         return
 
+    if input == ('whosaidit weekly'):
+        ranking, amountofpeople = await getwhosaiditranking()
+        weekly_winners_list = await get_whosaidit_weekly_ranking()
+        if not ranking or not amountofpeople or not weekly_winners_list:
+            await client.send_message(message.channel,
+                                      'Not enough players to form a weekly toplist.')
+            return
+
+        title = 'Weekly whosaidit winners:'
+        await client.send_message(message.channel,
+                                  ('```%s \n' % title + ranking + '\n' + weekly_winners_list + '```'))
+        return
     if input == ('blackjack') or input == ('bj'):
         reply, amountofpeople = await getblackjacktoplist()
         if not reply or not amountofpeople:
@@ -333,6 +345,49 @@ async def getwhosaiditranking():
         new_item = (name, rank, correct, total, round(pct,3), bonuspct)
         toplist.append(new_item)
     return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
+
+async def get_whosaidit_weekly_ranking():
+    async with db.connect(readonly = True) as c:
+        items = await c.fetch("""
+    -- week_score = score per pelaaja per viikko
+        with week_score as (
+          select
+            date_trunc('week', time) as dateadded,
+            user_id,
+            sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+            sum(case playeranswer when 'wrong' then 1 else 0 end) as losses,
+            -- accuracy
+            100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count (*) as accuracy,
+            -- bonus
+            least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20) as bonus,
+            -- score = accuracy + bonus
+            100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count(*) + least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20) as score,
+            -- MAGIC! weeks_best_score on kyseisen viikon paras score
+            max(100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count (*) + least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20)) over (partition by date_trunc('week', time)) as weeks_best_score,
+            -- more magic
+            count(user_id) over (partition by date_trunc('week', time)) as players
+          from whosaidit_stats_history
+          group by user_id, date_trunc('week', time)
+          having count(*) >= 20
+        )
+
+        select dateadded, name, score, wins, losses, accuracy, bonus, players, wins + losses as total
+        from week_score
+        join discord_user using (user_id)
+        -- Valitaan vain rivit, joilla score on viikon paras score, eli voittajat
+        where score = weeks_best_score and players >= 3
+        order by dateadded desc""")
+        if len(items) == 0:
+            return None, None
+        toplist = []
+        for item in items:
+            dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
+            new_item = (await get_week_with_year(dateadded), name, round(score), wins, losses, total)
+            toplist.append(new_item)
+        return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
+
+async def get_week_with_year(datetimeobject):
+    return datetimeobject.strftime("%Y") + '/' + datetimeobject.strftime("%V") #Week number/year todo: fix the issue of last year's days being problematic
 
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
@@ -481,6 +536,7 @@ async def cmd_whosaidit(client, message, _):
         return
     await dowhosaidit(client, message, _)
 
+
 async def dowhosaidit(client, message, _):
     channel = message.channel
     listofspammers = await checkifenoughmsgstoplay()
@@ -535,9 +591,6 @@ async def getresponse(client, name, options, message):
         if theanswer == name.lower():
             return 'correct'
         return 'wrong'
-
-# redundant
-
 
 async def save_stats_history(userid, message_id, sanitizedquestion, correctname, answer):
     correct = correctname == answer
