@@ -90,14 +90,15 @@ async def addintotrophytable(winner):
           "the database:%s, %s wins, %s losses, %s" % (user_id, wins, losses, date))
 
 async def get_time_until_reset():
-    date = await get_reset_date_from_db()
-    timeuntilreset = to_helsinki(as_utc(date['newestdate']))
+    datenow = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    while datenow.weekday() != 0:
+        datenow += datetime.timedelta(1)
+    timeuntilreset = to_helsinki(as_utc(datenow))
     now = as_utc(datetime.datetime.now())
     delta = timeuntilreset - now
     template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
     msg = template.format(*delta_to_tuple(delta))
     return msg
-
 
 def register(client):
     print("Tableresetter: registering")

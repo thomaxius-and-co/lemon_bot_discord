@@ -281,7 +281,7 @@ async def cmd_top(client, message, input):
 
         title = 'Weekly whosaidit winners:'
         await client.send_message(message.channel,
-                                  ('```%s \n' % title + '\n' + weekly_winners_list + '```'))
+                                  (title + '\n' + '```' + weekly_winners_list + '```'))
         return
     if input == 'blackjack' or input == 'bj':
         reply, amountofpeople = await getblackjacktoplist()
@@ -385,7 +385,7 @@ async def get_whosaidit_weekly_ranking():
     return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
 def get_week_with_year(datetimeobject):
-    return datetimeobject.strftime("%Y") + '/' + datetimeobject.strftime("%V") #Week number/year todo: fix the issue of last year's days being problematic
+    return datetimeobject.strftime("%V") + '/' + datetimeobject.strftime("%Y") #Week number/year todo: fix the issue of last year's days being problematic
 
 async def getcustomwords(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
