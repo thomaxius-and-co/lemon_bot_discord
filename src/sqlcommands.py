@@ -273,16 +273,15 @@ async def cmd_top(client, message, input):
         return
 
     if input == 'whosaidit weekly':
-        ranking, amountofpeople = await getwhosaiditranking()
         weekly_winners_list = await get_whosaidit_weekly_ranking()
-        if not ranking or not amountofpeople or not weekly_winners_list:
+        if not weekly_winners_list:
             await client.send_message(message.channel,
                                       'Not enough players to form a weekly toplist.')
             return
 
         title = 'Weekly whosaidit winners:'
         await client.send_message(message.channel,
-                                  ('```%s \n' % title + ranking + '\n' + weekly_winners_list + '```'))
+                                  ('```%s \n' % title + '\n' + weekly_winners_list + '```'))
         return
     if input == 'blackjack' or input == 'bj':
         reply, amountofpeople = await getblackjacktoplist()
