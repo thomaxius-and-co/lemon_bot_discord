@@ -282,6 +282,13 @@ schema_migrations = {
     time timestamp NOT NULL
     );
     """,
+
+    # Add user_id field to message table and index it
+    19: """
+        ALTER TABLE message ADD COLUMN user_id TEXT;
+        UPDATE message SET user_id = m->'author'->>'id';
+        CREATE INDEX message_user_id_idx ON message (user_id);
+    """,
 }
 
 _pool_holder = threading.local()
@@ -379,7 +386,7 @@ async def initialize_schema():
         if len(migrations) > 0:
             for version, sql in migrations:
                 print("database: migrating to version {0}".format(version))
-                await c.execute(sql)
+                await tx.execute(sql)
 
             await tx.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
 

@@ -97,13 +97,13 @@ def parse_ts(ts):
 async def _upsert_message(tx, message, upsert_clause):
     sql = """
         INSERT INTO message
-        (message_id, ts, content, m)
-        VALUES ($1, $2, $3, $4)
+        (message_id, user_id, ts, content, m)
+        VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (message_id)
         {upsert_clause}
     """.format(upsert_clause=upsert_clause)
 
-    await tx.execute(sql, message["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
+    await tx.execute(sql, message["id"], message["author"]["id"], parse_ts(message["timestamp"]), message["content"], json.dumps(message))
 
 async def latest_message_id(tx, channel_id):
     latest_id = await tx.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)

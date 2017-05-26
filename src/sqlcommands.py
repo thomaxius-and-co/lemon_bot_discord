@@ -16,14 +16,13 @@ def sanitize_message(content, mentions):
     return content
 
 async def send_quote(client, channel, random_message):
-    content, timestamp, mentions, author = random_message
+    content, timestamp, mentions, user_id, name, avatar = random_message
     mentions = json.loads(mentions)
-    author = json.loads(author)
     sanitized = sanitize_message(content, mentions)
-    avatar_url = "https://cdn.discordapp.com/avatars/{id}/{avatar}.jpg".format(**author)
+    avatar_url = "https://cdn.discordapp.com/avatars/{user_id}/{avatar}.jpg".format(user_id=user_id, avatar=avatar)
 
     embed = discord.Embed(description=sanitized)
-    embed.set_author(name=author["username"], icon_url=avatar_url)
+    embed.set_author(name=name, icon_url=avatar_url)
     embed.set_footer(text=str(timestamp))
     await client.send_message(channel, embed=embed)
 
@@ -33,8 +32,10 @@ async def random_message_with_filter(filters, params):
             content,
             ts::timestamptz AT TIME ZONE 'Europe/Helsinki',
             m->'mentions',
-            m->'author'
-        FROM message
+            user_id,
+            name,
+            m->'author'->>'avatar' as avatar
+        FROM message JOIN discord_user USING (user_id)
         WHERE length(content) > 6 AND content NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
         ORDER BY random()
         LIMIT 1
@@ -101,13 +102,13 @@ async def getquoteforquotegame(name):
         quote = await db.fetchrow("""
         SELECT
             content,
-            m->'author'->>'username',
+            coalesce(name, m->'author'->>'username'),
             m->'mentions',
             message_id
-        FROM message
+        FROM message JOIN discord_user USING (user_id)
         WHERE length(content) > 12 AND length(content) < 1000 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
          AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' LIKE $1
+         AND m->'author'->>'bot' IS NULL AND coalesce(name, m->'author'->>'username') LIKE $1
         ORDER BY random()
         LIMIT 1
     """, name)
@@ -145,10 +146,10 @@ async def random_quote_from_channel(channel_id):
 async def get_user_days_in_chat():
     rows = await db.fetch("""
         SELECT
-            m->'author'->>'id',
+            user_id,
             extract(epoch from current_timestamp - min(ts)) / 60 / 60 / 24
         FROM message
-        GROUP BY m->'author'->>'id'
+        GROUP BY user_id
     """)
     result = {}
     for row in rows:
@@ -162,12 +163,13 @@ async def top_message_counts(filters, params, excludecommands):
     user_days_in_chat = await get_user_days_in_chat()
     items = await db.fetch("""
         select
-            m->'author'->>'username' as name,
-            m->'author'->>'id' as user_id,
+            coalesce(name, m->'author'->>'username') as name,
+            user_id,
             count(*) as messages
         from message
+        join discord_user using (user_id)
         WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
-        group by m->'author'->>'username', m->'author'->>'id'
+        group by coalesce(name, m->'author'->>'username'), user_id
     """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
     if not items:
         return None, None
@@ -203,12 +205,12 @@ def addsymboltolist(lst, position, symbol):
 async def checkifenoughmsgstoplay():
     items = await db.fetch("""
         select
-            m->'author'->>'username' as name
-        from message
+            coalesce(name, m->'author'->>'username') as name
+        from message join discord_user using (user_id)
         WHERE m->'author'->>'bot' is null and length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
          AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND m->'author'->>'bot' IS NULL AND m->'author'->>'username' not like 'toxin'
-        group by m->'author'->>'username', m->'author'->>'id'
+         AND m->'author'->>'bot' IS NULL AND coalesce(name, m->'author'->>'username') not like 'toxin'
+        group by coalesce(name, m->'author'->>'username'), user_id
         having count(*) >= 500
         """)
     return [item['name'] for item in items]
