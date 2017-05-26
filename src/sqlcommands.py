@@ -36,7 +36,7 @@ async def random_message_with_filter(filters, params):
             name,
             m->'author'->>'avatar' as avatar
         FROM message JOIN discord_user USING (user_id)
-        WHERE length(content) > 6 AND content NOT LIKE '!%%' AND m->'author'->>'bot' IS NULL {filters}
+        WHERE length(content) > 6 AND content NOT LIKE '!%%' AND NOT bot {filters}
         ORDER BY random()
         LIMIT 1
     """.format(filters=filters), *params)
@@ -108,7 +108,7 @@ async def getquoteforquotegame(name):
         FROM message JOIN discord_user USING (user_id)
         WHERE length(content) > 12 AND length(content) < 1000 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
          AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND m->'author'->>'bot' IS NULL AND coalesce(name, m->'author'->>'username') LIKE $1
+         AND NOT bot AND coalesce(name, m->'author'->>'username') LIKE $1
         ORDER BY random()
         LIMIT 1
     """, name)
@@ -168,7 +168,7 @@ async def top_message_counts(filters, params, excludecommands):
             count(*) as messages
         from message
         join discord_user using (user_id)
-        WHERE m->'author'->>'bot' is null {sql_excludecommands} {filters}
+        WHERE NOT bot {sql_excludecommands} {filters}
         group by coalesce(name, m->'author'->>'username'), user_id
     """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
     if not items:
@@ -204,14 +204,14 @@ def addsymboltolist(lst, position, symbol):
 
 async def checkifenoughmsgstoplay():
     items = await db.fetch("""
-        select
-            coalesce(name, m->'author'->>'username') as name
-        from message join discord_user using (user_id)
-        WHERE m->'author'->>'bot' is null and length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
+        SELECT
+            coalesce(name, m->'author'->>'username') AS name
+        FROM message JOIN discord_user USING (user_id)
+        WHERE NOT bot AND length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
          AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND m->'author'->>'bot' IS NULL AND coalesce(name, m->'author'->>'username') not like 'toxin'
-        group by coalesce(name, m->'author'->>'username'), user_id
-        having count(*) >= 500
+         AND coalesce(name, m->'author'->>'username') NOT LIKE 'toxin'
+        GROUP BY coalesce(name, m->'author'->>'username'), user_id
+        HAVING count(*) >= 500
         """)
     return [item['name'] for item in items]
 
@@ -469,7 +469,7 @@ async def getserveremojis(client):
 async def get_least_used_emojis(emojilist):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND m->'author'->>'bot' IS NULL", emoji)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot", emoji)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
@@ -479,7 +479,7 @@ async def get_least_used_emojis(emojilist):
 async def get_most_used_emojis(emojilist):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND m->'author'->>'bot' IS NULL", emoji)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot", emoji)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
