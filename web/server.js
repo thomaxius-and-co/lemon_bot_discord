@@ -38,12 +38,14 @@ const buildInitialState = (path, params) => {
   switch (path) {
   case '/':
     return Promise.join(
-      db.findMessageCount(),
+      db.findUserMessageCount(),
+      db.findBotMessageCount(),
       db.messagesInLastNDays(7),
       db.messagesInLastNDays(30),
       db.findDailyMessageCounts(30),
-      (totalMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
-        totalMessages,
+      (userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
+        userMessages,
+        botMessages,
         messagesInLastWeek,
         messagesInLastMonth,
         dailyMessageCounts,

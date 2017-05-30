@@ -11,8 +11,11 @@ const connectionDetails = {
 
 const db = pgp(connectionDetails)
 
-const findMessageCount = () =>
-  db.query('SELECT count(*)::numeric FROM message').then(rows => rows[0].count)
+const findUserMessageCount = () =>
+  db.query('SELECT count(*)::numeric FROM message WHERE bot').then(rows => rows[0].count)
+
+const findBotMessageCount = () =>
+  db.query('SELECT count(*)::numeric FROM message WHERE bot').then(rows => rows[0].count)
 
 const messagesInLastNDays = days =>
   db.query(`
@@ -38,7 +41,8 @@ const findDailyMessageCounts = days =>
   `)
 
 module.exports = {
-  findMessageCount,
+  findUserMessageCount,
+  findBotMessageCount,
   messagesInLastNDays,
   findDailyMessageCounts,
 }

@@ -5,7 +5,8 @@ require('moment-timezone')
 const pageTitle = 'Discord statistics'
 
 const initialState = {
-  totalMessages: -1,
+  userMessages: -1,
+  botMessages: -1,
   messagesInLastWeek: -1,
   messagesInLastMonth: -1,
   dailyMessageCounts: [],
@@ -34,7 +35,8 @@ const dailyMessageCountTable = dailyMessageCounts =>
 const renderPage = state =>
   <div>
     <h1>Discord statistics</h1>
-    <p>Total messages {state.totalMessages}</p>
+    <p>Total messages {state.userMessages + state.botMessages}</p>
+    <p>({state.userMessages} by users, {state.botMessages} by bots)</p>
     <p>Messages in last week {state.messagesInLastWeek}</p>
     <p>Messages in last month {state.messagesInLastMonth}</p>
     {dailyMessageCountTable(state.dailyMessageCounts)}
