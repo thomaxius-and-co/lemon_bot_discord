@@ -12,10 +12,10 @@ const connectionDetails = {
 const db = pgp(connectionDetails)
 
 const findUserMessageCount = () =>
-  db.query('SELECT count(*)::numeric FROM message WHERE bot').then(rows => rows[0].count)
+  db.query('SELECT count(*)::numeric FROM message WHERE NOT bot').then(rows => Number(rows[0].count))
 
 const findBotMessageCount = () =>
-  db.query('SELECT count(*)::numeric FROM message WHERE bot').then(rows => rows[0].count)
+  db.query('SELECT count(*)::numeric FROM message WHERE bot').then(rows => Number(rows[0].count))
 
 const messagesInLastNDays = days =>
   db.query(`
