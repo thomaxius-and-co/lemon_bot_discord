@@ -181,7 +181,7 @@ async def top_message_counts(filters, params, excludecommands):
         message_count,
         (message_count /  sum(count(*)) over()) * 100 as pctoftotal
          from message
-        left join custommessage using (user_id)
+        join custommessage using (user_id)
         where NOT bot {sql_excludecommands} {filters}
         group by user_id, message_count, name order by pctoftotal desc
     """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
