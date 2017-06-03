@@ -166,7 +166,8 @@ async def top_message_counts(filters, params, excludecommands):
 
     user_days_in_chat = await get_user_days_in_chat()
     items = await db.fetch("""
-            with custommessage as (select
+        with custommessage as (
+            select
             coalesce(name, m->'author'->>'username') as name,
             user_id,
             count(*) as message_count
@@ -176,10 +177,9 @@ async def top_message_counts(filters, params, excludecommands):
             group by coalesce(name, m->'author'->>'username'), user_id)
         select
         name,
-        user_id
-        count(*),
+        user_id,
         message_count,
-        (message_count /  sum(count(*)) over()) * 100 as pctoftotal,
+        (message_count /  sum(count(*)) over()) * 100 as pctoftotal
          from message
         left join custommessage using (user_id)
         where NOT bot {sql_excludecommands} {filters}
@@ -194,14 +194,15 @@ async def top_message_counts(filters, params, excludecommands):
         new_item = (name, message_count, round(msg_per_day,3), round(pct_of_total,3))
         list_with_msg_per_day.append(new_item)
     top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
+    print(top_ten, 'here is the topten')
     return columnmaker.columnmaker(['NAME','RANK','TOTAL','MSG PER DAY', '% OF TOTAL'], top_ten), len(top_ten)
 
-def addranktolist(listwithoutrank):
+def addranktolist(listwithoutrank): #todo: get rid of this shit
     rank = 1
     newlst = []
     for item in listwithoutrank:
-        a, b, c = item
-        newlst.append((a, '#' + str(rank), b, c))
+        a, b, c, d = item
+        newlst.append((a, '#' + str(rank), b, c, d))
         rank += 1
     return newlst
 
