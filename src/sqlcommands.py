@@ -131,7 +131,7 @@ def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
 def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
     return quote.startswith(":") and quote.endswith(":")
 
-def is_gibberish(quote): #checks if quote cosnsits of 6 different letters
+def is_gibberish(quote): #checks if quote consists of 6 different letters
     return len(set(quote))
 
 def make_word_filters(words):
@@ -385,7 +385,7 @@ async def get_whosaidit_weekly_ranking():
     toplist = []
     for item in items:
         dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
-        new_item = (get_week_with_year(dateadded), name, round(score), wins, losses, total)
+        new_item = (get_week_with_year(dateadded), name, round(score, 3), wins, losses, total)
         toplist.append(new_item)
     return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
