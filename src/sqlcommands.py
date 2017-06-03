@@ -4,8 +4,9 @@ import json
 import database as db
 import columnmaker
 import random as rand
-from tableresetter import get_time_until_reset
-from datetime import datetime
+from datetime import datetime, timedelta
+from lan import delta_to_tuple
+from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 
 
 playinglist = []
@@ -165,25 +166,35 @@ async def top_message_counts(filters, params, excludecommands):
 
     user_days_in_chat = await get_user_days_in_chat()
     items = await db.fetch("""
-        select
+            with custommessage as (select
             coalesce(name, m->'author'->>'username') as name,
             user_id,
-            count(*) as messages
-        from message
-        join discord_user using (user_id)
-        WHERE NOT bot {sql_excludecommands} {filters}
-        group by coalesce(name, m->'author'->>'username'), user_id
+            count(*) as message_count
+            from message
+            join discord_user using (user_id)
+            WHERE NOT bot {sql_excludecommands} {filters}
+            group by coalesce(name, m->'author'->>'username'), user_id)
+        select
+        name,
+        user_id
+        count(*),
+        message_count,
+        (message_count /  sum(count(*)) over()) * 100 as pctoftotal,
+         from message
+        left join custommessage using (user_id)
+        where NOT bot {sql_excludecommands} {filters}
+        group by user_id, message_count, name order by pctoftotal desc
     """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
     if not items:
         return None, None
     list_with_msg_per_day = []
     for item in items:
-        name, user_id, message_count = item
+        name, user_id, message_count, pct_of_total = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (name, message_count, round(msg_per_day,3))
+        new_item = (name, message_count, round(msg_per_day,3), round(pct_of_total,3))
         list_with_msg_per_day.append(new_item)
     top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
-    return columnmaker.columnmaker(['NAME','RANK','TOTAL','MSG PER DAY'], top_ten), len(top_ten)
+    return columnmaker.columnmaker(['NAME','RANK','TOTAL','MSG PER DAY', '% OF TOTAL'], top_ten), len(top_ten)
 
 def addranktolist(listwithoutrank):
     rank = 1
@@ -272,7 +283,7 @@ async def cmd_top(client, message, input):
             return
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
-        msg = await get_time_until_reset() # fetches time until reset in a fancy message from tableresetter -module
+        msg = await get_time_until_reset()
         await client.send_message(message.channel,
                                   ('```%s \n' % title + ranking + '\n' + msg + '```'))
         return
@@ -603,6 +614,17 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     """, userid, message_id, sanitizedquestion, correctname, answer, 1 if correct else 0, datetime.today(), datetime.today().isocalendar()[1])
     print("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
+
+async def get_time_until_reset():
+    datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    while datenow.weekday() != 0:
+        datenow += timedelta(1)
+    timeuntilreset = to_helsinki(as_utc(datenow))
+    now = as_utc(datetime.now())
+    delta = timeuntilreset - now
+    template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
+    msg = template.format(*delta_to_tuple(delta))
+    return msg
 
 def register(client):
     return {

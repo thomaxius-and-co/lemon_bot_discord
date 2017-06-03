@@ -35,7 +35,6 @@ import database as db
 import command
 import util
 import zlib
-import tableresetter
 import archiver
 import casino
 import osu
@@ -486,7 +485,7 @@ def autocorrect_command(cmd):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, tableresetter]:
+for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands]:
     commands.update(module.register(client))
 
 @client.event
