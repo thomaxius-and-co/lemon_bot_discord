@@ -98,7 +98,7 @@ async def getslotstoplist():
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getquoteforquotegame(name):
-    for properquote in range(0,6):
+    for properquote in range(0,10):
         quote = await db.fetchrow("""
         SELECT
             content,
@@ -113,7 +113,10 @@ async def getquoteforquotegame(name):
         LIMIT 1
     """, name)
         if (checkifproperquote(quote['content'])):
+            print('This quote is good', quote['content'].encode("utf-8"))
             return quote
+        else:
+            print('This quote is bad, fetching a new one..', quote['content'].encode("utf-8"))
     return None
 
 
@@ -129,7 +132,7 @@ def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
     return quote.startswith(":") and quote.endswith(":")
 
 def is_gibberish(quote): #checks if quote cosnsits of 6 different letters
-    return len(set(quote[0]))
+    return len(set(quote))
 
 def make_word_filters(words):
     conditions = "content ~* $1"
