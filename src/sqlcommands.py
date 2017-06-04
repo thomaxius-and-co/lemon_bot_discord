@@ -200,15 +200,15 @@ async def top_message_counts(filters, params, excludecommands):
 def addranktolist(listwithoutrank): #todo: get rid of this shit
     rank = 1
     newlst = []
-    if rank == 1:
-        medal = ':first_place:'
-    elif rank == 2:
-        medal = ':second_place:'
-    elif rank == 3:
-        medal = ':third_place:'
-    else:
-        medal = None
     for item in listwithoutrank:
+        if rank == 1:
+            medal = ' :first_place:'
+        elif rank == 2:
+            medal = ' :second_place:'
+        elif rank == 3:
+            medal = ' :third_place:'
+        else:
+            medal = None
         a, b, c, d = item
         newlst.append((a, '#' + str(rank) + medal, b, c, d))
         rank += 1
@@ -359,7 +359,7 @@ async def getwhosaiditranking():
                 concat('#', row_number() OVER (ORDER BY (wins::float / (wins + losses) * 100)+ least(0.20* wins, 20) desc)) AS rank
             from score
             join discord_user using (user_id)
-            where (wins + losses) > 19
+            where (wins + losses) >= 20
             order by rank asc""")
     if len(items) == 0:
         return None, None
