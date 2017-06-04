@@ -3,6 +3,7 @@ import re
 import json
 import database as db
 import columnmaker
+import emoji
 import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
@@ -202,11 +203,11 @@ def addranktolist(listwithoutrank): #todo: get rid of this shit
     newlst = []
     for item in listwithoutrank:
         if rank == 1:
-            medal = ' :first_place:'
+            medal = ' ' + emoji.FIRST_PLACE_MEDAL
         elif rank == 2:
-            medal = ' :second_place:'
+            medal = ' ' + emoji.SECOND_PLACE_MEDAL
         elif rank == 3:
-            medal = ' :third_place:'
+            medal = ' ' + emoji.THIRD_PLACE_MEDAL
         else:
             medal =''
         a, b, c, d = item
