@@ -200,9 +200,17 @@ async def top_message_counts(filters, params, excludecommands):
 def addranktolist(listwithoutrank): #todo: get rid of this shit
     rank = 1
     newlst = []
+    if rank == 1:
+        medal = ':first_place:'
+    elif rank == 2:
+        medal = ':second_place:'
+    elif rank == 3:
+        medal = ':third_place:'
+    else:
+        medal = None
     for item in listwithoutrank:
         a, b, c, d = item
-        newlst.append((a, '#' + str(rank), b, c, d))
+        newlst.append((a, '#' + str(rank) + medal, b, c, d))
         rank += 1
     return newlst
 
