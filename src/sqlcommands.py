@@ -390,7 +390,7 @@ async def get_whosaidit_weekly_ranking():
         from week_score
         join discord_user using (user_id)
         -- Valitaan vain rivit, joilla score on viikon paras score, eli voittajat
-        where score = weeks_best_score and players >= 3
+          where not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 3
         order by dateadded desc""")
     if len(items) == 0:
         return None, None
