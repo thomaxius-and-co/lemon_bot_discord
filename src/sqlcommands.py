@@ -208,7 +208,7 @@ def addranktolist(listwithoutrank): #todo: get rid of this shit
         elif rank == 3:
             medal = ' :third_place:'
         else:
-            medal = None
+            medal =''
         a, b, c, d = item
         newlst.append((a, '#' + str(rank) + medal, b, c, d))
         rank += 1
