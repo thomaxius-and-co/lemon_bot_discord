@@ -33,7 +33,8 @@ const findDailyMessageCounts = days =>
   db.query(`
     SELECT
       extract(epoch from ts::date) * 1000 as epoch,
-      count(*) as count
+      sum(case bot when true 1 else 0 end) as bot_count,
+      sum(case bot when false 1 else 0 end) as user_count
     FROM message
     GROUP BY ts::date
     ORDER BY ts::date DESC

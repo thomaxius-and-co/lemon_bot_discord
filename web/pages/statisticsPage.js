@@ -21,14 +21,16 @@ const dailyMessageCountTable = dailyMessageCounts =>
     <thead>
       <tr>
           <td>Date</td>
-          <td>Messages</td>
+          <td>User messages</td>
+          <td>Bot messages</td>
       </tr>
     </thead>
     <tbody>
       {dailyMessageCounts.map(x =>
         <tr key={x.epoch}>
           <td>{formatDate(x.epoch)}</td>
-          <td>{formatNum(x.count)}</td>
+          <td>{formatNum(x.user_count)}</td>
+          <td>{formatNum(x.bot_count)}</td>
         </tr>
       )}
     </tbody>
