@@ -21,7 +21,7 @@ async def cmd_steam(client, message, subcommand):
 
 async def cmd_steam_common(client, message, args):
     usage = (
-        "Usage: `!steam common <steamid1>, <steamid2>, ..., <steamidN>`\n"
+        "Usage: `!steam common <username1>, <username2>, ..., <usernameN>`\n"
         "Figures out common games for given steam users to play\n"
     )
 
@@ -33,7 +33,14 @@ async def cmd_steam_common(client, message, args):
         await client.send_message(message.channel, usage)
         return
 
-    steamids = args.split(" ")
+    usernames = args.split(" ")
+    steamids = []
+    for username in usernames:
+        steamid = await api.steamid(username)
+        if steamid is None:
+            await client.send_message(message.channel, "Username {username} is not valid".format(username=username))
+            return
+        steamids.append(steamid)
 
     owned_game_sets = []
     for steamid in steamids:

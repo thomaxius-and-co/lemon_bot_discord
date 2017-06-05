@@ -69,6 +69,31 @@ async def game(appid):
 
     return Game(raw["game"])
 
+async def steamid(username):
+    username = username.lower()
+
+    def parse(raw):
+        return raw["response"].get("steamid", None)
+
+    cache_key = "steam:steamid:{username}".format(username=username)
+
+    async with redis.connect() as r:
+        cached = await r.get(cache_key, encoding="utf-8")
+
+    if cached is not None:
+        return parse(json.loads(cached))
+
+    raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {
+        "key": os.environ["STEAM_API_KEY"],
+        "vanityurl": username,
+        "format": "json",
+    })
+
+    async with redis.connect() as r:
+        await r.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
+
+    return parse(raw)
+
 async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
     async with aiohttp.get(url) as r:
