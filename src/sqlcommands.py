@@ -114,7 +114,7 @@ async def getquoteforquotegame(name):
         ORDER BY random()
         LIMIT 1
     """, name)
-        if (checkifproperquote(quote['content'])):
+        if not (checkifproperquote(quote['content'])):
             print('This quote is good', quote['content'].encode("utf-8"))
             return quote
         else:
