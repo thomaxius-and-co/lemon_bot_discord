@@ -15,10 +15,14 @@
    * Black Desert Online scripts
    * WolframAlpha
    * Bing translate
+   * Steam common games finder
    * Simple math
-   * Casino:
-	* Slot Machine
-	* Blackjack
+   * Games:
+	   * Casino:
+		* Slot Machine
+		* Blackjack
+	   * Whosaidit:
+		 - A game where you get a random quote and you must know the answer.
    * Database functions:
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
@@ -99,10 +103,11 @@ Start the bot by running
 | !translate <language>  <text> | Translate a text to the given language
 | !clearbot | Deletes 50 of bot messages. Only available to admins.
 | !pickone <arguments> | Picks a random choice out of X arguments
-| !version | Displays the bot's version.
+| !randomcolor | get a random color. Powered by the colorcombos.com
 | !randomquote | Retrieves a random quote from the database. Optional argument: custom <words separated by comma>.
-| !randomcurse | Retrieves a random quote with a curse from the database. Configure in sqlcommands.py
-| !top <list> | Makes a top list of people who has used certain words the most. Available arguments: custom <words separated by comma>, racists, spammers.
+| !top <list> | pre defined lists: spammers, whosaidit, whosaidit weekly, blackjack, slots. User defined: custom <words separated by comma>
+| !steam common | <username1>, <username2>, ..., <usernameN>  - Find out what games you have in common with other user(s)
+| !whosaidit | In this game you get a quote and you must guess who said it. Comes with weekly-resetting toplist.
 
 ## Updates:
   * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
@@ -116,14 +121,14 @@ Start the bot by running
   
   
 ## Help:
-  * If you need help you can email me @ lemon65.twitch@gmail.com, or talk with me on my Team Speak
-    (IP = ts.ramcommunity.com) user name is lemon65. 
+  * You can contact us (rce or Thomaxius) via our profile pages. 
 
 ## Notes:
   * I have seen lag issues with servers that can't parse the HTMl data quickly, for example a Raspberry-PI
 
 ## Thank you to:
   * Rapptz, for making discord.py - https://github.com/Rapptz/discord.py
+  * Lemon, for the base, or skeleton of a base.
 
 ## Copyright:
 
