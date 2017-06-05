@@ -226,7 +226,7 @@ async def cmd_clear(client, message, arg):
         limit = int(arg)
     await client.send_message(message.channel, "This will delete %s messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
+    answer = await client.wait_for_message(timeout=60, author=message.author)
     if answer and answer.content.lower() == 'yes':
         await client.purge_from(message.channel, limit=limit+3)
         await client.send_message(message.channel,
@@ -236,9 +236,6 @@ async def cmd_clear(client, message, arg):
                                   "Deletion of messages cancelled.")
     return
 
-
-def check(message):
-    return message.author == message.author
 
 # Delete 50 of bots messages
 async def cmd_clearbot(client, message, arg):
@@ -258,7 +255,7 @@ async def cmd_clearbot(client, message, arg):
         limit = int(arg)
     await client.send_message(message.channel, "This will delete %s of **bot's** messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
+    answer = await client.wait_for_message(timeout=60, author=message.author)
     if answer and answer.content.lower() == 'yes':
         await client.purge_from(message.channel, limit=limit+3, check=isbot)
         await client.send_message(message.channel,

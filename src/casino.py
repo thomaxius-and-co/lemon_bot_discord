@@ -313,7 +313,7 @@ async def cmd_coin(client, message, _):
 
 async def askifheadsortails(client, message, winnings):
     while True:
-        answer = await client.wait_for_message(timeout=60, author=message.author, check=check)
+        answer = await client.wait_for_message(timeout=60, author=message.author)
         if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
             coin = await cmd_coin(client, message, winnings)
             if coin.lower() == answer.content.lower():
@@ -328,14 +328,10 @@ async def askifheadsortails(client, message, winnings):
                 return winnings
 
 
-def check(message):
-    return message.author == message.author
-
-
 async def askifdouble(client, message, winnings):
     stay = True
     player = message.author
-    answer = await client.wait_for_message(timeout=15, author=player, check=check)
+    answer = await client.wait_for_message(timeout=15, author=player)
     if answer and answer.content.lower() == '!double':
         await client.send_message(message.channel,
                                   "Type 'heads' or 'tails'")
@@ -494,7 +490,7 @@ async def domessage(client, message, card1suit, card1letter, card2suit, card2let
 
 
 async def getresponse(client, message, score, cards, broke, hand):
-    answer = await client.wait_for_message(timeout=25, author=message.author, check=check)
+    answer = await client.wait_for_message(timeout=25, author=message.author)
     if answer and answer.content.lower() == '!hitme':
         score, hand = await dealhand(client, message, score, cards, broke, hand)
         stay = False
