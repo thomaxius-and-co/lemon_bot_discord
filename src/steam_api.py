@@ -103,7 +103,7 @@ async def appdetails(appid):
     def parse(raw):
         return raw[str(appid)].get("data", {"name": "pls report error to thomaxius"})
 
-    cache_key = "steam:appdeteails:{appid}".format(appid=appid)
+    cache_key = "steam:appdetails:{appid}".format(appid=appid)
 
     async with redis.connect() as r:
         cached = await r.get(cache_key, encoding="utf-8")
