@@ -195,18 +195,19 @@ async def top_message_counts(filters, params, excludecommands):
         new_item = (name, message_count, round(msg_per_day,3), round(pct_of_total,3))
         list_with_msg_per_day.append(new_item)
     top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
-    return columnmaker.columnmaker(['NAME','RANK', 'TOTAL','MSG PER DAY', '% OF TOTAL', 'MEDAL'], top_ten), len(top_ten)
+    return columnmaker.columnmaker(['NAME','RANK', 'TOTAL','MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
+                                    emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 def addranktolist(listwithoutrankandmedal): #todo: get rid of this shit
     rank = 1
     newlst = []
     for item in listwithoutrankandmedal:
         if rank == 1:
-            medal = ' ' + emoji.FIRST_PLACE_MEDAL
+            medal = '  ' + emoji.FIRST_PLACE_MEDAL
         elif rank == 2:
-            medal = ' ' + emoji.SECOND_PLACE_MEDAL
+            medal = '  ' + emoji.SECOND_PLACE_MEDAL
         elif rank == 3:
-            medal = ' ' + emoji.THIRD_PLACE_MEDAL
+            medal = '  ' + emoji.THIRD_PLACE_MEDAL
         else:
             medal = ''
         a, b, c, d = item
