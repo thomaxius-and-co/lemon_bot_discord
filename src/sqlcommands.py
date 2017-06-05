@@ -114,7 +114,7 @@ async def getquoteforquotegame(name):
         ORDER BY random()
         LIMIT 1
     """, name)
-        if not (checkifproperquote(quote['content'])):
+        if not invalid_quote(quote['content']):
             print('This quote is good', quote['content'].encode("utf-8"))
             return quote
         else:
@@ -124,17 +124,17 @@ async def getquoteforquotegame(name):
 
 
 
-def checkifproperquote(quote):
-    return is_gibberish(quote) < 6 or is_emoji(str(quote)) or is_custom_emoji(str(quote))
+def invalid_quote(quote):
+    def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+        return quote.startswith('<:') and quote.endswith('>')
 
-def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
-    return quote.startswith('<:') and quote.endswith('>')
+    def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+        return quote.startswith(":") and quote.endswith(":")
 
-def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
-    return quote.startswith(":") and quote.endswith(":")
+    def is_gibberish(quote): #checks if quote consists of 6 different letters
+        return len(set(quote)) < 6
 
-def is_gibberish(quote): #checks if quote consists of 6 different letters
-    return len(set(quote))
+    return is_gibberish(quote) or is_emoji(str(quote)) or is_custom_emoji(str(quote))
 
 def make_word_filters(words):
     conditions = "content ~* $1"
