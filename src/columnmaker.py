@@ -1,7 +1,6 @@
 # Make beautiful columns, originally implemeted by rce
 
 def columnmaker(titles,data):
-    print(titles,data)
 
     def column_width(rows, index):
         """Returns the width of the widest value in column"""
