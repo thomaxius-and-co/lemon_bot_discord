@@ -4,8 +4,7 @@ machine:
 
 dependencies:
   override:
-    - pip install ansible==2.2.0.0
-    - pip install -e git+https://github.com/rce/dopy.git@monitoring#egg=dopy
+    - pip install -r ansible/requirements.txt
     - pip install tox==2.5.0
 
 test:
