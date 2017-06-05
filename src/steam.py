@@ -47,8 +47,9 @@ async def cmd_steam_common(client, message, args):
     if len(selected) > 0:
         game_names = []
         for appid in selected:
-            game = await api.game(appid)
-            game_names.append(game.name)
+            details = await api.appdetails(appid)
+            game_names.append(details["name"])
+
 
         msg = "Found the following common games:\n{0}".format("\n".join(game_names))
         await client.send_message(message.channel, msg)

@@ -68,3 +68,27 @@ async def game(appid):
         await r.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
 
     return Game(raw["game"])
+
+async def call_appdetails(appid):
+    url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
+    async with aiohttp.get(url) as r:
+        return await r.json()
+
+async def appdetails(appid):
+    def parse(raw):
+        return raw[str(appid)].get("data", {"name": "pls report error to thomaxius"})
+
+    cache_key = "steam:appdeteails:{appid}".format(appid=appid)
+
+    async with redis.connect() as r:
+        cached = await r.get(cache_key, encoding="utf-8")
+
+    if cached is not None:
+        return parse(json.loads(cached))
+
+    raw = await call_appdetails(appid)
+
+    async with redis.connect() as r:
+        await r.set(cache_key, json.dumps(raw))
+
+    return parse(raw)
