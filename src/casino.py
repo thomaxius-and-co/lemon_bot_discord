@@ -1,6 +1,7 @@
 import random
 from asyncio import sleep
 
+import columnmaker
 import emoji
 import database as db
 
@@ -672,7 +673,6 @@ async def dofinalspam(client, message, pscore, dscore, bet, blackjack=False, sur
         return
 
 
-# Function to lookup the money and create a top 5 users.
 async def cmd_leader(client, message, _):
     leaders = await db.fetch("""
         SELECT
@@ -686,11 +686,12 @@ async def cmd_leader(client, message, _):
     """)
 
     if len(leaders) > 0:
-        def format_leader(row):
-            return '#%s - %s - $%s' % (row[0], row[1], row[2])
+        def format_leader(rank, name, balance):
+            return "#{0}".format(rank), name, "${0}".format(balance)
 
-        msg = '  |  '.join(map(format_leader, leaders))
-        await client.send_message(message.channel, msg)
+        formatted = map(lambda row: format_leader(*row), leaders)
+        reply = columnmaker.columnmaker(['Rank', 'Name', 'Balance'], formatted)
+        await client.send_message(message.channel, '```{0}```'.format(reply))
 
 
 def register(client):
