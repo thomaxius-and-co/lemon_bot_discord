@@ -299,7 +299,7 @@ async def cmd_top(client, message, input):
         return
 
     if input == 'leasttoxic':
-        reply, amountofpeople = await get_least_toxic
+        reply, amountofpeople = await get_least_toxic()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
                                       'Not enough chat logged into the database to form a toplist.')
