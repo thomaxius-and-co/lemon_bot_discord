@@ -45,14 +45,15 @@ import youtube
 import lan
 import steam
 import anssicommands
+import awards
 
 logging.basicConfig(level=logging.DEBUG)
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']
 token = os.environ['LEMONBOT_TOKEN']
-client_id = os.environ['BING_CLIENTID']
-client_secret = os.environ['BING_SECRET']
+bing_client_id = os.environ['BING_CLIENTID']
+bing_client_secret = os.environ['BING_SECRET']
 
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
@@ -188,7 +189,7 @@ async def cmd_translate(client, message, arg):
         return
 
     fromlang, tolang, input = parse(arg)
-    translator = Translator(client_id, client_secret)
+    translator = Translator(bing_client_id, client_secret)
     translation = translator.translate(input, tolang, fromlang)
     await client.send_message(message.channel, translation)
 
@@ -482,7 +483,7 @@ def autocorrect_command(cmd):
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 
-for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands]:
+for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards]:
     commands.update(module.register(client))
 
 @client.event
