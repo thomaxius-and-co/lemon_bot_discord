@@ -191,7 +191,7 @@ async def get_least_toxic():
         name, user_id, message_count, good_messages, bs_percentage = item
         new_item = (name, message_count, good_messages, round(bs_percentage,3))
         toplist.append(new_item)
-    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3])[:10])
+    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
     return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'BS PERCENTAGE', emoji.FIRST_PLACE_MEDAL +
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
