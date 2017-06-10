@@ -178,11 +178,11 @@ async def get_least_toxic():
         user_id,
         message_count,
         count(*) as count,
-        (count(*) / message_count::float) * 100 as pctoftotal
+        100 - (count(*) / message_count::float) * 100 as pctoftotal
          from message
         join custommessage using (user_id)
         where NOT bot AND content NOT LIKE '!%%' and length(content) > 15 and message_count > 300 and name not like 'toxin'
-        group by user_id, message_count, name order by pctoftotal desc
+        group by user_id, message_count, name order by pctoftotal ASC
     """)
     if not items:
         return None, None
@@ -305,7 +305,7 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
 
-        header = 'Top %s least toxic (most "informative" messages\n' % (amountofpeople)
+        header = 'Top %s least toxic (most "informative" messages)\n' % (amountofpeople)
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
