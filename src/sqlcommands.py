@@ -305,7 +305,7 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
 
-        header = 'Top %s least toxic (most "informative" messages %s\n' % (amountofpeople)
+        header = 'Top %s least toxic (most "informative" messages\n' % (amountofpeople)
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 

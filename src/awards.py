@@ -65,7 +65,9 @@ async def get_least_toxic():
     """)
     if not items:
         return None
-    return items['user_id']
+    for item in items:
+        user_id = item
+    return user_id
 
 awards = {
     'Top spammer': get_top_spammer(),
