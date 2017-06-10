@@ -2,7 +2,7 @@ import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
 
-TROPHY_NAMES = ['Top spammer', 'Least toxic']
+TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1']
 
 async def cmd_trophycabinet(client, message, arg):
     user_id = message.author.id
@@ -45,6 +45,27 @@ async def get_top_spammer():
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
 
+async def get_top_whosaidit():
+    items = await db.fetch("""
+            with score as (
+            select
+                user_id,
+                sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+                sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
+              from whosaidit_stats_history
+              group by user_id)
+            select
+             user_id
+            from score
+            join discord_user using (user_id)
+            where (wins + losses) >= 20
+            order by wins::float / (wins + losses) * 100 desc limit 1
+    """)
+    if not items:
+        return None
+    for item in items:
+        return item['user_id']
+
 async def get_least_toxic():
     items = await db.fetch("""
         with custommessage as (
@@ -70,7 +91,8 @@ async def get_least_toxic():
 
 awards = {
     'Top spammer': get_top_spammer(),
-    'Least toxic': get_least_toxic()
+    'Least toxic': get_least_toxic(),
+    'Whosaidit total #1': get_top_whosaidit()
 }
 
 def register(client):
