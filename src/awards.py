@@ -60,14 +60,13 @@ async def get_least_toxic():
         user_id
          from message
         join custommessage using (user_id)
-        where NOT bot AND content NOT LIKE '!%%' and length(content) > 15 and message_count > 300 and name not like 'toxin'
+        where NOT bot and length(content) > 15 and message_count > 300 and name not like 'toxin'
         group by user_id, message_count, name order by (count(*) / message_count::float) * 100 desc limit 1
     """)
     if not items:
         return None
     for item in items:
-        user_id = item
-    return user_id
+        return item['user_id']
 
 awards = {
     'Top spammer': get_top_spammer(),

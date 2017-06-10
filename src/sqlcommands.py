@@ -181,7 +181,7 @@ async def get_least_toxic():
         100 - (count(*) / message_count::float) * 100 as pctoftotal
          from message
         join custommessage using (user_id)
-        where NOT bot AND content NOT LIKE '!%%' and length(content) > 15 and message_count > 300 and name not like 'toxin'
+        where NOT bot and length(content) > 15 and message_count > 300 and name not like 'toxin'
         group by user_id, message_count, name order by pctoftotal ASC
     """)
     if not items:
@@ -191,7 +191,7 @@ async def get_least_toxic():
         name, user_id, message_count, good_messages, bs_percentage = item
         new_item = (name, message_count, good_messages, round(bs_percentage,3))
         toplist.append(new_item)
-    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
+    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3])[:10])
     return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'BS PERCENTAGE', emoji.FIRST_PLACE_MEDAL +
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
