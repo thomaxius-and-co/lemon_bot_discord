@@ -2,7 +2,7 @@ import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
 
-TROPHY_NAMES = ['Top spammer']
+TROPHY_NAMES = ['Top spammer', 'Least toxic']
 
 async def cmd_trophycabinet(client, message, arg):
     user_id = message.author.id
@@ -32,10 +32,10 @@ async def get_top_spammer():
         count(*) as message_count
          from message
         where NOT bot AND content NOT LIKE '!%%'
-        group by user_id order by message_count desc limit 1
+        group by user_id order by message_count desc limit 10
     """)
     if not items:
-        return None, None, None
+        return None
     list_with_msg_per_day = []
     for item in items:
         user_id, message_count = item
@@ -45,8 +45,31 @@ async def get_top_spammer():
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
 
+async def get_least_toxic():
+    items = await db.fetch("""
+        with custommessage as (
+            select
+            coalesce(name, m->'author'->>'username') as name,
+            user_id,
+            count(*) as message_count
+            from message
+            join discord_user using (user_id)
+            where NOT bot 
+            group by coalesce(name, m->'author'->>'username'), user_id)
+        select
+        user_id
+         from message
+        join custommessage using (user_id)
+        where NOT bot AND content NOT LIKE '!%%' and length(content) > 15 and message_count > 300 and name not like 'toxin'
+        group by user_id, message_count, name order by (count(*) / message_count::float) * 100 desc limit 1
+    """)
+    if not items:
+        return None
+    return items['user_id']
+
 awards = {
-    'Top spammer': get_top_spammer()
+    'Top spammer': get_top_spammer(),
+    'Least toxic': get_least_toxic()
 }
 
 def register(client):

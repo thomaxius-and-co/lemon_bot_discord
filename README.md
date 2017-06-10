@@ -22,7 +22,7 @@
 		* Slot Machine
 		* Blackjack
 	   * Whosaidit:
-		 - A game where you get a random quote and you must know the answer.
+		 - A game where you get a random quote from chatlog and you must know who said it.
    * Database functions:
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
