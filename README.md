@@ -26,6 +26,7 @@
    * Database functions:
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
+   * Awards for certain things (they work as archievements, basically)
 
 ## Development
 
@@ -52,31 +53,11 @@ Start the bot by running
 
 ## Installation
    * Git clone the Repo. 
-   	* git clone https://github.com/lemon65/lemon_bot_discord
-  * Install dependencies with `pip install -r requirements.txt`
-    * When you update dependencies, generate new requirements file using `pip freeze > requirements.txt`
-  * Grab an API Key from, http://openweathermap.org
-  * Also grab an API from https://www.wolframalpha.com/
-  * You can then log into the bot manually and join a server or you can hack it to use the bot_join function.
-  * Set the following environment variables:
+   	* git clone https://github.com/thomaxius-and-co/lemon_bot_discord
+   * Install Vagrant
+   * Install Virtual box
+   * Install Python
 
-    * OPEN_WEATHER_APPID
-    * LEMONBOT_TOKEN
-    * WOLFRAM_ALPHA_APPID
-	* BING_CLIENTID
-	* BING_SECRET
-	
-    To do this, you can either set them in system settings, or you can do SET
-    valuename=value on windows command line before you run python.  Or you can
-    hardcode them into run_lemon_bot.py
-
-## Requirements:
-   * Python 3.5.0
-   * bs4 - http://www.crummy.com/software/BeautifulSoup/bs4/doc/
-   * pickle - https://docs.python.org/2/library/pickle.html
-   * discord.py - https://github.com/Rapptz/discord.py
-   * bingtranslator https://github.com/wilfilho/BingTranslator
-   * wolframalpha https://github.com/jaraco/wolframalpha
  
 ## Commands:
 | Commands        | description |
@@ -108,18 +89,8 @@ Start the bot by running
 | !top <list> | pre defined lists: spammers, whosaidit, whosaidit weekly, blackjack, slots. User defined: custom <words separated by comma>
 | !steam common | <username1>, <username2>, ..., <usernameN>  - Find out what games you have in common with other user(s)
 | !whosaidit | In this game you get a quote and you must guess who said it. Comes with weekly-resetting toplist.
+| !trophycabinet | Check what trophies you might have.
 
-## Updates:
-  * updates happen when I feel like it, if you see issues point them out and I will be happy to help.
-
-## ToDo:
-  * Google Search
-  * Wiki Search
-  * Other BDO scripts Etc. 
-  * Music functions? 
-
-  
-  
 ## Help:
   * You can contact us (rce or Thomaxius) via our profile pages. 
 
@@ -131,7 +102,7 @@ Start the bot by running
   * Lemon, for the base, or skeleton of a base.
 
 ## Copyright:
-
+Original lemon bot:
 #################### Copyright (c) 2016 RamCommunity #################
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
