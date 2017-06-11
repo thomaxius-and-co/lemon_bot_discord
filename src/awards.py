@@ -2,7 +2,8 @@ import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
 
-TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score']
+
+TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score', 'Biggest gambling problem']
 
 async def cmd_trophycabinet(client, message, arg):
     oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
@@ -45,6 +46,7 @@ async def get_top_spammer():
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
+
 async def get_top_whosaidit():
     items = await db.fetch("""
             with score as (
@@ -94,6 +96,22 @@ async def get_top_whosaidit_score():
     for item in items:
         return item['user_id']
 
+async def get_top_gambling_addict():
+    items = await db.fetch("""
+            select
+            count(*) as total,
+            user_id
+            from message
+            where content like '!slots%' or content like '!blackjack%'
+            group by user_id
+            having count(*) >= 100
+            order by total desc
+            limit 1
+    """)
+    if not items:
+        return None
+    for item in items:
+        return item['user_id']
 
 async def get_least_toxic():
     items = await db.fetch("""
@@ -122,7 +140,8 @@ awards = {
     'Top spammer': get_top_spammer(),
     'Least toxic': get_least_toxic(),
     'Whosaidit total #1': get_top_whosaidit(),
-    'Whosaidit all time high score': get_top_whosaidit_score()
+    'Whosaidit all time high score': get_top_whosaidit_score(),
+    'Biggest gambling problem': get_top_gambling_addict()
 }
 
 def register(client):
