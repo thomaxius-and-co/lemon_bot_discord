@@ -2,18 +2,19 @@ import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
 
-TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1']
+TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score']
 
 async def cmd_trophycabinet(client, message, arg):
+    oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
     user_id = message.author.id
     trophycabinet = await find_user_trophies(user_id)
     msg = ''
     if trophycabinet:
         for trophy in trophycabinet:
             msg += ':trophy:' + trophy + '\n'
-        await client.send_message(message.channel, 'Your trophies:\n' + msg + '\n')
+        await client.edit_message(oldmessage, 'Your trophies: \n' + msg + '\n')
     else:
-        await client.send_message(message.channel, 'You have no trophies.')
+        await client.edit_message(oldmessage, 'You have no trophies.')
 
 @asyncio.coroutine
 def find_user_trophies(user_id):
@@ -44,7 +45,6 @@ async def get_top_spammer():
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
-
 async def get_top_whosaidit():
     items = await db.fetch("""
             with score as (
@@ -65,6 +65,35 @@ async def get_top_whosaidit():
         return None
     for item in items:
         return item['user_id']
+
+async def get_top_whosaidit_score():
+    items = await db.fetch("""
+        with week_score as (
+          select
+            date_trunc('week', time) as dateadded,
+            user_id,
+            sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+            sum(case playeranswer when 'wrong' then 1 else 0 end) as losses,
+            100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count (*) as accuracy,
+            least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20) as bonus,
+            100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count(*) + least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20) as score,
+            max(100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count (*) + least(20.0, sum(case playeranswer when 'correct' then 1 else 0 end) * 0.20)) over (partition by date_trunc('week', time)) as weeks_best_score,
+            count(user_id) over (partition by date_trunc('week', time)) as players
+          from whosaidit_stats_history
+          group by user_id, date_trunc('week', time)
+          having count(*) >= 20
+        )
+        select user_id, score
+        from week_score
+        join discord_user using (user_id)
+          where not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 3
+        order by score desc limit 1
+    """)
+    if not items:
+        return None
+    for item in items:
+        return item['user_id']
+
 
 async def get_least_toxic():
     items = await db.fetch("""
@@ -92,7 +121,8 @@ async def get_least_toxic():
 awards = {
     'Top spammer': get_top_spammer(),
     'Least toxic': get_least_toxic(),
-    'Whosaidit total #1': get_top_whosaidit()
+    'Whosaidit total #1': get_top_whosaidit(),
+    'Whosaidit all time high score': get_top_whosaidit_score()
 }
 
 def register(client):
