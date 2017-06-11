@@ -21,14 +21,15 @@ async def cmd_trophycabinet(client, message, arg):
 def find_user_trophies(user_id):
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
-        playertrophy = yield from awards.get(trophyname)
+        playertrophy = yield from awards.get(trophyname)()
         if user_id == playertrophy:
             trophycabinet.append(trophyname)
     return trophycabinet
 
-async def get_top_spammer():
-    user_days_in_chat = await get_user_days_in_chat()
-    items = await db.fetch("""
+@asyncio.coroutine
+def get_top_spammer():
+    user_days_in_chat = yield from get_user_days_in_chat()
+    items = yield from db.fetch("""
         select
             user_id,
             count(*) as message_count
@@ -53,9 +54,9 @@ async def get_top_spammer():
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
-
-async def get_top_whosaidit():
-    items = await db.fetch("""
+@asyncio.coroutine
+def get_top_whosaidit():
+    items = yield from db.fetch("""
             with score as 
                 (
                 select
@@ -84,9 +85,9 @@ async def get_top_whosaidit():
         return None
     for item in items:
         return item['user_id']
-
-async def get_top_whosaidit_score():
-    items = await db.fetch("""
+@asyncio.coroutine
+def get_top_whosaidit_score():
+    items = yield from db.fetch("""
         with week_score as 
         (
           select
@@ -124,9 +125,9 @@ async def get_top_whosaidit_score():
         return None
     for item in items:
         return item['user_id']
-
-async def get_top_gambling_addict():
-    items = await db.fetch("""
+@asyncio.coroutine
+def get_top_gambling_addict():
+    items = yield from db.fetch("""
             select
                 count(*) as total,
                 user_id
@@ -145,9 +146,9 @@ async def get_top_gambling_addict():
         return None
     for item in items:
         return item['user_id']
-
-async def get_least_toxic():
-    items = await db.fetch("""
+@asyncio.coroutine
+def get_least_toxic():
+    items = yield from db.fetch("""
         with custommessage as (
             select
                 coalesce(name, m->'author'->>'username') as name,
@@ -181,11 +182,11 @@ async def get_least_toxic():
         return item['user_id']
 
 awards = {
-    'Top spammer': get_top_spammer(),
-    'Least toxic': get_least_toxic(),
-    'Whosaidit total #1': get_top_whosaidit(),
-    'Whosaidit all time high score': get_top_whosaidit_score(),
-    'Biggest gambling problem': get_top_gambling_addict()
+    'Top spammer': get_top_spammer,
+    'Least toxic': get_least_toxic,
+    'Whosaidit total #1': get_top_whosaidit,
+    'Whosaidit all time high score': get_top_whosaidit_score,
+    'Biggest gambling problem': get_top_gambling_addict
 }
 
 def register(client):
