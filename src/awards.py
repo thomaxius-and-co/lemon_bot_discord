@@ -2,8 +2,8 @@ import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
 
-
-TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score', 'Biggest gambling problem']
+TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
+                'Biggest gambling problem']
 
 async def cmd_trophycabinet(client, message, arg):
     oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
@@ -17,19 +17,17 @@ async def cmd_trophycabinet(client, message, arg):
     else:
         await client.edit_message(oldmessage, 'You have no trophies.')
 
-@asyncio.coroutine
-def find_user_trophies(user_id):
+async def find_user_trophies(user_id):
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
-        playertrophy = yield from awards.get(trophyname)()
+        playertrophy = await awards.get(trophyname)()
         if user_id == playertrophy:
             trophycabinet.append(trophyname)
     return trophycabinet
 
-@asyncio.coroutine
-def get_top_spammer():
-    user_days_in_chat = yield from get_user_days_in_chat()
-    items = yield from db.fetch("""
+async def get_top_spammer():
+    user_days_in_chat = await get_user_days_in_chat()
+    items = await db.fetch("""
         select
             user_id,
             count(*) as message_count
@@ -50,13 +48,13 @@ def get_top_spammer():
     for item in items:
         user_id, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day,3), message_count)
+        new_item = (user_id, round(msg_per_day, 3), message_count)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0]
-@asyncio.coroutine
-def get_top_whosaidit():
-    items = yield from db.fetch("""
+
+async def get_top_whosaidit():
+    items = await db.fetch("""
             with score as 
                 (
                 select
@@ -85,9 +83,9 @@ def get_top_whosaidit():
         return None
     for item in items:
         return item['user_id']
-@asyncio.coroutine
-def get_top_whosaidit_score():
-    items = yield from db.fetch("""
+
+async def get_top_whosaidit_score():
+    items = await db.fetch("""
         with week_score as 
         (
           select
@@ -124,10 +122,10 @@ def get_top_whosaidit_score():
     if not items:
         return None
     for item in items:
-        return item['user_id']
-@asyncio.coroutine
-def get_top_gambling_addict():
-    items = yield from db.fetch("""
+        return item['user_id']6
+
+async def get_top_gambling_addict():
+    items = await db.fetch("""
             select
                 count(*) as total,
                 user_id
@@ -146,9 +144,9 @@ def get_top_gambling_addict():
         return None
     for item in items:
         return item['user_id']
-@asyncio.coroutine
-def get_least_toxic():
-    items = yield from db.fetch("""
+
+async def get_least_toxic():
+    items = await db.fetch("""
         with custommessage as (
             select
                 coalesce(name, m->'author'->>'username') as name,
@@ -191,5 +189,5 @@ awards = {
 
 def register(client):
     return {
-    'trophycabinet': cmd_trophycabinet
-}
+        'trophycabinet': cmd_trophycabinet
+    }
