@@ -122,7 +122,7 @@ async def get_top_whosaidit_score():
     if not items:
         return None
     for item in items:
-        return item['user_id']6
+        return item['user_id']
 
 async def get_top_gambling_addict():
     items = await db.fetch("""
