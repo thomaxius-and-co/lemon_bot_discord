@@ -483,6 +483,7 @@ def autocorrect_command(cmd):
 # Database schema has to be initialized before running the bot
 loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
+loop.run_until_complete(awards.main())
 
 for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva]:
     commands.update(module.register(client))

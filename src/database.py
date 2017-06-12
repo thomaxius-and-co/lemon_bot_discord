@@ -297,6 +297,15 @@ schema_migrations = {
         CREATE INDEX message_bot_idx ON message (bot);
         ALTER TABLE message ALTER COLUMN bot SET NOT NULL;
     """,
+    21: """
+        CREATE TABLE 
+            custom_trophies
+        (
+            message_id TEXT NOT NULL REFERENCES message(message_id),
+            trophy_name TEXT NOT NULL,
+            trophy_conditions TEXT NOT NULL
+        );
+        """,
 }
 
 _pool_holder = threading.local()
