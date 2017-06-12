@@ -160,9 +160,8 @@ async def get_top_whosaidit_score():
 async def get_top_gambling_addict():
     items = await db.fetch("""
             select
-                count(*) as total,
-                name,
-                user_id
+                user_id,
+                name
             from 
                 message
             JOIN 
@@ -174,7 +173,7 @@ async def get_top_gambling_addict():
             having 
                 count(*) >= 100
             order by 
-                total desc
+                count(*) desc
             limit 1
     """)
     if not items:
