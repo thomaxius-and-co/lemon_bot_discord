@@ -12,17 +12,36 @@ async def cmd_trophycabinet(client, message, arg):
     msg = ''
     if trophycabinet:
         for trophy in trophycabinet:
-            msg += ':trophy:' + trophy + '\n'
+            msg += ':trophy: ' + trophy + '\n'
         await client.edit_message(oldmessage, 'Your trophies:\n ' + msg + '\n')
     else:
         await client.edit_message(oldmessage, 'You have no trophies.')
 
+async def cmd_alltrophies(client, message, arg):
+    oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
+    trophycabinet = await find_all_trophies()
+    msg = ''
+    if trophycabinet:
+        for trophy in trophycabinet:
+            msg += ':trophy: ' + trophy + '\n'
+        await client.edit_message(oldmessage, msg + '\n')
+    else:
+        await client.edit_message(oldmessage, 'Nobody has won a trophy yet.')
+
 async def find_user_trophies(user_id):
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
-        playertrophy = await awards.get(trophyname)()
-        if user_id == playertrophy:
+        trophy_winner_id, trophy_winner_name = await awards.get(trophyname)()
+        if user_id == trophy_winner_id:
             trophycabinet.append(trophyname)
+    return trophycabinet
+
+async def find_all_trophies():
+    trophycabinet = []
+    for trophyname in TROPHY_NAMES:
+        trophy_winner_id, trophy_winner_name = await awards.get(trophyname)()
+        if trophy_winner_name:
+            trophycabinet.append(trophyname + '  -  ' + trophy_winner_name)
     return trophycabinet
 
 async def get_top_spammer():
@@ -30,59 +49,68 @@ async def get_top_spammer():
     items = await db.fetch("""
         select
             user_id,
+            name as username,
             count(*) as message_count
         from 
             message
+        join
+             discord_user using (user_id)
         where 
             NOT bot AND content NOT LIKE '!%%'
         group by 
-            user_id 
+            user_id, username
         order by 
             message_count 
         desc 
         limit 10
     """)
     if not items:
-        return None
+        return None, None
     list_with_msg_per_day = []
     for item in items:
-        user_id, message_count = item
+        user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day, 3), message_count)
+        new_item = (user_id, round(msg_per_day, 3), message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
-    return winner[0][0]
+    return winner[0][0], winner[0][3]
 
 async def get_top_whosaidit():
     items = await db.fetch("""
-            with score as 
-                (
-                select
-                    user_id,
-                    sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
-                    sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
-                from 
-                    whosaidit_stats_history
-                group by 
-                    user_id
-                )
+        with score as 
+            (
             select
-                user_id
+                user_id,
+                name as username,
+                sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
+                sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
             from 
-                score
-            join 
+                whosaidit_stats_history
+            join
                 discord_user using (user_id)
-            where 
-                (wins + losses) >= 20
-            order by 
-                wins::float / (wins + losses) * 100 
-            desc 
-            limit 1
+            group by 
+                user_id,
+                username
+            )
+        select
+            user_id,
+            username
+        from 
+            score
+        join 
+            discord_user using (user_id)
+        where 
+            (wins + losses) >= 20
+        order by 
+            wins::float / (wins + losses) * 100 
+        desc 
+        limit 1
     """)
     if not items:
-        return None
+        return None, None
     for item in items:
-        return item['user_id']
+        user_id, name = item
+        return user_id, name
 
 async def get_top_whosaidit_score():
     items = await db.fetch("""
@@ -91,6 +119,7 @@ async def get_top_whosaidit_score():
           select
             date_trunc('week', time) as dateadded,
             user_id,
+            name as username,
             sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
             sum(case playeranswer when 'wrong' then 1 else 0 end) as losses,
             100.0 * sum(case playeranswer when 'correct' then 1 else 0 end) / count (*) as accuracy,
@@ -100,15 +129,18 @@ async def get_top_whosaidit_score():
             count(user_id) over (partition by date_trunc('week', time)) as players
           from 
             whosaidit_stats_history
+            join 
+            discord_user using (user_id)
           group by 
             user_id, 
-            date_trunc('week', time)
+            date_trunc('week', time),
+            username
           having 
             count(*) >= 20
         )
         select 
-            user_id, 
-            score
+            user_id,
+            username
         from 
             week_score
         join 
@@ -120,20 +152,25 @@ async def get_top_whosaidit_score():
         limit 1
     """)
     if not items:
-        return None
+        return None, None
     for item in items:
-        return item['user_id']
+        user_id, name = item
+        return user_id, name
 
 async def get_top_gambling_addict():
     items = await db.fetch("""
             select
                 count(*) as total,
+                name,
                 user_id
-            from message
+            from 
+                message
+            JOIN 
+                discord_user USING (user_id)
             where 
                 content like '!slots%' or content like '!blackjack%'
             group by 
-                user_id
+                user_id, name
             having 
                 count(*) >= 100
             order by 
@@ -141,9 +178,10 @@ async def get_top_gambling_addict():
             limit 1
     """)
     if not items:
-        return None
+        return None, None
     for item in items:
-        return item['user_id']
+        user_id, name = item
+        return user_id, name
 
 async def get_least_toxic():
     items = await db.fetch("""
@@ -161,7 +199,8 @@ async def get_least_toxic():
             group by coalesce(name, m->'author'->>'username'), user_id
             )
         select
-            user_id
+            user_id, 
+            name
         from 
             message
         join 
@@ -175,9 +214,10 @@ async def get_least_toxic():
         limit 1
     """)
     if not items:
-        return None
+        return None, None
     for item in items:
-        return item['user_id']
+        user_id, name = item
+        return user_id, name
 
 awards = {
     'Top spammer': get_top_spammer,
@@ -189,5 +229,6 @@ awards = {
 
 def register(client):
     return {
-        'trophycabinet': cmd_trophycabinet
+        'trophycabinet': cmd_trophycabinet,
+        'alltrophies': cmd_alltrophies
     }
