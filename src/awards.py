@@ -1,6 +1,7 @@
 import database as db
 from sqlcommands import get_user_days_in_chat
 import asyncio
+from asyncio import sleep
 
 TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
                 'Biggest gambling problem']
@@ -100,8 +101,8 @@ async def cmd_trophycabinet(client, message, arg):
         await client.edit_message(oldmessage, 'You have no trophies.')
 
 async def cmd_addtrophy(client, message, arg):
-    error = "Correct usage, name= followed by conditions=, for example:\n " \
-            "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome"
+    error = "Correct usage: name= followed by conditions=, for example:\n``` " \
+            "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome```"
     if not (arg[0:5].startswith("name=")) or ("conditions=" not in arg):
         await client.send_message(message.channel, error)
         return
@@ -113,6 +114,7 @@ async def cmd_addtrophy(client, message, arg):
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")
         return
+    await sleep(2)
     await add_custom_award_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
     await client.send_message(message.channel, "Succesfully added a trophy.")
