@@ -100,11 +100,15 @@ async def cmd_trophycabinet(client, message, arg):
         await client.edit_message(oldmessage, 'You have no trophies.')
 
 async def cmd_addtrophy(client, message, arg):
-    if not (arg.startswith("name=")) or ("conditions=" not in arg):
-        await client.send_message(message.channel, "Correct usage, name= followed by conditions= separated by comma, for example:\n "
-                                                   "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome")
+    error = "Correct usage, name= followed by conditions=, for example:\n " \
+            "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome"
+    if not (arg[0:5].startswith("name=")) or ("conditions=" not in arg):
+        await client.send_message(message.channel, error)
         return
     name, conditions = parse_award_info(arg)
+    if not name or not conditions:
+        await client.send_message(message.channel, error)
+        return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")

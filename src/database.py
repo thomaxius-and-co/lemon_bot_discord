@@ -306,6 +306,11 @@ schema_migrations = {
             trophy_conditions TEXT NOT NULL
         );
         """,
+    22: """
+        ALTER TABLE 
+            custom_trophies
+        ADD FOREIGN KEY 
+            (message_id) REFERENCES message (message_id);"""
 }
 
 _pool_holder = threading.local()
