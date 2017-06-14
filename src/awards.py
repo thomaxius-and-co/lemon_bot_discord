@@ -28,10 +28,22 @@ async def get_custom_trophy_conditions(trophyname):
         from 
             custom_trophies
         where
-            trophy_name like '{trophyname}'
-    """.format(trophyname=trophyname))
+            trophy_name like $1
+    """, trophyname)
     for trophy in trophy:
         return trophy['trophy_conditions']
+
+async def delete_trophy(trophyname):
+    CUSTOM_TROPHY_NAMES.remove(trophyname)
+    await db.execute("""
+        delete
+        from 
+            custom_trophies
+        where
+            trophy_name like $1
+    """, trophyname)
+    return
+
 
 
 
@@ -43,36 +55,29 @@ async def custom_trophy_getter(trophyname):
 async def get_custom_trophy_winner(filters, params):
     user_days_in_chat = await get_user_days_in_chat()
     items = await db.fetch("""        
-    with custommessage as (
+        with custommessage as (
             select
-                coalesce(name, m->'author'->>'username') as name,
-                user_id,
-                count(*) as message_count
-            from 
-                message
-            join 
-                discord_user using (user_id)
-            WHERE 
-                NOT bot AND content NOT LIKE '!%%' {filters}
-            group by 
-                coalesce(name, m->'author'->>'username'), user_id)
-        select
+            coalesce(name, m->'author'->>'username') as name,
             user_id,
-            name,
-            message_count
-        from 
-            message
-        join 
-            custommessage using (user_id)
-        where 
-            NOT bot AND content NOT LIKE '!%%' {filters}
-        group by 
-            user_id, message_count, name""".format(filters=filters), *params)
+            count(*) as message_count
+            from message
+            join discord_user using (user_id)
+            WHERE NOT bot AND content NOT LIKE '!%%' {filters}
+            group by coalesce(name, m->'author'->>'username'), user_id)
+        select
+        user_id,
+        name,
+        message_count,
+        (message_count /  sum(count(*)) over()) * 100 as pctoftotal
+         from message
+        join custommessage using (user_id)
+        where NOT bot AND content NOT LIKE '!%%' {filters}
+        group by user_id, message_count, name order by pctoftotal desc""".format(filters=filters), *params)
     if not items:
         return None, None
     list_with_msg_per_day = []
     for item in items:
-        user_id, name, message_count = item
+        user_id, name, message_count, pctoftotal = item
         msg_per_day = message_count / user_days_in_chat[user_id]
         new_item = (user_id, round(msg_per_day, 3), message_count, name)
         list_with_msg_per_day.append(new_item)
@@ -99,6 +104,34 @@ async def cmd_trophycabinet(client, message, arg):
         await client.edit_message(oldmessage, 'Your trophies:\n' + msg + '\n')
     else:
         await client.edit_message(oldmessage, 'You have no trophies.')
+
+async def cmd_deletetrophy(client, message, arg):
+    msg = ''
+    y = 0
+    for x in CUSTOM_TROPHY_NAMES:
+        msg += str(y) + '. ' + x + '\n'
+        y+=1
+    if not arg.isdigit():
+        await client.send_message(message.channel, "You need to specify a trophy ID. Available trophy ID's:\n" + msg)
+        return
+    print(len(CUSTOM_TROPHY_NAMES), (int(arg)-1))
+    if (len(CUSTOM_TROPHY_NAMES) < (int(arg)-1)):
+        await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
+        return
+    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg)]
+    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg)])
+    await client.send_message(message.channel, 'Succesfully deleted trophy: ' + trophytobedeleted) #the ugly code above should be just temponary..
+
+async def cmd_listtrophies(client, message, arg):
+    if not CUSTOM_TROPHY_NAMES:
+        await client.send_message(message.channel, "There are no throphies")
+        return
+    msg = ''
+    y = 0
+    for x in CUSTOM_TROPHY_NAMES:
+        msg += str(y) + '. ' + x + '\n'
+        y+=1
+    await client.send_message(message.channel, msg)
 
 async def cmd_addtrophy(client, message, arg):
     error = "Correct usage: name= followed by conditions=, for example:\n``` " \
@@ -354,5 +387,7 @@ def register(client):
     return {
         'trophycabinet': cmd_trophycabinet,
         'alltrophies': cmd_alltrophies,
-        'addtrophy': cmd_addtrophy
+        'addtrophy': cmd_addtrophy,
+        'deletetrophy': cmd_deletetrophy,
+        'listtrophies': cmd_listtrophies
     }
