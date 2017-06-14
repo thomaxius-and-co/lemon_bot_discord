@@ -55,29 +55,36 @@ async def custom_trophy_getter(trophyname):
 async def get_custom_trophy_winner(filters, params):
     user_days_in_chat = await get_user_days_in_chat()
     items = await db.fetch("""        
-        with custommessage as (
+    with custommessage as (
             select
-            coalesce(name, m->'author'->>'username') as name,
-            user_id,
-            count(*) as message_count
-            from message
-            join discord_user using (user_id)
-            WHERE NOT bot AND content NOT LIKE '!%%' {filters}
-            group by coalesce(name, m->'author'->>'username'), user_id)
+                coalesce(name, m->'author'->>'username') as name,
+                user_id,
+                count(*) as message_count
+            from 
+                message
+            join 
+                discord_user using (user_id)
+            WHERE 
+                NOT bot AND content NOT LIKE '!%%' {filters}
+            group by 
+                coalesce(name, m->'author'->>'username'), user_id)
         select
-        user_id,
-        name,
-        message_count,
-        (message_count /  sum(count(*)) over()) * 100 as pctoftotal
-         from message
-        join custommessage using (user_id)
-        where NOT bot AND content NOT LIKE '!%%' {filters}
-        group by user_id, message_count, name order by pctoftotal desc""".format(filters=filters), *params)
+            user_id,
+            name,
+            message_count
+        from 
+            message
+        join 
+            custommessage using (user_id)
+        where 
+            NOT bot AND content NOT LIKE '!%%' {filters}
+        group by 
+            user_id, message_count, name""".format(filters=filters), *params)
     if not items:
         return None, None
     list_with_msg_per_day = []
     for item in items:
-        user_id, name, message_count, pctoftotal = item
+        user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
         new_item = (user_id, round(msg_per_day, 3), message_count, name)
         list_with_msg_per_day.append(new_item)
@@ -115,7 +122,7 @@ async def cmd_deletetrophy(client, message, arg):
         await client.send_message(message.channel, "You need to specify a trophy ID. Available trophy ID's:\n" + msg)
         return
     print(len(CUSTOM_TROPHY_NAMES), (int(arg)-1))
-    if (len(CUSTOM_TROPHY_NAMES) < (int(arg)-1)):
+    if (len(CUSTOM_TROPHY_NAMES) < (int(arg)-1) or (not CUSTOM_TROPHY_NAMES)):
         await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
         return
     trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg)]
@@ -140,23 +147,38 @@ async def cmd_addtrophy(client, message, arg):
         await client.send_message(message.channel, error)
         return
     name, conditions = parse_award_info(arg)
+    conditions = check_and_remove_invalid_words(conditions)
     if not name or not conditions:
         await client.send_message(message.channel, error)
+        return
+    if not check_and_remove_invalid_words(conditions):
+        await client.send_message(message.channel, "Your trophy contains invalid conditions.")
         return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")
         return
     await sleep(2)
+    print('I will add these to the database, Name:',name, 'Conditions:', conditions, (len(conditions)))
     await add_custom_award_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
     await client.send_message(message.channel, "Succesfully added a trophy.")
+
+def check_and_remove_invalid_words(input):
+    # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
+    possible_invalid_list = list(map(lambda x: x.strip(), input.split(',')))
+    def checkifsmall(value):
+        return len(value) > 0
+    valid_list = [word for word in possible_invalid_list if checkifsmall(word)]
+    if len(valid_list) == 0:
+        return None
+    return ', '.join(valid_list)
 
 def parse_award_info(unparsed_arg):
     string = unparsed_arg.split('conditions=')
     name = str(string[0]).replace('name=', '', 1)
     conditions = string[-1]
-    return name, conditions
+    return name.rstrip(' '), conditions
 
 async def add_custom_award_to_database(name, conditions, message_id):
     await db.execute("""
