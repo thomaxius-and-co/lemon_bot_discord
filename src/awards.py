@@ -45,11 +45,16 @@ async def delete_trophy(trophyname):
     return
 
 
-
+def make_word_filters(words):
+    conditions = "content ~* $1"
+    params = ["|".join(words)]
+    return conditions, params
 
 async def custom_trophy_getter(trophyname):
     custom_trophy_conditions = await get_custom_trophy_conditions(trophyname)
-    custom_trophy_id, custom_trophy_name = await random(custom_trophy_conditions.split(','))
+    filters, params = make_word_filters(custom_trophy_conditions.split(','))
+    custom_filter = "AND ({0})".format(filters)
+    custom_trophy_id, custom_trophy_name = await get_custom_trophy_winner(custom_filter, params)
     return custom_trophy_id, custom_trophy_name
 
 async def get_custom_trophy_winner(filters, params):
@@ -91,11 +96,6 @@ async def get_custom_trophy_winner(filters, params):
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0], winner[0][3]
 
-def make_word_filters(words):
-    conditions = "content ~* $1"
-    params = ["|".join(words)]
-    return conditions, params
-
 async def random(filter):
     word_filters, params = make_word_filters(filter)
     return await get_custom_trophy_winner("AND ({0})".format(word_filters), params)
@@ -114,19 +114,21 @@ async def cmd_trophycabinet(client, message, arg):
 
 async def cmd_deletetrophy(client, message, arg):
     msg = ''
-    y = 0
+    y = 1
     for x in CUSTOM_TROPHY_NAMES:
         msg += str(y) + '. ' + x + '\n'
         y+=1
     if not arg.isdigit():
         await client.send_message(message.channel, "You need to specify a trophy ID. Available trophy ID's:\n" + msg)
         return
-    print(len(CUSTOM_TROPHY_NAMES), (int(arg)-1))
-    if (len(CUSTOM_TROPHY_NAMES) < (int(arg)-1) or (not CUSTOM_TROPHY_NAMES)):
+    if not CUSTOM_TROPHY_NAMES:
+        await client.send_message(message.channel, "There are no throphies")
+        return
+    if len(CUSTOM_TROPHY_NAMES) < int(arg)-1:
         await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
         return
-    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg)]
-    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg)])
+    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg-1)]
+    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg-1)])
     await client.send_message(message.channel, 'Succesfully deleted trophy: ' + trophytobedeleted) #the ugly code above should be just temponary..
 
 async def cmd_listtrophies(client, message, arg):
@@ -147,12 +149,12 @@ async def cmd_addtrophy(client, message, arg):
         await client.send_message(message.channel, error)
         return
     name, conditions = parse_award_info(arg)
+    conditions = check_and_remove_invalid_words(conditions)
     if not name or not conditions:
         await client.send_message(message.channel, error)
         return
-    conditions = check_and_remove_invalid_words(conditions)
-    if not conditions:
-        await client.send_message(message.channel, "Invalid conditions.")
+    if not check_and_remove_invalid_words(conditions):
+        await client.send_message(message.channel, "Your trophy contains invalid conditions.")
         return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
