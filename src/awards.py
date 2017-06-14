@@ -52,7 +52,8 @@ def make_word_filters(words):
 
 async def custom_trophy_getter(trophyname):
     custom_trophy_conditions = await get_custom_trophy_conditions(trophyname)
-    filters, params = make_word_filters(custom_trophy_conditions.split(','))
+    filters, params = make_word_filters(custom_trophy_conditions.split(', '))
+
     custom_filter = "AND ({0})".format(filters)
     custom_trophy_id, custom_trophy_name = await get_custom_trophy_winner(custom_filter, params)
     return custom_trophy_id, custom_trophy_name
@@ -124,11 +125,12 @@ async def cmd_deletetrophy(client, message, arg):
     if not CUSTOM_TROPHY_NAMES:
         await client.send_message(message.channel, "There are no throphies")
         return
-    if len(CUSTOM_TROPHY_NAMES) < int(arg)-1:
+    if len(CUSTOM_TROPHY_NAMES) <= int(arg)-1 or (int(arg) == 0): # Even though giving 0 as ID works, It's not we want heh
         await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
         return
-    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg-1)]
-    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg-1)])
+
+    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg)-1]
+    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg)-1])
     await client.send_message(message.channel, 'Succesfully deleted trophy: ' + trophytobedeleted) #the ugly code above should be just temponary..
 
 async def cmd_listtrophies(client, message, arg):
@@ -136,13 +138,14 @@ async def cmd_listtrophies(client, message, arg):
         await client.send_message(message.channel, "There are no throphies")
         return
     msg = ''
-    y = 0
+    y = 1
     for x in CUSTOM_TROPHY_NAMES:
         msg += str(y) + '. ' + x + '\n'
         y+=1
     await client.send_message(message.channel, msg)
 
 async def cmd_addtrophy(client, message, arg):
+    arg = arg.lower()
     error = "Correct usage: name= followed by conditions=, for example:\n``` " \
             "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome```"
     if not (arg[0:5].startswith("name=")) or ("conditions=" not in arg):
@@ -160,7 +163,7 @@ async def cmd_addtrophy(client, message, arg):
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")
         return
-    await sleep(2)
+    await sleep(1)
     await add_custom_award_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
     await client.send_message(message.channel, "Succesfully added a trophy.")
@@ -176,9 +179,9 @@ def check_and_remove_invalid_words(input):
     return ', '.join(valid_list)
 
 def parse_award_info(unparsed_arg):
-    string = unparsed_arg.split('conditions=')
-    name = str(string[0]).replace('name=', '', 1)
-    conditions = string[-1]
+    list_with_args = unparsed_arg.split('conditions=')
+    name = str(list_with_args[0]).replace('name=', '', 1)
+    conditions = list_with_args[-1]
     return name.rstrip(' '), conditions
 
 async def add_custom_award_to_database(name, conditions, message_id):
