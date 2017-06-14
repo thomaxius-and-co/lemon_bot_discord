@@ -147,19 +147,18 @@ async def cmd_addtrophy(client, message, arg):
         await client.send_message(message.channel, error)
         return
     name, conditions = parse_award_info(arg)
-    conditions = check_and_remove_invalid_words(conditions)
     if not name or not conditions:
         await client.send_message(message.channel, error)
         return
-    if not check_and_remove_invalid_words(conditions):
-        await client.send_message(message.channel, "Your trophy contains invalid conditions.")
+    conditions = check_and_remove_invalid_words(conditions)
+    if not conditions:
+        await client.send_message(message.channel, "Invalid conditions.")
         return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")
         return
     await sleep(2)
-    print('I will add these to the database, Name:',name, 'Conditions:', conditions, (len(conditions)))
     await add_custom_award_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
     await client.send_message(message.channel, "Succesfully added a trophy.")
