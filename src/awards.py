@@ -417,7 +417,7 @@ async def get_best_grammar():
         name
          from message
         join custommessage using (user_id)
-        where NOT bot AND content NOT LIKE '!%%' AND content NOT LIKE '%www%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
+        where NOT bot AND content NOT LIKE '!%%' AND content NOT LIKE '%www%' AND content not like '^[0-9]%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
         content like '%.'or content like '%!' or (length(content) > 25 and content like '%,%')
         group by user_id, message_count, name order by (count(*) / message_count::float) desc
     """)
