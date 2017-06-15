@@ -204,7 +204,8 @@ async def get_best_grammar():
             count(*) as message_count
             from message
             join discord_user using (user_id)
-            where NOT bot and content not like '!%%'
+            where NOT bot and content not like '!%%' AND content NOT LIKE '%www%' AND content NOT LIKE '%http%' 
+            AND (content NOT LIKE ':%' AND content NOT LIKE '%:') AND (content NOT LIKE '<:%' AND content NOT LIKE '%>')
             group by coalesce(name, m->'author'->>'username'), user_id)
         select
         name,
@@ -214,7 +215,7 @@ async def get_best_grammar():
         (count(*) / message_count::float) * 100 as pctoftotal
          from message
         join custommessage using (user_id)
-        where NOT bot AND content NOT LIKE '!%%' AND content NOT LIKE '%www%' AND content not like '^[0-9]%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
+        where NOT bot AND content NOT LIKE '!%%'AND (content NOT LIKE ':%' AND content NOT LIKE '%:') AND (content NOT LIKE '<:%' AND content NOT LIKE '%>') AND content NOT LIKE '%www%' AND content not like '^[0-9]%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
         content like '%.'or content like '%!' or (length(content) > 25 and content like '%,%')
         group by user_id, message_count, name order by pctoftotal desc
     """)
