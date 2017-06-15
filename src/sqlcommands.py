@@ -14,7 +14,7 @@ playinglist = []
 
 def sanitize_message(content, mentions):
     for m in mentions:
-        content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
+        content = content.replace("<@%s>" % m["id"], "@%s" % m["username[0:10]"])
     return content
 
 async def send_quote(client, channel, random_message):
@@ -67,7 +67,7 @@ async def getblackjacktoplist():
     toplist = []
     for item in items:
         pct, wins, total, name, losses, surrenders, ties, moneyspent, moneywon, rank = item
-        new_item = (name, rank, total, wins, losses, surrenders, ties, moneyspent, round(moneywon), round(pct, 3))
+        new_item = (name[0:10], rank, total, wins, losses, surrenders, ties, moneyspent, round(moneywon), round(pct, 3))
         toplist.append(new_item)
     # toplist = addsymboltolist(toplist,9,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
@@ -94,7 +94,7 @@ async def getslotstoplist():
     toplist = []
     for item in items:
         name, rank, total, wins, losses, moneyspent, moneywon, pct = item
-        new_item = (name, rank, total, wins, losses, moneyspent, moneywon, round(pct, 3))
+        new_item = (name[0:10], rank, total, wins, losses, moneyspent, moneywon, round(pct, 3))
         toplist.append(new_item)
     # toplist = addsymboltolist(toplist,7,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
@@ -189,7 +189,7 @@ async def get_least_toxic():
     toplist = []
     for item in items:
         name, user_id, message_count, good_messages, bs_percentage = item
-        new_item = (name, message_count, good_messages, round(bs_percentage,3))
+        new_item = (name[0:10], message_count, good_messages, round(bs_percentage,3))
         toplist.append(new_item)
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3])[:10])
     return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'BS PERCENTAGE', emoji.FIRST_PLACE_MEDAL +
@@ -224,7 +224,7 @@ async def get_best_grammar():
     toplist = []
     for item in items:
         name, user_id, message_count, good_messages, bs_percentage = item
-        new_item = (name, message_count, good_messages, round(bs_percentage,3))
+        new_item = (name[0:10], message_count, good_messages, round(bs_percentage,3))
         toplist.append(new_item)
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
     return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
