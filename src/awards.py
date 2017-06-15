@@ -4,7 +4,7 @@ import asyncio
 from asyncio import sleep
 
 TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
-                'Biggest gambling problem']
+                'Biggest gambling problem', 'Best grammar']
 CUSTOM_TROPHY_NAMES = []
 
 
@@ -401,12 +401,39 @@ async def get_least_toxic():
         user_id, name = item
         return user_id, name
 
+async def get_best_grammar():
+    items = await db.fetch("""
+    with custommessage as (
+            select
+            coalesce(name, m->'author'->>'username') as name,
+            user_id,
+            count(*) as message_count
+            from message
+            join discord_user using (user_id)
+            where NOT bot and content not like '!%%'
+            group by coalesce(name, m->'author'->>'username'), user_id)
+        select
+        user_id,
+        name
+         from message
+        join custommessage using (user_id)
+        where NOT bot AND content NOT LIKE '!%%' AND content NOT LIKE '%www%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
+        content like '%.'or content like '%!' or (length(content) > 25 and content like '%,%')
+        group by user_id, message_count, name order by (count(*) / message_count::float) desc
+    """)
+    if not items:
+        return None, None
+    for item in items:
+        user_id, name = item
+        return user_id, name
+
 trophies = {
     'Top spammer': get_top_spammer,
     'Least toxic': get_least_toxic,
     'Whosaidit total #1': get_top_whosaidit,
     'Whosaidit all time high score': get_top_whosaidit_score,
-    'Biggest gambling problem': get_top_gambling_addict
+    'Biggest gambling problem': get_top_gambling_addict,
+    'Best grammar': get_best_grammar
 }
 
 def register(client):
