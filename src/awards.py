@@ -436,9 +436,9 @@ async def get_best_grammar():
             AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
             AND content NOT LIKE '%www%'
             AND content NOT LIKE '%http%'
-            or content like '$?' 
-            or content like '$.'
-            or content like '$!'
+            or content ~* '[A-ZÅÄÖ]\?$'
+            or content ~* '[A-ZÅÄÖ]\.$'
+            or content ~* '[A-ZÅÄÖ]!$'
             or (length(content) > 25 
             and content like '%,%')
         group by 
