@@ -405,22 +405,46 @@ async def get_best_grammar():
     items = await db.fetch("""
     with custommessage as (
             select
-            coalesce(name, m->'author'->>'username') as name,
-            user_id,
-            count(*) as message_count
-            from message
-            join discord_user using (user_id)
-            where NOT bot and content not like '!%%' AND content NOT LIKE '%www%' AND content NOT LIKE '%http%' 
-            AND (content NOT LIKE ':%' AND content NOT LIKE '%:') AND (content NOT LIKE '<:%' AND content NOT LIKE '%>')
-            group by coalesce(name, m->'author'->>'username'), user_id)
+                coalesce(name, m->'author'->>'username') as name,
+                user_id,
+                count(*) as message_count
+            from 
+                message
+            join 
+                discord_user using (user_id)
+            where 
+                NOT bot 
+                AND content not LIKE '!%%'
+                AND content not like '%http%'
+               AND content not like '%www%'
+                AND content ~* '^[A-ZÅÄÖ]'
+                and name not like 'toxin'
+            group by 
+                coalesce(name, m->'author'->>'username'), user_id)
         select
-        user_id,
-        name
-         from message
-        join custommessage using (user_id)
-        where NOT bot AND (content NOT LIKE ':%' AND content NOT LIKE '%:') AND (content NOT LIKE '<:%' AND content NOT LIKE '%>') AND content  NOT LIKE '!%%' AND content NOT LIKE '%www%' AND content not like '^[0-9]%' AND content NOT LIKE '%http%' and content ~ '^[A-ZÖÄÅ][a-zöäå]' or content like '%?' or 
-        content like '%.'or content like '%!' or (length(content) > 25 and content like '%,%')
-        group by user_id, message_count, name order by (count(*) / message_count::float) desc
+                user_id,
+                name
+        from 
+            message
+        join 
+            custommessage using (user_id)
+        where 
+            NOT bot
+            and message_count > 300
+            and name not like 'toxin'
+            AND content NOT LIKE '!%%'
+            AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
+            AND content NOT LIKE '%www%'
+            AND content NOT LIKE '%http%'
+            or content like '$?' 
+            or content like '$.'
+            or content like '$!'
+            or (length(content) > 25 
+            and content like '%,%')
+        group by 
+            user_id, message_count, name 
+        order by 
+            (count(*) / message_count::float) * 100 desc
     """)
     if not items:
         return None, None
