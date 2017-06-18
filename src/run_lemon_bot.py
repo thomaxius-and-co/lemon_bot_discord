@@ -142,7 +142,7 @@ async def cmd_fidgetspinner(client, message, _):
     old_message = await client.send_message(message.channel, '```' + fidgetspinner.pre_spin_template + '```')
     for spin_times in range(0,random.randrange(0,6)):
         for fidget in fidgetspinner.templates.items():
-            await sleep(.7)
+            await sleep(.5)
             old_message = await client.edit_message(old_message, '```' + fidget[1] + '```')
 
 
