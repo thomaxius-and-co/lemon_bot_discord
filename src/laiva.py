@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import floor
 
 from time_util import as_helsinki, as_utc, to_utc
@@ -23,13 +23,19 @@ async def cmd_laiva(client, message, query):
     laiva = to_utc(as_helsinki(datetime(2017, 6, 16, 17, 0)))
     laivaover = to_utc(as_helsinki(datetime(2017, 6, 18, 10, 0)))
     now = as_utc(datetime.now())
+    now_to_last_laivaover = now - laivaover
 
     if (laiva < now) and (laivaover > now):
         await client.send_message(message.channel, "Laiva is currently happening!!")
         return
 
-    if laiva < now:
+    if laivaover < now:
         await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
+        return
+
+    if ((laivaover + timedelta(days=1)) < now) and laiva < now:
+        await client.send_message(message.channel, ("**Last laiva ended:** {0} days, {1} hours, {2} minutes, {3} seconds ago, **next laiva:** TBA.")
+                                  .format(*delta_to_tuple(now_to_last_laivaover)))
         return
 
     delta = laiva - now
