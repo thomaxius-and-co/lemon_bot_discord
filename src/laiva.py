@@ -21,7 +21,7 @@ def delta_to_tuple(delta):
 
 async def cmd_laiva(client, message, query):
     laiva = to_utc(as_helsinki(datetime(2017, 6, 16, 17, 0)))
-    laivaover = to_utc(as_helsinki(datetime(2017, 6, 18, 17, 0)))
+    laivaover = to_utc(as_helsinki(datetime(2017, 6, 18, 10, 0)))
     now = as_utc(datetime.now())
 
     if (laiva < now) and (laivaover > now):
@@ -29,7 +29,7 @@ async def cmd_laiva(client, message, query):
         return
 
     if laiva < now:
-        await client.send_message(message.channel, "Laiva is already over")
+        await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
         return
 
     delta = laiva - now
