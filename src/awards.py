@@ -3,7 +3,7 @@ import asyncio
 from asyncio import sleep
 
 TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
-                'Biggest gambling problem', 'Best grammar']
+                'Biggest gambling problem', 'Best grammar', 'Worst grammar']
 CUSTOM_TROPHY_NAMES = []
 
 
@@ -454,8 +454,66 @@ async def get_best_grammar():
             or (length(content) > 25 and content like '%,%')
         group by 
             user_id, message_count, name 
+        HAVING
+            count(*) > 300
         order by 
             (count(*) / message_count::float) * 100 desc
+        limit
+            1
+    """)
+    if not items:
+        return None, None
+    for item in items:
+        user_id, name = item
+        return user_id, name
+
+async def get_worst_grammar():
+    items = await db.fetch("""
+    with custommessage as (
+            select
+                coalesce(name, m->'author'->>'username') as name,
+                user_id,
+                count(*) as message_count
+            from 
+                message
+            join 
+                discord_user using (user_id)
+            where 
+                NOT bot 
+                AND content not LIKE '!%%'
+                AND content not like '%http%'
+               AND content not like '%www%'
+                AND content ~* '^[A-ZÅÄÖ]'
+                and name not like 'toxin'
+            group by 
+                coalesce(name, m->'author'->>'username'), user_id)
+        select
+                user_id,
+                name
+        from 
+            message
+        join 
+            custommessage using (user_id)
+        where 
+            NOT bot
+            and message_count > 300
+            and name not like 'toxin'
+            AND content NOT LIKE '!%%'
+            AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
+            AND content NOT LIKE '%www%'
+            AND content NOT LIKE '%http%'
+            or content ~* '[A-ZÅÄÖ]\?$'
+            or content ~* '[A-ZÅÄÖ]\.$'
+            or content ~* '[A-ZÅÄÖ]!$'
+            or (length(content) > 25 and content like '%,%')
+        group by 
+            user_id, message_count, name 
+        HAVING
+            count(*) > 300
+        order by 
+            (count(*) / message_count::float) * 100 asc
+        limit
+            1
     """)
     if not items:
         return None, None
@@ -469,7 +527,8 @@ trophies = {
     'Whosaidit total #1': get_top_whosaidit,
     'Whosaidit all time high score': get_top_whosaidit_score,
     'Biggest gambling problem': get_top_gambling_addict,
-    'Best grammar': get_best_grammar
+    'Best grammar': get_best_grammar,
+    'Worst grammar': get_worst_grammar
 }
 
 def register(client):

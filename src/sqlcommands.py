@@ -252,7 +252,9 @@ async def get_best_grammar():
             or (length(content) > 25 
             and content like '%,%')
         group by 
-            user_id, message_count, name 
+            user_id, message_count, name
+        HAVING
+            count(*) > 300
         order by 
             pctoftotal desc
     """)
@@ -266,6 +268,69 @@ async def get_best_grammar():
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
     return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
+
+
+async def get_worst_grammar():
+    items = await db.fetch("""
+    with custommessage as (
+            select
+                coalesce(name, m->'author'->>'username') as name,
+                user_id,
+                count(*) as message_count
+            from 
+                message
+            join 
+                discord_user using (user_id)
+            where 
+                NOT bot 
+                AND content not LIKE '!%%'
+                AND content not like '%http%'
+               AND content not like '%www%'
+                AND content ~* '^[A-ZÅÄÖ]'
+                and name not like 'toxin'
+            group by 
+                coalesce(name, m->'author'->>'username'), user_id)
+        select
+            name,
+            user_id,
+                message_count,
+                message_count - count(*) as bad_messages,
+                100 - (count(*) / message_count::float) * 100 as pctoftotal
+         from 
+            message
+        join 
+            custommessage using (user_id)
+        where 
+            NOT bot
+            and message_count > 300
+            and name not like 'toxin'
+            AND content NOT LIKE '!%%'
+            AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
+            AND content NOT LIKE '%www%'
+            AND content NOT LIKE '%http%'
+            or content ~* '[A-ZÅÄÖ]\?$'
+            or content ~* '[A-ZÅÄÖ]\.$'
+            or content ~* '[A-ZÅÄÖ]!$'
+            or (length(content) > 25 
+            and content like '%,%')
+        group by 
+            user_id, message_count, name
+        HAVING
+            count(*) > 300
+        order by 
+            pctoftotal desc
+    """)
+    if not items:
+        return None, None
+    toplist = []
+    for item in items:
+        name, user_id, message_count, bad_messages, bs_percentage = item
+        new_item = (name[0:10], message_count, bad_messages, round(bs_percentage, 3))
+        toplist.append(new_item)
+    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
+    return columnmaker.columnmaker(
+        ['NAME', 'RANK', 'TOTAL MSGS', 'BAD MSGS', 'BAD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
+         emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 async def top_message_counts(filters, params, excludecommands):
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
@@ -388,7 +453,18 @@ async def cmd_top(client, message, input):
                                       'Not enough chat logged into the database to form a toplist.')
             return
 
-        header = 'Top %s best grammar (most messages written with proper grammar)\n' % (amountofpeople)
+        header = 'Top %s people with the best grammar (most messages written with proper grammar)\n' % (amountofpeople)
+        await client.send_message(message.channel, '```' + header + reply + '```')
+        return
+
+    elif input == 'worstgrammar':
+        reply, amountofpeople = await get_worst_grammar()
+        if not reply or not amountofpeople:
+            await client.send_message(message.channel,
+                                      'Not enough chat logged into the database to form a toplist.')
+            return
+
+        header = 'Top %s people with the worst grammar (most messages written with bad grammar)\n' % (amountofpeople)
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
