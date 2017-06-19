@@ -29,13 +29,13 @@ async def cmd_laiva(client, message, query):
         await client.send_message(message.channel, "Laiva is currently happening!!")
         return
 
-    if laivaover < now:
-        await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
-        return
-
     if ((laivaover + timedelta(days=1)) < now) and laiva < now:
         await client.send_message(message.channel, ("**Last laiva ended:** {0} days, {1} hours, {2} minutes, {3} seconds ago, **next laiva:** TBA.")
                                   .format(*delta_to_tuple(now_to_last_laivaover)))
+        return
+
+    if laivaover < now:
+        await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
         return
 
     delta = laiva - now
