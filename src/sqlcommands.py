@@ -8,7 +8,7 @@ import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
-
+from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
 
 playinglist = []
 
@@ -107,12 +107,25 @@ async def getquoteforquotegame(name):
             coalesce(name, m->'author'->>'username'),
             m->'mentions',
             message_id
-        FROM message JOIN discord_user USING (user_id)
-        WHERE length(content) > 12 AND length(content) < 1000 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
-         AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND NOT bot AND coalesce(name, m->'author'->>'username') LIKE $1
-        ORDER BY random()
-        LIMIT 1
+        FROM 
+            message 
+        JOIN 
+            discord_user USING (user_id)
+        WHERE 
+            length(content) > 12 
+            AND length(content) < 1000 
+            AND content NOT LIKE '!%%' 
+            AND content NOT LIKE '%wwww%'
+            AND content NOT LIKE '%http%' 
+            AND content NOT LIKE '%.com%' 
+            AND content NOT LIKE '%.fi%'
+            AND content ~* '^[A-ZÅÄÖ]'
+            AND NOT bot 
+            AND coalesce(name, m->'author'->>'username') LIKE $1
+        ORDER BY 
+            random()
+        LIMIT 
+            1
     """, name)
         if not invalid_quote(quote['content']):
             print('This quote is good', quote['content'].encode("utf-8"))
@@ -357,7 +370,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input == 'leasttoxic':
+    elif input == 'leasttoxic':
         reply, amountofpeople = await get_least_toxic()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
@@ -368,7 +381,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input == 'bestgrammar':
+    elif input == 'bestgrammar':
         reply, amountofpeople = await get_best_grammar()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
@@ -379,7 +392,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input[0:6] == 'custom' or input[0:7] == '!custom':
+    elif input[0:6] == 'custom' or input[0:7] == '!custom':
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
@@ -399,7 +412,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
         return
 
-    if input == 'whosaidit':
+    elif input == 'whosaidit':
         ranking, amountofpeople = await getwhosaiditranking()
         if not ranking or not amountofpeople:
             await client.send_message(message.channel,
@@ -412,7 +425,7 @@ async def cmd_top(client, message, input):
                                   ('```%s \n' % title + ranking + '\n' + msg + '```'))
         return
 
-    if input == 'whosaidit weekly':
+    elif input == 'whosaidit weekly':
         weekly_winners_list = await get_whosaidit_weekly_ranking()
         if not weekly_winners_list:
             await client.send_message(message.channel,
@@ -423,7 +436,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel,
                                   (title + '\n' + '```' + weekly_winners_list + '```'))
         return
-    if input == 'blackjack' or input == 'bj':
+    elif input == 'blackjack' or input == 'bj':
         reply, amountofpeople = await getblackjacktoplist()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
@@ -434,7 +447,7 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    if input == 'slots':
+    elif input == 'slots':
         reply, amountofpeople = await getslotstoplist()
         jackpot = await get_jackpot()
         if not reply or not amountofpeople:
@@ -446,6 +459,29 @@ async def cmd_top(client, message, input):
         jackpot = '\nCurrent jackpot: %s$' % (jackpot['jackpot'])
         await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
+
+    for trophy in CUSTOM_TROPHY_NAMES:
+        trophylower = trophy.lower()
+        if input == trophylower:
+            customwords = await get_custom_trophy_conditions(trophy)
+            customwords = await getcustomwords(customwords, message, client)
+            if not customwords:
+                return
+            filters, params = make_word_filters(customwords)
+            custom_filter = "AND ({0})".format(filters)
+            reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
+            if not reply or not amountofpeople:
+                await client.send_message(message.channel,
+                                          'Nobody has this trophy.')
+                return
+
+            word = 'word' if len(customwords) == 1 else 'words'
+            parameter = '(commands not included)' if excludecommands else '(commands included)'
+
+            title = 'Leaderboard of trophy %s (top %s users of the %s: %s %s)' % (trophy, amountofpeople, word, ', '.join(customwords), parameter)
+
+            await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
+            return
 
     else:
         await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, blackjack, slots, leasttoxic, bestgrammar, custom <words separated by comma>')

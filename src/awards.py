@@ -1,5 +1,4 @@
 import database as db
-from sqlcommands import get_user_days_in_chat
 import asyncio
 from asyncio import sleep
 
@@ -53,7 +52,6 @@ def make_word_filters(words):
 async def custom_trophy_getter(trophyname):
     custom_trophy_conditions = await get_custom_trophy_conditions(trophyname)
     filters, params = make_word_filters(custom_trophy_conditions.split(', '))
-
     custom_filter = "AND ({0})".format(filters)
     custom_trophy_id, custom_trophy_name = await get_custom_trophy_winner(custom_filter, params)
     return custom_trophy_id, custom_trophy_name
@@ -100,6 +98,20 @@ async def get_custom_trophy_winner(filters, params):
 async def random(filter):
     word_filters, params = make_word_filters(filter)
     return await get_custom_trophy_winner("AND ({0})".format(word_filters), params)
+
+async def get_user_days_in_chat():
+    rows = await db.fetch("""
+        SELECT
+            user_id,
+            extract(epoch from current_timestamp - min(ts)) / 60 / 60 / 24
+        FROM message
+        GROUP BY user_id
+    """)
+    result = {}
+    for row in rows:
+        result[row[0]] = row[1]
+# {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
+    return result
 
 async def cmd_trophycabinet(client, message, arg):
     oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
@@ -439,8 +451,7 @@ async def get_best_grammar():
             or content ~* '[A-ZÅÄÖ]\?$'
             or content ~* '[A-ZÅÄÖ]\.$'
             or content ~* '[A-ZÅÄÖ]!$'
-            or (length(content) > 25 
-            and content like '%,%')
+            or (length(content) > 25 and content like '%,%')
         group by 
             user_id, message_count, name 
         order by 
