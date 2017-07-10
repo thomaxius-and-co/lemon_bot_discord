@@ -24,7 +24,6 @@ import json
 import discord
 import logging
 import random
-import fidgetspinner
 import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
@@ -137,14 +136,6 @@ async def cmd_weather(client, message, zip_code):
         status = data['weather'][0]['description']
         payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
         await client.send_message(message.channel, payload)
-
-async def cmd_fidgetspinner(client, message, _):
-    old_message = await client.send_message(message.channel, '```' + fidgetspinner.pre_spin_template + '```')
-    for spin_times in range(0,random.randrange(0,6)):
-        for fidget in fidgetspinner.templates.items():
-            await sleep(.5)
-            old_message = await client.edit_message(old_message, '```' + fidget[1] + '```')
-
 
 async def domath(channel, input):
     if len(input) < 3:
@@ -401,8 +392,7 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'status': cmd_status,
-    'randomcolor': cmd_randomcolor,
-    'fidgetspinner': cmd_fidgetspinner
+    'randomcolor': cmd_randomcolor
 }
 
 def parse_raw_msg(msg):
