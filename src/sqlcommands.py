@@ -400,13 +400,25 @@ async def checkifenoughmsgstoplay():
     items = await db.fetch("""
         SELECT
             coalesce(name, m->'author'->>'username') AS name
-        FROM message JOIN discord_user USING (user_id)
-        WHERE NOT bot AND length(content) > 12 AND content NOT LIKE '!%%' AND content NOT LIKE '%wwww%'
-         AND content NOT LIKE '%http%' AND content NOT LIKE '%.com%' AND content NOT LIKE '%.fi%'
-         AND coalesce(name, m->'author'->>'username') NOT LIKE 'toxin'
-        GROUP BY coalesce(name, m->'author'->>'username'), user_id
-        HAVING count(*) >= 500
-        """)
+        FROM 
+            message 
+        JOIN 
+            discord_user USING (user_id)
+        WHERE 
+            NOT bot 
+            AND length(content) > 12 
+            AND content NOT LIKE '!%%' 
+            AND content NOT LIKE '%wwww%'
+            AND content NOT LIKE '%http%' 
+            AND content NOT LIKE '%.com%' 
+            AND content NOT LIKE '%.fi%'
+            AND content ~* '^[A-ZÅÄÖ]'
+            AND coalesce(name, m->'author'->>'username') NOT LIKE 'toxin'
+        GROUP BY 
+            coalesce(name, m->'author'->>'username'), user_id
+        HAVING 
+            count(*) >= 500"""
+       )
     return [item['name'] for item in items]
 
 
@@ -851,6 +863,69 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
     """, userid, message_id, sanitizedquestion, correctname, answer, 1 if correct else 0, datetime.today(), datetime.today().isocalendar()[1])
     print("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
 
+async def cmd_add_excluded_user(client, message, input):
+    if not input:
+        await client.send_message(message.channel, 'Usage: !addexcludeduser <userID>. '
+                                                   'or highlight someone: !addexcludeduser @Thomaxius')
+        return
+    input = input[:-1].lstrip('<@')
+    if not input.isdigit():
+        await client.send_message(message.channel, 'UserID has to be numeric.')
+        return
+    excluded_users = await get_excluded_users()
+    if input in excluded_users:
+        await client.send_message(message.channel, 'UserID is already in the database.')
+        return
+    member = discord.utils.get(message.server.members, id=input)
+    if not member:
+        await client.send_message(message.channel, 'UserID not found in the server.')
+        return
+    await add_excluded_user_into_database(input, message.author.id)
+    await client.send_message(message.channel, 'Added **%s** into the database.' % member.name)
+
+async def cmd_delete_excluded_user(client, message, input):
+    if not input:
+        await client.send_message(message.channel, 'Usage: !delexcludedduser <userID>. '
+                                                   'or highlight someone: !delexcludedduser @Thomaxius')
+        return
+    input = input[:-1].lstrip('<@')
+    if not input.isdigit():
+        await client.send_message(message.channel, 'UserID has to be numeric.')
+        return
+    excluded_users = await get_excluded_users()
+    if input not in excluded_users:
+        await client.send_message(message.channel, 'UserID not found in the database')
+        return
+    member = discord.utils.get(message.server.members, id=input)
+    await del_excluded_user_from_database(input)
+    await client.send_message(message.channel, 'Removed **%s** from the database.' % member.name)
+
+async def get_excluded_users():
+    results = await db.fetch("""
+        SELECT
+            excluded_user_id
+        FROM
+            excluded_users
+        """)
+    return [item['excluded_user_id'] for item in results]
+
+async def add_excluded_user_into_database(excluded_user_id, adder_user_id):
+    await db.execute("""
+        INSERT INTO excluded_users AS a
+        (excluded_user_id, added_by_id)
+        VALUES ($1, $2)""",excluded_user_id, adder_user_id)
+    print('Added an excluded user into the database:', excluded_user_id)
+
+async def del_excluded_user_from_database(excluded_user_id):
+    await db.execute("""
+        DELETE
+        FROM
+            excluded_users
+        WHERE
+            excluded_user_id like $1
+        """,excluded_user_id)
+    print('Removed an excluded user from the database:', excluded_user_id)
+
 async def get_time_until_reset():
     datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     while datenow.weekday() != 0:
@@ -867,5 +942,7 @@ def register(client):
         'randomquote': cmd_randomquote,
         'whosaidit': cmd_whosaidit,
         'top': cmd_top,
-        'emoji': cmd_emojicommands
+        'emoji': cmd_emojicommands,
+        'addexcludeduser': cmd_add_excluded_user,
+        'delexcludeduser': cmd_delete_excluded_user
     }

@@ -310,7 +310,14 @@ schema_migrations = {
         ALTER TABLE 
             custom_trophies
         ADD FOREIGN KEY 
-            (message_id) REFERENCES message (message_id);"""
+            (message_id) REFERENCES message (message_id);
+        """,
+    23: """
+        CREATE TABLE excluded_users (
+            excluded_user_id TEXT NOT NULL REFERENCES discord_user(user_id),
+            added_by_id TEXT NOT NULL REFERENCES discord_user(user_id)
+            )
+        """
 }
 
 _pool_holder = threading.local()
