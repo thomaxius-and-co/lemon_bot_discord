@@ -28,7 +28,21 @@ async def send_quote(client, channel, random_message):
     embed.set_footer(text=str(timestamp))
     await client.send_message(channel, embed=embed)
 
+async def get_string_with_excluded_users():
+    excluded_users = await get_excluded_users()
+    excluded_users_string = make_string_from_userids(excluded_users)
+    return excluded_users_string
+
+def make_string_from_userids(userids):
+    string = "AND user_id !~* '%s'" % '|'.join(userids)
+    return string
+
+async def random(filter):
+    word_filters, params = make_string_from_userids(filter)
+    return await random_message_with_filter("AND ({0})".format(word_filters), params)
+
 async def random_message_with_filter(filters, params):
+    excluded_users = await get_string_with_excluded_users()
     return await db.fetchrow("""
         SELECT
             content,
@@ -38,10 +52,11 @@ async def random_message_with_filter(filters, params):
             name,
             m->'author'->>'avatar' as avatar
         FROM message JOIN discord_user USING (user_id)
-        WHERE length(content) > 6 AND content NOT LIKE '!%%' AND NOT bot {filters}
+        WHERE length(content) > 6 AND content NOT LIKE '!%%' AND NOT bot {filters} {excluded_users}
         ORDER BY random()
         LIMIT 1
-    """.format(filters=filters), *params)
+    """.format(filters=filters,excluded_users=excluded_users), *params)
+
 
 async def getblackjacktoplist():
     items = await db.fetch("""
@@ -209,6 +224,7 @@ async def get_least_toxic():
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 async def get_best_grammar():
+    excluded_users = await get_string_with_excluded_users()
     items = await db.fetch("""
     with custommessage as (
             select
@@ -223,9 +239,9 @@ async def get_best_grammar():
                 NOT bot 
                 AND content not LIKE '!%%'
                 AND content not like '%http%'
-               AND content not like '%www%'
+                AND content not like '%www%'
                 AND content ~* '^[A-ZÅÄÖ]'
-                and name not like 'toxin'
+                {excluded_users}
             group by 
                 coalesce(name, m->'author'->>'username'), user_id)
         select
@@ -241,7 +257,6 @@ async def get_best_grammar():
         where 
             NOT bot
             and message_count > 300
-            and name not like 'toxin'
             AND content NOT LIKE '!%%'
             AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
             AND content NOT LIKE '%www%'
@@ -251,13 +266,14 @@ async def get_best_grammar():
             or content ~* '[A-ZÅÄÖ]!$'
             or (length(content) > 25 
             and content like '%,%')
+            {excluded_users}
         group by 
             user_id, message_count, name
         HAVING
             count(*) > 300
         order by 
             pctoftotal desc
-    """)
+    """.format(excluded_users=excluded_users))
     if not items:
         return None, None
     toplist = []
@@ -271,6 +287,7 @@ async def get_best_grammar():
 
 
 async def get_worst_grammar():
+    excluded_users = await get_string_with_excluded_users()
     items = await db.fetch("""
     with custommessage as (
             select
@@ -287,7 +304,7 @@ async def get_worst_grammar():
                 AND content not like '%http%'
                AND content not like '%www%'
                 AND content ~* '^[A-ZÅÄÖ]'
-                and name not like 'toxin'
+                {excluded_users}
             group by 
                 coalesce(name, m->'author'->>'username'), user_id)
         select
@@ -303,7 +320,7 @@ async def get_worst_grammar():
         where 
             NOT bot
             and message_count > 300
-            and name not like 'toxin'
+            {excluded_users}
             AND content NOT LIKE '!%%'
             AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
             AND content NOT LIKE '%www%'
@@ -319,7 +336,7 @@ async def get_worst_grammar():
             count(*) > 300
         order by 
             pctoftotal desc
-    """)
+    """.format(excluded_users=excluded_users))
     if not items:
         return None, None
     toplist = []
@@ -334,9 +351,9 @@ async def get_worst_grammar():
 
 async def top_message_counts(filters, params, excludecommands):
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
-
+    excluded_users = await get_string_with_excluded_users()
     user_days_in_chat = await get_user_days_in_chat()
-    items = await db.fetch("""
+    print("""
         with custommessage as (
             select
             coalesce(name, m->'author'->>'username') as name,
@@ -344,7 +361,7 @@ async def top_message_counts(filters, params, excludecommands):
             count(*) as message_count
             from message
             join discord_user using (user_id)
-            WHERE NOT bot {sql_excludecommands} {filters}
+            WHERE NOT bot {sql_excludecommands} {filters} {excluded_users}
             group by coalesce(name, m->'author'->>'username'), user_id)
         select
         name,
@@ -353,9 +370,29 @@ async def top_message_counts(filters, params, excludecommands):
         (message_count /  sum(count(*)) over()) * 100 as pctoftotal
          from message
         join custommessage using (user_id)
-        where NOT bot {sql_excludecommands} {filters}
+        where NOT bot {sql_excludecommands} {filters} {excluded_users}
         group by user_id, message_count, name order by pctoftotal desc
-    """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
+    """.format(filters=filters, sql_excludecommands=sql_excludecommands, excluded_users=excluded_users), *params)
+    items = await db.fetch("""
+        with custommessage as (
+            select
+            coalesce(name, m->'author'->>'username') as name,
+            user_id,
+            count(*) as message_count
+            from message
+            join discord_user using (user_id)
+            WHERE NOT bot {sql_excludecommands} {filters} {excluded_users}
+            group by coalesce(name, m->'author'->>'username'), user_id)
+        select
+        name,
+        user_id,
+        message_count,
+        (message_count /  sum(count(*)) over()) * 100 as pctoftotal
+         from message
+        join custommessage using (user_id)
+        where NOT bot {sql_excludecommands} {filters} {excluded_users}
+        group by user_id, message_count, name order by pctoftotal desc
+    """.format(filters=filters, sql_excludecommands=sql_excludecommands, excluded_users=excluded_users), *params)
     if not items:
         return None, None
     list_with_msg_per_day = []
@@ -397,6 +434,7 @@ def addsymboltolist(lst, position, symbol):
     return newlst
 
 async def checkifenoughmsgstoplay():
+    excluded_users = await get_string_with_excluded_users()
     items = await db.fetch("""
         SELECT
             coalesce(name, m->'author'->>'username') AS name
@@ -413,15 +451,12 @@ async def checkifenoughmsgstoplay():
             AND content NOT LIKE '%.com%' 
             AND content NOT LIKE '%.fi%'
             AND content ~* '^[A-ZÅÄÖ]'
-            AND coalesce(name, m->'author'->>'username') NOT LIKE 'toxin'
+            {excluded_users}
         GROUP BY 
             coalesce(name, m->'author'->>'username'), user_id
         HAVING 
-            count(*) >= 500"""
-       )
+            count(*) >= 500""".format(excluded_users=excluded_users))
     return [item['name'] for item in items]
-
-
 
 def check_length(x,i):
     return len(str(x[i]))
