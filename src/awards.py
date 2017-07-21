@@ -260,7 +260,7 @@ async def get_top_spammer():
         where 
             NOT bot 
             AND content NOT LIKE '!%%'
-            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)66666
+            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
         group by 
             user_id, username
         order by 
