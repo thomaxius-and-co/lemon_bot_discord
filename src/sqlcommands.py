@@ -344,7 +344,7 @@ async def get_worst_grammar():
 async def top_message_counts(filters, params, excludecommands):
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
     user_days_in_chat = await get_user_days_in_chat()
-    print("""
+    items = await db.fetch("""
         with custommessage as (
             SELECT
                 coalesce(name, m->'author'->>'username') as name,
@@ -379,26 +379,6 @@ async def top_message_counts(filters, params, excludecommands):
             user_id, message_count, name 
         ORDER BY 
             pctoftotal DESC
-    """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
-    items = await db.fetch("""
-        with custommessage as (
-            select
-            coalesce(name, m->'author'->>'username') as name,
-            user_id,
-            count(*) as message_count
-            from message
-            join discord_user using (user_id)
-            WHERE NOT bot {sql_excludecommands} {filters}
-            group by coalesce(name, m->'author'->>'username'), user_id)
-        select
-        name,
-        user_id,
-        message_count,
-        (message_count /  sum(count(*)) over()) * 100 as pctoftotal
-         from message
-        join custommessage using (user_id)
-        where NOT bot {sql_excludecommands} {filters}
-        group by user_id, message_count, name order by pctoftotal desc
     """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
     if not items:
         return None, None

@@ -69,7 +69,11 @@ async def get_custom_trophy_winner(filters, params):
             join 
                 discord_user using (user_id)
             WHERE 
-                NOT bot AND content NOT LIKE '!%%' {filters}
+                NOT bot 
+                AND content NOT LIKE '!%%'
+                AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id) 
+                {filters}
+                
             group by 
                 coalesce(name, m->'author'->>'username'), user_id)
         select
@@ -81,7 +85,10 @@ async def get_custom_trophy_winner(filters, params):
         join 
             custommessage using (user_id)
         where 
-            NOT bot AND content NOT LIKE '!%%' {filters}
+            NOT bot 
+            AND content NOT LIKE '!%%'
+            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id) 
+            {filters}
         group by 
             user_id, message_count, name""".format(filters=filters), *params)
     if not items:
@@ -251,7 +258,9 @@ async def get_top_spammer():
         join
              discord_user using (user_id)
         where 
-            NOT bot AND content NOT LIKE '!%%'
+            NOT bot 
+            AND content NOT LIKE '!%%'
+            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)66666
         group by 
             user_id, username
         order by 
