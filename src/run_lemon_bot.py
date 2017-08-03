@@ -330,6 +330,10 @@ async def cmd_pickone(client, message, args):
         return
 
     choices = args.split(",")
+    if len(choices) == 2:
+        if random.randrange(0,30) == 1:
+            await client.send_message(message.channel, 'Why not have both? :thinking:')
+            return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
