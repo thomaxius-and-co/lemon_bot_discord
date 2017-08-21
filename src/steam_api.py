@@ -1,7 +1,7 @@
 # TODO REMOVE
 
 import os
-import aiohttp
+import http_util as http
 import redis
 import json
 
@@ -27,8 +27,8 @@ def make_query_string(params):
 
 async def call_api(endpoint, params):
     url = "https://api.steampowered.com/%s%s" % (endpoint, make_query_string(params))
-    async with aiohttp.get(url) as r:
-        return await r.json()
+    r = await http.get(url)
+    return await r.json()
 
 async def owned_games(steamid):
     cache_key = "steam:owned_games:{steamid}".format(steamid=steamid)
@@ -86,8 +86,8 @@ async def steamid(username):
 
 async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
-    async with aiohttp.get(url) as r:
-        return await r.json()
+    r = await http.get(url)
+    return await r.json()
 
 async def appdetails(appid):
     def parse(raw):

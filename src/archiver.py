@@ -2,9 +2,7 @@ import asyncio
 import json
 import os
 import traceback
-
-import aiohttp
-
+import http_util as http
 import database as db
 import util
 
@@ -19,15 +17,15 @@ async def get(path):
     }
     url = "https://discordapp.com/api/%s" % path
 
-    async with aiohttp.get(url, headers=headers) as r:
-        if r.status == 429:
-            body = await r.json()
-            print("Hit ratelimit for path: %s", path)
-            print(body)
-            await asyncio.sleep(body["retry_after"] / 1000.0)
-            return await get(path)
+    r = await http.get(url, headers=headers)
+    if r.status == 429:
+        body = await r.json()
+        print("Hit ratelimit for path: %s", path)
+        print(body)
+        await asyncio.sleep(body["retry_after"] / 1000.0)
+        return await get(path)
 
-        response = await r.json()
+    response = await r.json()
 
     if response_is_error(response):
         return None, response

@@ -1,6 +1,5 @@
 import os
 import json
-import aiohttp
 
 import command
 import osu_api as api

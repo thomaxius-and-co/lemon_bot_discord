@@ -4,8 +4,7 @@ import os
 import sys
 import threading
 import traceback
-
-import aiohttp
+import http_util as http
 
 webhook_url = os.environ.get("ERROR_CHANNEL_WEBHOOK", None)
 
@@ -32,12 +31,12 @@ async def post_exception(err_str):
         "text": "```" + err_str + "```",
     }
 
-    async with aiohttp.post(webhook_url + "/slack", data=json.dumps(data)) as r:
-        if r.status != 200:
-            print("util: unknown webhook response {0}".format(r))
-            return
+    r = await http.post(webhook_url + "/slack", data=json.dumps(data))
+    if r.status != 200:
+        print("util: unknown webhook response {0}".format(r))
+        return
 
-        print("util: posted error on channel")
+    print("util: posted error on channel")
 
 
 # Run discord.py coroutines from antoher thread
