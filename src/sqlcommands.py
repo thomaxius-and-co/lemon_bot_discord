@@ -14,7 +14,7 @@ playinglist = []
 
 def sanitize_message(content, mentions):
     for m in mentions:
-        content = content.replace("<@%s>" % m["id"], "@%s" % m["username[0:10]"])
+        content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
     return content
 
 async def send_quote(client, channel, random_message):
