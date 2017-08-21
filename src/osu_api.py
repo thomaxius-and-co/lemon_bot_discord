@@ -131,8 +131,7 @@ async def user_best(name, limit):
 
 async def beatmaps(beatmap_id):
     cache_key = "beatmaps:{0}".format(beatmap_id)
-    async with redis.connect() as r:
-        cached = await r.get(cache_key, encoding="utf-8")
+    cached = await redis.get(cache_key)
     if cached is not None:
         return map(Beatmap, json.loads(cached))
     raw = await call_api("get_beatmaps", {
@@ -141,6 +140,5 @@ async def beatmaps(beatmap_id):
         "b": str(beatmap_id),
         "limit": "1",
     })
-    async with redis.connect() as r:
-        await r.set(cache_key, json.dumps(raw))
+    await redis.set(cache_key, json.dumps(raw))
     return map(Beatmap, raw)

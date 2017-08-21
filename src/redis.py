@@ -12,7 +12,7 @@ async def get_pool():
     global _pool_holder
     pool = getattr(_pool_holder, "pool", None)
     if pool is None:
-        pool = await aioredis.create_pool(connection_details())
+        pool = await aioredis.create_redis_pool(connection_details())
         setattr(_pool_holder, "pool", pool)
     return pool
 
@@ -24,15 +24,10 @@ async def close_pool():
         await pool.wait_closed()
         setattr(_pool_holder, "pool", None)
 
-class connect:
-    def __init__(self):
-        pass
+async def get(key, encoding="utf-8"):
+    pool = await get_pool()
+    await pool.get(key, encoding=encoding)
 
-    async def __aenter__(self):
-        self.pool = await get_pool()
-        self.redis = await self.pool.acquire()
-        return self.redis
-
-    async def __aexit__(self, exc_type, exc, tb):
-        self.pool.release(self.redis)
-        self.redis = None
+async def set(key, data, expire=None):
+    pool = await get_pool()
+    await pool.set(key, data, expire=expire)

@@ -33,9 +33,7 @@ async def call_api(endpoint, params):
 async def owned_games(steamid):
     cache_key = "steam:owned_games:{steamid}".format(steamid=steamid)
 
-    async with redis.connect() as r:
-        cached = await r.get(cache_key, encoding="utf-8")
-
+    cached = await redis.get(cache_key)
     if cached is not None:
         return map(OwnedGame, json.loads(cached)["response"]["games"])
 
@@ -45,17 +43,14 @@ async def owned_games(steamid):
         "format": "json",
     })
 
-    async with redis.connect() as r:
-        await r.set(cache_key, json.dumps(raw), expire=HOUR_IN_SECONDS)
+    await redis.set(cache_key, json.dumps(raw), expire=HOUR_IN_SECONDS)
 
     return map(OwnedGame, raw["response"]["games"])
 
 async def game(appid):
     cache_key = "steam:game:{appid}".format(appid=appid)
 
-    async with redis.connect() as r:
-        cached = await r.get(cache_key, encoding="utf-8")
-
+    cached = await redis.get(cache_key)
     if cached is not None:
         return Game(json.loads(cached)["game"])
 
@@ -64,8 +59,7 @@ async def game(appid):
         "appid": appid,
     })
 
-    async with redis.connect() as r:
-        await r.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
+    await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
 
     return Game(raw["game"])
 
@@ -77,9 +71,7 @@ async def steamid(username):
 
     cache_key = "steam:steamid:{username}".format(username=username)
 
-    async with redis.connect() as r:
-        cached = await r.get(cache_key, encoding="utf-8")
-
+    cached = await redis.get(cache_key)
     if cached is not None:
         return parse(json.loads(cached))
 
@@ -89,9 +81,7 @@ async def steamid(username):
         "format": "json",
     })
 
-    async with redis.connect() as r:
-        await r.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
-
+    await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
     return parse(raw)
 
 async def call_appdetails(appid):
@@ -105,15 +95,13 @@ async def appdetails(appid):
 
     cache_key = "steam:appdetails:{appid}".format(appid=appid)
 
-    async with redis.connect() as r:
-        cached = await r.get(cache_key, encoding="utf-8")
+    cached = await redis.get(cache_key)
 
     if cached is not None:
         return parse(json.loads(cached))
 
     raw = await call_appdetails(appid)
 
-    async with redis.connect() as r:
-        await r.set(cache_key, json.dumps(raw))
+    await redis.set(cache_key, json.dumps(raw))
 
     return parse(raw)

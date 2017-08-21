@@ -1,5 +1,5 @@
 BingTranslator==0.1
-aioredis==0.3.1
+aioredis==1.0.0b2
 asyncpg==0.10.1
 bs4==0.0.1
 discord.py==0.16.8
