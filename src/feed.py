@@ -1,9 +1,6 @@
 import asyncio
 from datetime import datetime
 import time
-import traceback
-import re
-from bs4 import BeautifulSoup
 import discord
 import feedparser
 
