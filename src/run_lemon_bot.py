@@ -28,7 +28,7 @@ import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
 from asyncio import sleep
-import http_util as http
+import aiohttp
 import difflib
 import wolframalpha
 import database as db
@@ -128,14 +128,14 @@ async def cmd_weather(client, message, zip_code):
         await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
-    r = await http.get(link)
-    data = await r.json()
-    location = data['name']
-    F = data['main']['temp'] * 1.8 - 459.67
-    C = (F - 32) * 5 / 9
-    status = data['weather'][0]['description']
-    payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-    await client.send_message(message.channel, payload)
+    async with aiohttp.get(link) as r:
+        data = await r.json()
+        location = data['name']
+        F = data['main']['temp'] * 1.8 - 459.67
+        C = (F - 32) * 5 / 9
+        status = data['weather'][0]['description']
+        payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
+        await client.send_message(message.channel, payload)
 
 async def domath(channel, input):
     if len(input) < 3:
@@ -316,6 +316,52 @@ async def cmd_status(client, message, input):
         return
     await client.change_presence(game=discord.Game(name=input))
 
+def pos_in_string(string, arg):
+    return string.find(arg)
+
+async def cmd_add_censored_word(client, message, input):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, 'You do not have permissions for this command.')
+        return
+    if not input or (not input[0:6].startswith('words=')):
+        await client.send_message(message.channel, 'Usage: !addblockedword **words**=word1, word2, word3, word4 '
+                                                   '**exchannel**=Main **message**=Profanity is not allowed.\n '
+                                                   'If no channel or message is specified, no channels will be '
+                                                   'excluded and default info message will be used.')
+        return
+    bannedwords, exchannel, infomessage = parse_blocked_word_message(input)
+    if not bannedwords:
+        await client.send_message(message.channel, "You must specify words to ban.")
+        return
+    if (pos_in_string(input, "message=") > pos_in_string(input, "exchannel=")) and ("message=" and "exchannel=" in input):
+        await client.send_message(message.channel, "You must use the following format: \n"
+                                                   "!addblockedword **words**=<word1>, <word2>, ..., <wordN> "
+                                                   "**exchannel**=<channel to be excluded> **message**=<message>\n"
+                                                   "You can define just **exchannel** or **message**, or both.")
+        return
+    print(message.id, 'this is the message id!')
+    await sleep(10)
+    await add_blocked_word_into_database(bannedwords, exchannel, infomessage, message.id)
+
+def parse_blocked_word_message(unparsed_arg):
+    channelindex = unparsed_arg.find('exchannel=')
+    words_end = channelindex if channelindex != -1 else len(unparsed_arg)
+    messageindex = unparsed_arg.find('message=')
+    words = unparsed_arg[6:words_end].rstrip()
+    if not words:
+        return None, None, None
+    channel_end = messageindex if messageindex != -1 else len(unparsed_arg)
+    channel = unparsed_arg[(words_end + len('exchannel=')):channel_end].rstrip() if channelindex != -1 else ''
+    infomessage = unparsed_arg[messageindex + len('message='):].rstrip() if messageindex != -1 else ''
+    return words, channel, infomessage
+
+async def add_blocked_word_into_database(censored_words, exchannel, message_id, infomessage):
+    await db.execute("""
+        INSERT INTO censored_words AS a
+        (message_id, censored_words, exchannel, infomessage)
+        VALUES ($1, $2, $3, $4)""", message_id, censored_words, exchannel, infomessage)
+
 async def cmd_pickone(client, message, args):
     usage = (
         "Usage: `!pickone <opt1>, <opt2>, ..., <optN>`\n"
@@ -396,7 +442,8 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'status': cmd_status,
-    'randomcolor': cmd_randomcolor
+    'randomcolor': cmd_randomcolor,
+    'addcensoredwords': cmd_add_censored_word
 }
 
 def parse_raw_msg(msg):
