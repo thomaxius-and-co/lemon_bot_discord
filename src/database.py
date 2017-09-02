@@ -317,8 +317,25 @@ schema_migrations = {
             excluded_user_id TEXT NOT NULL REFERENCES discord_user(user_id),
             added_by_id TEXT NOT NULL REFERENCES discord_user(user_id)
             )
+        """,
+    24: """
+    CREATE TABLE 
+        censored_words
+    (
+        message_id TEXT NOT NULL REFERENCES message(message_id),
+        censored_words TEXT NOT NULL,
+        exchannel TEXT NOT NULL,
+        infomessage TEXT NOT NULL
+
+    );
+    """,
+    25: """
+        ALTER TABLE 
+            censored_words
+        ADD FOREIGN KEY 
+            (message_id) REFERENCES message (message_id);
         """
-}
+    }
 
 _pool_holder = threading.local()
 
