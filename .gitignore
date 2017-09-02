@@ -1,0 +1,10 @@
+secrets
+
+# Python
+.tox/
+.venv/
+__pycache__/
+
+# Vagrant
+*.log
+.vagrant/
