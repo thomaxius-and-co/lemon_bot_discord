@@ -612,9 +612,11 @@ async def on_message(message):
         if message.author.bot:
             return
 
+        if not await pass_censored_words_check(client, message):
+            return
+        
         cmd, arg = command.parse(content)
-
-        if not cmd and not await pass_censored_words_check(client, message):
+        if not cmd:
             return
 
 
@@ -623,6 +625,8 @@ async def on_message(message):
         if not handler:
             handler = commands.get(autocorrect_command(cmd))
 
+        if not await pass_censored_words_check(client, message):
+            return
 
         if handler:
             await handler(client, message, arg)
