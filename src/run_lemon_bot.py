@@ -28,7 +28,7 @@ import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
 from asyncio import sleep
-import http_util as http
+import aiohttp
 import difflib
 import wolframalpha
 import database as db
@@ -128,14 +128,14 @@ async def cmd_weather(client, message, zip_code):
         await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
-    r = await http.get(link)
-    data = await r.json()
-    location = data['name']
-    F = data['main']['temp'] * 1.8 - 459.67
-    C = (F - 32) * 5 / 9
-    status = data['weather'][0]['description']
-    payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-    await client.send_message(message.channel, payload)
+    async with aiohttp.get(link) as r:
+        data = await r.json()
+        location = data['name']
+        F = data['main']['temp'] * 1.8 - 459.67
+        C = (F - 32) * 5 / 9
+        status = data['weather'][0]['description']
+        payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
+        await client.send_message(message.channel, payload)
 
 async def domath(channel, input):
     if len(input) < 3:
@@ -316,6 +316,79 @@ async def cmd_status(client, message, input):
         return
     await client.change_presence(game=discord.Game(name=input))
 
+def pos_in_string(string, arg):
+    return string.find(arg)
+
+async def cmd_add_censored_word(client, message, input):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, 'You do not have permissions for this command.')
+        return
+    if not input or (not input[0:6].startswith('words=')):
+        await client.send_message(message.channel, 'Usage: !addcensoredword **words**=word1, word2, word3, word4 '
+                                                   '**exchannel**=Main **infomessage**=Profanity is not allowed.\n '
+                                                   'If no channel or message is specified, no channels will be '
+                                                   'excluded and default info message will be used.')
+        return
+    bannedwords, exchannel, infomessage = parse_censored_word_message(input)
+    if exchannel:
+        exchannel = await get_channel_info(exchannel) # this is actualy the channel ID now
+        if not exchannel:
+            await client.send_message(message.channel, "Error: Channel %s doesn't exist, or the bot doesn't "
+                                                       "have permission for that channel." % exchannel)
+            return
+    if not bannedwords:
+        await client.send_message(message.channel, "You must specify words to ban.")
+        return
+
+    if (pos_in_string(input, "infomessage=") < pos_in_string(input, "exchannel=")) and ("infomessage=" in input and "exchannel=" in input):
+        await client.send_message(message.channel, "You must use the following format: \n"
+                                                   "!addcensoredword **words**=<word1>, <word2>, ..., <wordN> "
+                                                   "**exchannel**=<channel to be excluded> **infomessage**=<message>\n"
+                                                   "You can define just **exchannel** or **infomessage**, or both.")
+        return
+    print(message.id, 'this is the message id!')
+    await sleep(1)
+    await add_censored_word_into_database(bannedwords, message.id, exchannel, infomessage)
+    await client.send_message(message.channel, 'Succesfully defined a new censored word entry.')
+    return
+
+
+async def get_channel_info(user_channel_name):
+    channels = client.get_all_channels()
+    for channel in channels:
+        if channel.name == user_channel_name:
+            return channel.id
+        else:
+            return False
+
+def parse_censored_word_message(unparsed_arg):
+    channelindex = unparsed_arg.find('exchannel=')
+    words_end = channelindex if channelindex != -1 else len(unparsed_arg)
+    messageindex = unparsed_arg.find('infomessage=')
+    words = unparsed_arg[6:words_end].rstrip()
+    if not words:
+        return None, None, None
+    channel_end = messageindex if messageindex != -1 else len(unparsed_arg)
+    channel = unparsed_arg[(words_end + len('exchannel=')):channel_end].rstrip() if channelindex != -1 else ''
+    infomessage = unparsed_arg[messageindex + len('infomessage='):].rstrip() if messageindex != -1 else ''
+    return words, channel, infomessage
+
+async def add_censored_word_into_database(censored_words, message_id, exchannel_id=None, infomessage=None):
+    await db.execute("""
+        INSERT INTO censored_words AS a
+        (message_id, censored_words, exchannel_id, info_message)
+        VALUES ($1, $2, $3, $4)""", message_id, censored_words, exchannel_id, infomessage)
+    print('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s' % (censored_words, exchannel_id, infomessage, message_id))
+
+async def get_censored_words():
+    return await db.fetch("""
+        SELECT 
+            *
+        FROM
+            censored_words
+        """)
+
 async def cmd_pickone(client, message, args):
     usage = (
         "Usage: `!pickone <opt1>, <opt2>, ..., <optN>`\n"
@@ -337,6 +410,55 @@ async def cmd_pickone(client, message, args):
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
     await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
+
+async def cmd_list_censored_words(client, message, _):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        return
+    censored_word_entries = await get_censored_words()
+    if not censored_word_entries:
+        await client.send_message(message.channel, "No censored words have been defined.")
+        return
+    else:
+        msg = ''
+        i = 1
+        for row in censored_word_entries:
+            print(row)
+            censored_words = ' **Censored words:** ' + row['censored_words']
+            info_message = (' **Info message:** ' + row['info_message']) if row['info_message'] else ''
+            exchannel = (' **Excluded channel:** ' + row['exchannel_id']) if row['exchannel_id'] else ''
+            ID = str(i) + ':'
+            msg += ID + censored_words + info_message + exchannel + '\n'
+            i += 1
+        await client.send_message(message.channel, msg)
+
+async def cmd_del_censored_words(client, message, arg):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        return
+    if not arg or not arg.isdigit():
+        await client.send_message(message.channel, "You must specify an ID to delete, eq. !deletecensoredwords 1. "
+                                                   "Use !listcensoredwords to find out the correct ID.")
+        return
+    censored_word_entries = await get_censored_words()
+    if not censored_word_entries:
+        await client.send_message(message.channel, "No censored words have been defined.")
+        return
+    else:
+        index = int(arg) - 1
+        print(index-1, len(censored_word_entries))
+        if index > len(censored_word_entries)-1 or int(arg) == 0: # While defining 0 as an ID works, we don't want that heh
+            await client.send_message(message.channel, "No such ID in list")
+            return
+        await delete_censored_words_from_database(censored_word_entries[index]['message_id'])
+        await client.send_message(message.channel, "Censored word succesfully deleted.")
+        return
+
+
+async def delete_censored_words_from_database(message_id):
+    await db.execute("DELETE from censored_words where message_id like $1", message_id)
 
 async def cmd_sql(client, message, query):
     usage = (
@@ -379,6 +501,29 @@ async def cmd_randomcolor(client, message, _):
     link = 'http://www.colorcombos.com/images/colors/%s.png' % randchars
     await client.send_message(message.channel, link)
 
+
+async def pass_censored_words_check(client, message):
+    message_words = message.content.split(' ')
+    illegal_messages = await get_censored_words()
+    if not illegal_messages:
+        return True
+    for row in illegal_messages:
+        for word in message_words:
+            if word in row['censored_words']:
+                info_message = row['info_message'] if row['info_message'] else "Your message containts forbidden word(s), and it was removed."
+                if row['exchannel_id'] and await wrong_channel_for_this_word(message.channel.id, row['exchannel_id']):
+                    await client.delete_message(message)
+                    await client.send_message(message.author, info_message + " Illegal word: " + word)
+                    return False
+                else:
+                    await client.delete_message(message)
+                    await client.send_message(message.author, info_message)
+                    return False
+    return True
+
+async def wrong_channel_for_this_word(current_message_channel_id, database_channel_id):
+    return current_message_channel_id != database_channel_id
+
 commands = {
     'sql': cmd_sql,
     'enchant': cmd_enchant,
@@ -396,7 +541,10 @@ commands = {
     'version': cmd_version,
     'clearbot': cmd_clearbot,
     'status': cmd_status,
-    'randomcolor': cmd_randomcolor
+    'randomcolor': cmd_randomcolor,
+    'addcensoredwords': cmd_add_censored_word,
+    'listcensoredwords': cmd_list_censored_words,
+    'deletecensoredwords': cmd_del_censored_words
 }
 
 def parse_raw_msg(msg):
@@ -465,16 +613,22 @@ async def on_message(message):
             return
 
         cmd, arg = command.parse(content)
-        if not cmd:
+
+        if not cmd and not await pass_censored_words_check(client, message):
             return
+
+
 
         handler = commands.get(cmd)
         if not handler:
             handler = commands.get(autocorrect_command(cmd))
 
+
         if handler:
             await handler(client, message, arg)
             return
+
+
 
     except Exception:
         await util.log_exception()
