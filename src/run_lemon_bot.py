@@ -48,7 +48,10 @@ import steam
 import anssicommands
 import awards
 
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging (https://docs.python.org/3/library/logging.html#logrecord-attributes)
+FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
 API_KEY = os.environ['OPEN_WEATHER_APPID']

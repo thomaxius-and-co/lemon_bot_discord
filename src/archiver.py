@@ -2,9 +2,12 @@ import asyncio
 import json
 import os
 import traceback
-import http_util as http
+import aiohttp
 import database as db
 import util
+import logging
+
+log = logging.getLogger("ARCHIVER")
 
 ERROR_MISSING_ACCESS = 50001
 
@@ -17,20 +20,20 @@ async def get(path):
     }
     url = "https://discordapp.com/api/%s" % path
 
-    r = await http.get(url, headers=headers)
-    if r.status == 429:
-        body = await r.json()
-        print("Hit ratelimit for path: %s", path)
-        print(body)
-        await asyncio.sleep(body["retry_after"] / 1000.0)
-        return await get(path)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as r:
+            response = await r.json()
+            log.info("GET %s %s %s", url, r.status, response)
+            if r.status == 429:
+                log.warn("Hit ratelimit for path: %s", path)
+                log.warn(response)
+                await asyncio.sleep(float(response["retry_after"]) / 1000.0)
+                return await get(path)
 
-    response = await r.json()
-
-    if response_is_error(response):
-        return None, response
-    else:
-        return response, None
+            if response_is_error(response):
+                return None, response
+            else:
+                return response, None
 
 async def get_messages(channel_id, after):
     return await get("channels/%s/messages?after=%s&limit=100" % (channel_id, after))
@@ -48,7 +51,7 @@ async def fetch_messages_from(channel_id, after_id):
     next_messages, error = await get_messages(channel_id, after_id)
     if error:
         if error['code'] == ERROR_MISSING_ACCESS:
-            print('archiver: tried to archive a channel we no longer have access to')
+            log.warning('tried to archive a channel we no longer have access to')
             return []
         else:
             raise Exception(error)
@@ -59,7 +62,7 @@ async def fetch_messages_from(channel_id, after_id):
         next_messages, error = await get_messages(channel_id, last_id)
         if error:
             if error['code'] == ERROR_MISSING_ACCESS:
-                print('archiver: tried to archive a channel we no longer have access to')
+                log.warning('tried to archive a channel we no longer have access to')
                 break
             else:
                 raise Exception(error)
@@ -130,28 +133,29 @@ async def archive_channel(channel_id):
             new_latest_id = all_messages[0]["id"]
             await update_latest_message_id(tx, channel_id, new_latest_id)
 
-        print("Fetched total %s messages" % len(all_messages))
+        log.info("Fetched total %d messages", len(all_messages))
 
 
 async def archive_guild(guild_id):
     channels = await get_channels(guild_id)
     text_channels = list(filter(lambda c: c["type"] == "text", channels))
-    print("Archiving %s channels" % len(text_channels))
+    log.info("Archiving %d channels", len(text_channels))
 
     for channel in text_channels:
-        print("Archiving channel #%s" % channel["name"])
+        log.info("Archiving channel #%s", channel["name"])
         await archive_channel(channel["id"])
 
 async def run_archival():
     guilds = await get_user_guilds("@me")
     for guild in guilds:
-        print("Archiving guild %s" % guild["name"])
+        log.info("Archiving guild %s", guild["name"])
         await archive_guild(guild["id"])
 
 async def main():
     # Store new messages every 15 minutes
     while True:
         try:
+            log.info("Starting archival")
             await run_archival()
         except Exception:
             await util.log_exception()
