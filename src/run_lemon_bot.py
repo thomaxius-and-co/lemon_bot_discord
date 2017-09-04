@@ -51,6 +51,9 @@ import awards
 # Configure logging (https://docs.python.org/3/library/logging.html#logrecord-attributes)
 FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+# Make discord.py log a bit less
+for logger in ['discord', 'websockets']:
+    logging.getLogger(logger).setLevel(logging.INFO)
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
