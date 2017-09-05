@@ -114,18 +114,18 @@ async def cmd_roll(client, message, arg):
         return
 
     rand_roll = random.randint(0, int(arg))
-    await client.send_message(message.channel, '%s your roll is %s' % (message.author.name, rand_roll))
+    await client.send_message(message.channel, '%s your roll is %s.' % (message.author.name, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
 async def cmd_8ball(client, message, question):
     prediction = random.choice(EIGHT_BALL_OPTIONS)
-    await client.send_message(message.channel, 'Question: [%s], %s' % (question, prediction))
+    await client.send_message(message.channel, 'Question: [%s], %s.' % (question, prediction))
 
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
 async def cmd_weather(client, message, zip_code):
     if not zip_code:
-        await client.send_message(message.channel, "You must specify a city, eq. Säkylä")
+        await client.send_message(message.channel, "You must specify a city, eq. Säkylä.")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
     r = await http.get(link)
@@ -152,7 +152,7 @@ async def domath(channel, input):
     i2 = 2
     for char in range(len(input) - 1):
         if input[-1] in '+-/*':
-            print("Error: No digit specified after operator (last %s)" % (input[-1]))
+            print("Error: No digit specified after operator (last %s)." % (input[-1]))
             return
         i += 2
         i2 += 2
@@ -200,13 +200,13 @@ async def cmd_translate(client, message, arg):
 # Format ==> @User has been, INSERT_ITEM_HERE
 async def cmd_spank(client, message, target_user):
     punishment = random.choice(SPANK_BANK)
-    await client.send_message(message.channel, "%s has been, %s by %s" % (target_user, punishment, message.author.name))
+    await client.send_message(message.channel, "%s has been, %s by %s." % (target_user, punishment, message.author.name))
 
 async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
     await client.send_message(message.channel, "Just a moment, flipping the coin...")
     await sleep(.5)
-    await client.send_message(message.channel, "The coin lands on: %s" % coin)
+    await client.send_message(message.channel, "The coin lands on: %s." % coin)
     return coin
 
 async def cmd_help(client, message, _):
@@ -294,10 +294,10 @@ async def cmd_wolframalpha(client, message, query):
         answer = next(res.results).text
         await client.send_message(message.channel, answer)
     except ConnectionResetError:
-        await client.send_message(message.channel, 'Sorry, WolframAlpha is slow as fuck right now')
+        await client.send_message(message.channel, 'Sorry, WolframAlpha is slow as fuck right now.')
     except Exception as e:
         print("ERROR", type(e), e)
-        await client.send_message(message.channel, 'I don\'t know how to answer that')
+        await client.send_message(message.channel, 'I don\'t know how to answer that.')
 
 async def cmd_version(client, message, args):
     # todo: Make this function update automatically with some sort of github api.. Version
@@ -337,11 +337,15 @@ async def cmd_add_censored_word(client, message, input):
         return
     bannedwords, exchannel, infomessage = parse_censored_word_message(input)
     if exchannel:
-        exchannel = await get_channel_info(exchannel)  # this is actualy the channel ID now
-        if not exchannel:
-            await client.send_message(message.channel, "Error: Channel %s doesn't exist, or the bot doesn't "
-                                                       "have permission for that channel." % exchannel)
+        exchannel_id = await get_channel_info(exchannel)
+        if not exchannel_id:
+            msg = "Error: Channel doesn't exist, or the bot doesn't have permission for that channel."
+            if '_' in exchannel:
+                msg += '\nTry converting underscores to spaces, for example: game_of_thrones -> game of thrones.'
+            await client.send_message(message.channel, msg)
             return
+    if not exchannel:
+        exchannel_id = None
     if not bannedwords:
         await client.send_message(message.channel, "You must specify words to ban.")
         return
@@ -355,14 +359,14 @@ async def cmd_add_censored_word(client, message, input):
         return
     print(message.id, 'this is the message id!')
     await sleep(1)
-    await add_censored_word_into_database(bannedwords, message.id, exchannel, infomessage)
+    await add_censored_word_into_database(bannedwords, message.id, exchannel_id, infomessage)
     await client.send_message(message.channel, 'Succesfully defined a new censored word entry.')
     return
 
 async def get_channel_info(user_channel_name):
     channels = client.get_all_channels()
     for channel in channels:
-        if channel.name == user_channel_name:
+        if channel.name.lower() == user_channel_name.lower():
             return channel.id
         else:
             return False
