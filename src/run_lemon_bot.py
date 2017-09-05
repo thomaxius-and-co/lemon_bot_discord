@@ -47,6 +47,8 @@ import laiva
 import steam
 import anssicommands
 import awards
+import lightcommands
+
 
 # Configure logging (https://docs.python.org/3/library/logging.html#logrecord-attributes)
 FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
@@ -61,7 +63,6 @@ API_KEY = os.environ['OPEN_WEATHER_APPID']
 token = os.environ['LEMONBOT_TOKEN']
 bing_client_id = os.environ['BING_CLIENTID']
 bing_client_secret = os.environ['BING_SECRET']
-
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
@@ -170,6 +171,10 @@ async def domath(channel, input):
         await client.send_message(channel, "Error: There is an error in your calculation.")
         return
 
+async def cmd_help(client, message, _):
+        await client.send_message(message.channel,
+                                  'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
+
 # Simple math command.
 async def cmd_math(client, message, arg):
     if not arg:
@@ -214,10 +219,6 @@ async def cmd_coin(client, message, _):
     await sleep(.5)
     await client.send_message(message.channel, "The coin lands on: %s." % coin)
     return coin
-
-async def cmd_help(client, message, _):
-    await client.send_message(message.channel,
-                              'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Delete 50 messages from channel
 async def cmd_clear(client, message, arg):
@@ -363,7 +364,6 @@ async def cmd_add_censored_word(client, message, input):
                                                    "**exchannel**=<channel to be excluded> **infomessage**=<message>\n"
                                                    "You can define just **exchannel** or **infomessage**, or both.")
         return
-    print(message.id, 'this is the message id!')
     await sleep(1)
     await add_censored_word_into_database(bannedwords, message.id, exchannel_id, infomessage)
     await client.send_message(message.channel, 'Succesfully defined a new censored word entry.')
@@ -469,7 +469,7 @@ async def cmd_del_censored_words(client, message, arg):
         print(index - 1, len(censored_word_entries))
         if index > len(censored_word_entries) - 1 or int(
                 arg) == 0:  # While defining 0 as an ID works, we don't want that heh
-            await client.send_message(message.channel, "No such ID in list")
+            await client.send_message(message.channel, "No such ID in list.")
             return
         await delete_censored_words_from_database(censored_word_entries[index]['message_id'])
         await client.send_message(message.channel, "Censored word succesfully deleted.")
@@ -658,7 +658,7 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(db.initialize_schema())
 loop.run_until_complete(awards.main())
 
-for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva]:
+for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands]:
     commands.update(module.register(client))
 
 

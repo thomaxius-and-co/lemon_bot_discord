@@ -9,3 +9,4 @@ lxml==3.8.0
 parsedatetime==2.4
 pytz==2017.2
 wolframalpha==3.0
+phue==1.0
