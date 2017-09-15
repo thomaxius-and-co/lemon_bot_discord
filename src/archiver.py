@@ -6,6 +6,7 @@ import aiohttp
 import database as db
 import util
 import logger
+import perf
 
 log = logger.get("ARCHIVER")
 
@@ -35,6 +36,7 @@ async def get(path):
             else:
                 return response, None
 
+@perf.time_async("Fetch discord messages")
 async def get_messages(channel_id, after):
     return await get("channels/%s/messages?after=%s&limit=100" % (channel_id, after))
 
