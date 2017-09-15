@@ -3,6 +3,8 @@ import aiohttp
 import redis
 import json
 
+import perf
+
 class User:
     def __init__(self, json):
         self.json = json
@@ -105,7 +107,10 @@ class Beatmap:
 def make_query_string(params):
     return "?" + "&".join(map(lambda x: "=".join(x), params.items()))
 
+@perf.time_async("osu! API")
 async def call_api(endpoint, params):
+    params = params.copy()
+    params.update({"k": os.environ["OSU_API_KEY"]})
     url = "https://osu.ppy.sh/api/%s%s" % (endpoint, make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
@@ -113,7 +118,6 @@ async def call_api(endpoint, params):
 
 async def user(name):
     return map(User, await call_api("get_user", {
-        "k": os.environ["OSU_API_KEY"],
         "type": "u",
         "u": name,
         "event_days": "1",
@@ -124,7 +128,6 @@ async def user_best(name, limit):
         raise Error("osu: invalid limit")
 
     return map(Play, await call_api("get_user_best", {
-        "k": os.environ["OSU_API_KEY"],
         "type": "u",
         "u": name,
         "limit": str(limit),
@@ -136,7 +139,6 @@ async def beatmaps(beatmap_id):
     if cached is not None:
         return map(Beatmap, json.loads(cached))
     raw = await call_api("get_beatmaps", {
-        "k": os.environ["OSU_API_KEY"],
         "m": "0",
         "b": str(beatmap_id),
         "limit": "1",
