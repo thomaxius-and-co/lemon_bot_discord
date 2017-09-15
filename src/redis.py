@@ -2,7 +2,6 @@ import aioredis
 import os
 import threading
 
-
 _pool_holder = threading.local()
 
 def connection_details():
@@ -26,7 +25,7 @@ async def close_pool():
 
 async def get(key, encoding="utf-8"):
     pool = await get_pool()
-    await pool.get(key, encoding=encoding)
+    return await pool.get(key, encoding=encoding)
 
 async def set(key, data, expire=None):
     pool = await get_pool()
