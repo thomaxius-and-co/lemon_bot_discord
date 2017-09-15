@@ -1,5 +1,5 @@
 import os
-import http_util as http
+import aiohttp
 import redis
 import json
 
@@ -107,8 +107,9 @@ def make_query_string(params):
 
 async def call_api(endpoint, params):
     url = "https://osu.ppy.sh/api/%s%s" % (endpoint, make_query_string(params))
-    r = await http.get(url)
-    return await r.json()
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url)
+        return await r.json()
 
 async def user(name):
     return map(User, await call_api("get_user", {

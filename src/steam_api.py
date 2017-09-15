@@ -1,5 +1,5 @@
 import os
-import http_util as http
+import aiohttp
 import redis
 import json
 
@@ -30,8 +30,9 @@ async def call_api(endpoint, params):
     params = params.copy()
     params.update({"key": os.environ["STEAM_API_KEY"], "format": "json"})
     url = "https://api.steampowered.com/%s%s" % (endpoint, make_query_string(params))
-    r = await http.get(url)
-    return await r.json()
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url)
+        return await r.json()
 
 async def owned_games(steamid):
     cache_key = "steam:owned_games:{steamid}".format(steamid=steamid)
@@ -79,8 +80,9 @@ async def steamid(username):
 @perf.time_async("Steam API")
 async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
-    r = await http.get(url)
-    return await r.json()
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url)
+        return await r.json()
 
 async def appdetails(appid):
     def parse(raw):

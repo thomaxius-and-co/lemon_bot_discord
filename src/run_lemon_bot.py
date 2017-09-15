@@ -27,7 +27,7 @@ import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
 from asyncio import sleep
-import http_util as http
+import aiohttp
 import difflib
 import wolframalpha
 import database as db
@@ -129,14 +129,15 @@ async def cmd_weather(client, message, zip_code):
         await client.send_message(message.channel, "You must specify a city, eq. Säkylä.")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
-    r = await http.get(link)
-    data = await r.json()
-    location = data['name']
-    F = data['main']['temp'] * 1.8 - 459.67
-    C = (F - 32) * 5 / 9
-    status = data['weather'][0]['description']
-    payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-    await client.send_message(message.channel, payload)
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(link)
+        data = await r.json()
+        location = data['name']
+        F = data['main']['temp'] * 1.8 - 459.67
+        C = (F - 32) * 5 / 9
+        status = data['weather'][0]['description']
+        payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
+        await client.send_message(message.channel, payload)
 
 async def domath(channel, input):
     if len(input) < 3:
