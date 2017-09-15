@@ -1,9 +1,9 @@
-# TODO REMOVE
-
 import os
 import http_util as http
 import redis
 import json
+
+import perf
 
 HOUR_IN_SECONDS = 60 * 60
 WEEK_IN_SECONDS = 7 * 24 * HOUR_IN_SECONDS
@@ -25,7 +25,10 @@ class OwnedGame:
 def make_query_string(params):
     return "?" + "&".join(map(lambda x: "=".join(map(str, x)), params.items()))
 
+@perf.time_async("Steam API")
 async def call_api(endpoint, params):
+    params = params.copy()
+    params.update({"key": os.environ["STEAM_API_KEY"], "format": "json"})
     url = "https://api.steampowered.com/%s%s" % (endpoint, make_query_string(params))
     r = await http.get(url)
     return await r.json()
@@ -37,11 +40,7 @@ async def owned_games(steamid):
     if cached is not None:
         return map(OwnedGame, json.loads(cached)["response"]["games"])
 
-    raw = await call_api("IPlayerService/GetOwnedGames/v0001/", {
-        "key": os.environ["STEAM_API_KEY"],
-        "steamid": steamid,
-        "format": "json",
-    })
+    raw = await call_api("IPlayerService/GetOwnedGames/v0001/", {"steamid": steamid})
 
     await redis.set(cache_key, json.dumps(raw), expire=HOUR_IN_SECONDS)
 
@@ -54,10 +53,7 @@ async def game(appid):
     if cached is not None:
         return Game(json.loads(cached)["game"])
 
-    raw = await call_api("ISteamUserStats/GetSchemaForGame/v2/", {
-        "key": os.environ["STEAM_API_KEY"],
-        "appid": appid,
-    })
+    raw = await call_api("ISteamUserStats/GetSchemaForGame/v2/", {"appid": appid})
 
     await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
 
@@ -75,15 +71,12 @@ async def steamid(username):
     if cached is not None:
         return parse(json.loads(cached))
 
-    raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {
-        "key": os.environ["STEAM_API_KEY"],
-        "vanityurl": username,
-        "format": "json",
-    })
+    raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {"vanityurl": username})
 
     await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
     return parse(raw)
 
+@perf.time_async("Steam API")
 async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
     r = await http.get(url)
