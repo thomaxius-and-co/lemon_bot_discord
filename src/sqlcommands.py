@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
+import logger
+
+log = logger.get("SQLCOMMANDS")
 
 playinglist = []
 
@@ -137,10 +140,10 @@ async def getquoteforquotegame(name):
             1
     """, name)
         if not invalid_quote(quote['content']):
-            print('This quote is good', quote['content'].encode("utf-8"))
+            log.info('This quote is good {0}'.format(quote['content'].encode("utf-8")))
             return quote
         else:
-            print('This quote is bad, fetching a new one..', quote['content'].encode("utf-8"))
+            log.info('This quote is bad, fetching a new one.. {0}'.format(quote['content'].encode("utf-8")))
     return None
 
 
@@ -882,7 +885,7 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
         (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     """, userid, message_id, sanitizedquestion, correctname, answer, 1 if correct else 0, datetime.today(), datetime.today().isocalendar()[1])
-    print("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
+    log.info("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
 
 async def cmd_add_excluded_user(client, message, input):
     if not input:
@@ -935,7 +938,7 @@ async def add_excluded_user_into_database(excluded_user_id, adder_user_id):
         INSERT INTO excluded_users AS a
         (excluded_user_id, added_by_id)
         VALUES ($1, $2)""",excluded_user_id, adder_user_id)
-    print('Added an excluded user into the database:', excluded_user_id)
+    log.info('Added an excluded user into the database: {0}'.format(excluded_user_id))
 
 async def del_excluded_user_from_database(excluded_user_id):
     await db.execute("""
@@ -945,7 +948,7 @@ async def del_excluded_user_from_database(excluded_user_id):
         WHERE
             excluded_user_id like $1
         """,excluded_user_id)
-    print('Removed an excluded user from the database:', excluded_user_id)
+    log.info('Removed an excluded user from the database:'.format(excluded_user_id))
 
 async def get_time_until_reset():
     datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

@@ -279,7 +279,6 @@ async def cmd_slots(client, message, arg, debug=False):
 
     if amount == 4 and most_common in ['Star', emoji.STAR]:
         if jackpotamount > 0:
-            print(jackpotamount)
             await update_jackpot(player.id, jackpotamount, win=True)
         for spam in range(0, 3):
             await client.send_message(message.channel,

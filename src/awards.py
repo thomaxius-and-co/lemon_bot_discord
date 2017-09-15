@@ -2,6 +2,10 @@ import database as db
 import asyncio
 from asyncio import sleep
 
+import logger
+
+log = logger.get("AWARDS")
+
 TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
                 'Biggest gambling problem', 'Best grammar', 'Worst grammar']
 CUSTOM_TROPHY_NAMES = []
@@ -208,7 +212,7 @@ async def add_custom_award_to_database(name, conditions, message_id):
         INSERT INTO custom_trophies AS a
         (message_id, trophy_name, trophy_conditions)
         VALUES ($1, $2, $3)""", message_id, name, conditions)
-    print('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s' % (message_id, name, conditions))
+    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s' % (message_id, name, conditions))
 
 
 async def cmd_alltrophies(client, message, arg):

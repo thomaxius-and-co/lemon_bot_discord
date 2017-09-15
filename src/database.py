@@ -3,6 +3,9 @@ from contextlib import contextmanager
 
 import threading
 import asyncpg
+import logger
+
+log = logger.get("DATABASE")
 
 schema_migrations = {
     # Initial DB
@@ -426,13 +429,16 @@ def new_migrations(version):
 async def initialize_schema():
     async with transaction() as tx:
         version = await get_current_schema_version(tx)
+        log.info("Current schema version is {0}".format(version))
+
         migrations, new_version = new_migrations(version)
+        log.info("Found {0} new migirations".format(len(migrations)))
 
         if len(migrations) > 0:
             for version, sql in migrations:
-                print("database: migrating to version {0}".format(version))
+                log.info("Migrating to version {0}".format(version))
                 await tx.execute(sql)
 
             await tx.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
 
-    print("database: schema is in up to date")
+    log.info("Schema is in up to date")

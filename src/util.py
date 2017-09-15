@@ -5,12 +5,15 @@ import sys
 import threading
 import traceback
 import http_util as http
+import logger
+
+log = logger.get("UTIL")
 
 webhook_url = os.environ.get("ERROR_CHANNEL_WEBHOOK", None)
 
-async def log_exception():
+async def log_exception(error_log):
     err_str = traceback.format_exc()
-    print("ERROR: {0}".format(err_str))
+    error_log.error(err_str)
     if webhook_url is not None:
         await post_exception(err_str)
 
@@ -19,7 +22,7 @@ async def log_exception():
     error_message = str(sys.exc_info()[1])
     if error_message == 'Event loop is closed':
         msg = "Snipety snap! Event loop is closed! Committing sudoku in 3.. 2.. 1.."
-        print("util: {0}".format(msg))
+        log.error(msg)
         if webhook_url is not None:
             await post_exception(msg)
         os._exit(0)
@@ -33,10 +36,10 @@ async def post_exception(err_str):
 
     r = await http.post(webhook_url + "/slack", data=json.dumps(data))
     if r.status != 200:
-        print("util: unknown webhook response {0}".format(r))
+        log.error("Unknown webhook response {0}".format(r))
         return
 
-    print("util: posted error on channel")
+    log.info("Posted error on channel")
 
 
 # Run discord.py coroutines from antoher thread

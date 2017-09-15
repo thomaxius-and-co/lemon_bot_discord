@@ -12,7 +12,6 @@ async def cmd_connecttohue(client, message, input):
         await client.send_message(message.channel, "Error: You need to specify hue IP to connect to.")
         return
     if not input.replace('.','').isdigit():
-        print(input.strip('.'))
         await client.send_message(message.channel, "Error: IP must be numeric.")
         return
     try:

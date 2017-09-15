@@ -8,6 +8,9 @@ import database as db
 import command
 import emoji
 import util
+import logger
+
+log = logger.get("FEED")
 
 def time_to_datetime(struct_time):
     return datetime.fromtimestamp(time.mktime(struct_time))
@@ -52,10 +55,10 @@ def make_embed(item):
     return embed
 
 async def process_feed(client, id, url, last_entry, channel_id):
-    print("feed: processing feed '{0}'".format(url))
+    log.info("Processing feed '{0}'".format(url))
     parsed = get_new_items(url, last_entry)
     if parsed is None:
-      print("feed: feed missing title")
+      log.info("Feed missing title")
       return
 
     feed_title, feed_url, new_items = parsed
@@ -88,11 +91,11 @@ async def task(client):
     while True:
         await asyncio.sleep(fetch_interval)
         try:
-            print("feed: checking feeds")
+            log.info("Checking feeds")
             await check_feeds(client)
-            print("feed: feeds checked")
+            log.info("Feed: feeds checked")
         except Exception:
-            await util.log_exception()
+            await util.log_exception(log)
 
 async def cmd_feed(client, message, arg):
     if arg is None:
@@ -123,7 +126,7 @@ async def cmd_feed_add(client, message, url):
 
     await db.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
 
-    print("feed: added feed '{0}'".format(url))
+    log.info("Added feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
 
@@ -134,11 +137,11 @@ async def cmd_feed_remove(client, message, url):
 
     await db.execute("DELETE FROM feed WHERE url = $1", url)
 
-    print("feed: removed feed '{0}'".format(url))
+    log.info("Removed feed '{0}'".format(url))
     await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
 def register(client):
-    print("feed: registering")
+    log.info("Registering")
     util.start_task_thread(task(client))
     return {
         "feed": cmd_feed,

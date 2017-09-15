@@ -22,7 +22,6 @@
 import os
 import json
 import discord
-import logging
 import random
 import enchanting_chances as en
 from BingTranslator import Translator
@@ -48,14 +47,9 @@ import steam
 import anssicommands
 import awards
 import lightcommands
+import logger
 
-
-# Configure logging (https://docs.python.org/3/library/logging.html#logrecord-attributes)
-FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-# Make discord.py log a bit less
-for logger in ['discord', 'websockets']:
-    logging.getLogger(logger).setLevel(logging.INFO)
+log = logger.get("BOT")
 
 client = discord.Client()
 wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
@@ -159,7 +153,7 @@ async def domath(channel, input):
     i2 = 2
     for char in range(len(input) - 1):
         if input[-1] in '+-/*':
-            print("Error: No digit specified after operator (last %s)." % (input[-1]))
+            log.info("Error: No digit specified after operator (last %s)." % (input[-1]))
             return
         i += 2
         i2 += 2
@@ -288,7 +282,7 @@ async def cmd_wolframalpha(client, message, query):
     def valid(query):
         return len(query.strip()) > 0
 
-    print("Searching WolframAlpha for '%s'" % query)
+    log.info("Searching WolframAlpha for '%s'" % query)
 
     if not valid(query):
         await client.send_message(message.channel, usage)
@@ -303,7 +297,7 @@ async def cmd_wolframalpha(client, message, query):
     except ConnectionResetError:
         await client.send_message(message.channel, 'Sorry, WolframAlpha is slow as fuck right now.')
     except Exception as e:
-        print("ERROR", type(e), e)
+        log.error("Error querying WolframAlpha: {0} {1}".format(type(e), e))
         await client.send_message(message.channel, 'I don\'t know how to answer that.')
 
 async def cmd_version(client, message, args):
@@ -394,7 +388,7 @@ async def add_censored_word_into_database(censored_words, message_id, exchannel_
         INSERT INTO censored_words AS a
         (message_id, censored_words, exchannel_id, info_message)
         VALUES ($1, $2, $3, $4)""", message_id, censored_words, exchannel_id, infomessage)
-    print('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s' % (
+    log.info('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s' % (
         censored_words, exchannel_id, infomessage, message_id))
 
 async def get_censored_words():
@@ -466,7 +460,6 @@ async def cmd_del_censored_words(client, message, arg):
         return
     else:
         index = int(arg) - 1
-        print(index - 1, len(censored_word_entries))
         if index > len(censored_word_entries) - 1 or int(
                 arg) == 0:  # While defining 0 as an ID works, we don't want that heh
             await client.send_message(message.channel, "No such ID in list.")
@@ -581,22 +574,22 @@ async def on_socket_raw_receive(raw_msg):
     data = msg.get("d", None)
 
     if (type == "MESSAGE_CREATE"):
-        print("main: insta-archiving a new message")
+        log.info("Insta-archiving a new message")
         await archiver.insert_message(db, data)
 
     elif (type == "GUILD_CREATE"):
-        print("main: updating users from GUILD_CREATE event")
+        log.info("Updating users from GUILD_CREATE event")
         members = data.get("members", [])
         users = [m.get("user") for m in members]
         await upsert_users(users)
 
     elif (type == "GUILD_MEMBER_UPDATE"):
-        print("main: updating user from GUILD_MEMBER_UPDATE event")
+        log.info("Updating user from GUILD_MEMBER_UPDATE event")
         user = data.get("user")
         await upsert_users([user])
 
     elif (type == "PRESENCE_UPDATE"):
-        print("main: updating user from PRESENCE_UPDATE event")
+        log.info("Updating user from PRESENCE_UPDATE event")
         user = data.get("user")
         await upsert_users([user])
 
@@ -607,12 +600,12 @@ def is_full_user(user):
 
 async def upsert_users(users):
     if not all(is_full_user(user) for user in users):
-        print("main: not all users were full")
+        log.info("Not all users were full")
         return
 
     async with db.transaction() as tx:
         for user in users:
-            print("user: updating", user)
+            log.info("Updating user {0}".format(user))
             await tx.execute("""
                 INSERT INTO discord_user
                 (user_id, name, raw)
@@ -646,7 +639,7 @@ async def on_message(message):
             return
 
     except Exception:
-        await util.log_exception()
+        await util.log_exception(log)
 
 def autocorrect_command(cmd):
     matches = difflib.get_close_matches(cmd, commands.keys(), n=1, cutoff=0.7)
@@ -661,10 +654,11 @@ loop.run_until_complete(awards.main())
 for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands]:
     commands.update(module.register(client))
 
-
 @client.event
 async def on_ready():
     await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
 
 
-client.run(token)
+if __name__ == "__main__":
+    logger.init()
+    client.run(token)

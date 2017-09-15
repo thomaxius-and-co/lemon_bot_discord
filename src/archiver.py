@@ -5,9 +5,9 @@ import traceback
 import aiohttp
 import database as db
 import util
-import logging
+import logger
 
-log = logging.getLogger("ARCHIVER")
+log = logger.get("ARCHIVER")
 
 ERROR_MISSING_ACCESS = 50001
 
@@ -158,9 +158,10 @@ async def main():
             log.info("Starting archival")
             await run_archival()
         except Exception:
-            await util.log_exception()
+            await util.log_exception(log)
         await asyncio.sleep(15 * 60)
 
 if __name__ == '__main__':
+    logger.init()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())

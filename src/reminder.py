@@ -9,9 +9,12 @@ from time_util import to_utc, to_helsinki, as_utc, as_helsinki
 import emoji
 import database as db
 import util
+import logger
+
+log = logger.get("REMINDER")
 
 def register(client):
-    print("reminder: registering")
+    log.info("Registering")
     util.start_task_thread(task(client))
     return {
         "remind": cmd_reminder,
@@ -52,7 +55,7 @@ async def task(client):
         try:
             await process_next_reminder(client)
         except Exception as e:
-            await util.log_exception()
+            await util.log_exception(log)
 
 async def process_next_reminder(client):
     async with db.transaction() as tx:
@@ -65,7 +68,7 @@ async def process_next_reminder(client):
         if len(reminders) == 0:
             return
 
-        print("reminder: sending {0} reminders".format(len(reminders)))
+        log.info("Sending {0} reminders".format(len(reminders)))
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
