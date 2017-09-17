@@ -647,19 +647,19 @@ def autocorrect_command(cmd):
     if len(matches) > 0:
         return matches[0]
 
-# Database schema has to be initialized before running the bot
-loop = asyncio.get_event_loop()
-loop.run_until_complete(db.initialize_schema())
-loop.run_until_complete(awards.main())
-
-for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands]:
-    commands.update(module.register(client))
-
 @client.event
 async def on_ready():
     await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
 
-
 if __name__ == "__main__":
     logger.init()
+
+    # Database schema has to be initialized before running the bot
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(db.initialize_schema())
+    loop.run_until_complete(awards.main())
+
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands]:
+        commands.update(module.register(client))
+
     client.run(token)
