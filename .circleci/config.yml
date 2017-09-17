@@ -1,0 +1,34 @@
+version: 2
+
+jobs:
+  test:
+    working_directory: ~/repo
+    machine: true
+    steps:
+      - checkout
+      - run: pyenv global 2.7.12 3.5.2
+      - run: pip install -r ansible/requirements.txt
+      - run: pip install tox==2.5.0
+      - run: ./test.sh
+
+  deploy:
+    working_directory: ~/repo
+    machine: true
+    steps:
+      - checkout
+      - run: pyenv global 2.7.12 3.5.2
+      - run: pip install -r ansible/requirements.txt
+      - run: ./deploy.sh
+
+workflows:
+  version: 2
+  test_and_deploy:
+    jobs:
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
+
