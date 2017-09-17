@@ -49,6 +49,8 @@
         src: ../src
         dest: "/home/{{ app_name }}"
         delete: yes
+        rsync_opts:
+          - "--chown=lemon:lemon"
       notify:
         - restart services
 
