@@ -69,7 +69,7 @@ app.get('*', (req, res, next) => {
       checksumPromise(styleCssFilePath),
       (state, bundleJsChecksum, styleCssChecksum) => {
         const initialState = Object.assign(page.initialState, state)
-        const checkSums = {bundleJsChecksum, styleCssChecksum}
+        const checksums = {bundleJsChecksum, styleCssChecksum}
         res.send(ReactDOMServer.renderToString(basePage(page, initialState, checksums)))
       }
     ).catch(next)
