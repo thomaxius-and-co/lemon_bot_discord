@@ -1,7 +1,7 @@
 {
   "name": "web",
   "scripts": {
-    "build-client": "browserify --entry client.js > .generated/bundle.js",
+    "build-client": "browserify --entry client.js > public/bundle.js",
     "start": "babel-node server.js",
     "dev": "npm-run-all build-client start"
   },

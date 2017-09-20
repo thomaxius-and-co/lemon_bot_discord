@@ -66,9 +66,11 @@ app.get('*', (req, res, next) => {
     Promise.join(
       buildInitialState(path, req.query),
       checksumPromise(bundleJsFilePath),
-      (state, bundleJsChecksum) => {
+      checksumPromise(styleCssFilePath),
+      (state, bundleJsChecksum, styleCssChecksum) => {
         const initialState = Object.assign(page.initialState, state)
-        res.send(ReactDOMServer.renderToString(basePage(page, initialState, { bundleJsChecksum })))
+        const checkSums = {bundleJsChecksum, styleCssChecksum}
+        res.send(ReactDOMServer.renderToString(basePage(page, initialState, checksums)))
       }
     ).catch(next)
   } else {
@@ -76,8 +78,10 @@ app.get('*', (req, res, next) => {
   }
 })
 
-const bundleJsFilePath = path.resolve(`${__dirname}/.generated/bundle.js`)
+const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))
+const styleCssFilePath = path.resolve(`${__dirname}/public/style.css`)
+app.get('/style.css', serveStaticResource(styleCssFilePath))
 
 app.listen(3000, () => {
   console.log('Listening on port 3000')

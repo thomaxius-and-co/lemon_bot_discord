@@ -1,0 +1,26 @@
+body {
+  font-family: "helvetica neue", helvetica, arial, sans-serif;
+}
+
+table { font-size: 1.2rem; }
+
+thead {
+  font-weight: bold;
+}
+
+tbody {
+  font-family: monospace;
+}
+
+/* Message counts */
+td:nth-child(2),
+td:nth-child(3) {
+  text-align: right;
+}
+tbody tr:nth-child(odd) {
+  background-color: #eee;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #fff;
+}

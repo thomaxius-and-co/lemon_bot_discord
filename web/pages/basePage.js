@@ -11,6 +11,10 @@ const render = (page, applicationState, checksums) =>
       React.DOM.script({
         async: '',
         src: `bundle.js?checksum=${checksums.bundleJsChecksum}`,
+      }),
+      React.DOM.link({
+        rel: `stylesheet`,
+        href: `style.css?checksum=${checksums.styleCssChecksum}`
       })
     ),
     React.DOM.body({ id: 'applicationState', 'data-state': JSON.stringify(applicationState), },
