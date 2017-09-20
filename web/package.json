@@ -23,10 +23,10 @@
     "browserify": "14.4.0",
     "express": "^4.14.0",
     "pg-promise": "6.7.1",
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1",
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.11"
+    "react": "15.6.1",
+    "react-dom": "15.6.1"
   },
   "devDependencies": {
     "npm-run-all": "4.1.1"
