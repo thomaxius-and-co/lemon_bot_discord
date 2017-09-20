@@ -16,9 +16,9 @@
     ]
   },
   "dependencies": {
-    "babel-cli": "^6.18.0",
-    "babel-preset-react": "^6.16.0",
-    "babelify": "^7.3.0",
+    "babel-cli": "6.26.0",
+    "babel-preset-react": "6.24.1",
+    "babelify": "7.3.0",
     "bluebird": "^3.4.7",
     "browserify": "14.4.0",
     "express": "^4.14.0",
