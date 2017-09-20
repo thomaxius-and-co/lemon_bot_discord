@@ -1,7 +1,16 @@
 #!/bin/sh
 
 set -e
-export ROOT=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")
+
+function absolute_path {
+  if which realpath &> /dev/null; then
+    realpath "$@"
+  else
+    readlink -f "$@"
+  fi
+}
+
+export ROOT=$(absolute_path "$(dirname "${BASH_SOURCE[0]}")/..")
 
 function ssh_vm {
   cd $ROOT/local-services
