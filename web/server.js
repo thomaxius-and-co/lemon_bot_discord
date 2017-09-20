@@ -23,7 +23,7 @@ const serveStaticResource = filePath => (req, res, next) => {
   checksumPromise(filePath).then(checksum => {
     if (req.query.checksum == checksum) {
       const oneYearInSeconds = 60 * 60 * 24 * 356
-      res.setHeader('Cache-Control', `public, max-age=${oneYearInSeconds}`)
+      res.setHeader('Cache-Control', `public, max-age=${oneYearInSeconds}, immutable`)
       res.sendFile(filePath)
     } else {
       res.status(404).end()
