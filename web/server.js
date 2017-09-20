@@ -5,9 +5,14 @@ const express = require('express')
 const ReactDOMServer = require('react-dom/server')
 
 const db = require('./db')
+const auth = require("./auth")
 
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
+const adminPage = require('./pages/adminPage')
+
+const app = express()
+auth.init(app)
 
 const checksumPromise = filePath => new Promise((resolve, reject) => {
   require('fs').readFile(filePath, (error, fileContent) => {
@@ -32,10 +37,13 @@ const serveStaticResource = filePath => (req, res, next) => {
   .catch(next)
 }
 
-const app = express()
-
-const buildInitialState = (path, params) => {
-  switch (path) {
+const buildInitialState = req => {
+  switch (req.path) {
+  case '/admin':
+    console.log(req.user)
+    return Promise.resolve({
+      user: req.user,
+    })
   case '/':
     return Promise.join(
       db.findUserMessageCount(),
@@ -44,6 +52,7 @@ const buildInitialState = (path, params) => {
       db.messagesInLastNDays(30),
       db.findDailyMessageCounts(30),
       (userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
+        user: req.user,
         userMessages,
         botMessages,
         messagesInLastWeek,
@@ -57,14 +66,19 @@ const buildInitialState = (path, params) => {
   }
 }
 
-app.get('*', (req, res, next) => {
+renderApp = (req, res, next) => {
   console.log(`Requested ${req.originalUrl}`)
   const path = req.originalUrl
-  if (path === '/') {
-    const page = statisticsPage // TODO
+  let page = undefined
+  if (path === '/admin') {
+    page = adminPage // TODO
+  } else if (path === '/') {
+    page = statisticsPage // TODO
+  }
 
+  if (page) {
     Promise.join(
-      buildInitialState(path, req.query),
+      buildInitialState(req),
       checksumPromise(bundleJsFilePath),
       checksumPromise(styleCssFilePath),
       (state, bundleJsChecksum, styleCssChecksum) => {
@@ -76,7 +90,10 @@ app.get('*', (req, res, next) => {
   } else {
     next()
   }
-})
+}
+
+app.get("/admin", auth.requireAdmin, renderApp)
+app.get("/", renderApp)
 
 const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))

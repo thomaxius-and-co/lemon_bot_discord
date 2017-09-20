@@ -8,7 +8,12 @@ User={{ app_name }}
 Group={{ app_name }}
 ExecStart=/home/{{ app_name }}/web/run.sh
 WorkingDirectory=/home/{{ app_name }}/web
+Environment=ADMIN_USER_IDS={{ secrets.admin_user_ids }}
 Environment=LEMONBOT_TOKEN={{ secrets.discord_token }}
+Environment=DISCORD_BOT_ID={{ secrets.discord_bot_id }}
+Environment=DISCORD_CLIENT_ID={{ secrets.discord_client_id }}
+Environment=DISCORD_CLIENT_SECRET={{ secrets.discord_client_secret }}
+Environment=DISCORD_CALLBACK_URL={{ secrets.discord_callback_url }}
 Environment=WOLFRAM_ALPHA_APPID={{ secrets.wolfram_alpha_appid }}
 Environment=OPEN_WEATHER_APPID={{ secrets.open_weather_appid }}
 Environment=BING_CLIENTID={{ secrets.bing.clientid }}
@@ -21,3 +26,4 @@ Environment=DATABASE_PASSWORD={{ secrets.db.password }}
 Environment=REDIS_HOST=localhost
 Environment=REDIS_PORT={{ secrets.redis.port }}
 Environment=ERROR_CHANNEL_WEBHOOK={{ secrets.error_channel_webhook }}
+Environment=WEB_SESSION_SECRET={{ secrets.web_session_secret }}

@@ -44,6 +44,10 @@ const renderPage = state =>
     <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
     <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
     {dailyMessageCountTable(state.dailyMessageCounts)}
+    {state.user && <p><a href="/admin">Admin</a></p>}
+    {state.user
+        ? <p><a href="/logout">Logout</a></p>
+        : <p><a href="/login">Login</a></p>}
   </div>
 
 module.exports = {
