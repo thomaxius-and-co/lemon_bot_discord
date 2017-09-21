@@ -17,7 +17,7 @@ const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
 const formatNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
 
 const dailyMessageCountTable = dailyMessageCounts =>
-  <table>
+  <table className="row">
     <thead>
       <tr>
           <td>Date</td>
@@ -38,12 +38,14 @@ const dailyMessageCountTable = dailyMessageCounts =>
 
 const renderPage = state =>
   <div>
-    {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
-    <h1>Discord statistics</h1>
-    <p>Total messages {formatNum(state.userMessages + state.botMessages)}</p>
-    <p>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</p>
-    <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
-    <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
+    <div className="row">
+      {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
+      <h1>Discord statistics</h1>
+      <p>Total messages {formatNum(state.userMessages + state.botMessages)}</p>
+      <p>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</p>
+      <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
+      <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
+    </div>
     {dailyMessageCountTable(state.dailyMessageCounts)}
   </div>
 

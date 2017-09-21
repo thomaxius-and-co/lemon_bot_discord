@@ -8,11 +8,13 @@ const Login = ({user}) =>
   </ul>
 
 const Header = ({user}) =>
-  <div className="header">
-    <ul className="navigation">
-      <li><a href="/">Home</a></li>
-    </ul>
-    <Login user={user} />
+  <div className="header-wrapper">
+    <div className="header">
+      <ul className="navigation">
+        <li><a href="/">Home</a></li>
+      </ul>
+      <Login user={user} />
+    </div>
   </div>
 
 const render = (page, applicationState, checksums) =>
@@ -26,8 +28,10 @@ const render = (page, applicationState, checksums) =>
     </head>
     <body id="applicationState" data-state={JSON.stringify(applicationState)}>
       <Header user={applicationState.user} />
-      <div className="content">
-        {page.renderPage(applicationState)}
+      <div className="content-wrapper">
+        <div className="content">
+          {page.renderPage(applicationState)}
+        </div>
       </div>
     </body>
   </html>

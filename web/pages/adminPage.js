@@ -9,7 +9,7 @@ const initialState = {
 }
 
 const renderPage = state =>
-  <div>
+  <div className="row">
     <h1>Discord Admin</h1>
     <p>You are logged in as user:</p>
     <pre>{JSON.stringify(state.user, null, 2)}</pre>
