@@ -41,9 +41,13 @@ const findDailyMessageCounts = days =>
     LIMIT ${Number(days)}
   `)
 
+const findMessageCountByUser = userId =>
+  db.query(`SELECT count(*) FROM message WHERE user_id = $1`, userId).then(rows => rows[0].count)
+
 module.exports = {
   findUserMessageCount,
   findBotMessageCount,
   messagesInLastNDays,
   findDailyMessageCounts,
+  findMessageCountByUser,
 }

@@ -36,6 +36,14 @@ const dailyMessageCountTable = dailyMessageCounts =>
     </tbody>
   </table>
 
+const Login = state =>
+  <div>
+    {state.user && <p><a href="/admin">Admin</a></p>}
+    {state.user
+        ? <p><a href="/logout">Logout</a></p>
+        : <p><a href="/login">Login</a></p>}
+  </div>
+
 const renderPage = state =>
   <div>
     <h1>Discord statistics</h1>
@@ -44,10 +52,14 @@ const renderPage = state =>
     <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
     <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
     {dailyMessageCountTable(state.dailyMessageCounts)}
-    {state.user && <p><a href="/admin">Admin</a></p>}
-    {state.user
-        ? <p><a href="/logout">Logout</a></p>
-        : <p><a href="/login">Login</a></p>}
+    {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
+    <Login {...state}/>
+  </div>
+
+const UserStats = props =>
+  <div>
+    <h1>Personal stats</h1>
+    <p>You, {props.user.username}#{props.user.discriminator}, have written {formatNum(props.messageCount)} messages.</p>
   </div>
 
 module.exports = {

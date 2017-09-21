@@ -40,19 +40,21 @@ const serveStaticResource = filePath => (req, res, next) => {
 const buildInitialState = req => {
   switch (req.path) {
   case '/admin':
-    console.log(req.user)
     return Promise.resolve({
       user: req.user,
     })
   case '/':
+    const messageCountByUser = req.user ? db.findMessageCountByUser(req.user.id) : Promise.resolve(-1)
     return Promise.join(
+      messageCountByUser,
       db.findUserMessageCount(),
       db.findBotMessageCount(),
       db.messagesInLastNDays(7),
       db.messagesInLastNDays(30),
       db.findDailyMessageCounts(30),
-      (userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
+      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
         user: req.user,
+        messageCountByUser,
         userMessages,
         botMessages,
         messagesInLastWeek,
