@@ -24,7 +24,6 @@ const requireLogin = (req, res, next) => {
 const requireAdmin = (req, res, next) => {
   if (!req.isAuthenticated()) {
     console.log("requireAdmin: no auth")
-    req.session.returnFromLoginPath = req.path
     return res.redirect("/login")
   }
 
@@ -69,8 +68,7 @@ const init = app => {
     res.redirect("/")
   })
   app.get("/login", passport.authenticate("discord", {scope, failureRedirect: "/error"}), (req, res) => {
-    const returnPath = req.session.returnFromLoginPath || "/"
-    res.redirect(returnPath)
+    res.redirect("/")
   })
 }
 
