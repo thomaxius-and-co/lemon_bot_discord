@@ -5,13 +5,13 @@ const session = require("express-session")
 const RedisStore = require("connect-redis")(session)
 
 const redisOptions = {
-  host: process.env["REDIS_HOST"],
-  port: process.env["REDIS_PORT"],
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
   prefix: "web:session:",
   logErrors: true,
 }
 
-const ADMIN_USER_IDS = (process.env["ADMIN_USER_IDS"] || "").split(",")
+const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || "").split(",")
 
 const requireLogin = (req, res, next) => {
   if (!req.isAuthenticated()) {
@@ -44,9 +44,9 @@ const init = app => {
   passport.deserializeUser((obj, done) => done(null, obj))
 
   passport.use(new DiscordStrategy({
-    clientID: process.env["DISCORD_CLIENT_ID"],
-    clientSecret: process.env["DISCORD_CLIENT_SECRET"],
-    callbackURL: process.env["DISCORD_CALLBACK_URL"],
+    clientID: process.env.DISCORD_CLIENT_ID,
+    clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    callbackURL: process.env.DISCORD_CALLBACK_URL,
     scope: scope,
   }, (accessToken, refreshToken, profile, done) => {
     console.log(`Logged in as ${JSON.stringify(profile.id, null, 2)}`)
@@ -55,7 +55,7 @@ const init = app => {
 
   app.use(session({
     store: new RedisStore(redisOptions),
-    secret: process.env["WEB_SESSION_SECRET"],
+    secret: process.env.WEB_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
   }))
