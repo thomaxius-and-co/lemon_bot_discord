@@ -525,7 +525,7 @@ async def getresponse(client, message, score, cards, broke, hand):
     return score, stay, hand
 
 
-async def cmd_blackjack(client, message, _):
+async def cmd_blackjack(client, message, arg):
     broke = False
     blackjack = False
     phand = []
@@ -560,9 +560,9 @@ async def cmd_blackjack(client, message, _):
     pscore, phand = await dealhand(client, message, pscore, cards, broke, phand)
 
     # Player gets a blackjack
-    if pscore == 21:
+    if (pscore == 21):
         blackjack = True
-        bet *= 1.5
+        bet = float(bet) * 1.5
         if dhand[2] not in hicards:
             await dofinalspam(client, message, pscore, dscore, int(bet),
                               blackjack=True)  # If the dealer does not have a blackjack, they lose
