@@ -36,24 +36,15 @@ const dailyMessageCountTable = dailyMessageCounts =>
     </tbody>
   </table>
 
-const Login = state =>
-  <div>
-    {state.user && <p><a href="/admin">Admin</a></p>}
-    {state.user
-        ? <p><a href="/logout">Logout</a></p>
-        : <p><a href="/login">Login</a></p>}
-  </div>
-
 const renderPage = state =>
   <div>
+    {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
     <h1>Discord statistics</h1>
     <p>Total messages {formatNum(state.userMessages + state.botMessages)}</p>
     <p>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</p>
     <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
     <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
     {dailyMessageCountTable(state.dailyMessageCounts)}
-    {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
-    <Login {...state}/>
   </div>
 
 const UserStats = props =>

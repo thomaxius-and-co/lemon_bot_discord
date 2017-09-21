@@ -1,5 +1,20 @@
 const React = require("react")
 
+const Login = ({user}) =>
+  <ul className="login">
+    {user && <li><a href="/admin">Admin</a></li>}
+    {user ? <li><a href="/logout">Logout</a></li>
+          : <li><a href="/login">Login</a></li>}
+  </ul>
+
+const Header = ({user}) =>
+  <div className="header">
+    <ul className="navigation">
+      <li><a href="/">Home</a></li>
+    </ul>
+    <Login user={user} />
+  </div>
+
 const render = (page, applicationState, checksums) =>
   <html>
     <head>
@@ -10,7 +25,10 @@ const render = (page, applicationState, checksums) =>
       <link rel="stylesheet" href={`style.css?checksum=${checksums.styleCssChecksum}`}/>
     </head>
     <body id="applicationState" data-state={JSON.stringify(applicationState)}>
-      {page.renderPage(applicationState)}
+      <Header user={applicationState.user} />
+      <div className="content">
+        {page.renderPage(applicationState)}
+      </div>
     </body>
   </html>
 
