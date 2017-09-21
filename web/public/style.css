@@ -7,6 +7,20 @@ body {
   height: 100%;
 }
 
+/* Colors and stuff */
+h1, h2, h3, h4, h5, h6, thead {
+  color: #7289da;
+  margin: 0;
+  padding: 0;
+}
+
+.header, .header a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
 /* Header */
 .header {
   flex: 0 0 auto;
