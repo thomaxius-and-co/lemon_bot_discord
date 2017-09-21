@@ -1,25 +1,16 @@
-const React = require('react')
+const React = require("react")
 
 const render = (page, applicationState, checksums) =>
-  React.DOM.html(null,
-    React.DOM.head(null,
-      React.DOM.title(null, page.pageTitle),
-      React.DOM.script({
-        type: "text/javascript",
-        dangerouslySetInnerHTML: { __html: `window.CHECKSUMS = ${JSON.stringify(checksums)};` },
-      }),
-      React.DOM.script({
-        async: '',
-        src: `bundle.js?checksum=${checksums.bundleJsChecksum}`,
-      }),
-      React.DOM.link({
-        rel: `stylesheet`,
-        href: `style.css?checksum=${checksums.styleCssChecksum}`
-      })
-    ),
-    React.DOM.body({ id: 'applicationState', 'data-state': JSON.stringify(applicationState), },
-      page.renderPage(applicationState)
-    )
-  )
+  <html>
+    <head>
+      <title>{page.pageTitle}</title>
+      <script type="text/javascript" dangerouslySetInnerHTML={{__html: `window.CHECKSUMS = ${JSON.stringify(checksums)};`}}></script>
+      <script async src={`bundle.js?checksum=${checksums.bundleJsChecksum}`}></script>
+      <link rel="stylesheet" href={`style.css?checksum=${checksums.styleCssChecksum}`}/>
+    </head>
+    <body id="applicationState" data-state={JSON.stringify(applicationState)}>
+      {page.renderPage(applicationState)}
+    </body>
+  </html>
 
 module.exports = render
