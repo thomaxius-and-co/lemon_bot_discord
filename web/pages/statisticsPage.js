@@ -9,6 +9,7 @@ const initialState = {
   botMessages: -1,
   messagesInLastWeek: -1,
   messagesInLastMonth: -1,
+  spammer: -1,
   dailyMessageCounts: [],
 }
 
@@ -36,15 +37,17 @@ const dailyMessageCountTable = dailyMessageCounts =>
     </tbody>
   </table>
 
+  
 const renderPage = state =>
   <div>
     <div className="row">
       {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
       <h1>Discord statistics</h1>
-      <p>Total messages {formatNum(state.userMessages + state.botMessages)}</p>
-      <p>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</p>
-      <p>Messages in last week {formatNum(state.messagesInLastWeek)}</p>
-      <p>Messages in last month {formatNum(state.messagesInLastMonth)}</p>
+      <p>Total messages: <b>{formatNum(state.userMessages + state.botMessages)}</b></p>
+      <p><i>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</i></p>
+      <p>Messages in last week: <b>{formatNum(state.messagesInLastWeek)}</b> </p>
+      <p>Messages in last month: <b>{formatNum(state.messagesInLastMonth)}</b> </p>
+	  <p>Spammer of the day: <b>{state.spammer.spammeroftheday}</b> with {state.spammer.message_count} messages.</p>
     </div>
     {dailyMessageCountTable(state.dailyMessageCounts)}
   </div>

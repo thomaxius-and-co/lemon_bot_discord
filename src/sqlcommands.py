@@ -187,39 +187,6 @@ async def get_user_days_in_chat():
 # {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
     return result
 
-async def get_least_toxic():
-    items = await db.fetch("""
-        with custommessage as (
-            select
-            coalesce(name, m->'author'->>'username') as name,
-            user_id,
-            count(*) as message_count
-            from message
-            join discord_user using (user_id)
-            where NOT bot 
-            group by coalesce(name, m->'author'->>'username'), user_id)
-        select
-        name,
-        user_id,
-        message_count,
-        count(*) as count,
-        100 - (count(*) / message_count::float) * 100 as pctoftotal
-         from message
-        join custommessage using (user_id)
-        where NOT bot and length(content) > 15 and message_count > 300 and name not like 'toxin'
-        group by user_id, message_count, name order by pctoftotal ASC
-    """)
-    if not items:
-        return None, None
-    toplist = []
-    for item in items:
-        name, user_id, message_count, good_messages, bs_percentage = item
-        new_item = (name[0:10], message_count, good_messages, round(bs_percentage,3))
-        toplist.append(new_item)
-    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3])[:10])
-    return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'BS PERCENTAGE', emoji.FIRST_PLACE_MEDAL +
-                                    emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
-
 async def get_best_grammar():
     items = await db.fetch("""
     with custommessage as (
@@ -471,17 +438,6 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 
-    elif input == 'leasttoxic':
-        reply, amountofpeople = await get_least_toxic()
-        if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
-            return
-
-        header = 'Top %s least toxic (most "informative" messages)\n' % (amountofpeople)
-        await client.send_message(message.channel, '```' + header + reply + '```')
-        return
-
     elif input == 'bestgrammar':
         reply, amountofpeople = await get_best_grammar()
         if not reply or not amountofpeople:
@@ -552,10 +508,10 @@ async def cmd_top(client, message, input):
         reply, amountofpeople = await getblackjacktoplist()
         if not reply or not amountofpeople:
             await client.send_message(message.channel,
-                                      'Not enough players to form a toplist. (need 20 games to qualify).')
+                                      'Not enough players to form a toplist.')
             return
 
-        header = 'Top %s blackjack players (need 20 games to qualify)\n' % (amountofpeople)
+        header = 'Top %s blackjack players\n' % (amountofpeople)
         await client.send_message(message.channel, '```' + header + reply + '```')
         return
 

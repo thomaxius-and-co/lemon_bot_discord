@@ -41,6 +41,25 @@ const findDailyMessageCounts = days =>
     LIMIT ${Number(days)}
   `)
 
+const findSpammerOfTheDay = () =>
+  db.query(`
+	SELECT
+            coalesce(name, m->'author'->>'username') as spammeroftheday,
+            user_id,
+            count(*) as message_count
+	FROM 
+			message
+	JOIN 
+			discord_user using (user_id)
+    WHERE
+			NOT bot 
+			and date_trunc('day', ts) = date_trunc('day', current_timestamp) 
+			and content not like '!%'
+    GROUP BY 
+			coalesce(name, m->'author'->>'username'), user_id order by message_count desc limit 1
+  `).then(rows => rows[0])
+
+  
 const findMessageCountByUser = userId =>
   db.query(`SELECT count(*) FROM message WHERE user_id = $1`, userId).then(rows => rows[0].count)
 
@@ -50,4 +69,5 @@ module.exports = {
   messagesInLastNDays,
   findDailyMessageCounts,
   findMessageCountByUser,
+  findSpammerOfTheDay,
 }

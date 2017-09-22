@@ -51,14 +51,16 @@ const buildInitialState = req => {
       db.findBotMessageCount(),
       db.messagesInLastNDays(7),
       db.messagesInLastNDays(30),
+      db.findSpammerOfTheDay(),
       db.findDailyMessageCounts(30),
-      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, dailyMessageCounts) => ({
+      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, spammer, dailyMessageCounts) => ({
         user: req.user,
         messageCountByUser,
         userMessages,
         botMessages,
         messagesInLastWeek,
         messagesInLastMonth,
+        spammer,
         dailyMessageCounts,
       })
     )
