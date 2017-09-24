@@ -37,6 +37,13 @@ const dailyMessageCountTable = dailyMessageCounts =>
     </tbody>
   </table>
 
+const Spammer = props =>
+  <div>{props.spammer}</div>
+
+const render = state =>
+  <div>
+    {state.spammer && <Spammer spammer={state.spammer} />}
+  </div>
   
 const renderPage = state =>
   <div>

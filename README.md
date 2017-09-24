@@ -11,12 +11,10 @@
    * Youtube Integration
    * Magic EightBall
    * Weather by ZipCode
-   * Currency system
-   * Black Desert Online scripts
    * WolframAlpha
    * Bing translate
    * Steam common games finder
-   * Simple math
+   * Simple math (WolframAlpha has a superior feature, though)
    * Games:
 	   * Casino:
 		* Slot Machine
@@ -27,6 +25,7 @@
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
    * Awards for certain things (they work as archievements, basically)
+   * Simple statistics webfront
 
 ## Development
 
@@ -50,6 +49,10 @@ Initialize required services in VM by running
 Start the bot by running
 
     run_bot
+
+To run the statistics web page, use
+
+	run_web
 
 ## Installation
    * Git clone the Repo. 
@@ -83,13 +86,23 @@ Start the bot by running
 | !blackjack | Play blackjack versus the dealer
 | !translate <language>  <text> | Translate a text to the given language
 | !clearbot | Deletes 50 of bot messages. Only available to admins.
-| !pickone <arguments> | Picks a random choice out of X arguments
+| !pickone <arguments> | Picks a random choice out of X arguments. 
 | !randomcolor | get a random color. Powered by the colorcombos.com
 | !randomquote | Retrieves a random quote from the database. Optional argument: custom <words separated by comma>.
-| !top <list> | pre defined lists: spammers, whosaidit, whosaidit weekly, blackjack, slots. User defined: custom <words separated by comma>
+| !top <list> | pre defined lists: spammers, whosaidit, whosaidit weekly, blackjack, slots, bestgrammar. User defined: custom <words separated by comma>. Also works with trophy names.
 | !steam common | <username1>, <username2>, ..., <usernameN>  - Find out what games you have in common with other user(s)
 | !whosaidit | In this game you get a quote and you must guess who said it. Comes with weekly-resetting toplist.
-| !trophycabinet | Check what trophies you might have.
+| Trophy commands:
+|   !trophycabinet | Check what trophies you might have.
+|   !addtrophy <name=> <conditions=> | Add a trophy into database. The one who with the most words on the "conditions=" argument gets the trophy.
+|   !alltrophies | Show all trophies in the guild.
+|   !deletetrophy <ID> | Delete a trophy. use !alltrophies to find ID of the trophy you wish to delete..
+|   !alltrophies | List trophies. Shows ID that you can use with !deletetrophy
+| Word censoring:
+|   !addcensoredwords <words=> <exchannel=> <infomessage=> | Add a censored word entry.
+|   !deletecensoredwords <ID> | Delete a censored words -entry. You can get the ID from !listcensoredwords.
+|   !listcensoredwords | Gives you a list of censored words.
+
 
 ## Help:
   * You can contact us (rce or Thomaxius) via our profile pages. 
