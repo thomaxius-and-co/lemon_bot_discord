@@ -41,22 +41,26 @@ const mangleCountsIntoChartFormat = counts => {
       x: "x",
       columns: [
         ["x"].concat(counts.map(_ => formatDate(_.epoch))),
-        ["user_count"].concat(counts.map(_ => _.user_count)),
-        ["bot_count"].concat(counts.map(_ => _.bot_count)),
+        ["Users"].concat(counts.map(_ => _.user_count)),
+        ["Bots"].concat(counts.map(_ => _.bot_count)),
       ],
       types: {
         user_count: "area-spline",
         bot_count: "area-spline",
       },
-      groups: [["user_count", "bot_count"]],
+      groups: [["Users", "Bots"]],
     },
     axis: {
       x: {
+        label: "Date",
         type: "timeseries",
         tick: {
           format: "%Y-%m-%d"
         }
-      }
+      },
+      y: {
+        label: "Messages",
+      },
     }
   }
 }
