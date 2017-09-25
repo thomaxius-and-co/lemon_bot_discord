@@ -18,26 +18,6 @@ const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
 
 const formatNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
 
-const dailyMessageCountTable = dailyMessageCounts =>
-  <table className="row">
-    <thead>
-      <tr>
-          <td>Date</td>
-          <td>User messages</td>
-          <td>Bot messages</td>
-      </tr>
-    </thead>
-    <tbody>
-      {dailyMessageCounts.map(x =>
-        <tr key={x.epoch}>
-          <td>{formatDate(x.epoch)}</td>
-          <td>{formatNum(x.user_count)}</td>
-          <td>{formatNum(x.bot_count)}</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-
 const Spammer = props =>
   <p>Spammer of the day: <b>{props.spammer.spammeroftheday}</b> with {props.spammer.message_count} messages.</p>
   
@@ -53,7 +33,6 @@ const renderPage = state =>
 	  {state.spammer && <Spammer spammer={state.spammer} />}
     </div>
     {dailyMessageCountChart(state.dailyMessageCounts)}
-    {dailyMessageCountTable(state.dailyMessageCounts)}
   </div>
 
 const mangleCountsIntoChartFormat = counts => {
