@@ -3,8 +3,15 @@ const ReactDOM = require('react-dom')
 
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
+const adminPage = require('./pages/adminPage')
 
-const currentPage = statisticsPage // TODO
+const findPage = path => {
+  switch (path) {
+  case "/": return statisticsPage
+  case "/admin": return adminPage
+  }
+}
+const currentPage = findPage(window.location.pathname)
 
 const App = React.createClass({
   componentWillMount: function() {

@@ -75,9 +75,9 @@ renderApp = (req, res, next) => {
   const path = req.originalUrl
   let page = undefined
   if (path === '/admin') {
-    page = adminPage // TODO
+    page = adminPage
   } else if (path === '/') {
-    page = statisticsPage // TODO
+    page = statisticsPage
   }
 
   if (page) {
@@ -85,9 +85,10 @@ renderApp = (req, res, next) => {
       buildInitialState(req),
       checksumPromise(bundleJsFilePath),
       checksumPromise(styleCssFilePath),
-      (state, bundleJsChecksum, styleCssChecksum) => {
+      checksumPromise(c3CssFilePath),
+      (state, bundleJsChecksum, styleCssChecksum, c3CssChecksum) => {
         const initialState = Object.assign(page.initialState, state)
-        const checksums = {bundleJsChecksum, styleCssChecksum}
+        const checksums = {bundleJsChecksum, styleCssChecksum, c3CssChecksum}
         res.send(ReactDOMServer.renderToString(basePage(page, initialState, checksums)))
       }
     ).catch(next)
@@ -103,6 +104,8 @@ const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))
 const styleCssFilePath = path.resolve(`${__dirname}/public/style.css`)
 app.get('/style.css', serveStaticResource(styleCssFilePath))
+const c3CssFilePath = path.resolve(`${__dirname}/node_modules/c3/c3.min.css`)
+app.get('/c3.min.css', serveStaticResource(c3CssFilePath))
 
 app.listen(3000, () => {
   console.log('Listening on port 3000')

@@ -1,6 +1,7 @@
 const React = require('react')
 const moment = require('moment')
 require('moment-timezone')
+const {LineChart} = require('./chart')
 
 const pageTitle = 'Discord statistics'
 
@@ -56,8 +57,39 @@ const renderPage = state =>
       <p>Messages in last month: <b>{formatNum(state.messagesInLastMonth)}</b> </p>
 	  <p>Spammer of the day: <b>{state.spammer.spammeroftheday}</b> with {state.spammer.message_count} messages.</p>
     </div>
+    {dailyMessageCountChart(state.dailyMessageCounts)}
     {dailyMessageCountTable(state.dailyMessageCounts)}
   </div>
+
+const mangleCountsIntoChartFormat = counts => {
+  return {
+    data: {
+      x: "x",
+      columns: [
+        ["x"].concat(counts.map(_ => formatDate(_.epoch))),
+        ["user_count"].concat(counts.map(_ => _.user_count)),
+        ["bot_count"].concat(counts.map(_ => _.bot_count)),
+      ],
+      types: {
+        user_count: "area-spline",
+        bot_count: "area-spline",
+      },
+      groups: [["user_count", "bot_count"]],
+    },
+    axis: {
+      x: {
+        type: "timeseries",
+        tick: {
+          format: "%Y-%m-%d"
+        }
+      }
+    }
+  }
+}
+const dailyMessageCountChart = dailyMessageCounts => {
+  const {data, axis} = mangleCountsIntoChartFormat(dailyMessageCounts)
+  return <LineChart data={data} axis={axis} />
+}
 
 const UserStats = props =>
   <div>

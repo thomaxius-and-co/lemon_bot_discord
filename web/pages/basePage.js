@@ -25,6 +25,7 @@ const render = (page, applicationState, checksums) =>
       <script type="text/javascript" dangerouslySetInnerHTML={{__html: `window.CHECKSUMS = ${JSON.stringify(checksums)};`}}></script>
       <script async src={`bundle.js?checksum=${checksums.bundleJsChecksum}`}></script>
       <link rel="stylesheet" href={`style.css?checksum=${checksums.styleCssChecksum}`}/>
+      <link rel="stylesheet" href={`c3.min.css?checksum=${checksums.c3CssChecksum}`}/>
     </head>
     <body id="applicationState" data-state={JSON.stringify(applicationState)}>
       <Header user={applicationState.user} />
