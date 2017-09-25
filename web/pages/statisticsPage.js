@@ -39,12 +39,7 @@ const dailyMessageCountTable = dailyMessageCounts =>
   </table>
 
 const Spammer = props =>
-  <div>{props.spammer}</div>
-
-const render = state =>
-  <div>
-    {state.spammer && <Spammer spammer={state.spammer} />}
-  </div>
+  <p>Spammer of the day: <b>{props.spammer.spammeroftheday}</b> with {props.spammer.message_count} messages.</p>
   
 const renderPage = state =>
   <div>
@@ -55,7 +50,7 @@ const renderPage = state =>
       <p><i>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</i></p>
       <p>Messages in last week: <b>{formatNum(state.messagesInLastWeek)}</b> </p>
       <p>Messages in last month: <b>{formatNum(state.messagesInLastMonth)}</b> </p>
-	  <p>Spammer of the day: <b>{state.spammer.spammeroftheday}</b> with {state.spammer.message_count} messages.</p>
+	  {state.spammer && <Spammer spammer={state.spammer} />}
     </div>
     {dailyMessageCountChart(state.dailyMessageCounts)}
     {dailyMessageCountTable(state.dailyMessageCounts)}
