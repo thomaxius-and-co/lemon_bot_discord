@@ -32,42 +32,41 @@ const renderPage = state =>
       <p>Messages in last month: <b>{formatNum(state.messagesInLastMonth)}</b> </p>
 	  {state.spammer && <Spammer spammer={state.spammer} />}
     </div>
-    {dailyMessageCountChart(state.dailyMessageCounts)}
+    {dailyMessageCountChart(state.dailyMessageCounts, state.rolling7DayMessageCounts)}
     {weekdayCountChart(state.messagesPerWeekday7, state.messagesPerWeekday30, state.messagesPerWeekday90, state.messagesPerWeekday360)}
   </div>
 
-const mangleCountsIntoChartFormat = counts => {
-  return {
-    data: {
-      x: "x",
-      columns: [
-        ["x"].concat(counts.map(_ => formatDate(_.epoch))),
-        ["Users"].concat(counts.map(_ => _.user_count)),
-        ["Bots"].concat(counts.map(_ => _.bot_count)),
-      ],
-      types: {
-        "Users": "area-spline",
-        "Bots": "area-spline",
-      },
-      groups: [["Users", "Bots"]],
+const dailyMessageCountChart = (dailyMessageCounts, rolling7DayMessageCounts) => {
+  const averages = rolling7DayMessageCounts.map(_ => Math.round(_.average))
+
+  const data = {
+    x: "x",
+    columns: [
+      ["x"].concat(dailyMessageCounts.map(_ => formatDate(_.epoch))),
+      ["Users"].concat(dailyMessageCounts.map(_ => _.user_count)),
+      ["Bots"].concat(dailyMessageCounts.map(_ => _.bot_count)),
+      ["Rolling 7 day average"].concat(averages),
+    ],
+    types: {
+      "Users": "area-spline",
+      "Bots": "area-spline",
+      "Rolling 7 day average": "spline",
     },
-    axis: {
-      x: {
-        label: "Date",
-        type: "timeseries",
-        tick: {
-          format: "%Y-%m-%d"
-        }
-      },
-      y: {
-        label: "Messages",
-      },
+    groups: [["Users", "Bots"]],
+  }
+  const axis = {
+    x: {
+      label: "Date",
+      type: "timeseries",
+      tick: {
+        format: "%Y-%m-%d"
+      }
+    },
+    y: {
+      label: "Messages",
     }
   }
-}
 
-const dailyMessageCountChart = dailyMessageCounts => {
-  const {data, axis} = mangleCountsIntoChartFormat(dailyMessageCounts)
   return (
     <div>
       <h2>Messages per per day in the last month</h2>

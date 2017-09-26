@@ -53,11 +53,12 @@ const buildInitialState = req => {
       db.messagesInLastNDays(30),
       db.findSpammerOfTheDay(),
       db.findDailyMessageCounts(30),
+      db.findRolling7DayMessageCounts(30),
       db.countMessagesByWeekdays(7),
       db.countMessagesByWeekdays(30),
       db.countMessagesByWeekdays(90),
       db.countMessagesByWeekdays(360),
-      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, spammer, dailyMessageCounts, messagesPerWeekday7, messagesPerWeekday30, messagesPerWeekday90, messagesPerWeekday360) => ({
+      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, spammer, dailyMessageCounts, rolling7DayMessageCounts, messagesPerWeekday7, messagesPerWeekday30, messagesPerWeekday90, messagesPerWeekday360) => ({
         user: req.user,
         messageCountByUser,
         userMessages,
@@ -66,6 +67,7 @@ const buildInitialState = req => {
         messagesInLastMonth,
         spammer,
         dailyMessageCounts,
+        rolling7DayMessageCounts,
         messagesPerWeekday7,
         messagesPerWeekday30,
         messagesPerWeekday90,
