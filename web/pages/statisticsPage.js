@@ -20,12 +20,12 @@ const formatNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
 
 const Spammer = props =>
   <p>Spammer of the day: <b>{props.spammer.spammeroftheday}</b> with {props.spammer.message_count} messages.</p>
-  
+
 const renderPage = state =>
   <div>
     <div className="row">
       {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
-      <h1>Discord statistics</h1>
+      <h1>Global statistics</h1>
       <p>Total messages: <b>{formatNum(state.userMessages + state.botMessages)}</b></p>
       <p><i>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</i></p>
       <p>Messages in last week: <b>{formatNum(state.messagesInLastWeek)}</b> </p>
@@ -46,8 +46,8 @@ const mangleCountsIntoChartFormat = counts => {
         ["Bots"].concat(counts.map(_ => _.bot_count)),
       ],
       types: {
-        user_count: "area-spline",
-        bot_count: "area-spline",
+        "Users": "area-spline",
+        "Bots": "area-spline",
       },
       groups: [["Users", "Bots"]],
     },
@@ -68,7 +68,12 @@ const mangleCountsIntoChartFormat = counts => {
 
 const dailyMessageCountChart = dailyMessageCounts => {
   const {data, axis} = mangleCountsIntoChartFormat(dailyMessageCounts)
-  return <LineChart data={data} axis={axis} />
+  return (
+    <div>
+      <h2>Messages per per day in the last month</h2>
+      <LineChart data={data} axis={axis} />
+    </div>
+  )
 }
 
 const weekdayCountChart = (counts7, counts30, counts90, counts360) => {
