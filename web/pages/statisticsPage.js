@@ -111,10 +111,31 @@ const weekdayCountChart = (counts7, counts30, counts90, counts360) => {
   )
 }
 
-const UserStats = props =>
+const OK_HAND = String.fromCodePoint(0x1F44C)
+const DISSAPOINTED = String.fromCodePoint(0x1F61E)
+
+const Profile = ({user}) => {
+  const {id, username, discriminator, avatar, mfa_enabled} = user
+  const avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.webp?size=256`
+  const mfa = mfa_enabled
+    ? <div>MFA enabled {OK_HAND}</div>
+    : <div>MFA not enabled {DISSAPOINTED}</div>
+  return (
+    <div className="profile">
+      <img className="profile-avatar" src={avatarUrl} />
+      <div className="profile-info">
+        <div className="profile-username" >{username}<span className="profile-discriminator">#{discriminator}</span></div>
+        {mfa}
+      </div>
+    </div>
+  )
+}
+
+const UserStats = ({user, messageCount}) =>
   <div>
     <h1>Personal stats</h1>
-    <p>You, {props.user.username}#{props.user.discriminator}, have written {formatNum(props.messageCount)} messages.</p>
+    <Profile user={user} />
+    <p>You, {user.username}#{user.discriminator}, have written {formatNum(messageCount)} messages.</p>
   </div>
 
 module.exports = {

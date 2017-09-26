@@ -74,29 +74,44 @@ h1, h2, h3, h4, h5, h6, thead {
   margin: 0 auto;
 }
 
-/* Message counts */
-table { width: 100%; }
+/* Disable fixed header on mobile */
+@media only screen and (max-width: 1024px) {
+  .content-wrapper {
+    overflow-y: visible;
+  }
 
-thead {
-  font-weight: bold;
+  .content {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
-tbody {
-  font-family: monospace;
+/* Profile */
+
+.profile {
+  display: flex;
+  flex-flow: row nowrap;
 }
 
-td:nth-child(2),
-td:nth-child(3) {
-  text-align: right;
-}
-tbody tr:nth-child(odd) {
-  background-color: #eee;
-}
-
-tbody tr:nth-child(even) {
-  background-color: #fff;
+.profile-avatar {
+  margin: 10px;
+  box-shadow: 0px 0px 10px #222;
+  flex-grow: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
 }
 
-tbody tr:hover {
-  background-color: #ddd;
+.profile-info {
+  flex-grow: 1;
+
+  /* Make user info align nicely and evenly */
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: space-evenly;
+}
+
+.profile-discriminator {
+  font-size: 0.7rem;
+  color: #aaa;
 }
