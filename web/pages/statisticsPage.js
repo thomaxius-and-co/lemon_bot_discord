@@ -33,6 +33,7 @@ const renderPage = state =>
 	  {state.spammer && <Spammer spammer={state.spammer} />}
     </div>
     {dailyMessageCountChart(state.dailyMessageCounts)}
+    {weekdayCountChart(state.messagesPerWeekday7, state.messagesPerWeekday30, state.messagesPerWeekday90, state.messagesPerWeekday360)}
   </div>
 
 const mangleCountsIntoChartFormat = counts => {
@@ -64,9 +65,45 @@ const mangleCountsIntoChartFormat = counts => {
     }
   }
 }
+
 const dailyMessageCountChart = dailyMessageCounts => {
   const {data, axis} = mangleCountsIntoChartFormat(dailyMessageCounts)
   return <LineChart data={data} axis={axis} />
+}
+
+const weekdayCountChart = (counts7, counts30, counts90, counts360) => {
+  const mkColumn = (title, counts) => [title].concat(counts.map(_ => Math.round(_.messages)))
+  const data = {
+    x: "Weekday",
+    columns: [
+      ["Weekday", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"],
+      mkColumn("week", counts7),
+      mkColumn("month", counts30),
+      mkColumn("3 months", counts90),
+      mkColumn("year", counts360),
+    ],
+    types: {
+      "week": "spline",
+      "month": "spline",
+      "3 months": "spline",
+      "year": "spline",
+    },
+  }
+  const axis = {
+    x: {
+      label: "Weekday",
+      type: "category",
+    },
+    y: {
+      label: "Average messages",
+    },
+  }
+  return (
+    <div>
+      <h2>Messages per weekday on average</h2>
+      <LineChart data={data} axis={axis} />
+    </div>
+  )
 }
 
 const UserStats = props =>

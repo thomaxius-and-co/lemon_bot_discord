@@ -63,6 +63,36 @@ const findSpammerOfTheDay = () =>
 const findMessageCountByUser = userId =>
   db.query(`SELECT count(*) FROM message WHERE user_id = $1`, userId).then(rows => rows[0].count)
 
+const countMessagesByWeekdays = days =>
+  db.query(`
+    WITH daily_messages AS (
+      SELECT
+        date_trunc('day', ts) AS day,
+        count(*) AS messages
+      FROM message
+      WHERE NOT bot AND content NOT LIKE '!%'
+      GROUP BY date_trunc('day', ts)
+    )
+    SELECT
+      extract(dow FROM day) AS day_of_week,
+      avg(coalesce(messages, 0)) AS count
+    FROM generate_series(
+      date_trunc('day', current_timestamp - interval '${Number(days)} days'),
+      date_trunc('day', current_timestamp),
+      interval '1 day'
+    ) AS day
+    LEFT JOIN daily_messages USING (day)
+    GROUP BY extract(dow FROM day)
+    ORDER BY day_of_week
+  `).then(rows => rows.map(row => {
+    // PostgreSQL uses 0-6 to represent days starting from sunday
+    const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
+    return {
+      dayOfWeek: dayNames[row.day_of_week],
+      messages: row.count,
+    }
+  }))
+
 module.exports = {
   findUserMessageCount,
   findBotMessageCount,
@@ -70,4 +100,5 @@ module.exports = {
   findDailyMessageCounts,
   findMessageCountByUser,
   findSpammerOfTheDay,
+  countMessagesByWeekdays,
 }
