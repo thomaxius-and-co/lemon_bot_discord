@@ -3,7 +3,9 @@
   "scripts": {
     "build-client": "browserify --entry client.js > public/bundle.js",
     "start": "babel-node server.js",
-    "dev": "npm-run-all build-client start"
+    "dev": "npm-run-all --parallel  watch:*",
+    "watch:client": "watchify client.js --debug -o public/bundle.js -v",
+    "watch:server": "nodemon --exec babel-node server.js"
   },
   "browserify": {
     "transform": [
@@ -34,6 +36,8 @@
     "react-dom": "15.6.1"
   },
   "devDependencies": {
-    "npm-run-all": "4.1.1"
+    "nodemon": "1.12.1",
+    "npm-run-all": "4.1.1",
+    "watchify": "3.9.0"
   }
 }
