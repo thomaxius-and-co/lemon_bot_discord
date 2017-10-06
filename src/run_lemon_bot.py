@@ -372,6 +372,37 @@ async def get_channel_info(user_channel_name):
         else:
             return False
 
+async def edit_channel_bitrate(bitrate):
+    channels = client.get_all_channels()
+    succesfully_edited_channels = []
+    unsuccesfully_edited_channels = []
+    for channel in channels:
+        if str(channel.type) == 'voice':
+            try:
+                await client.edit_channel(channel, bitrate=int(bitrate))
+                succesfully_edited_channels.append(channel)
+            except discord.Forbidden:
+                unsuccesfully_edited_channels.append(channel)
+    return len(succesfully_edited_channels), len(unsuccesfully_edited_channels)
+
+async def cmd_edit_channel_kbps(client, message, input):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        return
+    if not input or not input.isdigit() or not (8000 <= int(input) <= 96000):
+        await client.send_message(message.channel, 'You need to specify channel bitrate between 8000-96000.')
+        return
+    num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels = await edit_channel_bitrate(input)
+    msg = ("Succesfully changed bitrate of %s channels." % num_of_succesfully_edited_channels) if (num_of_unsuccesfully_edited_channels == 0) \
+        else ("Succesfully changed bitrate of %s channels, failed to change bitrate of %s channels\n(The bot is probably lacking manage permissions for some channel(s)."
+              % (num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels))
+    await client.send_message(message.channel, msg)
+
+
+
+
+
 def parse_censored_word_message(unparsed_arg):
     channelindex = unparsed_arg.find('exchannel=')
     words_end = channelindex if channelindex != -1 else len(unparsed_arg)
@@ -558,7 +589,8 @@ commands = {
     'randomcolor': cmd_randomcolor,
     'addcensoredwords': cmd_add_censored_word,
     'listcensoredwords': cmd_list_censored_words,
-    'deletecensoredwords': cmd_del_censored_words
+    'deletecensoredwords': cmd_del_censored_words,
+    'editkbpsofchannels': cmd_edit_channel_kbps
 }
 
 def parse_raw_msg(msg):
