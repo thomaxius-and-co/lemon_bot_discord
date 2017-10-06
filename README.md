@@ -91,6 +91,7 @@ To run the statistics web page, use
 | !pickone <arguments> | Picks a random choice out of X arguments. 
 | !randomcolor | get a random color. Powered by the colorcombos.com
 | !randomquote | Retrieves a random quote from the database. Optional argument: custom <words separated by comma>.
+| !editkbpsofchannels <8000-96000> | Change the kbps of all channels at once.
 | !top <list> | pre defined lists: spammers, whosaidit, whosaidit weekly, blackjack, slots, bestgrammar. User defined: custom <words separated by comma>. Also works with trophy names.
 | !steam common | <username1>, <username2>, ..., <usernameN>  - Find out what games you have in common with other user(s)
 | !whosaidit | In this game you get a quote and you must guess who said it. Comes with weekly-resetting toplist.
