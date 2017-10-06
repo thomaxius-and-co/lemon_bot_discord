@@ -373,17 +373,21 @@ async def get_channel_info(user_channel_name):
             return False
 
 async def edit_channel_bitrate(bitrate):
-    channels = client.get_all_channels()
+    voice_channels = [c for c in client.get_all_channels() if c.type == discord.ChannelType.voice]
     succesfully_edited_channels = []
     unsuccesfully_edited_channels = []
-    for channel in channels:
-        if str(channel.type) == 'voice':
-            try:
-                await client.edit_channel(channel, bitrate=int(bitrate))
+    skipped_channels = []
+    for channel in voice_channels:
+        try:
+            await sleep(0.2)
+            if channel.bitrate != bitrate:
+                await client.edit_channel(channel, bitrate=bitrate)
                 succesfully_edited_channels.append(channel)
-            except discord.Forbidden:
-                unsuccesfully_edited_channels.append(channel)
-    return len(succesfully_edited_channels), len(unsuccesfully_edited_channels)
+            else:
+                skipped_channels.append(channel)
+        except discord.Forbidden:
+            unsuccesfully_edited_channels.append(channel)
+    return len(succesfully_edited_channels), len(unsuccesfully_edited_channels), len(skipped_channels)
 
 async def cmd_edit_channel_kbps(client, message, input):
     perms = message.channel.permissions_for(message.author)
@@ -393,10 +397,10 @@ async def cmd_edit_channel_kbps(client, message, input):
     if not input or not input.isdigit() or not (8000 <= int(input) <= 96000):
         await client.send_message(message.channel, 'You need to specify channel bitrate between 8000-96000.')
         return
-    num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels = await edit_channel_bitrate(input)
-    msg = ("Succesfully changed bitrate of %s channels." % num_of_succesfully_edited_channels) if (num_of_unsuccesfully_edited_channels == 0) \
-        else ("Succesfully changed bitrate of %s channels, failed to change bitrate of %s channels\n(The bot is probably lacking manage permissions for some channel(s)."
-              % (num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels))
+    num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels, num_of_skipped_channels = await edit_channel_bitrate(int(input))
+    msg = ("Changed bitrate of %s channels, skipped %s channel(s)." % (num_of_succesfully_edited_channels, num_of_skipped_channels)) if (num_of_unsuccesfully_edited_channels == 0) \
+        else ("Changed bitrate of %s channel(s), skipped %s, failed %s\n(The bot is probably lacking manage permissions for some channel(s)."
+              % (num_of_succesfully_edited_channels, num_of_skipped_channels, num_of_unsuccesfully_edited_channels))
     await client.send_message(message.channel, msg)
 
 
