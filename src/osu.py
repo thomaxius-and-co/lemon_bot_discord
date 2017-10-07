@@ -2,8 +2,9 @@ import os
 import json
 
 import command
-import osu_api as api
 import logger
+import osu_api as api
+import util
 
 log = logger.get("OSU")
 
