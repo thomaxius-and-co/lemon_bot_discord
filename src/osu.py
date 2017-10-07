@@ -3,6 +3,7 @@ import os
 import json
 
 import command
+import database as db
 import logger
 import osu_api as api
 import util
