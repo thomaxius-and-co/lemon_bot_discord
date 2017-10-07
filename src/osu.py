@@ -3,6 +3,9 @@ import json
 
 import command
 import osu_api as api
+import logger
+
+log = logger.get("OSU")
 
 async def cmd_osu(client, message, user):
     user_info = next(await api.user(user), None)
@@ -37,7 +40,44 @@ async def cmd_osu(client, message, user):
     reply = "**{user_line}**\n```{plays}```".format(user_line=user_line, plays="\n".join(plays))
     await client.send_message(message.channel, reply)
 
+async def check_pps(client):
+    users = await db.fetch("SELECT osu_user_id, channel_id, last_pp, last_rank FROM osu_pp")
+    for u in users:
+        await process_user(client, u)
+
+async def process_user(client, user):
+  user_id, channel_id, last_pp, last_rank = user
+  u = await api.user_by_id(user_id)
+  log.info("Checking player {0} performance".format(u.username))
+
+  if last_pp != u.pp:
+    msg = "{username} has received {pp_diff} pp! (Rank {rank_diff})".format(
+      username = u.username,
+      pp_diff = u.pp - last_pp,
+      rank_diff = u.rank - last_rank
+    )
+    util.threadsafe(client, client.send_message(discord.Object(id=channel_id), msg))
+    await db.execute("""
+      UPDATE osu_pp
+      SET last_pp = $1, last_rank = $2, changed = current_timestamp
+      WHERE osu_user_id = $3 AND channel_id = $4
+    """, u.pp, u.rank, user_id, channel_id)
+
+
+async def task(client):
+    util.threadsafe(client, client.wait_until_ready())
+    fetch_interval = 60
+
+    while True:
+        await asyncio.sleep(fetch_interval)
+        try:
+            log.info("Checking tracked player performance")
+            await check_pps(client)
+        except Exception:
+            await util.log_exception(log)
+
 def register(client):
+    util.start_task_thread(task(client))
     return {
         "osu": cmd_osu,
     }

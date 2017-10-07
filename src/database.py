@@ -337,6 +337,17 @@ schema_migrations = {
         ADD FOREIGN KEY 
             (message_id) REFERENCES message (message_id);
         """,
+    26: """
+        CREATE TABLE osu_pp (
+            osu_pp_id SERIAL PRIMARY KEY,
+            osu_user_id TEXT NOT NULL,
+            channel_id TEXT NOT NULL,
+            last_pp NUMERIC NOT NULL,
+            last_rank INT NOT NULL,
+            changed TIMESTAMP NOT NULL,
+            UNIQUE (osu_userid, channel_id)
+        );
+    """,
     }
 
 _pool_holder = threading.local()
