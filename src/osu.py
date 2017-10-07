@@ -53,10 +53,11 @@ async def process_user(client, user):
   u = await api.user_by_id(user_id)
   log.info("Checking player {0} performance".format(u.username))
 
-  if last_pp != u.pp:
+  pp_diff = float(last_pp) - u.pp
+  if abs(pp_diff) >= 0.1:
     msg = "{username} has received {pp_diff} pp! (Rank {rank_diff})".format(
       username = u.username,
-      pp_diff = u.pp - last_pp,
+      pp_diff = round(pp_diff, 1),
       rank_diff = u.rank - last_rank
     )
     util.threadsafe(client, client.send_message(discord.Object(id=channel_id), msg))
