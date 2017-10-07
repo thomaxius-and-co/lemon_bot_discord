@@ -117,11 +117,12 @@ async def call_api(endpoint, params):
         return await r.json()
 
 async def user_by_id(user_id):
-    return map(User, await call_api("get_user", {
+    users = map(User, await call_api("get_user", {
         "type": "id",
         "u": user_id,
         "event_days": "1",
     }))
+    return next(users, None)
 
 async def user(name):
     return map(User, await call_api("get_user", {
