@@ -54,7 +54,7 @@ async def process_user(client, user):
   u = await api.user_by_id(user_id)
   log.info("Checking player {0} performance".format(u.username))
 
-  pp_diff = float(last_pp) - u.pp
+  pp_diff = u.pp - float(last_pp)
   if abs(pp_diff) >= 0.1:
     msg = "{username} has received {pp_diff} pp! (Rank {rank_diff})".format(
       username = u.username,
