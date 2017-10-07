@@ -345,7 +345,7 @@ schema_migrations = {
             last_pp NUMERIC NOT NULL,
             last_rank INT NOT NULL,
             changed TIMESTAMP NOT NULL,
-            UNIQUE (osu_userid, channel_id)
+            UNIQUE (osu_user_id, channel_id)
         );
     """,
     }
