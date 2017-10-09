@@ -3,7 +3,10 @@ import aiohttp
 import redis
 import json
 
+import logger
 import perf
+
+log = logger.get("STEAM_API")
 
 HOUR_IN_SECONDS = 60 * 60
 WEEK_IN_SECONDS = 7 * 24 * HOUR_IN_SECONDS
@@ -32,6 +35,7 @@ async def call_api(endpoint, params):
     url = "https://api.steampowered.com/%s%s" % (endpoint, make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
+        log.info("GET %s %s %s", url.replace(os.environ["STEAM_API_KEY"], "<REDACTED>"), r.status, await r.text())
         return await r.json()
 
 async def owned_games(steamid):
@@ -82,6 +86,7 @@ async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
+        log.info("GET %s %s %s", url, r.status, await r.text())
         return await r.json()
 
 async def appdetails(appid):
