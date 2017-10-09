@@ -23,8 +23,8 @@ async def get(path):
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as r:
+            log.info("GET %s %s %s", url, r.status, await r.text())
             response = await r.json()
-            log.info("GET %s %s %s", url, r.status, response)
             if r.status == 429:
                 log.warn("Hit ratelimit for path: %s", path)
                 log.warn(response)
