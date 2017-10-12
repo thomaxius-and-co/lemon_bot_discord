@@ -1,0 +1,6 @@
+[package]
+name = "journald-cloudwatch"
+version = "0.0.0"
+authors = ["Henry Heikkinen <rce@rce.fi>"]
+
+[dependencies]
