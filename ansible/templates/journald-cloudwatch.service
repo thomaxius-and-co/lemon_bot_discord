@@ -1,0 +1,14 @@
+[Unit]
+Description=Upload journald logs to AWS CloudWatch Logs
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+User=nobody
+Group=nogroup
+ExecStart=/opt/journald-cloudwatch/journald-cloudwatch
+WorkingDirectory=/opt/journald-cloudwatch
+Environment=AWS_REGION={{ secrets.aws.region }}
+Environment=AWS_ACCESS_KEY_ID={{ secrets.aws.access_key_id }}
+Environment=AWS_SECRET_ACCESS_KEY={{ secrets.aws.secret_access_key }}
