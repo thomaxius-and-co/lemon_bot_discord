@@ -82,6 +82,7 @@
 
     - include: nodejs.yml
     - include: web.yml
+    - include: logs.yml
 
   handlers:
     - name: reload unit files
@@ -91,6 +92,11 @@
       service:
         name: nginx
         state: reloaded
+
+    - name: restart journald-cloudwatch
+      service:
+        name: "journald-cloudwatch"
+        state: restarted
 
     - name: restart services
       service:
