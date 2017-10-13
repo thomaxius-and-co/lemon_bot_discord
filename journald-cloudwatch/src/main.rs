@@ -30,10 +30,12 @@ fn main() {
         fetch_journald_logs(last_usec_opt, tx.clone());
     });
 
+    process_log_rows(client, rx, stream.upload_sequence_token);
     journald_thread.join().unwrap();
 }
 
 fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeMap<String, String>)>) -> () {
+    let unit = String::from("lemon.service"); // TODO: Read from env or something
     let mut journal = Journal::open().unwrap();
 
     println!("Seeking to proper point in journal...");
@@ -45,14 +47,77 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeM
     loop {
         match journal.next().unwrap() {
             Some((usec, record)) => {
-                println!("Fetched log from journald: {} {:?}", usec, record.get("_MESSAGE"));
-                tx.send((usec, record)).unwrap();
+                if record.get("_SYSTEMD_UNIT").map_or(false, |x| x == &unit) {
+                    tx.send((usec, record)).unwrap();
+                }
             },
             None => {
                 println!("No more log records. Waiting for a while");
                 thread::sleep(time::Duration::from_secs(10));
             },
         }
+    }
+}
+
+fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, BTreeMap<String, String>)>, initial_upload_sequence_token: Option<String>) -> () {
+    println!("Started CloudWatch Logs uploader");
+    let batch_size = 1000;
+    let batch_max_wait = time::Duration::from_secs(2);
+
+    let mut token = initial_upload_sequence_token;
+    let mut batch = Vec::with_capacity(batch_size);
+    let mut last_upload = time::SystemTime::now();
+    loop {
+        match rx.recv_timeout(time::Duration::from_millis(100)) {
+            Ok(x) => batch.push(x),
+            Err(mpsc::RecvTimeoutError::Timeout) => (),
+            Err(e) => println!("process_log_rows: unknown error {}", e),
+        };
+
+        if batch.len() > 0 {
+            let force_upload_because_time = last_upload.elapsed().unwrap() > batch_max_wait;
+            if batch.len() >= batch_size || force_upload_because_time {
+                if force_upload_because_time {
+                    println!("Upload triggered by interval");
+                }
+
+                token = upload_batch(&client, &batch, token).unwrap();
+                batch.clear();
+
+                last_upload = time::SystemTime::now();
+                thread::sleep(time::Duration::from_millis(200));
+            }
+        }
+    }
+}
+
+fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, BTreeMap<String, String>)>, token: Option<String>) -> Result<Option<String>,()> {
+    println!("Uploading batch of {} log rows to CloudWatch", batch.len());
+
+    let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
+    let log_group_name = String::from("discord-prod-bot");
+    let log_stream_name = String::from(format!("discord-prod-bot-{}", instance_id));
+
+    let log_events = batch.iter().map(|x| match x {
+        &(usec, ref record) => InputLogEvent {
+            message: record.get("MESSAGE").unwrap().to_owned(),
+            timestamp: (usec / 1000) as i64,
+        }
+    }).collect();
+
+    match client.put_log_events(&PutLogEventsRequest {
+        log_events,
+        log_group_name,
+        log_stream_name,
+        sequence_token: token.clone(),
+    }) {
+        Ok(response) => Ok(response.next_sequence_token.clone()),
+        Err(e) => {
+            // TODO: Handle ratelimit properly with retry exponential backoff
+            println!("upload_batch: unknown error {}", e);
+            thread::sleep(time::Duration::from_millis(1000));
+            Ok(token)
+        },
     }
 }
 
@@ -68,7 +133,7 @@ fn make_client() -> Box<CloudWatchLogs> {
 }
 
 fn init_log_stream(client: &Box<CloudWatchLogs>) -> Result<LogStream, AsdfError> {
-    let instance_id = 32477856; // TODO: Get instance ID
+    let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
     let log_group_name = String::from("discord-prod-bot");
     let log_stream_name = String::from(format!("discord-prod-bot-{}", instance_id));
 
