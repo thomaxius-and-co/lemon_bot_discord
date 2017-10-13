@@ -21,16 +21,16 @@ fn main() {
     let client = make_client();
     let stream = init_log_stream(&client).unwrap();
     println!("Log group and stream initialized");
-    println!("Last log entry in stream at {:?}", stream.last_event_timestamp);
+    let last_usec_opt = stream.last_event_timestamp.map(|msec| (msec * 1000) as u64);
+    println!("Last log entry in stream at {:?} usec", last_usec_opt);
 
     println!("Seeking to proper point in journal...");
-    match stream.last_event_timestamp {
+    match last_usec_opt {
         None => journal.seek_head(),
-        Some(last_usec) => journal.seek(last_usec as u64),
+        Some(last_usec) => journal.seek(last_usec + 1),
     }.unwrap();
 
     loop {
-        println!("TODO: Implement something...");
         match journal.next().unwrap() {
             Some((usec, record)) => println!("Fetched log from journald: {} {:?}", usec, record.get("_MESSAGE")),
             None => {
