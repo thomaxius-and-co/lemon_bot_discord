@@ -12,7 +12,6 @@ from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
 import logger
 
 log = logger.get("SQLCOMMANDS")
-
 playinglist = []
 
 def sanitize_message(content, mentions):
@@ -680,7 +679,7 @@ async def cmd_randomquote(client, themessage, input):
 async def doemojilist(client, message):
     emojilist = []
     x = 1
-    for emoji in client.get_all_emojis():
+    for emoji in message.channel.server.emojis:
         if emoji:
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
@@ -701,10 +700,10 @@ async def doemojilist(client, message):
                 await client.send_message(message.channel, msg)
 
 
-async def getserveremojis(client):
+async def getserveremojis(server):
     emojilist = []
-    for emoji in client.get_all_emojis():
-        if emoji and str(emoji) not in emojilist:
+    for emoji in server.emojis:
+        if emoji:
             emojilist.append(str(emoji))
     return emojilist
 
@@ -729,7 +728,7 @@ async def get_most_used_emojis(emojilist):
     return most_used_top_twentyfive
 
 async def showleastusedemojis(client, message):
-    emojilist = await getserveremojis(client)
+    emojilist = await getserveremojis(message.channel.server)
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
         return
@@ -742,7 +741,7 @@ async def showleastusedemojis(client, message):
                               + '\n(emoji, number of times used)')
 
 async def showmostusedemojis(client, message):
-    emojilist = await getserveremojis(client)
+    emojilist = await getserveremojis(message.channel.server)
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
         return
