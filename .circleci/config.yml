@@ -8,7 +8,7 @@ jobs:
     steps:
       - checkout
       - run: apt-get update
-      - run: apt-get install -y python-minimal
+      - run: apt-get install -y python-minimal python-pip
       - run: python --version
       - run: pip install -r ansible/requirements.txt
       - run: pip install tox==2.5.0
