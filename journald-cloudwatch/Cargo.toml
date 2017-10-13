@@ -4,5 +4,6 @@ version = "0.0.0"
 authors = ["Henry Heikkinen <rce@rce.fi>"]
 
 [dependencies]
+libc = "0.2.32"
 rusoto_core = "0.28.0"
 rusoto_logs = "0.28.0"

@@ -1,6 +1,8 @@
 extern crate rusoto_core;
 extern crate rusoto_logs;
 
+mod journald;
+
 use std::env;
 use std::str::FromStr;
 use std::thread;
@@ -9,17 +11,33 @@ use std::time;
 use rusoto_core::{default_tls_client, EnvironmentProvider, Region};
 use rusoto_logs::*;
 
+use journald::Journal;
+
 fn main() {
     println!("Starting journald-cloudwatch...");
+
+    let mut journal = Journal::open().unwrap();
 
     let client = make_client();
     let stream = init_log_stream(&client).unwrap();
     println!("Log group and stream initialized");
     println!("Last log entry in stream at {:?}", stream.last_event_timestamp);
 
+    println!("Seeking to proper point in journal...");
+    match stream.last_event_timestamp {
+        None => journal.seek_head(),
+        Some(last_usec) => journal.seek(last_usec as u64),
+    }.unwrap();
+
     loop {
         println!("TODO: Implement something...");
-        thread::sleep(time::Duration::from_millis(60 * 1000));
+        match journal.next().unwrap() {
+            Some((usec, record)) => println!("Fetched log from journald: {} {:?}", usec, record.get("_MESSAGE")),
+            None => {
+                println!("No more log records. Waiting for a while");
+                thread::sleep(time::Duration::from_secs(10));
+            },
+        }
     }
 }
 
