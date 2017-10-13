@@ -7,6 +7,8 @@ use std::env;
 use std::str::FromStr;
 use std::thread;
 use std::time;
+use std::sync::mpsc;
+use std::collections::BTreeMap;
 
 use rusoto_core::{default_tls_client, EnvironmentProvider, Region};
 use rusoto_logs::*;
@@ -16,13 +18,23 @@ use journald::Journal;
 fn main() {
     println!("Starting journald-cloudwatch...");
 
-    let mut journal = Journal::open().unwrap();
+    let (tx, rx) = mpsc::channel();
 
     let client = make_client();
     let stream = init_log_stream(&client).unwrap();
     println!("Log group and stream initialized");
     let last_usec_opt = stream.last_event_timestamp.map(|msec| (msec * 1000) as u64);
     println!("Last log entry in stream at {:?} usec", last_usec_opt);
+
+    let journald_thread = thread::spawn(move || {
+        fetch_journald_logs(last_usec_opt, tx.clone());
+    });
+
+    journald_thread.join().unwrap();
+}
+
+fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeMap<String, String>)>) -> () {
+    let mut journal = Journal::open().unwrap();
 
     println!("Seeking to proper point in journal...");
     match last_usec_opt {
@@ -32,7 +44,10 @@ fn main() {
 
     loop {
         match journal.next().unwrap() {
-            Some((usec, record)) => println!("Fetched log from journald: {} {:?}", usec, record.get("_MESSAGE")),
+            Some((usec, record)) => {
+                println!("Fetched log from journald: {} {:?}", usec, record.get("_MESSAGE"));
+                tx.send((usec, record)).unwrap();
+            },
             None => {
                 println!("No more log records. Waiting for a while");
                 thread::sleep(time::Duration::from_secs(10));
