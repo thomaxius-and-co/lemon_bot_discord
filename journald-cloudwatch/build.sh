@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit
 
-sudo apt install libsystemd-journal-dev
+sudo apt-get update
+sudo apt-get install libsystemd-daemon-dev
+sudo apt-get install libsystemd-journal-dev
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 export PATH="$HOME/.cargo/bin:$PATH"
