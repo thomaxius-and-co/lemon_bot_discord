@@ -2,7 +2,6 @@
 set -o errexit
 
 sudo apt-get update
-sudo apt-get install libsystemd-daemon-dev
 sudo apt-get install libsystemd-journal-dev
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
