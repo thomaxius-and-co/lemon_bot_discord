@@ -704,7 +704,7 @@ async def doemojilist(client, message):
 async def getserveremojis(client):
     emojilist = []
     for emoji in client.get_all_emojis():
-        if emoji:
+        if emoji and str(emoji) not in emojilist:
             emojilist.append(str(emoji))
     return emojilist
 
@@ -764,7 +764,7 @@ async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'list':
         await doemojilist(client, message)
     else:
-        await client.send_message(message.channel, 'Usage: !emoji <list> or <leastused>')  # obv more features will be added later
+        await client.send_message(message.channel, 'Usage: !emoji <list> or <leastused> or <mostused>')  # obv more features will be added later
         return
 
 
