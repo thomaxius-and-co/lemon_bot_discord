@@ -3,7 +3,8 @@ version: 2
 jobs:
   test:
     working_directory: ~/repo
-    machine: true
+    docker:
+      - image: ubuntu:16.04
     steps:
       - checkout
       - run: pyenv global 2.7.12 3.5.2

@@ -14,7 +14,7 @@ macro_rules! ffi_try {
     })
 }
 
-#[link(name = "systemd-journal")]
+#[link(name = "systemd")]
 extern {
     fn sd_journal_open(ret: *mut *mut sd_journal, flags: c_int) -> c_int;
     fn sd_journal_seek_head(j: *mut sd_journal) -> c_int;
