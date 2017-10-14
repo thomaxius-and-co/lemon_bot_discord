@@ -68,10 +68,10 @@ fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, BTreeM
     let mut batch = Vec::with_capacity(batch_size);
     let mut last_upload = time::SystemTime::now();
     loop {
-        match rx.recv_timeout(time::Duration::from_millis(100)) {
+        match rx.try_recv() {
             Ok(x) => batch.push(x),
-            Err(mpsc::RecvTimeoutError::Timeout) => (),
-            Err(e) => println!("process_log_rows: unknown error {}", e),
+            Err(mpsc::TryRecvError::Empty) => thread::sleep(time::Duration::from_millis(100)),
+            Err(mpsc::TryRecvError::Disconnected) => panic!("process_log_rows: channel disconnected, this should never happen"),
         };
 
         if batch.len() > 0 {
