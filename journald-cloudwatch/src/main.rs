@@ -44,16 +44,11 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeM
         Some(last_usec) => journal.seek(last_usec + 1),
     }.unwrap();
 
+    println!("Started polling journal for records")
     loop {
         match journal.next().unwrap() {
-            Some((usec, record)) => {
-                println!("Fetched record {:?}", record);
-                tx.send((usec, record)).unwrap();
-            },
-            None => {
-                println!("No more log records. Waiting for a while");
-                thread::sleep(time::Duration::from_secs(10));
-            },
+            Some((usec, record)) => tx.send((usec, record)).unwrap(),
+            None => thread::sleep(time::Duration::from_secs(10)),
         }
     }
 }
