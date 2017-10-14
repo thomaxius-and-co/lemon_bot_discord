@@ -20,7 +20,7 @@ def log_perf(name, start, end):
     def actually_log(f, args, kwargs):
         duration = duration = (end - start) * 1000
         call = call_str(f, args, kwargs)
-        log.info("{name} [{duration} ms] {call}".format(name=name, duration=round(duration), call=call))
+        log.info("[{name}] [{duration}] {call}".format(name=name, duration=round(duration), call=call))
     return actually_log
 
 def time_async(name):
