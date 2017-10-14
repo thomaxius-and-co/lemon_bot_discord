@@ -25,6 +25,8 @@ extern {
     fn sd_journal_get_realtime_usec(j: *mut sd_journal, ret: *const u64) -> c_int;
     fn sd_journal_enumerate_data(j: *mut sd_journal, data: *const *mut u8, l: *mut size_t) -> c_int;
 
+    fn sd_journal_add_match(j: *mut sd_journal, data: *const c_void, size: size_t) -> c_int;
+
     pub fn sd_journal_close(j: *mut sd_journal) -> ();
 }
 
@@ -79,6 +81,16 @@ impl Journal {
         let mut usec: u64 = 0;
         ffi_try!(sd_journal_get_realtime_usec(self.j, &mut usec));
         Ok(usec)
+    }
+
+    fn add_match(&mut self, key: &str, val: &str) -> Result<()> {
+        let mut filter = Vec::<u8>from(key);
+        filter.push('=' as u8);
+        filter.extend(Vec::<u8>from(val));
+        let data = filter.as_ptr() as *const c_void;
+        let size = filter.len() as size_t;
+        ffi_try!(sd_journal_add_match(self.j, data, size));
+        Ok(())
     }
 }
 
