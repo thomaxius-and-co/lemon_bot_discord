@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit
 
-sudo apt-get install -y libsystemd-dev
+apt-get install -y curl pkg-config libsystemd-dev libssl-dev
 
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 export PATH="$HOME/.cargo/bin:$PATH"

@@ -1,38 +1,13 @@
 version: 2
 
 jobs:
-  test:
+  build:
+    filters:
+      branches:
+        only: master
     working_directory: ~/repo
     docker:
       - image: ubuntu:16.04
     steps:
       - checkout
-      - run: apt-get update
-      - run: apt-get install -y python-minimal python-pip git
-      - run: python --version
-      - run: pip install -r ansible/requirements.txt
-      - run: pip install tox==2.5.0
-      - run: ./test.sh
-      - run: ./journald-cloudwatch/build.sh
-
-  deploy:
-    working_directory: ~/repo
-    machine: true
-    steps:
-      - checkout
-      - run: pyenv global 2.7.12 3.5.2
-      - run: pip install -r ansible/requirements.txt
-      - run: ./journald-cloudwatch/build.sh
-      - run: ./deploy.sh
-
-workflows:
-  version: 2
-  test_and_deploy:
-    jobs:
-      - test
-      - deploy:
-          requires:
-            - test
-          filters:
-            branches:
-              only: master
+      - run: ./circleci.sh
