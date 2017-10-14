@@ -44,7 +44,7 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeM
         Some(last_usec) => journal.seek(last_usec + 1),
     }.unwrap();
 
-    println!("Started polling journal for records")
+    println!("Polling journal for records");
     loop {
         match journal.next().unwrap() {
             Some((usec, record)) => tx.send((usec, record)).unwrap(),
