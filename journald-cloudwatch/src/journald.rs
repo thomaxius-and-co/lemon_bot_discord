@@ -5,6 +5,8 @@ use std::io::{Result, Error};
 use std::collections::BTreeMap;
 use std::ptr;
 
+pub const SD_JOURNAL_LOCAL_ONLY: c_int = 1;
+
 #[allow(non_camel_case_types)]
 pub enum sd_journal {}
 
@@ -38,7 +40,7 @@ pub struct Journal {
 impl Journal {
     pub fn open() -> Result<Journal> {
         let mut journal = Journal { j: ptr::null_mut() };
-        ffi_try!(sd_journal_open(&mut journal.j, 0));
+        ffi_try!(sd_journal_open(&mut journal.j, SD_JOURNAL_LOCAL_ONLY));
         Ok(journal)
     }
 
