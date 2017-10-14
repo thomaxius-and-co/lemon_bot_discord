@@ -35,9 +35,8 @@ fn main() {
 }
 
 fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeMap<String, String>)>) -> () {
-    let unit = String::from("lemon.service"); // TODO: Read from env or something
     let mut journal = Journal::open().unwrap();
-    journal.add_match(format!("_SYSTEMD_UNIT={}", unit));
+    journal.add_match("_SYSTEMD_UNIT", "lemon.service").unwrap(); // TODO: Read from env or something
 
     println!("Seeking to proper point in journal");
     match last_usec_opt {

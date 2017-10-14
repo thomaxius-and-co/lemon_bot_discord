@@ -1,6 +1,6 @@
 extern crate libc;
 
-use self::libc::{c_int, size_t};
+use self::libc::{c_int, c_void, size_t};
 use std::io::{Result, Error};
 use std::collections::BTreeMap;
 use std::ptr;
@@ -39,6 +39,16 @@ impl Journal {
         let mut journal = Journal { j: ptr::null_mut() };
         ffi_try!(sd_journal_open(&mut journal.j, 0));
         Ok(journal)
+    }
+
+    pub fn add_match(&mut self, key: &str, val: &str) -> Result<()> {
+        let mut filter = Vec::<u8>::from(key);
+        filter.push('=' as u8);
+        filter.extend(Vec::<u8>::from(val));
+        let data = filter.as_ptr() as *const c_void;
+        let size = filter.len() as size_t;
+        ffi_try!(sd_journal_add_match(self.j, data, size));
+        Ok(())
     }
 
     pub fn seek_head(&mut self) -> Result<()> {
@@ -81,16 +91,6 @@ impl Journal {
         let mut usec: u64 = 0;
         ffi_try!(sd_journal_get_realtime_usec(self.j, &mut usec));
         Ok(usec)
-    }
-
-    fn add_match(&mut self, key: &str, val: &str) -> Result<()> {
-        let mut filter = Vec::<u8>from(key);
-        filter.push('=' as u8);
-        filter.extend(Vec::<u8>from(val));
-        let data = filter.as_ptr() as *const c_void;
-        let size = filter.len() as size_t;
-        ffi_try!(sd_journal_add_match(self.j, data, size));
-        Ok(())
     }
 }
 
