@@ -8,5 +8,6 @@ export PATH="$HOME/.cargo/bin:$PATH"
 rustup install stable
 
 cd journald-cloudwatch
+cargo test --release
 cargo build --release
 
