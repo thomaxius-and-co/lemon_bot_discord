@@ -22,6 +22,7 @@ extern {
 
     fn sd_journal_restart_data(j: *mut sd_journal) -> ();
     fn sd_journal_next(j: *mut sd_journal) -> c_int;
+    fn sd_journal_previous(j: *mut sd_journal) -> c_int;
     fn sd_journal_get_realtime_usec(j: *mut sd_journal, ret: *const u64) -> c_int;
     fn sd_journal_enumerate_data(j: *mut sd_journal, data: *const *mut u8, l: *mut size_t) -> c_int;
 
@@ -66,6 +67,20 @@ impl Journal {
             return Ok(None);
         }
 
+        let record = try!(self.get_record());
+        Ok(Some(record))
+    }
+
+    pub fn previous(&mut self) -> Result<Option<(u64, BTreeMap<String, String>)>> {
+        if ffi_try!(sd_journal_previous(self.j)) == 0 {
+            return Ok(None);
+        }
+
+        let record = try!(self.get_record());
+        Ok(Some(record))
+    }
+
+    fn get_record(&mut self) -> Result<(u64, BTreeMap<String, String>)> {
         unsafe { sd_journal_restart_data(self.j) };
 
         let mut ret = BTreeMap::new();
@@ -84,7 +99,7 @@ impl Journal {
         }
 
         let usec = try!(self.realtime_usec());
-        Ok(Some((usec, ret)))
+        Ok((usec, ret))
     }
 
     fn realtime_usec(&mut self) -> Result<u64> {

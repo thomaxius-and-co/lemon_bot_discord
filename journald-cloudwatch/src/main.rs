@@ -1,5 +1,6 @@
 extern crate rusoto_core;
 extern crate rusoto_logs;
+extern crate regex;
 
 mod journald;
 
@@ -8,7 +9,6 @@ use std::str::FromStr;
 use std::thread;
 use std::time;
 use std::sync::mpsc;
-use std::collections::BTreeMap;
 
 use rusoto_core::{default_tls_client, EnvironmentProvider, Region};
 use rusoto_logs::*;
@@ -34,7 +34,11 @@ fn main() {
     journald_thread.join().unwrap();
 }
 
-fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeMap<String, String>)>) -> () {
+fn is_entry_start(s: &str) -> bool {
+    regex::Regex::new(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} .+").unwrap().is_match(s)
+}
+
+fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, String)>) -> () {
     let mut journal = Journal::open().unwrap();
     journal.add_match("_SYSTEMD_UNIT", "lemon.service").unwrap(); // TODO: Read from env or something
 
@@ -44,16 +48,38 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, BTreeM
         Some(last_usec) => journal.seek(last_usec + 1),
     }.unwrap();
 
+    println!("Skipping until next proper log entry start");
+    while let Some((_, record)) = journal.next().unwrap() {
+        let message = record.get("MESSAGE").unwrap().to_owned();
+        if is_entry_start(&message) {
+            journal.previous().unwrap();
+            break;
+        }
+    }
+
     println!("Polling journal for records");
+    let mut entry_start_usec = 0;
+    let mut entry_pieces = Vec::with_capacity(100);
     loop {
         match journal.next().unwrap() {
-            Some((usec, record)) => tx.send((usec, record)).unwrap(),
+            Some((usec, record)) => {
+                let message = record.get("MESSAGE").unwrap().to_owned();
+                if is_entry_start(&message) {
+                    // New entry starting. Combine and deliver the previuos one
+                    tx.send((entry_start_usec, entry_pieces.join("\n"))).unwrap();
+
+                    entry_pieces.clear();
+                    entry_start_usec = usec;
+                }
+
+                entry_pieces.push(message);
+            },
             None => thread::sleep(time::Duration::from_secs(10)),
         }
     }
 }
 
-fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, BTreeMap<String, String>)>, initial_upload_sequence_token: Option<String>) -> () {
+fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String)>, initial_upload_sequence_token: Option<String>) -> () {
     println!("Started CloudWatch Logs uploader");
     let batch_size = 1000;
     let batch_max_wait = time::Duration::from_secs(2);
@@ -85,7 +111,7 @@ fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, BTreeM
     }
 }
 
-fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, BTreeMap<String, String>)>, token: Option<String>) -> Result<Option<String>,()> {
+fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, token: Option<String>) -> Result<Option<String>,()> {
     println!("Uploading batch of {} log rows to CloudWatch", batch.len());
 
     let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
@@ -93,8 +119,8 @@ fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, BTreeMap<String,
     let log_stream_name = String::from(format!("discord-prod-bot-{}", instance_id));
 
     let log_events = batch.iter().map(|x| match x {
-        &(usec, ref record) => InputLogEvent {
-            message: record.get("MESSAGE").unwrap().to_owned(),
+        &(usec, ref message) => InputLogEvent {
+            message: message.to_owned(),
             timestamp: (usec / 1000) as i64,
         }
     }).collect();
@@ -190,5 +216,17 @@ impl From<CreateLogStreamError> for AsdfError {
 impl From<DescribeLogStreamsError> for AsdfError {
     fn from(e: DescribeLogStreamsError) -> Self {
         AsdfError::DescribeStream(e)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_entry_start() {
+        assert!(is_entry_start("2017-10-14 22:29:28,780 INFO OSU_API GET https://osu.ppy.sh/api/get_user?k=<REDACTED>&event_days=1&u=7840726&type=id 504 <html>"));
+        assert!(!is_entry_start(""));
+        assert!(!is_entry_start("<title>No pippi, that's a bad pippi!</title>"));
     }
 }

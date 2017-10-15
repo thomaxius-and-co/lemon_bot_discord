@@ -3,6 +3,7 @@ name = "journald-cloudwatch"
 version = "0.0.0"
 dependencies = [
  "libc 0.2.32 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusoto_core 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusoto_logs 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
