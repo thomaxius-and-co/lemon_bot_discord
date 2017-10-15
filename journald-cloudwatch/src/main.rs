@@ -186,8 +186,10 @@ fn init_log_stream(client: &Box<CloudWatchLogs>) -> Result<LogStream, AsdfError>
         next_token: None,
     }) {
         Ok(describe_log_stream_response) => {
-            let streams_opt = describe_log_stream_response.log_streams.unwrap();
-            let log_stream = streams_opt.first().unwrap();
+            let streams = describe_log_stream_response.log_streams.unwrap();
+            let log_stream = streams.iter()
+                .find(|&s| s.log_stream_name.as_ref().map_or(false, |x| x == &log_stream_name))
+                .unwrap();
             Ok(log_stream.clone())
         },
         Err(e) => Err(AsdfError::from(e)),
