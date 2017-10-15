@@ -5,6 +5,7 @@ After=network.target
 [Service]
 ExecStart=/opt/journald-cloudwatch/journald-cloudwatch
 Restart=always
+RestartSec=10s
 Environment=AWS_REGION={{ secrets.aws.region }}
 Environment=AWS_ACCESS_KEY_ID={{ secrets.aws.access_key_id }}
 Environment=AWS_SECRET_ACCESS_KEY={{ secrets.aws.secret_access_key }}
