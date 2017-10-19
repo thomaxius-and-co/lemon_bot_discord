@@ -10,8 +10,8 @@
   copy:
     src: "../journald-cloudwatch/target/release/journald-cloudwatch"
     dest: "/opt/journald-cloudwatch/journald-cloudwatch"
-    owner: nobody
-    group: nogroup
+    owner: root
+    group: root
     mode: 0700
   notify:
     - restart journald-cloudwatch

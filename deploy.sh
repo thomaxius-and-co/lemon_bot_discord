@@ -8,6 +8,7 @@ trap "rm vault.pw" SIGINT SIGTERM EXIT
 
 echo $ANSIBLE_VAULT_PASSWORD > vault.pw
 
+ANSIBLE_CONFIG="$ROOT/ansible/ansible.cfg" \
 ANSIBLE_LIBRARY="$ROOT/ansible/library" \
 ansible-playbook \
   --vault-password-file=vault.pw \
