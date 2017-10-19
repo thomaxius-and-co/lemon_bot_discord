@@ -369,8 +369,7 @@ async def get_channel_info(user_channel_name):
     for channel in channels:
         if channel.name.lower() == user_channel_name.lower():
             return channel.id
-        else:
-            return False
+    return False #If channel doesn't exist
 
 async def edit_channel_bitrate(bitrate):
     voice_channels = [c for c in client.get_all_channels() if c.type == discord.ChannelType.voice]
