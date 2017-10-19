@@ -660,7 +660,8 @@ async def on_message(message):
         if message.author.bot:
             return
 
-        await do_censored_words_check(client, message)
+        if not message.attachments:
+            await do_censored_words_check(client, message)
 
         cmd, arg = command.parse(content)
         if not cmd:
