@@ -338,6 +338,9 @@ async def cmd_add_censored_word(client, message, input):
                                                    'excluded and default info message will be used.')
         return
     bannedwords, exchannel, infomessage = parse_censored_word_message(input)
+    if ("!deletecensoredwords") in bannedwords.lower() or ("!listcensoredwords" in bannedwords.lower()):
+        await client.send_message(message.channel, 'You cannot define these commands as censored words.')
+        return
     if exchannel:
         exchannel_id = await get_channel_info(exchannel)
         if not exchannel_id:
@@ -554,7 +557,7 @@ async def do_censored_words_check(client, message):
         return True
     for row in illegal_messages:
         for word in message_words:
-            if word in row['censored_words']:
+            if word and row['censored_words'] in word:
                 info_message = row['info_message'] if row[
                     'info_message'] else "Your message containts forbidden word(s), and it was removed."
                 if row['exchannel_id'] and await wrong_channel_for_this_word(message.channel.id, row['exchannel_id']):
@@ -660,11 +663,11 @@ async def on_message(message):
         if message.author.bot:
             return
 
-        if not message.attachments:
-            await do_censored_words_check(client, message)
+
+        censor_check_passed = await do_censored_words_check(client, message)
 
         cmd, arg = command.parse(content)
-        if not cmd:
+        if not cmd or not censor_check_passed:
             return
 
         handler = commands.get(cmd)
