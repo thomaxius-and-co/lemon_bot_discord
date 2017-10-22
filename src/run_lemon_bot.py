@@ -557,7 +557,7 @@ async def do_censored_words_check(client, message):
         return True
     for row in illegal_messages:
         for word in message_words:
-            if word and row['censored_words'] in word:
+            if word and row['censored_words'] in word.lower():
                 info_message = row['info_message'] if row[
                     'info_message'] else "Your message containts forbidden word(s), and it was removed."
                 if row['exchannel_id'] and await wrong_channel_for_this_word(message.channel.id, row['exchannel_id']):
