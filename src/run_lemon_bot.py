@@ -557,9 +557,14 @@ async def do_censored_words_check(client, message):
         return True
     for row in illegal_messages:
         for word in message_words:
-            if word and row['censored_words'] in word:
+            if word and [badword for badword in row['censored_words'].split(',') if badword.strip() == word.strip()]:
                 info_message = row['info_message'] + "\nIllegal word: " + word if row[
                     'info_message'] else "Your message containts forbidden word(s), and it was removed." + "\nIllegal word: " + word
+                if not row['exchannel_id']:
+                    await sleep(1)  # To prevent ratelimit from being reached
+                    await client.delete_message(message)
+                    await client.send_message(message.author, info_message)
+                    return False
                 if row['exchannel_id'] and await wrong_channel_for_this_word(message.channel.id, row['exchannel_id']):
                     await sleep(1)  # To prevent ratelimit from being reached
                     await client.delete_message(message)
