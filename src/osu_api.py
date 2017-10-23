@@ -5,6 +5,7 @@ import json
 
 import logger
 import perf
+import retry
 
 log = logger.get("OSU_API")
 
@@ -110,6 +111,7 @@ class Beatmap:
 def make_query_string(params):
     return "?" + "&".join(map(lambda x: "=".join(x), params.items()))
 
+@retry.on_any_exception
 @perf.time_async("osu! API")
 async def call_api(endpoint, params):
     params = params.copy()
