@@ -1,5 +1,7 @@
-import logger
 import asyncio
+import functools
+
+import logger
 
 log = logger.get("RETRY")
 
@@ -10,6 +12,7 @@ def on_any_exception(func):
     up to a maximum of 5000 ms.
     """
 
+    @functools.wraps(func)
     async def func_with_retry(*args, **kwargs):
         max_attempts = 5
         init_delay = 0.1

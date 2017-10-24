@@ -58,3 +58,7 @@ def test_exponential_backoff():
     assert abs(duration - expected_duration) <= 0.1
     assert failer.attempts == 4
     assert result == "Hello, world!"
+
+def test_preserve_original_function_name():
+    assert Failer.attempt.__module__ == "retry_test"
+    assert Failer.attempt.__name__ == "attempt"
