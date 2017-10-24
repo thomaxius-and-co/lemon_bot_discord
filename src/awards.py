@@ -6,13 +6,14 @@ import logger
 
 log = logger.get("AWARDS")
 
-TROPHY_NAMES = ['Top spammer', 'Least toxic', 'Whosaidit total #1', 'Whosaidit all time high score',
-                'Biggest gambling problem', 'Best grammar', 'Worst grammar']
+TROPHY_NAMES = ['Top spammer', 'Whosaidit total #1', 'Whosaidit all time high score',
+                'Biggest gambling problem', 'Best grammar', 'Worst grammar', 'Spammer of the week']
 CUSTOM_TROPHY_NAMES = []
 
 
 async def main():
     await get_custom_trophy_names()
+
 
 async def get_custom_trophy_names():
     trophies = await db.fetch("""
@@ -23,6 +24,7 @@ async def get_custom_trophy_names():
     """)
     for trophy in trophies:
         CUSTOM_TROPHY_NAMES.append(trophy['trophy_name'])
+
 
 async def get_custom_trophy_conditions(trophyname):
     trophy = await db.fetch("""
@@ -35,6 +37,7 @@ async def get_custom_trophy_conditions(trophyname):
     """, trophyname)
     for trophy in trophy:
         return trophy['trophy_conditions']
+
 
 async def delete_trophy(trophyname):
     CUSTOM_TROPHY_NAMES.remove(trophyname)
@@ -53,12 +56,14 @@ def make_word_filters(words):
     params = ["|".join(words)]
     return conditions, params
 
+
 async def custom_trophy_getter(trophyname):
     custom_trophy_conditions = await get_custom_trophy_conditions(trophyname)
     filters, params = make_word_filters(custom_trophy_conditions.split(', '))
     custom_filter = "AND ({0})".format(filters)
     custom_trophy_id, custom_trophy_name = await get_custom_trophy_winner(custom_filter, params)
     return custom_trophy_id, custom_trophy_name
+
 
 async def get_custom_trophy_winner(filters, params):
     user_days_in_chat = await get_user_days_in_chat()
@@ -77,7 +82,7 @@ async def get_custom_trophy_winner(filters, params):
                 AND content NOT LIKE '!%%'
                 AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id) 
                 {filters}
-                
+
             group by 
                 coalesce(name, m->'author'->>'username'), user_id)
         select
@@ -106,9 +111,11 @@ async def get_custom_trophy_winner(filters, params):
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0], winner[0][3]
 
+
 async def random(filter):
     word_filters, params = make_word_filters(filter)
     return await get_custom_trophy_winner("AND ({0})".format(word_filters), params)
+
 
 async def get_user_days_in_chat():
     rows = await db.fetch("""
@@ -121,8 +128,9 @@ async def get_user_days_in_chat():
     result = {}
     for row in rows:
         result[row[0]] = row[1]
-# {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
+    # {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
     return result
+
 
 async def cmd_trophycabinet(client, message, arg):
     oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
@@ -136,25 +144,29 @@ async def cmd_trophycabinet(client, message, arg):
     else:
         await client.edit_message(oldmessage, 'You have no trophies.')
 
+
 async def cmd_deletetrophy(client, message, arg):
     msg = ''
     y = 1
     for x in CUSTOM_TROPHY_NAMES:
         msg += str(y) + '. ' + x + '\n'
-        y+=1
+        y += 1
     if not arg.isdigit():
         await client.send_message(message.channel, "You need to specify a trophy ID. Available trophy ID's:\n" + msg)
         return
     if not CUSTOM_TROPHY_NAMES:
         await client.send_message(message.channel, "There are no throphies")
         return
-    if len(CUSTOM_TROPHY_NAMES) <= int(arg)-1 or (int(arg) == 0): # Even though giving 0 as ID works, It's not we want heh
+    if len(CUSTOM_TROPHY_NAMES) <= int(arg) - 1 or (
+        int(arg) == 0):  # Even though giving 0 as ID works, It's not we want heh
         await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
         return
 
-    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg)-1]
-    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg)-1])
-    await client.send_message(message.channel, 'Succesfully deleted trophy: ' + trophytobedeleted) #the ugly code above should be just temponary..
+    trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg) - 1]
+    await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg) - 1])
+    await client.send_message(message.channel,
+                              'Succesfully deleted trophy: ' + trophytobedeleted)  # the ugly code above should be just temponary..
+
 
 async def cmd_listtrophies(client, message, arg):
     if not CUSTOM_TROPHY_NAMES:
@@ -164,8 +176,9 @@ async def cmd_listtrophies(client, message, arg):
     y = 1
     for x in CUSTOM_TROPHY_NAMES:
         msg += str(y) + '. ' + x + '\n'
-        y+=1
+        y += 1
     await client.send_message(message.channel, msg)
+
 
 async def cmd_addtrophy(client, message, arg):
     arg = arg.lower()
@@ -191,15 +204,19 @@ async def cmd_addtrophy(client, message, arg):
     CUSTOM_TROPHY_NAMES.append(name)
     await client.send_message(message.channel, "Succesfully added a trophy.")
 
+
 def check_and_remove_invalid_words(input):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
     possible_invalid_list = list(map(lambda x: x.strip(), input.split(',')))
+
     def checkifsmall(value):
         return len(value) > 0
+
     valid_list = [word for word in possible_invalid_list if checkifsmall(word)]
     if len(valid_list) == 0:
         return None
     return ', '.join(valid_list)
+
 
 def parse_award_info(unparsed_arg):
     list_with_args = unparsed_arg.split('conditions=')
@@ -207,12 +224,14 @@ def parse_award_info(unparsed_arg):
     conditions = list_with_args[-1]
     return name.rstrip(' '), conditions
 
+
 async def add_custom_award_to_database(name, conditions, message_id):
     await db.execute("""
         INSERT INTO custom_trophies AS a
         (message_id, trophy_name, trophy_conditions)
         VALUES ($1, $2, $3)""", message_id, name, conditions)
-    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s' % (message_id, name, conditions))
+    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s' % (
+    message_id, name, conditions))
 
 
 async def cmd_alltrophies(client, message, arg):
@@ -226,6 +245,7 @@ async def cmd_alltrophies(client, message, arg):
     else:
         await client.edit_message(oldmessage, 'Nobody has won a trophy yet.')
 
+
 async def find_user_trophies(user_id):
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
@@ -238,6 +258,7 @@ async def find_user_trophies(user_id):
             trophycabinet.append(trophyname)
     return trophycabinet
 
+
 async def find_all_trophies():
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
@@ -249,6 +270,7 @@ async def find_all_trophies():
         if trophy_winner_name:
             trophycabinet.append(trophyname + '  -  ' + trophy_winner_name)
     return trophycabinet
+
 
 async def get_top_spammer():
     user_days_in_chat = await get_user_days_in_chat()
@@ -282,6 +304,36 @@ async def get_top_spammer():
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0], winner[0][3]
+
+
+async def get_spammer_of_the_week():
+    items = await db.fetch("""
+        select
+            user_id,
+            name as username,
+            count(*) as message_count
+        from 
+            message
+        join
+             discord_user using (user_id)
+        where 
+            NOT bot 
+            AND content NOT LIKE '!%%'
+            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
+            AND date_part('week',ts) = date_part('week', current_timestamp) - 1
+        group by 
+            user_id, username
+        order by 
+            message_count 
+        desc 
+        limit 1
+    """)
+    if not items:
+        return None, None
+    for item in items:
+        user_id, name, message_count = item
+        return user_id, name
+
 
 async def get_top_whosaidit():
     items = await db.fetch("""
@@ -320,6 +372,7 @@ async def get_top_whosaidit():
         user_id, name = item
         return user_id, name
 
+
 async def get_top_whosaidit_score():
     items = await db.fetch("""
         with week_score as 
@@ -354,7 +407,7 @@ async def get_top_whosaidit_score():
         join 
             discord_user using (user_id)
         where 
-            not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 3
+            not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 2
         order by score 
         desc 
         limit 1
@@ -364,6 +417,7 @@ async def get_top_whosaidit_score():
     for item in items:
         user_id, name = item
         return user_id, name
+
 
 async def get_top_gambling_addict():
     items = await db.fetch("""
@@ -383,48 +437,13 @@ async def get_top_gambling_addict():
             order by 
                 count(*) desc
             limit 1
-    """) # this should be replaced with a query that searches from the respected casino games' tables
+    """)  # this should be replaced with a query that searches from the respected casino games' tables
     if not items:
         return None, None
     for item in items:
         user_id, name = item
         return user_id, name
 
-async def get_least_toxic():
-    items = await db.fetch("""
-        with custommessage as (
-            select
-                coalesce(name, m->'author'->>'username') as name,
-                user_id,
-                count(*) as message_count
-            from 
-                message
-            join 
-                discord_user using (user_id)
-            where 
-                NOT bot 
-            group by coalesce(name, m->'author'->>'username'), user_id
-            )
-        select
-            user_id, 
-            name
-        from 
-            message
-        join 
-            custommessage using (user_id)
-        where 
-            NOT bot and length(content) > 15 and message_count > 300 and name not like 'toxin'
-        group by 
-            user_id, message_count, name 
-        order by (count(*) / message_count::float) * 100 
-        desc 
-        limit 1
-    """)
-    if not items:
-        return None, None
-    for item in items:
-        user_id, name = item
-        return user_id, name
 
 async def get_best_grammar():
     items = await db.fetch("""
@@ -480,6 +499,7 @@ async def get_best_grammar():
         user_id, name = item
         return user_id, name
 
+
 async def get_worst_grammar():
     items = await db.fetch("""
     with custommessage as (
@@ -534,15 +554,17 @@ async def get_worst_grammar():
         user_id, name = item
         return user_id, name
 
+
 trophies = {
     'Top spammer': get_top_spammer,
-    'Least toxic': get_least_toxic,
     'Whosaidit total #1': get_top_whosaidit,
     'Whosaidit all time high score': get_top_whosaidit_score,
     'Biggest gambling problem': get_top_gambling_addict,
     'Best grammar': get_best_grammar,
-    'Worst grammar': get_worst_grammar
+    'Worst grammar': get_worst_grammar,
+    'Spammer of the week': get_spammer_of_the_week
 }
+
 
 def register(client):
     return {
