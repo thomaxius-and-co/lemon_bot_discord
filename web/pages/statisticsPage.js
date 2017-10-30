@@ -64,13 +64,21 @@ const dailyMessageCountChart = (dailyMessageCounts, rolling7DayMessageCounts) =>
     },
     y: {
       label: "Messages",
+    },
+  }
+  const grid = {
+    x: {
+      lines: [
+        { value: moment("2017-11-03T17:00:00+02:00").valueOf(), text: "Harry Spa v4.0 START" },
+        { value: moment("2017-11-05T10:00:00+02:00").valueOf(), text: "Harry Spa v4.0 END" },
+      ]
     }
   }
 
   return (
     <div>
       <h2>Messages per per day in the last month</h2>
-      <LineChart data={data} axis={axis} />
+      <LineChart data={data} axis={axis} grid={grid} />
     </div>
   )
 }
