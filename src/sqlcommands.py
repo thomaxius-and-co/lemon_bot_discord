@@ -93,22 +93,23 @@ async def getslotstoplist():
             losses_slots,
             moneyspent_slots,
             moneywon_slots,
+            moneywon_slots - moneyspent_slots as profit,
             (wins_slots / (wins_slots + losses_slots)) * 100
         FROM casino_stats
         JOIN discord_user USING (user_id)
         WHERE (wins_slots + losses_slots) > 100
-        ORDER BY (wins_slots / (wins_slots + losses_slots)) * 100 DESC
+        ORDER BY moneywon_slots - moneyspent_slots DESC
         LIMIT 10
     """)
     if len(items) == 0:
         return None, None
     toplist = []
     for item in items:
-        name, rank, total, wins, losses, moneyspent, moneywon, pct = item
-        new_item = (name[0:10], rank, total, wins, losses, moneyspent, moneywon, round(pct, 3))
+        name, rank, total, wins, losses, moneyspent, moneywon, profit, pct = item
+        new_item = (name[0:10], rank, total, wins, losses, moneyspent, moneywon, profit, round(pct, 3))
         toplist.append(new_item)
     # toplist = addsymboltolist(toplist,7,' %')
-    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
+    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
 
 async def getquoteforquotegame(name):
     for properquote in range(0,10):

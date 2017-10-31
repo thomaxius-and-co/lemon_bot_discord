@@ -368,19 +368,16 @@ async def cmd_reviewbet(client, message, _):
                               '%s is currently betting: %s' % (message.author.name, bet))
 
 
-# function to loan players money -- ONLY UP TO -- > $50 dollars
+# function to loan players money -- ONLY UP TO -- > $200 dollars
 async def cmd_loan(client, message, _):
     balance = await get_balance(message.author)
-    if balance >= 50:
+    if balance >= 200:
         await client.send_message(message.channel,
                                   '%s you have $%s, you do not need a loan.' % (message.author.name, balance))
         return
 
-    await add_money(message.author, 50 - balance)
-    if balance == 0:
-        await client.send_message(message.channel, '%s, added $50' % message.author.name)
-    else:
-        await client.send_message(message.channel, '%s, added up to $50' % message.author.name)
+    await add_money(message.author, 200 - balance)
+    await client.send_message(message.channel, '%s, added %s$' % (message.author.name, 200 - balance))
 
 
 # Function to look up a users Money!
