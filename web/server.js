@@ -10,6 +10,7 @@ const auth = require("./auth")
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
 const adminPage = require('./pages/adminPage')
+const gameStatisticsPage = require('./pages/gameStatisticsPage')
 
 const app = express()
 auth.init(app)
@@ -73,7 +74,14 @@ const buildInitialState = req => {
         messagesPerWeekday90,
         messagesPerWeekday360,
       })
-    )
+	  ) 
+  case '/gameStatisticsPage':
+    return Promise.join(
+      db.topBlackjack(), db.topSlots(), db.topWhosaidit(), db.whosaiditWeeklyWinners(), db.countMessagesByWeekdays,
+      (topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners) => ({
+        topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners
+      })
+	  )
 
   default:
     return Promise.resolve({})
@@ -88,7 +96,9 @@ renderApp = (req, res, next) => {
     page = adminPage
   } else if (path === '/') {
     page = statisticsPage
-  }
+  } else if (path === '/gameStatisticsPage') {
+    page = gameStatisticsPage
+  }  
 
   if (page) {
     Promise.join(
@@ -109,6 +119,7 @@ renderApp = (req, res, next) => {
 
 app.get("/admin", auth.requireAdmin, renderApp)
 app.get("/", renderApp)
+app.get("/gameStatisticsPage", renderApp)
 
 const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))

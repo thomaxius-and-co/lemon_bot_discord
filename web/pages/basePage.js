@@ -12,6 +12,12 @@ const Header = ({user}) =>
     <div className="header">
       <ul className="navigation">
         <li><a href="/">Home</a></li>
+	  <li className="dropdown">
+			<a href="javascript:void(0)" className="dropbtn">Statistics menu</a>
+			<div className="dropdown-content">
+				<a href="/gameStatisticsPage">Game statistics</a>
+			</div>
+		</li>
       </ul>
       <Login user={user} />
     </div>
