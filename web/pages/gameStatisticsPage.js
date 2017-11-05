@@ -142,7 +142,7 @@ const renderPage = state => {
     {topSlotsTable(state.topSlots)}
     <div className="row">
       <h1>Top blackjack</h1>
-	  <p><i>Top 10 blackjack players.)</i></p>
+	  <p><i>Top 10 blackjack players.</i></p>
     </div>
     {topBlackjackTable(state.topBlackjack)}
     <div className="row">

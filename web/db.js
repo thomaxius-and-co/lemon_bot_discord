@@ -102,9 +102,9 @@ const topBlackjack = () =>
   
 const topSlots = () =>
   db.query(`
-        SELECT
+	SELECT
             name,
-            concat('#', row_number() OVER (ORDER BY  (wins_slots / (wins_slots + losses_slots)) * 100 desc)) AS rank,
+            concat('#', row_number() OVER (ORDER BY  (moneywon_slots - moneyspent_slots)desc)) AS rank,
             wins_slots + losses_slots AS total,
             wins_slots,
             losses_slots,
