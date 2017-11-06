@@ -209,7 +209,10 @@ async def cmd_spank(client, message, target_user):
     await client.send_message(message.channel, "%s has been, %s by %s." % (target_user, punishment, message.author.name))
 
 async def cmd_countchars(client, message, input):
-    await client.send_message(message.channel, "%s: %s characters." % (message.author, len(input)))
+    if input:
+        await client.send_message(message.channel, "%s: %s characters, %s word(s)." % (message.author, len(input), len(input.split(" "))))
+    else:
+        await client.send_message(message.channel, "Usage: !countchars <characters and words to be counted>.")
 
 async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
