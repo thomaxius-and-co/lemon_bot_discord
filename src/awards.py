@@ -195,6 +195,9 @@ async def cmd_addtrophy(client, message, arg):
     if not check_and_remove_invalid_words(conditions):
         await client.send_message(message.channel, "Your trophy contains invalid conditions.")
         return
+    if len(name) > 100:
+        await client.send_message(message.channel, "Trophy name can't be over 100 characters.")
+        return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
         await client.send_message(message.channel, "There is a trophy with a similar name already.")

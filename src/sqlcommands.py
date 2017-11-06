@@ -418,11 +418,6 @@ def check_length(x,i):
     return len(str(x[i]))
 
 async def cmd_top(client, message, input):
-    if CUSTOM_TROPHY_NAMES:
-        string_with_custom_awards = "," + ", ".join(CUSTOM_TROPHY_NAMES) # This is used (possibly) at the end of this function
-    else:
-        string_with_custom_awards = ""
-
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
@@ -556,7 +551,10 @@ async def cmd_top(client, message, input):
             await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
             return
     else:
-        await client.send_message(message.channel, 'Unknown list. Available lists: spammers, whosaidit, blackjack, slots, bestgrammar, custom <words separated by comma>' + string_with_custom_awards)
+        msg = "Unknown list. Available lists: spammers, whosaidit, blackjack, slots, bestgrammar, custom <words separated by comma>"
+        if CUSTOM_TROPHY_NAMES:
+            msg += ", " + ", ".join(CUSTOM_TROPHY_NAMES)
+        await client.send_message(message.channel, msg[:2000])
         return
 
 
