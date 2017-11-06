@@ -208,6 +208,9 @@ async def cmd_spank(client, message, target_user):
     punishment = random.choice(SPANK_BANK)
     await client.send_message(message.channel, "%s has been, %s by %s." % (target_user, punishment, message.author.name))
 
+async def cmd_countchars(client, message, input):
+    await client.send_message(message.channel, "%s: %s characters." % (message.author, len(input)))
+
 async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
     await client.send_message(message.channel, "Just a moment, flipping the coin...")
@@ -596,7 +599,8 @@ commands = {
     'addcensoredwords': cmd_add_censored_word,
     'listcensoredwords': cmd_list_censored_words,
     'deletecensoredwords': cmd_del_censored_words,
-    'editkbpsofchannels': cmd_edit_channel_kbps
+    'editkbpsofchannels': cmd_edit_channel_kbps,
+    'countchars': cmd_countchars
 }
 
 def parse_raw_msg(msg):
