@@ -1,6 +1,9 @@
 from ansible.module_utils.basic import *
 import boto3
 
+def head(xs):
+    return next(iter(xs), None)
+
 def main():
     module = AnsibleModule(
         argument_spec={
@@ -22,8 +25,9 @@ def main():
 
     client = boto3.client("logs")
 
-    existingFilters = client.describe_metric_filters(filterNamePrefix=filterName)["metricFilters"]
-    if len(existingFilters) == 0:
+    existing_filters = client.describe_metric_filters(filterNamePrefix=filterName)["metricFilters"]
+    existing = head(filter(lambda f: f["filterName"] == filterName, existing_filters))
+    if existing is None:
         new_state = client.put_metric_filter(
             logGroupName=logGroupName,
             filterName=filterName,
@@ -35,8 +39,35 @@ def main():
             }]
         )
         module.exit_json(changed=True, result=new_state)
+        return
     else:
-        module.fail_json(msg="Not implemented")
+        # LOL
+        changed = False
+        if existing["logGroupName"] != logGroupName:
+            changed = True
+        if existing["filterPattern"] != filterPattern:
+            changed = True
+        if existing["metricTransformations"][0]["metricNamespace"] != metricNamespace:
+            changed = True
+        if existing["metricTransformations"][0]["metricName"] != metricName:
+            changed = True
+        if existing["metricTransformations"][0]["metricValue"] != metricValue:
+            changed = True
+
+        if changed:
+            new_state = client.put_metric_filter(
+                logGroupName=logGroupName,
+                filterName=filterName,
+                filterPattern=filterPattern,
+                metricTransformations=[{
+                    "metricName": metricName,
+                    "metricNamespace": metricNamespace,
+                    "metricValue": metricValue
+                }]
+            )
+            module.exit_json(changed=True, result=new_state)
+        else:
+            module.exit_json(changed=False, result=existing)
 
 if __name__ == "__main__":
     main()

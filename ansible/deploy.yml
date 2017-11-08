@@ -10,11 +10,10 @@
       aws_metric_filter:
         filterName: "{{ prefix }}-osuapi-latency-filter"
         logGroupName: "{{ prefix }}-bot"
-        filterPattern: "[date, time, module = PERFORMANCE, name = \"osu! API\", ms, call]"
-        metricName: "{{ prefix }}-metric-performance-osuapi"
+        filterPattern: "[date, time, level, module = PERFORMANCE, name = \"osu! API\", ms, call]"
+        metricName: "{{ prefix }}-performance-osuapi"
         metricNamespace: "General"
         metricValue: "$ms"
-      changed_when: False
 
 - name: Create server
   hosts: localhost
