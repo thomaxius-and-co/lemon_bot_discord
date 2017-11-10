@@ -48,6 +48,7 @@ import anssicommands
 import awards
 import lightcommands
 import logger
+import faceit_commands
 
 log = logger.get("BOT")
 
@@ -210,9 +211,9 @@ async def cmd_spank(client, message, target_user):
 
 async def cmd_countchars(client, message, input):
     if input:
-        await client.send_message(message.channel, "%s: %s characters, %s word(s)." % (message.author, len(input), len(input.split(" "))))
+        await client.send_message(message.channel, "%s: %s character(s), %s word(s)." % (message.author, len(input), len(input.split(" "))))
     else:
-        await client.send_message(message.channel, "Usage: !countchars <characters and words to be counted>.")
+        await client.send_message(message.channel, "Usage: !countchars <character(s) and word(s) to be counted>.")
 
 async def cmd_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
@@ -705,7 +706,7 @@ if __name__ == "__main__":
     loop.run_until_complete(db.initialize_schema())
     loop.run_until_complete(awards.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands]:
         commands.update(module.register(client))
 
     client.run(token)
