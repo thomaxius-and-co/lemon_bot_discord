@@ -65,8 +65,13 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, String
             Some((usec, record)) => {
                 let message = record.get("MESSAGE").unwrap().to_owned();
                 if is_entry_start(&message) {
-                    // New entry starting. Combine and deliver the previuos one
-                    tx.send((entry_start_usec, entry_pieces.join("\n"))).unwrap();
+                    // If we have just started the process, the collected
+                    // entry_pieces will be empty. We skip it to avoid
+                    // CloudWatch errors.
+                    if !entry_pieces.is_empty() {
+                      // New entry starting. Combine and deliver the previuos one
+                      tx.send((entry_start_usec, entry_pieces.join("\n"))).unwrap();
+                    }
 
                     entry_pieces.clear();
                     entry_start_usec = usec;
