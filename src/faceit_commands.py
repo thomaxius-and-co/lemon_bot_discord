@@ -6,7 +6,10 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
     csgo_elo, skill_level, csgo_name, ranking_eu = await get_user_stats_from_api(client, message, faceit_nickname)
-    await client.send_message(message.channel, "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s" % (faceit_nickname, csgo_name,  ranking_eu, csgo_elo, skill_level))
+    if csgo_name:
+        await client.send_message(message.channel, "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s" % (faceit_nickname, csgo_name,  ranking_eu, csgo_elo, skill_level))
+    else:
+        return
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user_stats_url = "https://api.faceit.com/api/nicknames/" + faceit_nickname
@@ -14,8 +17,8 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
         result = await session.get(user_stats_url)
         result = await result.json()
         if result['result'] == 'error':
-           await client.send_message(message.channel, result['message'].replace(result['message'][0],result['message'][0].upper()) + ".") #Yes, I am this triggered by the first letter being a non-capital
-           return
+            await client.send_message(message.channel, result['message'].replace(result['message'][0],result['message'][0].upper()) + ".") #Yes, I am this triggered by the first letter being a non-capital
+            return None, None, None, None
         csgo_name = result.get("payload", {}).get("csgo_name", "-")
         skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", "-")
         csgo_elo = result.get("payload", {}).get("games", {}).get("csgo", {}).get("faceit_elo", "-")
