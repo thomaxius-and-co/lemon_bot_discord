@@ -17,9 +17,9 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user_stats_url = "https://api.faceit.com/api/nicknames/" + faceit_nickname
     async with aiohttp.ClientSession() as session:
-        result = await session.get(user_stats_url)
-        result = await result.json()
-        log.info("GET %s %s", user_stats_url, result)
+        response = await session.get(user_stats_url)
+        log.info("GET %s %s %s", response.url, response.status, await response.text())
+        result = await response.json()
         if result['result'] == 'error':
             await client.send_message(message.channel, result['message'].replace(result['message'][0],result['message'][0].upper()) + ".") #Yes, I am this triggered by the first letter being a non-capital
             return None, None, None, None
