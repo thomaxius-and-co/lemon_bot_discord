@@ -32,8 +32,9 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
 async def get_user_eu_ranking(faceit_guid):
     eu_ranking_url = "https://api.faceit.com/ranking/v1/globalranking/csgo/EU/" + faceit_guid
     async with aiohttp.ClientSession() as session:
-        result = await session.get(eu_ranking_url)
-        result = await result.json()
+        response = await session.get(eu_ranking_url)
+        log.info("GET %s %s %s", response.url, response.status, await response.text())
+        result = await response.json()
         return str(result.get("payload", "-"))
 
 def register(client):
