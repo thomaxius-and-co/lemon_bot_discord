@@ -4,6 +4,7 @@ import json
 import database as db
 import columnmaker
 import emoji
+import aiohttp
 import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
@@ -528,6 +529,16 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
 
+    elif input == 'faceit':
+        toplist, amountofpeople = await get_faceit_leaderboard()
+        if not toplist or not amountofpeople:
+            await client.send_message(message.channel,
+                                      'No faceit players have been added to the database')
+            return
+        title = 'Top %s ranked faceit CS:GO players:' % (amountofpeople)
+        await client.send_message(message.channel,
+                                  ('```%s \n' % title + toplist + '```'))
+        return
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
@@ -557,6 +568,46 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, msg[:2000])
         return
 
+async def get_faceit_leaderboard():
+    items = await db.fetch("""
+        SELECT
+            faceit_nickname, faceit_guid
+        FROM
+            faceit_guild_players_list
+        """)
+    if len(items) == 0:
+        return None
+    toplist = []
+    for item in items:
+        csgo_elo, skill_level, csgo_name = await get_user_stats_from_api(item['faceit_nickname'])
+        if (not csgo_elo and not csgo_name and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
+            continue
+        eu_ranking = await get_user_eu_ranking(item['faceit_guid'])
+        new_item = eu_ranking, csgo_name, csgo_elo, skill_level
+        toplist.append(new_item)
+    toplist = sorted(toplist, key=lambda x: x[0])[:10]
+    return columnmaker.columnmaker(['EU RANKING', 'CS:GO NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
+
+async def get_user_eu_ranking(faceit_guid):
+    eu_ranking_url = "https://api.faceit.com/ranking/v1/globalranking/csgo/EU/" + faceit_guid
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(eu_ranking_url)
+        log.info("GET %s %s %s", response.url, response.status, await response.text())
+        result = await response.json()
+        return result.get("payload", 0)
+
+async def get_user_stats_from_api(faceit_nickname):
+    user_stats_url = "https://api.faceit.com/api/nicknames/" + faceit_nickname
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(user_stats_url)
+        log.info("GET %s %s %s", response.url, response.status, await response.text())
+        result = await response.json()
+        if result['result'] == 'error':
+            return None, None, None
+        csgo_name = result.get("payload", {}).get("csgo_name", "-")
+        skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", 0)
+        csgo_elo = result.get("payload", {}).get("games", {}).get("csgo", {}).get("faceit_elo", 0)
+        return csgo_elo, skill_level, csgo_name
 
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
