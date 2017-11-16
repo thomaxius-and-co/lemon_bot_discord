@@ -4,11 +4,13 @@ import json
 import database as db
 import columnmaker
 import emoji
+import aiohttp
 import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
+import faceit_api
 import logger
 
 log = logger.get("SQLCOMMANDS")
@@ -528,6 +530,16 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
 
+    elif input == 'faceit':
+        toplist, amountofpeople = await get_faceit_leaderboard()
+        if not toplist or not amountofpeople:
+            await client.send_message(message.channel,
+                                      'No faceit players have been added to the database, or none of them have rank.')
+            return
+        title = 'Top %s ranked faceit CS:GO players:' % (amountofpeople)
+        await client.send_message(message.channel,
+                                  ('```%s \n' % title + toplist + '```'))
+        return
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
@@ -557,6 +569,33 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, msg[:2000])
         return
 
+async def get_faceit_leaderboard():
+    items = await db.fetch("""
+        SELECT
+            faceit_nickname, faceit_guid
+        FROM
+            faceit_guild_players_list
+        """)
+    if len(items) == 0:
+        return None, None
+    toplist = []
+    for item in items:
+        csgo_elo, skill_level= await get_user_stats_from_api(item['faceit_nickname'])
+        if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
+            continue
+        eu_ranking = await faceit_api.ranking(item["faceit_guid"])
+        new_item = eu_ranking, item['faceit_nickname'], csgo_elo, skill_level
+        toplist.append(new_item)
+    toplist = sorted(toplist, key=lambda x: x[0])[:10]
+    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
+
+async def get_user_stats_from_api(faceit_nickname):
+    user, error = await faceit_api.user(faceit_nickname)
+    if error:
+        return None, None
+    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
+    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)
+    return csgo_elo, skill_level
 
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")

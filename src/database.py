@@ -348,6 +348,19 @@ schema_migrations = {
             UNIQUE (osu_user_id, channel_id)
         );
     """,
+    27: """
+    CREATE TABLE faceit_guild_players_list (
+        faceit_nickname TEXT NOT NULL,
+        faceit_guid TEXT NOT NULL,
+        message_id TEXT NOT NULL REFERENCES message(message_id)
+    );
+    """,
+    28: """
+        ALTER TABLE
+            faceit_guild_players_list
+        ADD FOREIGN KEY 
+            (message_id) REFERENCES message (message_id);
+    """,
     }
 
 _pool_holder = threading.local()
