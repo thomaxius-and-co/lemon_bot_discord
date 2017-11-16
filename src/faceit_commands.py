@@ -21,7 +21,7 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
         log.info("GET %s %s %s", response.url, response.status, await response.text())
         result = await response.json()
         if result['result'] == 'error':
-            await client.send_message(message.channel, result['message'].replace(result['message'][0],result['message'][0].upper()) + ".") #Yes, I am this triggered by the first letter being a non-capital
+            await client.send_message(message.channel, result['message'].title() + ".") #Yes, I am this triggered by the first letter being a non-capital
             return None, None, None, None
         csgo_name = result.get("payload", {}).get("csgo_name", "-")
         skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", "-")
@@ -36,7 +36,7 @@ async def get_faceit_guid(client, message, faceit_nickname):
         log.info("GET %s %s %s", response.url, response.status, await response.text())
         result = await response.json()
         if result['result'] == 'error':
-            await client.send_message(message.channel, result['message'].replace(result['message'][0],result['message'][0].upper()) + ".") #Yes, I am this triggered by the first letter being a non-capital
+            await client.send_message(message.channel, result['message'].title() + ".") #Yes, I am this triggered by the first letter being a non-capital
             return None
         return result.get("payload", {}).get("guid", None)
 
