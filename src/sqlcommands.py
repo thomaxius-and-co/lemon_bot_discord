@@ -579,14 +579,14 @@ async def get_faceit_leaderboard():
         return None, None
     toplist = []
     for item in items:
-        csgo_elo, skill_level, csgo_name = await get_user_stats_from_api(item['faceit_nickname'])
-        if (not csgo_elo and not csgo_name and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
+        csgo_elo, skill_level= await get_user_stats_from_api(item['faceit_nickname'])
+        if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
             continue
         eu_ranking = await get_user_eu_ranking(item['faceit_guid'])
-        new_item = eu_ranking, csgo_name, csgo_elo, skill_level
+        new_item = eu_ranking, item['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
     toplist = sorted(toplist, key=lambda x: x[0])[:10]
-    return columnmaker.columnmaker(['EU RANKING', 'CS:GO NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
+    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
 
 async def get_user_eu_ranking(faceit_guid):
     eu_ranking_url = "https://api.faceit.com/ranking/v1/globalranking/csgo/EU/" + faceit_guid
@@ -604,10 +604,9 @@ async def get_user_stats_from_api(faceit_nickname):
         result = await response.json()
         if result['result'] == 'error':
             return None, None, None
-        csgo_name = result.get("payload", {}).get("csgo_name", "-")
         skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", 0)
         csgo_elo = result.get("payload", {}).get("games", {}).get("csgo", {}).get("faceit_elo", 0)
-        return csgo_elo, skill_level, csgo_name
+        return csgo_elo, skill_level
 
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
