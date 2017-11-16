@@ -590,16 +590,12 @@ async def get_faceit_leaderboard():
     return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
 
 async def get_user_stats_from_api(faceit_nickname):
-    user_stats_url = "https://api.faceit.com/api/nicknames/" + faceit_nickname
-    async with aiohttp.ClientSession() as session:
-        response = await session.get(user_stats_url)
-        log.info("GET %s %s %s", response.url, response.status, await response.text())
-        result = await response.json()
-        if result['result'] == 'error':
-            return None, None, None
-        skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", 0)
-        csgo_elo = result.get("payload", {}).get("games", {}).get("csgo", {}).get("faceit_elo", 0)
-        return csgo_elo, skill_level
+    user = await faceit_api.user(faceit_nickname)
+    if not user:
+        return None, None, None
+    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
+    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)
+    return csgo_elo, skill_level
 
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
