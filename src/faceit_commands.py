@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import logger
 import database as db
+import faceit_api
 log = logger.get("FACEIT")
 
 async def cmd_faceit_stats(client, message, faceit_nickname):
@@ -26,7 +27,7 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
         csgo_name = result.get("payload", {}).get("csgo_name", "-")
         skill_level = result.get("payload", {}).get("games", {}).get("csgo", {}).get("skill_level", "-")
         csgo_elo = result.get("payload", {}).get("games", {}).get("csgo", {}).get("faceit_elo", "-")
-        ranking = await get_user_eu_ranking(result.get("payload", {}).get("guid", {})) if csgo_elo != "-" else "-"
+        ranking = await faceit_api.ranking(result.get("payload", {}).get("guid", {})) if csgo_elo != "-" else "-"
         return str(csgo_elo), str(skill_level), csgo_name, ranking
 
 async def get_faceit_guid(client, message, faceit_nickname):
@@ -39,14 +40,6 @@ async def get_faceit_guid(client, message, faceit_nickname):
             await client.send_message(message.channel, result['message'].title() + ".") #Yes, I am this triggered by the first letter being a non-capital
             return None
         return result.get("payload", {}).get("guid", None)
-
-async def get_user_eu_ranking(faceit_guid):
-    eu_ranking_url = "https://api.faceit.com/ranking/v1/globalranking/csgo/EU/" + faceit_guid
-    async with aiohttp.ClientSession() as session:
-        response = await session.get(eu_ranking_url)
-        log.info("GET %s %s %s", response.url, response.status, await response.text())
-        result = await response.json()
-        return str(result.get("payload", "-"))
 
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
     if not faceit_nickname:

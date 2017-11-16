@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
+import faceit_api
 import logger
 
 log = logger.get("SQLCOMMANDS")
@@ -582,19 +583,11 @@ async def get_faceit_leaderboard():
         csgo_elo, skill_level= await get_user_stats_from_api(item['faceit_nickname'])
         if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
             continue
-        eu_ranking = await get_user_eu_ranking(item['faceit_guid'])
+        eu_ranking = await faceit_api.ranking(item["faceit_guid"])
         new_item = eu_ranking, item['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
     toplist = sorted(toplist, key=lambda x: x[0])[:10]
     return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
-
-async def get_user_eu_ranking(faceit_guid):
-    eu_ranking_url = "https://api.faceit.com/ranking/v1/globalranking/csgo/EU/" + faceit_guid
-    async with aiohttp.ClientSession() as session:
-        response = await session.get(eu_ranking_url)
-        log.info("GET %s %s %s", response.url, response.status, await response.text())
-        result = await response.json()
-        return result.get("payload", 0)
 
 async def get_user_stats_from_api(faceit_nickname):
     user_stats_url = "https://api.faceit.com/api/nicknames/" + faceit_nickname
