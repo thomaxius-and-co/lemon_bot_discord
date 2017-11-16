@@ -533,7 +533,7 @@ async def cmd_top(client, message, input):
         toplist, amountofpeople = await get_faceit_leaderboard()
         if not toplist or not amountofpeople:
             await client.send_message(message.channel,
-                                      'No faceit players have been added to the database')
+                                      'No faceit players have been added to the database, or none of them have rank.')
             return
         title = 'Top %s ranked faceit CS:GO players:' % (amountofpeople)
         await client.send_message(message.channel,
@@ -576,7 +576,7 @@ async def get_faceit_leaderboard():
             faceit_guild_players_list
         """)
     if len(items) == 0:
-        return None
+        return None, None
     toplist = []
     for item in items:
         csgo_elo, skill_level, csgo_name = await get_user_stats_from_api(item['faceit_nickname'])
