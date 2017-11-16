@@ -16,9 +16,9 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
         return
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
-    user = await faceit_api.user(faceit_nickname)
-    if not user:
-        await client.send_message(message.channel, result['message'].title() + ".") #Yes, I am this triggered by the first letter being a non-capital
+    user, error = await faceit_api.user(faceit_nickname)
+    if error:
+        await client.send_message(message.channel, error)
         return None, None, None, None
     csgo_name = user.get("csgo_name", "-")
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", "-")
@@ -27,9 +27,9 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
     return str(csgo_elo), str(skill_level), csgo_name, ranking
 
 async def get_faceit_guid(client, message, faceit_nickname):
-    user = await faceit_api.user(faceit_nickname)
-    if not user:
-        await client.send_message(message.channel, result['message'].title() + ".") #Yes, I am this triggered by the first letter being a non-capital
+    user, error = await faceit_api.user(faceit_nickname)
+    if error:
+        await client.send_message(message.channel, error)
         return None
     return user.get("guid", None)
 

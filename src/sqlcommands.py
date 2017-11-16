@@ -590,8 +590,8 @@ async def get_faceit_leaderboard():
     return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
 
 async def get_user_stats_from_api(faceit_nickname):
-    user = await faceit_api.user(faceit_nickname)
-    if not user:
+    user, error = await faceit_api.user(faceit_nickname)
+    if error:
         return None, None, None
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)
