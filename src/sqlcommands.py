@@ -592,7 +592,7 @@ async def get_faceit_leaderboard():
 async def get_user_stats_from_api(faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
     if error:
-        return None, None, None
+        return None, None
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)
     return csgo_elo, skill_level
