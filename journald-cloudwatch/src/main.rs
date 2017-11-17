@@ -79,7 +79,10 @@ fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, String
 
                 entry_pieces.push(message);
             },
-            None => thread::sleep(time::Duration::from_secs(10)),
+            None => {
+                println!("Waiting for journal events");
+                journal.wait(None).unwrap();
+            }
         }
     }
 }

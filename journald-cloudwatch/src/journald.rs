@@ -4,6 +4,7 @@ use self::libc::{c_int, c_void, size_t};
 use std::io::{Result, Error};
 use std::collections::BTreeMap;
 use std::ptr;
+use std::time::Duration;
 
 pub const SD_JOURNAL_LOCAL_ONLY: c_int = 1;
 
@@ -29,6 +30,8 @@ extern {
     fn sd_journal_enumerate_data(j: *mut sd_journal, data: *const *mut u8, l: *mut size_t) -> c_int;
 
     fn sd_journal_add_match(j: *mut sd_journal, data: *const c_void, size: size_t) -> c_int;
+
+    fn sd_journal_wait(j: *mut sd_journal, timeout_usec: u64) -> c_int;
 
     pub fn sd_journal_close(j: *mut sd_journal) -> ();
 }
@@ -82,6 +85,13 @@ impl Journal {
         Ok(Some(record))
     }
 
+    pub fn wait(&mut self, timeout: Option<Duration>) -> Result<()> {
+        let timeout_usec = timeout.map(duration_to_usec).unwrap_or(-1i64 as u64);
+        // TODO: Return event type when needed
+        ffi_try!(sd_journal_wait(self.j, timeout_usec));
+        Ok(())
+    }
+
     fn get_record(&mut self) -> Result<(u64, BTreeMap<String, String>)> {
         unsafe { sd_journal_restart_data(self.j) };
 
@@ -125,4 +135,8 @@ fn ffi_to_result(ret: c_int) -> Result<c_int> {
     } else {
         Ok(ret)
     }
+}
+
+fn duration_to_usec(d: Duration) -> u64 {
+    d.as_secs() * 1_000_000 + (d.subsec_nanos() * 1_000) as u64
 }
