@@ -21,10 +21,15 @@ def delta_to_tuple(delta):
 
 async def cmd_lan(client, message, query):
     lan = to_utc(as_helsinki(datetime(2017, 11, 17, 16, 0)))
+    lan_over = to_utc(as_helsinki(datetime(2017, 11, 19, 12, 0)))
     now = as_utc(datetime.now())
 
+    if (lan < now) and (lan_over > now):
+        await client.send_message(message.channel, "HelmiLAN is currently happening!!")
+        return
+
     if lan < now:
-        await client.send_message(message.channel, "HelmiLAN is already over")
+        await client.send_message(message.channel, "HelmiLAN is already over but väsymys remains.")
         return
 
     delta = lan - now
