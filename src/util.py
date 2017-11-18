@@ -9,6 +9,8 @@ import logger
 
 log = logger.get("UTIL")
 
+http = aiohttp.ClientSession()
+
 webhook_url = os.environ.get("ERROR_CHANNEL_WEBHOOK", None)
 
 async def log_exception(error_log):
@@ -34,13 +36,12 @@ async def post_exception(err_str):
         "text": "```" + err_str + "```",
     }
 
-    async with aiohttp.ClientSession() as session:
-        r = await session.post(webhook_url + "/slack", data=json.dumps(data))
-        if r.status != 200:
-            log.error("Unknown webhook response {0}".format(r))
-            return
+    r = await http.post(webhook_url + "/slack", data=json.dumps(data))
+    if r.status != 200:
+        log.error("Unknown webhook response {0}".format(r))
+        return
 
-        log.info("Posted error on channel")
+    log.info("Posted error on channel")
 
 # Run discord.py coroutines from antoher thread
 def threadsafe(client, coroutine):

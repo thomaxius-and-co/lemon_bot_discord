@@ -10,6 +10,8 @@ import perf
 
 log = logger.get("ARCHIVER")
 
+http = aiohttp.ClientSession()
+
 ERROR_MISSING_ACCESS = 50001
 
 def response_is_error(response):
@@ -21,20 +23,19 @@ async def get(path):
     }
     url = "https://discordapp.com/api/%s" % path
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as r:
-            log.info("GET %s %s %s", url, r.status, await r.text())
-            response = await r.json()
-            if r.status == 429:
-                log.warn("Hit ratelimit for path: %s", path)
-                log.warn(response)
-                await asyncio.sleep(float(response["retry_after"]) / 1000.0)
-                return await get(path)
+    r = await http.get(url, headers=headers)
+    log.info("GET %s %s %s", url, r.status, await r.text())
+    response = await r.json()
+    if r.status == 429:
+        log.warn("Hit ratelimit for path: %s", path)
+        log.warn(response)
+        await asyncio.sleep(float(response["retry_after"]) / 1000.0)
+        return await get(path)
 
-            if response_is_error(response):
-                return None, response
-            else:
-                return response, None
+    if response_is_error(response):
+        return None, response
+    else:
+        return response, None
 
 @perf.time_async("Fetch discord messages")
 async def get_messages(channel_id, after):
