@@ -71,6 +71,8 @@ const dailyMessageCountChart = (dailyMessageCounts, rolling7DayMessageCounts) =>
       lines: [
         { value: moment("2017-11-03T17:00:00+02:00").valueOf(), text: "Harry Spa v4.0 START" },
         { value: moment("2017-11-05T10:00:00+02:00").valueOf(), text: "Harry Spa v4.0 END" },
+        { value: moment("2017-11-17T16:00:00+02:00").valueOf(), text: "HelmiLAN START" },
+        { value: moment("2017-11-19T12:00:00+02:00").valueOf(), text: "HelmiLAN END" },
       ]
     }
   }
