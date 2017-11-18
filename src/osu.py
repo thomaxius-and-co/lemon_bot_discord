@@ -12,7 +12,7 @@ import util
 log = logger.get("OSU")
 
 async def cmd_osu(client, message, user):
-    user_info = next(await api.user(user), None)
+    user_info = await api.user(user)
 
     if not user_info:
         await client.send_message(message.channel, "User %s not found" % user)

@@ -1,13 +1,16 @@
 import os
 import aiohttp
-import redis
 import json
 
+import cache
 import logger
 import perf
 import retry
 
 log = logger.get("OSU_API")
+
+def head(xs):
+    return next(iter(xs), None)
 
 class User:
     def __init__(self, json):
@@ -95,7 +98,7 @@ class Play:
 
     async def beatmap(self):
         if self._beatmap is None:
-            self._beatmap = next(await beatmaps(self.beatmap_id))
+            self._beatmap = head(await beatmaps(self.beatmap_id))
         return self._beatmap
 
 class Beatmap:
@@ -128,14 +131,15 @@ async def user_by_id(user_id):
         "u": user_id,
         "event_days": "1",
     }))
-    return next(users, None)
+    return head(users)
 
 async def user(name):
-    return map(User, await call_api("get_user", {
+    users = map(User, await call_api("get_user", {
         "type": "u",
         "u": name,
         "event_days": "1",
     }))
+    return head(users)
 
 async def user_best(name, limit):
     if not (1 <= limit <= 100):
@@ -147,15 +151,11 @@ async def user_best(name, limit):
         "limit": str(limit),
     }))
 
+@cache.cache()
 async def beatmaps(beatmap_id):
-    cache_key = "beatmaps:{0}".format(beatmap_id)
-    cached = await redis.get(cache_key)
-    if cached is not None:
-        return map(Beatmap, json.loads(cached))
     raw = await call_api("get_beatmaps", {
         "m": "0",
         "b": str(beatmap_id),
         "limit": "1",
     })
-    await redis.set(cache_key, json.dumps(raw))
-    return map(Beatmap, raw)
+    return list(map(Beatmap, raw))

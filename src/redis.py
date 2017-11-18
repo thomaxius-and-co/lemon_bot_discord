@@ -27,6 +27,10 @@ async def get(key, encoding="utf-8"):
     pool = await get_pool()
     return await pool.get(key, encoding=encoding)
 
+async def get_binary(key):
+    pool = await get_pool()
+    return await pool.get(key, encoding=None)
+
 async def set(key, data, expire=None):
     pool = await get_pool()
     await pool.set(key, data, expire=expire)
