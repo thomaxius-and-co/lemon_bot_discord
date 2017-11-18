@@ -20,10 +20,6 @@ class OwnedGame:
         self.playtime_forever = json.get("playtime_forever", 0)
         self.playtime_2weeks = json.get("playtime_2weeks", 0)
 
-    @property
-    async def details(self):
-        return await game(self.appid)
-
 def make_query_string(params):
     return "?" + "&".join(map(lambda x: "=".join(map(str, x)), params.items()))
 
