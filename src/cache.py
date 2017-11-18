@@ -6,6 +6,9 @@ import logger
 
 log = logger.get("CACHE")
 
+HOUR = 60 * 60
+WEEK = 7 * 24 * HOUR
+
 def make_key(func, args, kwargs):
     args_pickled = pickle.dumps((args, sorted(kwargs.items())), pickle.HIGHEST_PROTOCOL)
     cache_prefix = "_cache:{0}.{1}:".format(func.__module__, func.__name__)

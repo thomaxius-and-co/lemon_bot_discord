@@ -8,9 +8,6 @@ import perf
 
 log = logger.get("STEAM_API")
 
-HOUR_IN_SECONDS = 60 * 60
-WEEK_IN_SECONDS = 7 * 24 * HOUR_IN_SECONDS
-
 class Game:
     def __init__(self, json):
         self.name = json.get("gameName", "N/A")
@@ -38,17 +35,17 @@ async def call_api(endpoint, params):
         log.info("GET %s %s %s", url.replace(os.environ["STEAM_API_KEY"], "<REDACTED>"), r.status, await r.text())
         return await r.json()
 
-@cache.cache(ttl = HOUR_IN_SECONDS)
+@cache.cache(ttl = cache.HOUR)
 async def owned_games(steamid):
     raw = await call_api("IPlayerService/GetOwnedGames/v0001/", {"steamid": steamid})
     return list(map(OwnedGame, raw["response"]["games"]))
 
-@cache.cache(ttl = WEEK_IN_SECONDS)
+@cache.cache(ttl = cache.WEEK)
 async def game(appid):
     raw = await call_api("ISteamUserStats/GetSchemaForGame/v2/", {"appid": appid})
     return Game(raw["game"])
 
-@cache.cache(ttl = WEEK_IN_SECONDS)
+@cache.cache(ttl = cache.WEEK)
 async def steamid(username):
     raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {"vanityurl": username.lower()})
     return raw["response"].get("steamid", None)
