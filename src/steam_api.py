@@ -1,7 +1,7 @@
 import os
 import aiohttp
-import redis
 import json
+import cache
 
 import logger
 import perf
@@ -38,48 +38,20 @@ async def call_api(endpoint, params):
         log.info("GET %s %s %s", url.replace(os.environ["STEAM_API_KEY"], "<REDACTED>"), r.status, await r.text())
         return await r.json()
 
+@cache.cache(ttl = HOUR_IN_SECONDS)
 async def owned_games(steamid):
-    cache_key = "steam:owned_games:{steamid}".format(steamid=steamid)
-
-    cached = await redis.get(cache_key)
-    if cached is not None:
-        return map(OwnedGame, json.loads(cached)["response"]["games"])
-
     raw = await call_api("IPlayerService/GetOwnedGames/v0001/", {"steamid": steamid})
+    return list(map(OwnedGame, raw["response"]["games"]))
 
-    await redis.set(cache_key, json.dumps(raw), expire=HOUR_IN_SECONDS)
-
-    return map(OwnedGame, raw["response"]["games"])
-
+@cache.cache(ttl = WEEK_IN_SECONDS)
 async def game(appid):
-    cache_key = "steam:game:{appid}".format(appid=appid)
-
-    cached = await redis.get(cache_key)
-    if cached is not None:
-        return Game(json.loads(cached)["game"])
-
     raw = await call_api("ISteamUserStats/GetSchemaForGame/v2/", {"appid": appid})
-
-    await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
-
     return Game(raw["game"])
 
+@cache.cache(ttl = WEEK_IN_SECONDS)
 async def steamid(username):
-    username = username.lower()
-
-    def parse(raw):
-        return raw["response"].get("steamid", None)
-
-    cache_key = "steam:steamid:{username}".format(username=username)
-
-    cached = await redis.get(cache_key)
-    if cached is not None:
-        return parse(json.loads(cached))
-
-    raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {"vanityurl": username})
-
-    await redis.set(cache_key, json.dumps(raw), expire=WEEK_IN_SECONDS)
-    return parse(raw)
+    raw = await call_api("ISteamUser/ResolveVanityURL/v0001/", {"vanityurl": username.lower()})
+    return raw["response"].get("steamid", None)
 
 @perf.time_async("Steam API")
 async def call_appdetails(appid):
@@ -89,19 +61,7 @@ async def call_appdetails(appid):
         log.info("GET %s %s %s", url, r.status, await r.text())
         return await r.json()
 
+@cache.cache()
 async def appdetails(appid):
-    def parse(raw):
-        return raw[str(appid)].get("data", {"name": "pls report error to thomaxius"})
-
-    cache_key = "steam:appdetails:{appid}".format(appid=appid)
-
-    cached = await redis.get(cache_key)
-
-    if cached is not None:
-        return parse(json.loads(cached))
-
     raw = await call_appdetails(appid)
-
-    await redis.set(cache_key, json.dumps(raw))
-
-    return parse(raw)
+    return raw[str(appid)].get("data", {"name": "pls report error to thomaxius"})
