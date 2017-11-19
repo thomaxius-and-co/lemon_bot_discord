@@ -29,7 +29,7 @@ def on_any_exception(func):
                     # TODO: What should we do?
                     # - Throw the last exception
                     # - Throw a custom exception that wraps all received ones?
-                    log.error("{0}.{1} failed {2} retries. Final exception: {1}".format(func.__module__, func.__name__, max_attempts, e))
+                    log.error("{0}.{1} failed {2} retries. Final exception: {3}".format(func.__module__, func.__name__, max_attempts, e))
                     raise e
                 else:
                     log.warn("Retrying {0}.{1} in {2} ms (attempt {3})".format(func.__module__, func.__name__, int(delay_seconds * 1000), attempts))
