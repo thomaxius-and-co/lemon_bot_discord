@@ -9,8 +9,6 @@ import retry
 
 log = logger.get("OSU_API")
 
-http = aiohttp.ClientSession()
-
 def head(xs):
     return next(iter(xs), None)
 
@@ -122,9 +120,10 @@ async def call_api(endpoint, params):
     params = params.copy()
     params.update({"k": os.environ["OSU_API_KEY"]})
     url = "https://osu.ppy.sh/api/%s%s" % (endpoint, make_query_string(params))
-    r = await http.get(url)
-    log.info("GET %s %s %s", url.replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())
-    return await r.json()
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url)
+        log.info("GET %s %s %s", url.replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())
+        return await r.json()
 
 async def user_by_id(user_id):
     users = map(User, await call_api("get_user", {
