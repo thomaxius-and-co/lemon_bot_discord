@@ -32,7 +32,7 @@ def on_any_exception(func):
                     log.error("{0}.{1} failed {2} retries. Final exception: {3}".format(func.__module__, func.__name__, max_attempts, e))
                     raise e
                 else:
-                    log.warn("Retrying {0}.{1} in {2} ms (attempt {3})".format(func.__module__, func.__name__, int(delay_seconds * 1000), attempts))
+                    log.warn("Retrying {0}.{1} in {2} ms (attempt {3}). Exception:\n{4}".format(func.__module__, func.__name__, int(delay_seconds * 1000), attempts, e))
                     await asyncio.sleep(delay_seconds)
                     delay_seconds = min(max_delay, delay_seconds * 2)
 
