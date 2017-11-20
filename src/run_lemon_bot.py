@@ -49,6 +49,7 @@ import awards
 import lightcommands
 import logger
 import faceit_commands
+import muutto
 
 log = logger.get("BOT")
 
@@ -706,7 +707,7 @@ if __name__ == "__main__":
     loop.run_until_complete(db.initialize_schema())
     loop.run_until_complete(awards.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto]:
         commands.update(module.register(client))
 
     client.run(token)
