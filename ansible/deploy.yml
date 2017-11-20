@@ -15,6 +15,21 @@
         metricNamespace: "General"
         metricValue: "$ms"
 
+    - name: Create alarm for bot log silence
+      ec2_metric_alarm:
+        state: present
+        description: "Alarm triggered when there are no new log events in '{{ prefix }}-bot' log"
+        name: "{{ prefix }}-bot-IncomingLogEvents-silence-alarm"
+        namespace: "AWS/Logs"
+        metric: "IncomingLogEvents"
+        statistic: "Sum"
+        comparison: "<="
+        threshold: 0
+        period: 60
+        evaluation_periods: 1
+        dimensions:
+          LogGroupName: "{{ prefix }}-bot"
+
 - name: Create server
   hosts: localhost
   gather_facts: no
