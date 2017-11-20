@@ -56,6 +56,11 @@
         env:
           DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
 
+    # TODO: Write this into proper module
+    - name: Give SNS permission to trigger the function
+      shell: "aws lambda add-permission --function-name {{ prefix }}-alarms-to-discord-lambda --statement-id {{ prefix }}-alarms-to-discord-lambda-statement --action lambda:InvokeFunction --principal sns.amazonaws.com"
+      ignore_errors: yes
+
 - name: Create server
   hosts: localhost
   gather_facts: no
