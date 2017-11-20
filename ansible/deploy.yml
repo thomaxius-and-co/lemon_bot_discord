@@ -37,6 +37,8 @@
         evaluation_periods: 1
         dimensions:
           LogGroupName: "{{ prefix }}-bot"
+        alarm_actions:
+          - "{{ sns_topic_out.sns_arn }}"
 
     - name: Create role for alarms to Discord lambda
       iam_role:
