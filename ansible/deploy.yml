@@ -42,15 +42,7 @@
       iam_role:
         state: present
         name: "{{ prefix }}-alarms-to-discord-lambda-role"
-        assume_role_policy_document: >
-          {
-            "Version": "2008-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Principal": {"Service": ["lambda.amazonaws.com"]},
-              "Action": "sts:AssumeRole"
-            }]
-          }
+        assume_role_policy_document: "{{ lookup('template', 'alarms-to-discord-lambda-assume-role-policy.json') }}"
       register: lambda_role_out
 
     - name: Create alarms to Discord lambda
