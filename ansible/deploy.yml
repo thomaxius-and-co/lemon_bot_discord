@@ -30,6 +30,30 @@
         dimensions:
           LogGroupName: "{{ prefix }}-bot"
 
+    - name: Create role for alarms to Discord lambda
+      iam_role:
+        state: present
+        name: "{{ prefix }}-alarms-to-discord-lambda-role"
+        assume_role_policy_document: >
+          {
+            "Version": "2008-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": {"Service": ["lambda.amazonaws.com"]},
+              "Action": "sts:AssumeRole"
+            }]
+          }
+      register: lambda_role_out
+
+    - name: Create alarms to Discord lambda
+      aws_lambda:
+        name: "{{ prefix }}-alarms-to-discord-lambda"
+        path: "../alarms-to-discord"
+        role: "{{ lambda_role_out.iam_role.arn }}"
+        handler: "alarms-to-discord.handler"
+        env:
+          DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
+
 - name: Create server
   hosts: localhost
   gather_facts: no
