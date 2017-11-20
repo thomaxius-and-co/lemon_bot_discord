@@ -35,7 +35,9 @@ def main():
             Environment={"Variables": module.params["env"]},
             Publish=False
         )
-        module.exit_json(changed=True, function=func)
+
+        func = get_function(client, module.params["name"])
+        module.exit_json(changed=True, **func)
     else:
         changed = True # TODO: Check if update is needed
 
@@ -50,7 +52,9 @@ def main():
             ZipFile=zip_file,
             Publish=False
         )
-        module.exit_json(changed=changed, function={})
+
+        func = get_function(client, module.params["name"])
+        module.exit_json(changed=changed, **func)
 
 def build_lambda(path):
     with mkdtemp() as tmp_dir:

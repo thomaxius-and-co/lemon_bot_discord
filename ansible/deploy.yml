@@ -6,6 +6,33 @@
     prefix: "discord-prod"
 
   tasks:
+    - name: Create role for alarms to Discord lambda
+      iam_role:
+        state: present
+        name: "{{ prefix }}-alarms-to-discord-lambda-role"
+        assume_role_policy_document: "{{ lookup('template', 'alarms-to-discord-lambda-assume-role-policy.json') }}"
+      register: lambda_role_out
+
+    - name: Create alarms to Discord lambda
+      aws_lambda:
+        name: "{{ prefix }}-alarms-to-discord-lambda"
+        path: "../alarms-to-discord"
+        role: "{{ lambda_role_out.iam_role.arn }}"
+        handler: "alarms-to-discord.handler"
+        env:
+          DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
+      register: lambda_out
+
+    - name: Create SNS topic for alarms
+      sns_topic:
+        state: present
+        name: "{{ prefix }}-alarms-sns-topic"
+        subscriptions:
+          - endpoint: "{{ lambda_out.Configuration.FunctionArn }}"
+            protocol: lambda
+        purge_subscriptions: no
+      register: sns_topic_out
+
     - name: Create metric for osu! API request times
       aws_metric_filter:
         filterName: "{{ prefix }}-osuapi-latency-filter"
@@ -15,13 +42,10 @@
         metricNamespace: "General"
         metricValue: "$ms"
 
-    - name: Create SNS topic for alarms
-      sns_topic:
-        state: present
-        name: "{{ prefix }}-alarms-sns-topic"
-      register: sns_topic_out
-
-    - debug: var=sns_topic_out
+    # TODO: Write this into proper module
+    - name: Give SNS permission to trigger the function
+      shell: "aws lambda add-permission --function-name {{ prefix }}-alarms-to-discord-lambda --statement-id {{ prefix }}-alarms-to-discord-lambda-statement --action lambda:InvokeFunction --principal sns.amazonaws.com"
+      ignore_errors: yes
 
     - name: Create alarm for bot log silence
       ec2_metric_alarm:
@@ -40,26 +64,6 @@
         alarm_actions:
           - "{{ sns_topic_out.sns_arn }}"
 
-    - name: Create role for alarms to Discord lambda
-      iam_role:
-        state: present
-        name: "{{ prefix }}-alarms-to-discord-lambda-role"
-        assume_role_policy_document: "{{ lookup('template', 'alarms-to-discord-lambda-assume-role-policy.json') }}"
-      register: lambda_role_out
-
-    - name: Create alarms to Discord lambda
-      aws_lambda:
-        name: "{{ prefix }}-alarms-to-discord-lambda"
-        path: "../alarms-to-discord"
-        role: "{{ lambda_role_out.iam_role.arn }}"
-        handler: "alarms-to-discord.handler"
-        env:
-          DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
-
-    # TODO: Write this into proper module
-    - name: Give SNS permission to trigger the function
-      shell: "aws lambda add-permission --function-name {{ prefix }}-alarms-to-discord-lambda --statement-id {{ prefix }}-alarms-to-discord-lambda-statement --action lambda:InvokeFunction --principal sns.amazonaws.com"
-      ignore_errors: yes
 
 - name: Create server
   hosts: localhost
