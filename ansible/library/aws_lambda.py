@@ -82,7 +82,7 @@ def mkdtemp():
 def rmtree(path):
     try:
         shutil.rmtree(tmp_dir)
-    except e:
+    except:
         pass
 
 if __name__ == "__main__":
