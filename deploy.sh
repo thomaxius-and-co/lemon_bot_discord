@@ -8,7 +8,7 @@ trap "rm vault.pw" SIGINT SIGTERM EXIT
 
 echo $ANSIBLE_VAULT_PASSWORD > vault.pw
 
-source "$ROOT/web/nvm.sh"
+source "$ROOT/web/nvm.sh" || true
 nvm install
 
 ANSIBLE_CONFIG="$ROOT/ansible/ansible.cfg" \
