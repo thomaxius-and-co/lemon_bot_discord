@@ -3,12 +3,15 @@
 ROOT="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 cd $ROOT
 
-set -e
+set -o errexit
 trap "rm vault.pw" SIGINT SIGTERM EXIT
 
 echo $ANSIBLE_VAULT_PASSWORD > vault.pw
 
-source "$ROOT/web/nvm.sh" || true
+set +o errexit
+export NVM_DIR="$ROOT/.nvm"
+source "$ROOT/web/nvm.sh"
+set -o errexit
 nvm install
 
 ANSIBLE_CONFIG="$ROOT/ansible/ansible.cfg" \
