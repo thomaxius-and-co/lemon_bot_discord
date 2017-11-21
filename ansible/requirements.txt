@@ -1,4 +1,4 @@
--e git+https://github.com/ansible/ansible@95a2140f4b1b34a82a1a88f65c7079f1371c5740#egg=ansible
+ansible==2.4.1.0
 boto3==1.4.7
 botocore==1.7.41
 boto==2.48.0

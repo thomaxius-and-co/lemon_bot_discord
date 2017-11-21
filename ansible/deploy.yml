@@ -24,7 +24,7 @@
       register: lambda_out
 
     - name: Create SNS topic for alarms
-      sns_topic:
+      fixed_sns_topic:
         state: present
         name: "{{ prefix }}-alarms-sns-topic"
         subscriptions:
