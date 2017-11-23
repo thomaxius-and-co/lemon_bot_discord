@@ -73,20 +73,23 @@
 
     - name: Create metric for errors logged
       aws_metric_filter:
-        filterName: "{{ prefix }}-bot-errors-logged-filter"
-        logGroupName: "{{ prefix }}-bot"
+        filterName: "{{ item }}-errors-logged-filter"
+        logGroupName: "{{ item }}"
         filterPattern: "[date, time, level = ERROR, ...]"
         metricNamespace: "General"
-        metricName: "{{ prefix }}-bot-errors-logged"
+        metricName: "{{ item }}-errors-logged"
         metricValue: "1"
+      with_items:
+        - "{{ prefix }}-bot"
+        - "{{ prefix }}-archiver"
 
     - name: Create alarm for errors logged
       ec2_metric_alarm:
         state: present
-        description: "Alarm triggered when there are log events with ERROR level in '{{ prefix }}-bot' log"
-        name: "{{ prefix }}-bot-errors-logged-alarm"
+        description: "Alarm triggered when there are log events with ERROR level in '{{ item }}' log"
+        name: "{{ item }}-errors-logged-alarm"
         namespace: "General"
-        metric: "{{ prefix }}-bot-errors-logged"
+        metric: "{{ item }}-errors-logged"
         statistic: "Sum"
         comparison: ">="
         threshold: 1
@@ -94,6 +97,9 @@
         evaluation_periods: 1
         alarm_actions:
           - "{{ sns_topic_out.sns_arn }}"
+      with_items:
+        - "{{ prefix }}-bot"
+        - "{{ prefix }}-archiver"
 
 - name: Create server
   hosts: localhost
