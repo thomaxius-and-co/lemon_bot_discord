@@ -17,7 +17,26 @@ use journald::Journal;
 
 fn main() {
     println!("Starting journald-cloudwatch...");
+    match env::var("SYSTEMD_UNIT_NAMES") {
+        Ok(value) => run_workers(value.split(",").collect()),
+        Err(e) => panic!("Error reading SYSTEMD_UNIT_NAMES environment variable: {}", e),
+    };
+}
 
+fn run_workers(units: Vec<&str>) {
+    let mut workers = vec![];
+    for unit_name in units {
+        let x = unit_name.to_owned();
+        let worker = thread::spawn(move || { log_worker(x); });
+        workers.push(worker);
+    }
+
+    for w in workers {
+        w.join().unwrap();
+    }
+}
+
+fn log_worker(unit_name: String) {
     let (tx, rx) = mpsc::channel();
 
     let client = make_client();
@@ -27,7 +46,7 @@ fn main() {
     println!("Last log entry in stream at {:?} usec", last_usec_opt);
 
     let journald_thread = thread::spawn(move || {
-        fetch_journald_logs(last_usec_opt, tx.clone());
+        fetch_journald_logs(&unit_name, last_usec_opt, tx.clone());
     });
 
     process_log_rows(client, rx, stream.upload_sequence_token);
@@ -38,9 +57,9 @@ fn is_entry_start(s: &str) -> bool {
     regex::Regex::new(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} .+").unwrap().is_match(s)
 }
 
-fn fetch_journald_logs(last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, String)>) -> () {
+fn fetch_journald_logs(unit_name: &str, last_usec_opt: Option<u64>, tx: mpsc::Sender<(u64, String)>) -> () {
     let mut journal = Journal::open().unwrap();
-    journal.add_match("_SYSTEMD_UNIT", "lemon.service").unwrap(); // TODO: Read from env or something
+    journal.add_match("_SYSTEMD_UNIT", unit_name).unwrap();
 
     println!("Seeking to proper point in journal");
     match last_usec_opt {
