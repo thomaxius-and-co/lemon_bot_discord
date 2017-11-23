@@ -25,3 +25,6 @@ def find_log_group(client, name):
 
 def head(xs):
     return next(iter(xs), None)
+
+if __name__ == "__main__":
+    main()
