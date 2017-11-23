@@ -1,4 +1,5 @@
 import asyncio
+from enum import IntEnum
 import json
 import os
 import traceback
@@ -12,6 +13,13 @@ log = logger.get("ARCHIVER")
 
 ERROR_MISSING_ACCESS = 50001
 
+class ChannelType(IntEnum):
+    GUILD_TEXT = 0
+    DM = 1
+    GUILD_VOICE = 2
+    GROUP_DM = 3
+    GUILD_CATEGORY = 4
+
 def response_is_error(response):
     return type(response) is dict and 'code' in response
 
@@ -19,7 +27,7 @@ async def get(path):
     headers = {
         "Authorization": "Bot %s" % os.environ["LEMONBOT_TOKEN"],
     }
-    url = "https://discordapp.com/api/%s" % path
+    url = "https://discordapp.com/api/v6/%s" % path
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as r:
@@ -140,7 +148,7 @@ async def archive_channel(channel_id):
 
 async def archive_guild(guild_id):
     channels = await get_channels(guild_id)
-    text_channels = list(filter(lambda c: c["type"] == "text", channels))
+    text_channels = list(filter(lambda c: c["type"] == ChannelType.GUILD_TEXT, channels))
     log.info("Archiving %d channels", len(text_channels))
 
     for channel in text_channels:
