@@ -6,6 +6,13 @@
     prefix: "discord-prod"
 
   tasks:
+    - name: Create log groups
+      aws_log_group:
+        name: "{{ item }}"
+      with_items:
+        - "{{ prefix }}-bot"
+        - "{{ prefix }}-archiver"
+
     - name: Create role for alarms to Discord lambda
       iam_role:
         state: present
