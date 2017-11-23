@@ -6,6 +6,7 @@
 
   vars:
     app_name: lemon
+    prefix: "discord-prod"
 
   pre_tasks:
     - name: Install python on remote machine
