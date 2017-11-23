@@ -26,8 +26,10 @@ fn main() {
 fn run_workers(units: Vec<&str>) {
     let mut workers = vec![];
     for unit_name in units {
-        let x = unit_name.to_owned();
-        let worker = thread::spawn(move || { log_worker(x); });
+        let parts = unit_name.split("=").collect::<Vec<&str>>();
+        let unit = parts[0].to_owned();
+        let log_group = parts[1].to_owned();
+        let worker = thread::spawn(move || { log_worker(unit, log_group); });
         workers.push(worker);
     }
 
@@ -36,11 +38,11 @@ fn run_workers(units: Vec<&str>) {
     }
 }
 
-fn log_worker(unit_name: String) {
+fn log_worker(unit_name: String, log_group: String) {
     let (tx, rx) = mpsc::channel();
 
     let client = make_client();
-    let stream = init_log_stream(&client).unwrap();
+    let stream = init_log_stream(&client, &log_group).unwrap();
     println!("Log group and stream initialized");
     let last_usec_opt = stream.last_event_timestamp.map(|msec| (msec * 1000) as u64);
     println!("Last log entry in stream at {:?} usec", last_usec_opt);
@@ -179,13 +181,12 @@ fn make_client() -> Box<CloudWatchLogs> {
     Box::new(client)
 }
 
-fn init_log_stream(client: &Box<CloudWatchLogs>) -> Result<LogStream, AsdfError> {
+fn init_log_stream(client: &Box<CloudWatchLogs>, log_group_name: &str) -> Result<LogStream, AsdfError> {
     let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
-    let log_group_name = String::from("discord-prod-bot");
-    let log_stream_name = String::from(format!("discord-prod-bot-{}", instance_id));
+    let log_stream_name = String::from(format!("{}-{}", log_group_name, instance_id));
 
     match client.create_log_group(&CreateLogGroupRequest{
-        log_group_name: log_group_name.clone(),
+        log_group_name: log_group_name.to_owned(),
         tags: None,
     }) {
         Ok(()) => println!("Log group {} created", log_group_name),
@@ -195,7 +196,7 @@ fn init_log_stream(client: &Box<CloudWatchLogs>) -> Result<LogStream, AsdfError>
     }
 
     match client.create_log_stream(&CreateLogStreamRequest{
-        log_group_name: log_group_name.clone(),
+        log_group_name: log_group_name.to_owned(),
         log_stream_name: log_stream_name.clone(),
     }) {
         Ok(()) => println!("Log stream {} created", log_stream_name),
@@ -206,7 +207,7 @@ fn init_log_stream(client: &Box<CloudWatchLogs>) -> Result<LogStream, AsdfError>
 
     match client.describe_log_streams(&DescribeLogStreamsRequest{
         order_by: None,
-        log_group_name: log_group_name.clone(),
+        log_group_name: log_group_name.to_owned(),
         log_stream_name_prefix: Some(log_stream_name.clone()),
         descending: None,
         limit: None,

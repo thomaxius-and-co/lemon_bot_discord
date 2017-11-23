@@ -10,4 +10,4 @@ Environment=AWS_REGION={{ secrets.aws.region }}
 Environment=AWS_ACCESS_KEY_ID={{ secrets.aws.access_key_id }}
 Environment=AWS_SECRET_ACCESS_KEY={{ secrets.aws.secret_access_key }}
 Environment=RUST_BACKTRACE=1
-Environment=SYSTEMD_UNIT_NAMES=lemon.service,lemon-archiver.service
+Environment=SYSTEMD_UNIT_NAMES=lemon.service={{ prefix }}-bot,lemon-archiver.service={{ prefix }}-archiver
