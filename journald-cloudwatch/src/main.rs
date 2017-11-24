@@ -51,7 +51,7 @@ fn log_worker(unit_name: String, log_group: String) {
         fetch_journald_logs(&unit_name, last_usec_opt, tx.clone());
     });
 
-    process_log_rows(client, rx, stream.upload_sequence_token);
+    process_log_rows(client, rx, &log_group, stream.upload_sequence_token);
     journald_thread.join().unwrap();
 }
 
@@ -108,7 +108,7 @@ fn fetch_journald_logs(unit_name: &str, last_usec_opt: Option<u64>, tx: mpsc::Se
     }
 }
 
-fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String)>, initial_upload_sequence_token: Option<String>) -> () {
+fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String)>, log_group_name: &str, initial_upload_sequence_token: Option<String>) -> () {
     println!("Started CloudWatch Logs uploader");
     let batch_size = 1000;
     let batch_max_wait = time::Duration::from_secs(2);
@@ -130,7 +130,7 @@ fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String
                     println!("Upload triggered by interval");
                 }
 
-                token = upload_batch(&client, &batch, token).unwrap();
+                token = upload_batch(&client, &batch, &log_group_name, token).unwrap();
                 batch.clear();
 
                 last_upload = time::SystemTime::now();
@@ -140,12 +140,11 @@ fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String
     }
 }
 
-fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, token: Option<String>) -> Result<Option<String>,()> {
+fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, log_group_name: &str, token: Option<String>) -> Result<Option<String>,()> {
     println!("Uploading batch of {} log rows to CloudWatch", batch.len());
 
     let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
-    let log_group_name = String::from("discord-prod-bot");
-    let log_stream_name = String::from(format!("discord-prod-bot-{}", instance_id));
+    let log_stream_name = String::from(format!("{}-{}", log_group_name, instance_id));
 
     let log_events = batch.iter().map(|x| match x {
         &(usec, ref message) => InputLogEvent {
@@ -156,7 +155,7 @@ fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, token:
 
     match client.put_log_events(&PutLogEventsRequest {
         log_events,
-        log_group_name,
+        log_group_name: log_group_name.to_owned(),
         log_stream_name,
         sequence_token: token.clone(),
     }) {
