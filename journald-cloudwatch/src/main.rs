@@ -141,7 +141,7 @@ fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String
 }
 
 fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, log_group_name: &str, token: Option<String>) -> Result<Option<String>,()> {
-    println!("Uploading batch of {} log rows to CloudWatch", batch.len());
+    println!("Uploading batch of {} log rows to CloudWatch ({})", batch.len(), log_group_name);
 
     let instance_id = format!("droplet-{}", 32477856); // TODO: Get instance ID
     let log_stream_name = String::from(format!("{}-{}", log_group_name, instance_id));
@@ -160,9 +160,11 @@ fn upload_batch(client: &Box<CloudWatchLogs>, batch: &Vec<(u64, String)>, log_gr
         sequence_token: token.clone(),
     }) {
         Ok(response) => Ok(response.next_sequence_token.clone()),
+        Err(PutLogEventsError::InvalidSequenceToken(msg)) => panic!("{}: impossible error: PutLogEventsError::InvalidSequenceToken({})", log_group_name, msg),
+        Err(PutLogEventsError::Validation(msg)) => panic!("{}: impossible error: PutLogEventsError::Validation({})", log_group_name, msg),
         Err(e) => {
             // TODO: Handle ratelimit properly with retry exponential backoff
-            println!("upload_batch: unknown error {}", e);
+            println!("upload_batch: {} unknown error {}", log_group_name, e);
             thread::sleep(time::Duration::from_millis(1000));
             Ok(token)
         },
