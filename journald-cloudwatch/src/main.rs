@@ -100,10 +100,7 @@ fn fetch_journald_logs(unit_name: &str, last_usec_opt: Option<u64>, tx: mpsc::Se
 
                 entry_pieces.push(message);
             },
-            None => {
-                println!("Waiting for journal events");
-                journal.wait(None).unwrap();
-            }
+            None => journal.wait(None).unwrap(),
         }
     }
 }
