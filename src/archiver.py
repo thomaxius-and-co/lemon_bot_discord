@@ -8,6 +8,7 @@ import database as db
 import util
 import logger
 import perf
+import retry
 
 log = logger.get("ARCHIVER")
 
@@ -23,6 +24,7 @@ class ChannelType(IntEnum):
 def response_is_error(response):
     return type(response) is dict and 'code' in response
 
+@retry.on_any_exception
 async def get(path):
     headers = {
         "Authorization": "Bot %s" % os.environ["LEMONBOT_TOKEN"],
@@ -144,7 +146,6 @@ async def archive_channel(channel_id):
             await update_latest_message_id(tx, channel_id, new_latest_id)
 
         log.info("Fetched total %d messages", len(all_messages))
-
 
 async def archive_guild(guild_id):
     channels = await get_channels(guild_id)
