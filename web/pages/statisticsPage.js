@@ -73,6 +73,8 @@ const dailyMessageCountChart = (dailyMessageCounts, rolling7DayMessageCounts) =>
         { value: moment("2017-11-05T10:00:00+02:00").valueOf(), text: "Harry Spa v4.0 END" },
         { value: moment("2017-11-17T16:00:00+02:00").valueOf(), text: "HelmiLAN START" },
         { value: moment("2017-11-19T12:00:00+02:00").valueOf(), text: "HelmiLAN END" },
+        { value: moment("2017-11-24T16:00:00+02:00").valueOf(), text: "Siipiweikot + Nisken laiva START" },
+        { value: moment("2017-11-26T12:00:00+02:00").valueOf(), text: "Siipiweikot + Nisken laiva END" },		
       ]
     }
   }
