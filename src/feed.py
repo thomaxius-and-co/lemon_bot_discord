@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 from datetime import datetime
 import time
@@ -9,6 +10,7 @@ import command
 import emoji
 import util
 import logger
+import perf
 
 log = logger.get("FEED")
 
@@ -27,20 +29,28 @@ def get_date(entry):
 
     return time_to_datetime(sturct_time)
 
+@perf.time_async("Checking feeds")
 async def check_feeds(client):
     feeds = await db.fetch("SELECT feed_id, url, last_entry, channel_id FROM feed")
 
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
 
-def get_new_items(url, since):
+async def fetch_feed(url):
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url)
+        log.info("GET %s %s %s", r.url, r.status, await r.text())
+        xml = await r.text()
+        return feedparser.parse(xml)
+
+async def get_new_items(url, since):
     def parse_entry(e):
         return {
             "title": e.title,
             "url": e.links[0].href,
             "date": get_date(e),
         }
-    d = feedparser.parse(url)
+    d = await fetch_feed(url)
     if not hasattr(d.feed, 'title'):
       return None
 
@@ -56,7 +66,7 @@ def make_embed(item):
 
 async def process_feed(client, id, url, last_entry, channel_id):
     log.info("Processing feed '{0}'".format(url))
-    parsed = get_new_items(url, last_entry)
+    parsed = await get_new_items(url, last_entry)
     if parsed is None:
       log.info("Feed missing title")
       return
