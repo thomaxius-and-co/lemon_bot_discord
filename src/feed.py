@@ -39,7 +39,7 @@ async def check_feeds(client):
 async def fetch_feed(url):
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.info("GET %s %s %s", r.url, r.status, await r.text())
+        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
         xml = await r.text()
         return feedparser.parse(xml)
 
