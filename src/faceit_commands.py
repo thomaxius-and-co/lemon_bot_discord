@@ -61,20 +61,19 @@ async def cmd_del_faceit_user(client, message, arg):
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "There are no faceit players added.")
         return
-    if arg.isdigit() and (int(arg) <= len(guild_faceit_players_entries)): #There is a slight problem with this.. if the faceit nickname is entire numeric, it will think that the user is trying to type an ID and not the name..
-        index = int(arg) - 1
-        if index > len(guild_faceit_players_entries) - 1 or int(
-                arg) == 0:  # While defining 0 as an ID works, we don't want that heh
-            await client.send_message(message.channel, "No such ID in list.")
-            return
-        await delete_faceit_user_from_database_with_message_id(guild_faceit_players_entries[index]['message_id'])
-        await client.send_message(message.channel, "Faceit user succesfully deleted.")
+    if arg.isdigit():
+        for entry in guild_faceit_players_entries:
+            if int(arg) == entry['id']:
+                await delete_faceit_user_from_database_with_row_id(entry['id'])
+                await client.send_message(message.channel, "User %s succesfully deleted." % entry['faceit_nickname'])
+                return
+        await client.send_message(message.channel, "No such ID in list. Use !listfaceitusers.")
         return
     else:
         for entry in guild_faceit_players_entries:
             if arg == entry['faceit_nickname']:
                 await delete_faceit_user_from_database_with_faceit_nickname(entry['faceit_nickname'])
-                await client.send_message(message.channel, "Faceit user succesfully deleted.")
+                await client.send_message(message.channel, "Faceit user %s succesfully deleted." % entry['faceit_nickname'])
                 return
         await client.send_message(message.channel, "No such user in list. Use !listfaceitusers to display a list of ID's.")
         return
@@ -85,18 +84,16 @@ async def cmd_list_faceit_users(client, message, _):
         await client.send_message(message.channel, "No faceit users have been defined.")
         return
     else:
-        msg = ''
-        i = 1
         for row in guild_faceit_players_entries:
-            faceit_players = row['faceit_nickname']
-            ID = str(i) + ': '
-            msg += ID + faceit_players + '\n'
-            i += 1
-        await client.send_message(message.channel, msg)
+            msg = ''
+            faceit_player = row['faceit_nickname']
+            faceit_id = row['id']
+            msg += str(faceit_id) + '. ' + faceit_player + '\n'
+            await client.send_message(message.channel, msg)
 
-async def delete_faceit_user_from_database_with_message_id(message_id):
-    log.info("DELETE from faceit_guild_players_list where message_id like %s" % message_id)
-    await db.execute("DELETE from faceit_guild_players_list where message_id like $1", message_id)
+async def delete_faceit_user_from_database_with_row_id(row_id):
+    log.info("DELETE from faceit_guild_players_list where id like %s" % row_id)
+    await db.execute("DELETE from faceit_guild_players_list where id = $1", row_id)
 
 async def delete_faceit_user_from_database_with_faceit_nickname(faceit_nickname):
     log.info("DELETE from faceit_guild_players_list where faceit_nickname like %s" % faceit_nickname)

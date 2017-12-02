@@ -361,6 +361,12 @@ schema_migrations = {
         ADD FOREIGN KEY 
             (message_id) REFERENCES message (message_id);
     """,
+    29: """
+    ALTER TABLE
+        faceit_guild_players_list
+    ADD COLUMN
+        id SERIAL PRIMARY KEY;
+        """,
     }
 
 _pool_holder = threading.local()
