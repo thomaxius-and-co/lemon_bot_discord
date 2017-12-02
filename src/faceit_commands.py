@@ -84,12 +84,12 @@ async def cmd_list_faceit_users(client, message, _):
         await client.send_message(message.channel, "No faceit users have been defined.")
         return
     else:
+        msg = ''
         for row in guild_faceit_players_entries:
-            msg = ''
             faceit_player = row['faceit_nickname']
             faceit_id = row['id']
             msg += str(faceit_id) + '. ' + faceit_player + '\n'
-            await client.send_message(message.channel, msg)
+        await client.send_message(message.channel, msg)
 
 async def delete_faceit_user_from_database_with_row_id(row_id):
     log.info("DELETE from faceit_guild_players_list where id like %s" % row_id)
