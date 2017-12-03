@@ -1,8 +1,15 @@
 server {
-  listen 80 default_server;
-  listen [::]:80 default_server;
+  listen 80;
+  listen 443 ssl http2;
 
-  server_name _;
+  server_name discord.rce.fi;
+
+  # Older browsers might not support TLSv1.2 but it's not
+  # a problem until someone complains
+  ssl_protocols TLSv1.2;
+
+  ssl_certificate     /etc/letsencrypt/live/discord.rce.fi/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/discord.rce.fi/privkey.pem;
 
   # URL path used for renewing Let's Enrypt certificates with certbot
   location ^~ /.well-known/ {
@@ -11,6 +18,11 @@ server {
   }
 
   location / {
+    # Redirect HTTP to HTTPS
+    if ($scheme = http) {
+      return 301 https://$server_name$request_uri;
+    }
+
     proxy_pass http://localhost:3000/;
   }
 }
