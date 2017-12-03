@@ -4,6 +4,12 @@ server {
 
   server_name _;
 
+  # URL path used for renewing Let's Enrypt certificates with certbot
+  location ^~ /.well-known/ {
+    default_type "text/plain";
+    root /var/www/letsencrypt;
+  }
+
   location / {
     proxy_pass http://localhost:3000/;
   }
