@@ -105,10 +105,10 @@ async def get_custom_trophy_winner(filters, params):
     for item in items:
         user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day, 3), message_count, name)
+        new_item = (user_id, msg_per_day, message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
-    return winner[0][0], winner[0][3], str(round(winner[0][1])) + ' messages per day'
+    return winner[0][0], winner[0][3], str(round(winner[0][1],3)) + ' messages per day.'
 
 
 async def random(filter):
@@ -169,7 +169,7 @@ async def cmd_deletetrophy(client, message, arg):
 
 async def cmd_listtrophies(client, message, arg):
     if not CUSTOM_TROPHY_NAMES:
-        await client.send_message(message.channel, "There are no throphies")
+        await client.send_message(message.channel, "There are no throphies.")
         return
     msg = ''
     y = 1
@@ -244,7 +244,7 @@ async def cmd_alltrophies(client, message, arg):
         for trophy in trophycabinet:
             msg += ':trophy: ' + trophy + '\n'
         log.info(oldmessage, msg + '\n')
-        await client.edit_message(oldmessage, msg[:1998] + '\n') #todo Fix this
+        await client.edit_message(oldmessage, msg + '\n')
     else:
         await client.edit_message(oldmessage, 'Nobody has won a trophy yet.')
 
@@ -466,23 +466,22 @@ async def get_best_grammar():
                 NOT bot 
                 AND content not LIKE '!%%'
                 AND content not like '%http%'
-               AND content not like '%www%'
+                AND content not like '%www%'
                 AND content ~* '^[A-ZÅÄÖ]'
-                and name not like 'toxin'
+                AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
             group by 
                 coalesce(name, m->'author'->>'username'), user_id)
         select
-                user_id,
-                name,
-                (count(*) / message_count::float) * 100 as pct
-        from 
+            user_id,
+            name,
+            (count(*) / message_count::float) * 100 as pctoftotal
+         from 
             message
         join 
             custommessage using (user_id)
         where 
             NOT bot
             and message_count > 300
-            and name not like 'toxin'
             AND content NOT LIKE '!%%'
             AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
             AND content NOT LIKE '%www%'
@@ -490,21 +489,21 @@ async def get_best_grammar():
             or content ~* '[A-ZÅÄÖ]\?$'
             or content ~* '[A-ZÅÄÖ]\.$'
             or content ~* '[A-ZÅÄÖ]!$'
-            or (length(content) > 25 and content like '%,%')
+            or (length(content) > 25 
+            and content like '%,%')
+            AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
         group by 
-            user_id, message_count, name 
+            user_id, message_count, name
         HAVING
             count(*) > 300
         order by 
-            (count(*) / message_count::float) * 100 desc
-        limit
-            1
+            pctoftotal desc
     """)
     if not items:
         return None, None, None
     for item in items:
-        user_id, name, pct = item
-        return user_id, name, str(round(pct, 1)) + ' % good messages'
+        user_id, name, pctoftotal = item
+        return user_id, name, str(round(pctoftotal, 1)) + ' % good messages.'
 
 
 async def get_worst_grammar():
@@ -530,7 +529,7 @@ async def get_worst_grammar():
         select
                 user_id,
                 name,
-                (count(*) / message_count::float) * 100 as pct
+                100 - ((count(*) / message_count::float) * 100) as pct
         from 
             message
         join 
@@ -560,7 +559,7 @@ async def get_worst_grammar():
         return None, None, None
     for item in items:
         user_id, name, pct = item
-        return user_id, name, str(round(pct, 1)) + ' % bad messages'
+        return user_id, name, str(round(pct, 1)) + ' % bad messages.'
 
 
 trophies = {
@@ -579,7 +578,7 @@ async def do_hourly_weekly_spammer_check(client):
     while True:
         user_id, top_spammer, value = await get_spammer_of_the_week()
         if top_spammer and ((top_spammer is not old_spammer) and (value is not old_value)):
-            log.info("Setting new top spammer: %s with %s." % (top_spammer, value))
+            log.info("Setting new top spammer: %s with %s" % (top_spammer, value))
             await client.change_presence(game=discord.Game(name='Spammer of the week: %s with %s' % (top_spammer, value)))
             old_spammer, old_value = top_spammer, value
         await sleep(3600)
