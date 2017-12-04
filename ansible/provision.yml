@@ -83,6 +83,7 @@
 
     - include: nodejs.yml
     - include: web.yml
+    - include: letsencrypt.yml
     - include: logs.yml
 
   handlers:

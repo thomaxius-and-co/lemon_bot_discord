@@ -1,0 +1,35 @@
+- set_fact:
+    certbot_email: "rce@rce.fi"
+    certbot_domain: "discord.rce.fi"
+
+- name: Add certbot PPA
+  apt_repository:
+    repo: "ppa:certbot/certbot"
+
+- name: Update package repos
+  apt: update_cache=yes
+
+- name: Install certbot and dependencies
+  apt: name={{ item }}
+  with_items:
+    - certbot
+
+- name: Create app directory for lets encrypt challanges
+  file:
+    path: "/var/www/letsencrypt"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+# TODO: Replace with proper '/etc/letsencrypt/renewal/{{ domain }}.conf' file
+- name: Run certbot once
+  shell: "certbot certonly --webroot -w /var/www/letsencrypt --non-interactive --agree-tos --email \"{{ certbot_email }}\" --domains \"{{ certbot_domain }}\""
+  args:
+    creates: "/etc/letsencrypt/live/{{ certbot_domain }}"
+
+- name: Start and enable certbot timer
+  service:
+    name: certbot.timer
+    state: started
+    enabled: yes

@@ -32,13 +32,9 @@ async def cmd_reminder(client, message, text):
 
     await add_reminder(message.author.id, reminder.time, reminder.text, reminder.original_text)
 
-    reply = "\n".join([
-        "Hello, {message.author.mention}!",
-        "I'll remind you about `{reminder.text}` at time `{reminder.time_text}`!",
-        "I interpreted that as `{helsinki_time}`.",
-    ]).format(message=message, reminder=reminder, helsinki_time=to_helsinki(reminder.time))
+    reply = "Hello, {0}! I'll remind you about `{1}` at `{2}`!".format(
+        message.author.mention, reminder.text, to_helsinki(reminder.time))
     await client.send_message(message.channel, reply)
-    await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
 
 async def add_reminder(user_id, time, text, original_text):
     await db.execute("""
