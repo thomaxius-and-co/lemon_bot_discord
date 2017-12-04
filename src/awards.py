@@ -1,7 +1,7 @@
 import database as db
 import asyncio
 from asyncio import sleep
-
+import discord
 import logger
 
 log = logger.get("AWARDS")
@@ -9,7 +9,6 @@ log = logger.get("AWARDS")
 TROPHY_NAMES = ['Top spammer', 'Whosaidit total #1', 'Whosaidit all time high score',
                 'Biggest gambling problem', 'Best grammar', 'Worst grammar', 'Spammer of the week']
 CUSTOM_TROPHY_NAMES = []
-
 
 async def main():
     await get_custom_trophy_names()
@@ -106,7 +105,7 @@ async def get_custom_trophy_winner(filters, params):
     for item in items:
         user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day, 3), message_count, name)
+        new_item = (user_id, round(msg_per_day, 1), message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
     return winner[0][0], winner[0][3]
@@ -252,7 +251,7 @@ async def cmd_alltrophies(client, message, arg):
 async def find_user_trophies(user_id):
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
-        trophy_winner_id, trophy_winner_name = await trophies.get(trophyname)()
+        trophy_winner_id, trophy_winner_name, trophy_winner_determiner = await trophies.get(trophyname)()
         if user_id == trophy_winner_id:
             trophycabinet.append(trophyname)
     for trophyname in CUSTOM_TROPHY_NAMES:
@@ -265,13 +264,13 @@ async def find_user_trophies(user_id):
 async def find_all_trophies():
     trophycabinet = []
     for trophyname in TROPHY_NAMES:
-        trophy_winner_id, trophy_winner_name = await trophies.get(trophyname)()
+        trophy_winner_id, trophy_winner_name, trophy_winner_determiner = await trophies.get(trophyname)()
         if trophy_winner_name:
-            trophycabinet.append(trophyname + '  -  ' + trophy_winner_name)
+            trophycabinet.append(trophyname + '  -  ' + trophy_winner_name + ' with ' + trophy_winner_determiner)
     for trophyname in CUSTOM_TROPHY_NAMES:
         trophy_winner_id, trophy_winner_name = await custom_trophy_getter(trophyname)
         if trophy_winner_name:
-            trophycabinet.append(trophyname + '  -  ' + trophy_winner_name)
+            trophycabinet.append(trophyname + '  -  ' + trophy_winner_name + ' with ' + trophy_winner_determiner)
     return trophycabinet
 
 
@@ -303,10 +302,10 @@ async def get_top_spammer():
     for item in items:
         user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day, 3), message_count, name)
+        new_item = (user_id, round(msg_per_day, 1), message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
-    return winner[0][0], winner[0][3]
+    return winner[0][0], winner[0][3], str(winner[0][1]) + 'messages per day.'
 
 
 async def get_spammer_of_the_week():
@@ -335,7 +334,7 @@ async def get_spammer_of_the_week():
         return None, None
     for item in items:
         user_id, name, message_count = item
-        return user_id, name
+        return user_id, name, str(message_count) + ' messages.'
 
 
 async def get_top_whosaidit():
@@ -357,7 +356,8 @@ async def get_top_whosaidit():
             )
         select
             user_id,
-            username
+            username,
+            wins::float / (wins + losses) * 100 as score
         from 
             score
         join 
@@ -370,10 +370,10 @@ async def get_top_whosaidit():
         limit 1
     """)
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
-        user_id, name = item
-        return user_id, name
+        user_id, name, score = item
+        return user_id, name, str(round(score,3)) + 'pct.'
 
 
 async def get_top_whosaidit_score():
@@ -404,7 +404,8 @@ async def get_top_whosaidit_score():
         )
         select 
             user_id,
-            username
+            username,
+            score
         from 
             week_score
         join 
@@ -416,17 +417,18 @@ async def get_top_whosaidit_score():
         limit 1
     """)
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
-        user_id, name = item
-        return user_id, name
+        user_id, name, score = item
+        return user_id, name, str(round(score, 1)) + ' pct'
 
 
 async def get_top_gambling_addict():
     items = await db.fetch("""
             select
                 user_id,
-                name
+                name,
+                count(*) as total
             from 
                 message
             JOIN 
@@ -444,8 +446,8 @@ async def get_top_gambling_addict():
     if not items:
         return None, None
     for item in items:
-        user_id, name = item
-        return user_id, name
+        user_id, name, total = item
+        return user_id, name, str(total) + ' games.'
 
 
 async def get_best_grammar():
@@ -470,7 +472,8 @@ async def get_best_grammar():
                 coalesce(name, m->'author'->>'username'), user_id)
         select
                 user_id,
-                name
+                name,
+                (count(*) / message_count::float) * 100 as pct
         from 
             message
         join 
@@ -499,8 +502,8 @@ async def get_best_grammar():
     if not items:
         return None, None
     for item in items:
-        user_id, name = item
-        return user_id, name
+        user_id, name, pct = item
+        return user_id, name, str(round(pct, 1)) + ' % good messages'
 
 
 async def get_worst_grammar():
@@ -525,7 +528,8 @@ async def get_worst_grammar():
                 coalesce(name, m->'author'->>'username'), user_id)
         select
                 user_id,
-                name
+                name,
+                (count(*) / message_count::float) * 100 as pct
         from 
             message
         join 
@@ -554,8 +558,8 @@ async def get_worst_grammar():
     if not items:
         return None, None
     for item in items:
-        user_id, name = item
-        return user_id, name
+        user_id, name, pct = item
+        return user_id, name, str(round(pct, 1)) + ' % bad messages'
 
 
 trophies = {
@@ -567,6 +571,14 @@ trophies = {
     'Worst grammar': get_worst_grammar,
     'Spammer of the week': get_spammer_of_the_week
 }
+
+
+async def do_hourly_weekly_spammer_check(client):
+    while True:
+        user_id, top_spammer, value = await get_spammer_of_the_week()
+        if top_spammer:
+            await client.change_presence(game=discord.Game(name='Spammer of the week: %s with %s' % (top_spammer, value)))
+            await sleep(3600)
 
 
 def register(client):

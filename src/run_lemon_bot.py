@@ -698,6 +698,7 @@ def autocorrect_command(cmd):
 @client.event
 async def on_ready():
     await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
+    await awards.do_hourly_weekly_spammer_check(client)
 
 if __name__ == "__main__":
     logger.init()
