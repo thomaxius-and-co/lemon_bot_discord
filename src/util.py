@@ -53,3 +53,7 @@ def start_task_thread(coroutine):
         asyncio.set_event_loop(loop)
         loop.run_until_complete(coroutine)
     threading.Thread(target=thread_func, args=(coroutine,)).start()
+
+async def pmap(async_func, xs):
+    futures = map(async_func, xs)
+    return await asyncio.gather(*futures)

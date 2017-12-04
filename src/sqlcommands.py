@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import re
 import json
@@ -12,6 +13,7 @@ from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
 import faceit_api
 import logger
+from util import pmap
 
 log = logger.get("SQLCOMMANDS")
 playinglist = []
@@ -570,21 +572,22 @@ async def cmd_top(client, message, input):
         return
 
 async def get_faceit_leaderboard():
-    items = await db.fetch("""
-        SELECT
-            faceit_nickname, faceit_guid
-        FROM
-            faceit_guild_players_list
-        """)
-    if len(items) == 0:
+    faceit_users = await db.fetch("SELECT faceit_nickname, faceit_guid FROM faceit_guild_players_list")
+    if len(faceit_users) == 0:
         return None, None
     toplist = []
-    for item in items:
-        csgo_elo, skill_level= await get_user_stats_from_api(item['faceit_nickname'])
+
+    batch_stats, batch_ranking = await asyncio.gather(
+        pmap(get_user_stats_from_api, map(lambda u: u["faceit_nickname"], faceit_users)),
+        pmap(faceit_api.ranking, map(lambda u: u["faceit_guid"], faceit_users)),
+    )
+
+    for i, user in enumerate(faceit_users):
+        csgo_elo, skill_level = batch_stats[i]
         if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
             continue
-        eu_ranking = await faceit_api.ranking(item["faceit_guid"])
-        new_item = eu_ranking, item['faceit_nickname'], csgo_elo, skill_level
+        eu_ranking = batch_ranking[i]
+        new_item = eu_ranking, user['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
     toplist = sorted(toplist, key=lambda x: x[0])[:10]
     return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
