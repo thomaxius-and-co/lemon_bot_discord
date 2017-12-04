@@ -60,8 +60,8 @@ async def custom_trophy_getter(trophyname):
     custom_trophy_conditions = await get_custom_trophy_conditions(trophyname)
     filters, params = make_word_filters(custom_trophy_conditions.split(', '))
     custom_filter = "AND ({0})".format(filters)
-    custom_trophy_id, custom_trophy_name = await get_custom_trophy_winner(custom_filter, params)
-    return custom_trophy_id, custom_trophy_name
+    custom_trophy_id, custom_trophy_winner_name, custom_trophy_winner_determiner = await get_custom_trophy_winner(custom_filter, params)
+    return custom_trophy_id, custom_trophy_winner_name, custom_trophy_winner_determiner
 
 
 async def get_custom_trophy_winner(filters, params):
@@ -100,15 +100,15 @@ async def get_custom_trophy_winner(filters, params):
         group by 
             user_id, message_count, name""".format(filters=filters), *params)
     if not items:
-        return None, None
+        return None, None, None
     list_with_msg_per_day = []
     for item in items:
         user_id, name, message_count = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (user_id, round(msg_per_day, 1), message_count, name)
+        new_item = (user_id, round(msg_per_day, 3), message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
-    return winner[0][0], winner[0][3]
+    return winner[0][0], winner[0][3], str(round(winner[0][1])) + ' messages per day'
 
 
 async def random(filter):
@@ -243,7 +243,8 @@ async def cmd_alltrophies(client, message, arg):
     if trophycabinet:
         for trophy in trophycabinet:
             msg += ':trophy: ' + trophy + '\n'
-        await client.edit_message(oldmessage, msg + '\n')
+        log.info(oldmessage, msg + '\n')
+        await client.edit_message(oldmessage, msg[:1998] + '\n') #todo Fix this
     else:
         await client.edit_message(oldmessage, 'Nobody has won a trophy yet.')
 
@@ -255,7 +256,7 @@ async def find_user_trophies(user_id):
         if user_id == trophy_winner_id:
             trophycabinet.append(trophyname)
     for trophyname in CUSTOM_TROPHY_NAMES:
-        trophy_winner_id, trophy_winner_name = await custom_trophy_getter(trophyname)
+        trophy_winner_id, trophy_winner_name, trophy_winner_determiner = await custom_trophy_getter(trophyname)
         if user_id == trophy_winner_id:
             trophycabinet.append(trophyname)
     return trophycabinet
@@ -268,7 +269,7 @@ async def find_all_trophies():
         if trophy_winner_name:
             trophycabinet.append(trophyname + '  -  ' + trophy_winner_name + ' with ' + trophy_winner_determiner)
     for trophyname in CUSTOM_TROPHY_NAMES:
-        trophy_winner_id, trophy_winner_name = await custom_trophy_getter(trophyname)
+        trophy_winner_id, trophy_winner_name, trophy_winner_determiner = await custom_trophy_getter(trophyname)
         if trophy_winner_name:
             trophycabinet.append(trophyname + '  -  ' + trophy_winner_name + ' with ' + trophy_winner_determiner)
     return trophycabinet
@@ -297,7 +298,7 @@ async def get_top_spammer():
         limit 10
     """)
     if not items:
-        return None, None
+        return None, None, None
     list_with_msg_per_day = []
     for item in items:
         user_id, name, message_count = item
@@ -305,7 +306,7 @@ async def get_top_spammer():
         new_item = (user_id, round(msg_per_day, 1), message_count, name)
         list_with_msg_per_day.append(new_item)
     winner = sorted(list_with_msg_per_day, key=lambda x: x[1], reverse=True)[:1]
-    return winner[0][0], winner[0][3], str(winner[0][1]) + 'messages per day.'
+    return winner[0][0], winner[0][3], str(winner[0][1]) + ' messages per day.'
 
 
 async def get_spammer_of_the_week():
@@ -331,7 +332,7 @@ async def get_spammer_of_the_week():
         limit 1
     """)
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
         user_id, name, message_count = item
         return user_id, name, str(message_count) + ' messages.'
@@ -373,7 +374,7 @@ async def get_top_whosaidit():
         return None, None, None
     for item in items:
         user_id, name, score = item
-        return user_id, name, str(round(score,3)) + 'pct.'
+        return user_id, name, str(round(score,3)) + ' pct.'
 
 
 async def get_top_whosaidit_score():
@@ -444,7 +445,7 @@ async def get_top_gambling_addict():
             limit 1
     """)  # this should be replaced with a query that searches from the respected casino games' tables
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
         user_id, name, total = item
         return user_id, name, str(total) + ' games.'
@@ -500,7 +501,7 @@ async def get_best_grammar():
             1
     """)
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
         user_id, name, pct = item
         return user_id, name, str(round(pct, 1)) + ' % good messages'
@@ -556,7 +557,7 @@ async def get_worst_grammar():
             1
     """)
     if not items:
-        return None, None
+        return None, None, None
     for item in items:
         user_id, name, pct = item
         return user_id, name, str(round(pct, 1)) + ' % bad messages'
@@ -574,11 +575,14 @@ trophies = {
 
 
 async def do_hourly_weekly_spammer_check(client):
+    old_spammer, old_value = None, None
     while True:
         user_id, top_spammer, value = await get_spammer_of_the_week()
-        if top_spammer:
+        if top_spammer and ((top_spammer is not old_spammer) and (value is not old_value)):
+            log.info("Setting new top spammer: %s with %s." % (top_spammer, value))
             await client.change_presence(game=discord.Game(name='Spammer of the week: %s with %s' % (top_spammer, value)))
-            await sleep(3600)
+            old_spammer, old_value = top_spammer, value
+        await sleep(3600)
 
 
 def register(client):
