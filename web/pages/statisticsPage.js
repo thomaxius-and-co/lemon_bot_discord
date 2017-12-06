@@ -11,7 +11,7 @@ const initialState = {
   messagesInLastWeek: -1,
   messagesInLastMonth: -1,
   spammer: -1,
-  dailyMessageCounts: [],
+  lastMonthDailyMessageCounts: [],
 }
 
 const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
@@ -32,19 +32,19 @@ const renderPage = state =>
       <p>Messages in last month: <b>{formatNum(state.messagesInLastMonth)}</b> </p>
 	  {state.spammer && <Spammer spammer={state.spammer} />}
     </div>
-    {dailyMessageCountChart(state.dailyMessageCounts, state.rolling7DayMessageCounts)}
+    {dailyMessageCountChart(state.lastMonthDailyMessageCounts, state.rolling7DayMessageCounts)}
     {weekdayCountChart(state.messagesPerWeekday7, state.messagesPerWeekday30, state.messagesPerWeekday90, state.messagesPerWeekday360)}
   </div>
 
-const dailyMessageCountChart = (dailyMessageCounts, rolling7DayMessageCounts) => {
+const dailyMessageCountChart = (lastMonthDailyMessageCounts, rolling7DayMessageCounts) => {
   const averages = rolling7DayMessageCounts.map(_ => Math.round(_.average))
 
   const data = {
     x: "x",
     columns: [
-      ["x"].concat(dailyMessageCounts.map(_ => formatDate(_.epoch))),
-      ["Users"].concat(dailyMessageCounts.map(_ => _.user_count)),
-      ["Bots"].concat(dailyMessageCounts.map(_ => _.bot_count)),
+      ["x"].concat(lastMonthDailyMessageCounts.map(_ => formatDate(_.epoch))),
+      ["Users"].concat(lastMonthDailyMessageCounts.map(_ => _.user_count)),
+      ["Bots"].concat(lastMonthDailyMessageCounts.map(_ => _.bot_count)),
       ["Rolling 7 day average"].concat(averages),
     ],
     types: {

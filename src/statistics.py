@@ -11,6 +11,7 @@ async def task():
     statistic_funcs = [
         spammer_of_the_day,
         messages_by_weekdays,
+        last_month_daily_message_counts,
     ]
 
     while True:
@@ -78,6 +79,21 @@ async def messages_by_weekdays():
         await upsert_statistic("MESSAGES_BY_WEEKDAYS_{0}D".format(days), content)
 
     await pmap(exec, [7, 30, 90, 360])
+
+async def last_month_daily_message_counts():
+    sql = """
+        SELECT
+            extract(epoch from ts::date) * 1000 as epoch,
+            sum(case bot when true then 1 else 0 end) as bot_count,
+            sum(case bot when false then 1 else 0 end) as user_count
+        FROM message
+        GROUP BY ts::date
+        ORDER BY ts::date DESC
+        LIMIT 30
+    """
+    rows = await db.fetch(sql)
+    content = list(map(dict, rows))
+    await upsert_statistic("LAST_MONTH_DAILY_MESSAGE_COUNTS", content)
 
 async def upsert_statistic(statistic_id, content):
     json_string = json.dumps(content)

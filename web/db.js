@@ -29,17 +29,8 @@ const messagesInLastNDays = days =>
     ) AS daily
   `).then(rows => rows[0].count)
 
-const findDailyMessageCounts = days =>
-  db.query(`
-    SELECT
-      extract(epoch from ts::date) * 1000 as epoch,
-      sum(case bot when true then 1 else 0 end) as bot_count,
-      sum(case bot when false then 1 else 0 end) as user_count
-    FROM message
-    GROUP BY ts::date
-    ORDER BY ts::date DESC
-    LIMIT ${Number(days)}
-  `)
+const findLastMonthDailyMessageCounts = days =>
+  fetchPrecalculatedStatistics("LAST_MONTH_DAILY_MESSAGE_COUNTS")
 
 const findRolling7DayMessageCounts = days =>
   db.query(`
@@ -170,7 +161,7 @@ module.exports = {
   findUserMessageCount,
   findBotMessageCount,
   messagesInLastNDays,
-  findDailyMessageCounts,
+  findLastMonthDailyMessageCounts,
   findRolling7DayMessageCounts,
   findMessageCountByUser,
   findSpammerOfTheDay,
