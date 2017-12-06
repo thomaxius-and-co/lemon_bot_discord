@@ -18,7 +18,8 @@ async def task():
         await sleep(60)
         try:
             log.info("Calculating statistics")
-            await pmap(lambda func: func(), statistic_funcs)
+            for func in statistic_funcs:
+                await func()
         except Exception:
             await log_exception(log)
 
@@ -78,7 +79,8 @@ async def messages_by_weekdays():
             })
         await upsert_statistic("MESSAGES_BY_WEEKDAYS_{0}D".format(days), content)
 
-    await pmap(exec, [7, 30, 90, 360])
+    for days in [7, 30, 90, 360]:
+        await exec(days)
 
 async def last_month_daily_message_counts():
     sql = """
