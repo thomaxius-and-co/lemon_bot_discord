@@ -33,22 +33,7 @@ const findLastMonthDailyMessageCounts = days =>
   fetchPrecalculatedStatistics("LAST_MONTH_DAILY_MESSAGE_COUNTS")
 
 const findRolling7DayMessageCounts = days =>
-  db.query(`
-    WITH daily_count AS (
-      SELECT
-        extract(epoch from ts::date) * 1000 as epoch,
-        count(*) as messages
-      FROM message
-      WHERE NOT bot
-      GROUP BY ts::date
-    )
-    SELECT
-      epoch,
-      avg(messages) OVER (ORDER BY epoch ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS average
-    FROM daily_count
-    ORDER BY epoch DESC
-    LIMIT ${Number(days)}
-  `)
+  fetchPrecalculatedStatistics(`ROLLING_MESSAGE_COUNTS_${Number(days)}D`)
 
 const findSpammerOfTheDay = () =>
   fetchPrecalculatedStatistics("SPAMMER_OF_THE_DAY")

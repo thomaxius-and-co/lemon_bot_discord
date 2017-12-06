@@ -12,6 +12,7 @@ async def task():
         spammer_of_the_day,
         messages_by_weekdays,
         last_month_daily_message_counts,
+        rolling_message_counts,
     ]
 
     while True:
@@ -96,6 +97,31 @@ async def last_month_daily_message_counts():
     rows = await db.fetch(sql)
     content = list(map(dict, rows))
     await upsert_statistic("LAST_MONTH_DAILY_MESSAGE_COUNTS", content)
+
+async def rolling_message_counts():
+    async def exec(days):
+        sql = """
+            WITH daily_count AS (
+                SELECT
+                    extract(epoch from ts::date) * 1000 as epoch,
+                    count(*) as messages
+                FROM message
+                WHERE NOT bot
+                GROUP BY ts::date
+            )
+            SELECT
+                epoch::bigint,
+                avg(messages) OVER (ORDER BY epoch ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)::float AS average
+            FROM daily_count
+            ORDER BY epoch DESC
+            LIMIT {days}
+        """.format(days=days)
+        rows = await db.fetch(sql)
+        content = list(map(dict, rows))
+        await upsert_statistic("ROLLING_MESSAGE_COUNTS_{0}D".format(days), content)
+    for days in [30]:
+        await exec(days)
+
 
 async def upsert_statistic(statistic_id, content):
     json_string = json.dumps(content)
