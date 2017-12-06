@@ -13,6 +13,7 @@ async def task():
         messages_by_weekdays,
         last_month_daily_message_counts,
         rolling_message_counts,
+        messages_in_last_in_last_week_month,
     ]
 
     while True:
@@ -122,6 +123,23 @@ async def rolling_message_counts():
     for days in [30]:
         await exec(days)
 
+async def messages_in_last_in_last_week_month():
+    async def exec(days):
+        sql = """
+            SELECT sum(daily.count)::bigint AS count
+            FROM (
+                SELECT count(*)::numeric AS count
+                FROM message
+                GROUP BY ts::date
+                ORDER BY ts::date DESC
+                LIMIT {days}
+            ) AS daily
+        """.format(days=days)
+        row = await db.fetchrow(sql)
+        content = int(row["count"])
+        await upsert_statistic("MESSAGES_IN_LAST_{0}D".format(days), content)
+    for days in [7, 30]:
+        await exec(days)
 
 async def upsert_statistic(statistic_id, content):
     json_string = json.dumps(content)
