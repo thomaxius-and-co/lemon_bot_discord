@@ -18,8 +18,8 @@ const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
 
 const formatNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
 
-const Spammer = props =>
-  <p>Spammer of the day: <b>{props.spammer.spammeroftheday}</b> with {props.spammer.message_count} messages.</p>
+const Spammer = ({spammer}) =>
+  <p>Spammer of the day: <b>{spammer.spammeroftheday}</b> with {spammer.message_count} messages.</p>
 
 const renderPage = state =>
   <div>

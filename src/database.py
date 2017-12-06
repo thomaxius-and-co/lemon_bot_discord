@@ -367,6 +367,15 @@ schema_migrations = {
     ADD COLUMN
         id SERIAL PRIMARY KEY;
         """,
+
+    # Database table for storing precalculated statistics
+    30: """
+        CREATE TABLE statistics (
+            statistics_id TEXT PRIMARY KEY,
+            content JSONB NOT NULL,
+            changed TIMESTAMP NOT NULL DEFAULT current_timestamp
+        )
+    """,
     }
 
 _pool_holder = threading.local()
