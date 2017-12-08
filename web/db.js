@@ -7,6 +7,9 @@ const connectionDetails = {
   database: process.env.DATABASE_NAME,
   user:     process.env.DATABASE_USERNAME,
   password: process.env.DATABASE_PASSWORD,
+  // After 75 connections used by the bot we have 25 connections left for the website
+  min: 5,
+  max: 25,
 }
 
 const db = pgp(connectionDetails)

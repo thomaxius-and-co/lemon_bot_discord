@@ -7,6 +7,11 @@ import logger
 
 log = logger.get("DATABASE")
 
+# 15 because we have 5 threads and each has own connection pool
+# 75 connections should be more than enough for our loads
+MIN_CONNECTION_POOL_SIZE = 5
+MAX_CONNECTION_POOL_SIZE = 15
+
 schema_migrations = {
     # Initial DB
     1: """
@@ -419,7 +424,11 @@ async def get_pool():
     global _pool_holder
     pool = getattr(_pool_holder, "pool", None)
     if pool is None:
-        pool = await asyncpg.create_pool(_connect_string)
+        pool = await asyncpg.create_pool(
+            _connect_string,
+            min_size=MIN_CONNECTION_POOL_SIZE,
+            max_size=MAX_CONNECTION_POOL_SIZE
+        )
         setattr(_pool_holder, "pool", pool)
     return pool
 
