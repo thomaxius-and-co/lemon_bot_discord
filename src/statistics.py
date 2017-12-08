@@ -20,8 +20,7 @@ async def task():
         await sleep(60)
         try:
             log.info("Calculating statistics")
-            for func in statistic_funcs:
-                await func()
+            await pmap(lambda func: func(), statistic_funcs)
         except Exception:
             await log_exception(log)
 
@@ -81,8 +80,7 @@ async def messages_by_weekdays():
             })
         await upsert_statistic("MESSAGES_BY_WEEKDAYS_{0}D".format(days), content)
 
-    for days in [7, 30, 90, 360]:
-        await exec(days)
+    await pmap(exec, [7, 30, 90, 360])
 
 async def last_month_daily_message_counts():
     sql = """
@@ -120,8 +118,7 @@ async def rolling_message_counts():
         rows = await db.fetch(sql)
         content = list(map(dict, rows))
         await upsert_statistic("ROLLING_MESSAGE_COUNTS_{0}D".format(days), content)
-    for days in [30]:
-        await exec(days)
+    await pmap(exec, [30])
 
 async def messages_in_last_in_last_week_month():
     async def exec(days):
@@ -138,8 +135,7 @@ async def messages_in_last_in_last_week_month():
         row = await db.fetchrow(sql)
         content = int(row["count"])
         await upsert_statistic("MESSAGES_IN_LAST_{0}D".format(days), content)
-    for days in [7, 30]:
-        await exec(days)
+    await pmap(exec, [7, 30])
 
 async def upsert_statistic(statistic_id, content):
     json_string = json.dumps(content)
