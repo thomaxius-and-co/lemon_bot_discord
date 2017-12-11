@@ -188,6 +188,7 @@ async def check_faceit_stats(client):
         await asyncio.sleep(fetch_interval)
 
 async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, ranking, old_toplist, new_toplist):
+    await asyncio.sleep(0.1)
     channel = discord.Object(id=spam_channel_id)
     if skill_before < current_skill:
         util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo and a new skill level! (**Skill level** %s, **Elo now:** %s)' % (faceit_nickname, int(current_elo - elo_before), current_skill, current_elo)))
