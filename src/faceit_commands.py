@@ -1,7 +1,9 @@
 import aiohttp
 import asyncio
+import util
 import logger
 import database as db
+import discord
 import faceit_api
 log = logger.get("FACEIT")
 
@@ -49,6 +51,31 @@ async def add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
             VALUES ($1, $2, $3)""", faceit_nickname, faceit_guid, message.id)
         log.info('Added a player into database: %s, faceit_guid: %s, message_id %s, added by: %s' % (
             faceit_nickname, faceit_guid, message.author.id, message.author))
+
+
+async def update_faceit_channel(channel):
+    await db.execute("""
+                  UPDATE faceit_guild_players_list
+      SET spam_channel_id = $1""", channel)
+    log.info('Updated faceit spam channel: %s' % channel)
+
+async def get_channel_info(client, user_channel_name):
+    channels = client.get_all_channels()
+    for channel in channels:
+        if channel.name.lower() == user_channel_name.lower():
+            return channel.id
+    return False #If channel doesn't exist
+
+async def add_faceit_channel(client, message, arg):
+    print(message.channel, type(message.channel))
+    channel = await get_channel_info(client, arg)
+    if not channel:
+        await client.send_message(message.channel, 'No such channel.')
+        return
+    else:
+        await update_faceit_channel(channel)
+        await client.send_message(message.channel, 'Faceit spam channel added.')
+        return
 
 
 
@@ -99,6 +126,80 @@ async def delete_faceit_user_from_database_with_faceit_nickname(faceit_nickname)
     log.info("DELETE from faceit_guild_players_list where faceit_nickname like %s" % faceit_nickname)
     await db.execute("DELETE from faceit_guild_players_list where faceit_nickname like $1", faceit_nickname)
 
+async def get_faceit_stats_of_player(guid):
+    return await db.fetchrow("""
+        SELECT 
+            *
+        FROM
+            faceit_live_stats
+        WHERE
+            faceit_guid = $1
+        ORDER BY
+            changed DESC
+        LIMIT
+            1
+        """, guid)
+
+async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
+    await db.execute("""
+        INSERT INTO faceit_live_stats AS a
+        (faceit_guid, faceit_elo, faceit_skill, faceit_ranking, changed)
+        VALUES ($1, $2, $3, $4, current_timestamp)""", str(guid), str(elo), str(skill_level), str(ranking))
+    log.info('Added a player into stats database: faceit_guid: %s, elo %s, skill_level: %s, ranking: %s' % (
+        guid, elo, skill_level, ranking))
+
+async def check_faceit_stats(client):
+    fetch_interval = 60
+    while True:
+        faceit_players = await get_guild_faceit_players()
+        if not faceit_players:
+            return
+        old_toplist = []
+        new_toplist = []
+        for record in faceit_players:
+            player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
+            if player_stats:
+                current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None, record['faceit_nickname'])
+                if current_elo == '-':
+                    continue
+                item = record['faceit_nickname'], player_stats['faceit_ranking']
+
+                old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
+                old_toplist = sorted(old_toplist, key=lambda x: x[1])
+                item = record['faceit_nickname'], ranking
+                new_toplist.append(item)
+                new_toplist = sorted(new_toplist, key=lambda x: x[1])
+
+                if (str(current_elo) != str(player_stats['faceit_elo'])):
+                    await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
+                    if record['spam_channel_id']:
+                        await spam_about_elo_changes(client, record['faceit_nickname'], int(record['spam_channel_id']),
+                                                     int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
+                                                     int(player_stats['faceit_skill']), int(ranking), old_toplist,
+                                                     new_toplist)
+            else:
+                current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
+                                                                                             record['faceit_nickname'])
+                if current_elo == '-':
+                    continue
+                await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
+        await asyncio.sleep(fetch_interval)
+
+async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, ranking, old_toplist, new_toplist):
+    channel = discord.Object(id=spam_channel_id)
+    if skill_before < current_skill:
+        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo and a new skill level! (**Skill level** %s, **Elo now:** %s)' % (faceit_nickname, int(current_elo - elo_before), current_skill, current_elo)))
+        return
+    if skill_before > current_skill:
+        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo and lost a skill level! (**%s**)' % (faceit_nickname, (current_elo - elo_before), current_skill)))
+        return
+    if current_elo > elo_before:
+        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, (current_elo - elo_before), elo_before, current_elo)))
+        return
+    if elo_before > current_elo:
+        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, (current_elo - elo_before), current_elo, elo_before)))
+        return
+
 async def get_guild_faceit_players():
     return await db.fetch("""
         SELECT 
@@ -108,9 +209,11 @@ async def get_guild_faceit_players():
         """)
 
 def register(client):
+    util.start_task_thread(check_faceit_stats(client))
     return {
         'faceitstats': cmd_faceit_stats,
         'addfaceituser': cmd_add_faceit_user_into_database,
         'listfaceitusers': cmd_list_faceit_users,
-        'deletefaceitusers': cmd_del_faceit_user
+        'deletefaceitusers': cmd_del_faceit_user,
+        'addfaceitchannel': add_faceit_channel
     }
