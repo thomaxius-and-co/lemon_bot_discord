@@ -154,6 +154,7 @@ async def check_faceit_stats(client):
         faceit_players = await get_guild_faceit_players()
         if not faceit_players:
             return
+        log.info('Checking faceit stats')
         old_toplist = []
         new_toplist = []
         for record in faceit_players:
@@ -183,6 +184,7 @@ async def check_faceit_stats(client):
                 if current_elo == '-':
                     continue
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
+        log.info('Faceit stats checked')
         await asyncio.sleep(fetch_interval)
 
 async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, ranking, old_toplist, new_toplist):
@@ -191,13 +193,13 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
         util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo and a new skill level! (**Skill level** %s, **Elo now:** %s)' % (faceit_nickname, int(current_elo - elo_before), current_skill, current_elo)))
         return
     if skill_before > current_skill:
-        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo and lost a skill level! (**%s**)' % (faceit_nickname, (current_elo - elo_before), current_skill)))
+        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo and lost a skill level! (**%s**)' % (faceit_nickname, int(current_elo - elo_before), current_skill)))
         return
     if current_elo > elo_before:
-        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, (current_elo - elo_before), elo_before, current_elo)))
+        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, int(current_elo - elo_before), elo_before, current_elo)))
         return
     if elo_before > current_elo:
-        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, (current_elo - elo_before), current_elo, elo_before)))
+        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, int(current_elo - elo_before), current_elo, elo_before)))
         return
 
 async def get_guild_faceit_players():
