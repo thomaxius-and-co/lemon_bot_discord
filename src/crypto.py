@@ -18,7 +18,12 @@ def register(client):
         "crypto": cmd_crypto
     }
 
-coins = ['Ethereum', 'Bitcoin', 'Litecoin', 'Bitcoin-Cash']
+coins = ['ethereum', 'bitcoin', 'litecoin', 'bitcoin-cash']
+
+coins_dict = {'eth': 'Ethereum',
+              'btc': 'Bitcoin',
+              'ltc': 'Litecoin',
+              'bch': 'Bitcoin-Cash'}
 
 async def cmd_ethereum(client, message, user):
     data = await get_current_price("Ethereum")
@@ -43,14 +48,14 @@ async def cmd_ethereum(client, message, user):
         amount=round(int(0.25 * float(eur)),3),
         profit=round(int(0.25 * float(eur)-100),3)
     )
-    await client.send_message(message.channel, reply +  "This command is obsolete and replaced by !crpyto.'")
+    await client.send_message(message.channel, reply +  "This command is obsolete and replaced by !crypto.'")
 
 async def get_crypto_price(coin):
     data = await get_current_price(coin)
     eur = data[0]["price_eur"]
     usd = data[0]["price_usd"]
     name = data[0]["name"]
-    percent_change_day = data[0]["percent_change_24h"]
+    percent_change_day = '+' + str(data[0]["percent_change_24h"]) if (float(data[0]["percent_change_24h"]) > 0) else data[0]["percent_change_24h"]
 
     return ((
         "\n"
@@ -67,12 +72,21 @@ async def get_crypto_price(coin):
 
 
 async def cmd_bitcoin(client, message, user):
-    await client.send_message(message.channel, "This command is obsolete and replaced by !crpyto.")
+    await client.send_message(message.channel, "This command is obsolete and replaced by !crypto.")
 
-async def cmd_crypto(client, message, _):
-    await client.send_message(message.channel, await message_builder())
+async def cmd_crypto(client, message, arg):
+    if arg and (arg.lower() not in coins):
+        arg = coins_dict.get(arg.lower(), None)
+        if not arg:
+            await client.send_message(message.channel, 'Available cryptocoins: %s' % coins)
+            return
+    await client.send_message(message.channel, await message_builder(arg if arg else None))
 
-async def message_builder():
+async def message_builder(arg):
+    if arg:
+        msg = ('%s price as of %s:```' % (arg.title(), await get_date_fetched()))
+        msg += await get_crypto_price(arg)
+        return msg + '```'
     msg = 'Crypto prices as of %s:```' % await get_date_fetched()
     for coin in coins:
         msg += await get_crypto_price(coin)
