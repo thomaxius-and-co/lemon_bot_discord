@@ -5,7 +5,7 @@ from datetime import datetime
 import logger
 import perf
 import retry
-from time_util import to_helsinki
+from time_util import as_utc
 
 log = logger.get("ethereum")
 
@@ -21,7 +21,7 @@ async def cmd_ethereum(client, message, user):
 
     eur = data[0]["price_eur"]
     usd = data[0]["price_usd"]
-    updated = to_helsinki(datetime.fromtimestamp(int(data[0]["last_updated"])))
+    updated = as_utc(datetime.fromtimestamp(int(data[0]["last_updated"])))
 
     reply = (
         "Ethereum price as of {time}\n"
