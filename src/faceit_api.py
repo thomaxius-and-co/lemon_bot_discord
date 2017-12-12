@@ -12,7 +12,7 @@ async def ranking(guid, area="EU"):
         return result.get("payload", 0)
 
 async def user(nickname):
-    url = "https://api.faceit.com/core/v1/nicknames/" + nickname
+    url = "https://api.faceit.com/api/nicknames/" + nickname
     async with aiohttp.ClientSession() as session:
         response = await session.get(url)
         log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
