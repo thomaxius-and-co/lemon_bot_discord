@@ -41,16 +41,61 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
         return
     faceit_guid = await get_faceit_guid(client, message, faceit_nickname)
     if faceit_guid:
-        await add_faceit_user_into_database(faceit_nickname, faceit_guid, message)
-        await client.send_message(message.channel, "Added %s into the database" % faceit_nickname)
+        if await user_in_database_but_deleted(faceit_guid):
+            await unremove_user_from_database(faceit_guid)
+        else:
+            if not await add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
+                await client.send_message(message.channel, "%s is already in the database." % faceit_nickname)
+                return
+        await client.send_message(message.channel, "Added %s into the database." % faceit_nickname)
+
+
+async def unremove_user_from_database(faceit_guid):
+    await db.execute("""
+            UPDATE 
+                faceit_guild_players_list 
+            SET 
+                deleted = false 
+            WHERE 
+                faceit_guid = $1""", faceit_guid)
+    log.info('SET deleted = false WHERE faceit_guid = %s' % faceit_guid)
+
+async def user_in_database_but_deleted(faceit_guid):
+    log.info('Cheking if %s is in database' % faceit_guid)
+    return (await db.fetchrow("""
+        SELECT 
+            *
+        FROM
+            faceit_guild_players_list
+        WHERE
+            faceit_guid = $1
+            AND
+            deleted = true
+        LIMIT
+            1
+        """, faceit_guid) is not None)
 
 async def add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
+        already_in_db = (await db.fetchrow("""
+        SELECT 
+            *
+        FROM
+            faceit_guild_players_list
+        WHERE
+            faceit_guid = $1
+        LIMIT
+            1
+        """, faceit_guid))
+        if already_in_db:
+            return False
+
         await db.execute("""
             INSERT INTO faceit_guild_players_list AS a
             (faceit_nickname, faceit_guid, message_id)
             VALUES ($1, $2, $3)""", faceit_nickname, faceit_guid, message.id)
         log.info('Added a player into database: %s, faceit_guid: %s, message_id %s, added by: %s' % (
             faceit_nickname, faceit_guid, message.author.id, message.author))
+        return True
 
 
 async def update_faceit_channel(channel):
@@ -76,8 +121,6 @@ async def cmd_add_faceit_channel(client, message, arg):
         await update_faceit_channel(channel)
         await client.send_message(message.channel, 'Faceit spam channel added.')
         return
-
-
 
 async def cmd_del_faceit_user(client, message, arg):
     if not arg:
@@ -205,8 +248,6 @@ async def cmd_add_faceit_nickname(client, message, arg):
             return
     await client.send_message(message.channel, "Player %s not found in database. " % faceit_name)
 
-
-
 async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, custom_nickname):
     await asyncio.sleep(0.1)
     channel = discord.Object(id=spam_channel_id)
@@ -223,10 +264,8 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
         util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)' % (faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo)))
         return
 
-
-
 async def get_guild_faceit_players():
-    return await db.fetch("SELECT * FROM faceit_guild_players_list WHERE NOT deleted")
+    return await db.fetch("SELECT * FROM faceit_guild_players_list WHERE NOT deleted order by ID ASC")
 
 def register(client):
     util.start_task_thread(check_faceit_stats(client))
