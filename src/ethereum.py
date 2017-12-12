@@ -5,7 +5,7 @@ from datetime import datetime
 import logger
 import perf
 import retry
-from time_util import as_utc
+from time_util import as_utc, to_helsinki
 
 log = logger.get("ethereum")
 
@@ -21,20 +21,21 @@ async def cmd_ethereum(client, message, user):
 
     eur = data[0]["price_eur"]
     usd = data[0]["price_usd"]
-    updated = as_utc(datetime.fromtimestamp(int(data[0]["last_updated"])))
+    updated = to_helsinki(as_utc(datetime.fromtimestamp(int(data[0]["last_updated"]))))
 
     reply = (
         "Ethereum price as of {time}\n"
         "```\n"
         "{eur} EUR\n"
         "{usd} USD\n"
-        "Thomaxius now has {amount} EUR"
+        "Thomaxius now has {amount} EUR (profit: {profit} EUR)"
         "```"
     ).format(
         time=updated.strftime("%Y-%m-%d %H:%M"),
         eur=round(float(eur),3),
         usd=round(float(usd),3),
-        amount=round(int(0.25 * float(eur)),3)
+        amount=round(int(0.25 * float(eur)),3),
+        profit=round(int(0.25 * float(eur)-100),3)
     )
     await client.send_message(message.channel, reply)
 
