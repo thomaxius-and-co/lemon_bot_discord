@@ -394,6 +394,12 @@ schema_migrations = {
             faceit_guild_players_list 
         ADD COLUMN 
             spam_channel_id TEXT;
+            """,
+    34: """
+        ALTER TABLE 
+            faceit_guild_players_list 
+        ADD COLUMN 
+            custom_nickname TEXT;
             """
 }
 

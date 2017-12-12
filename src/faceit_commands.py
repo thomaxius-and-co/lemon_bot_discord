@@ -66,7 +66,7 @@ async def get_channel_info(client, user_channel_name):
             return channel.id
     return False #If channel doesn't exist
 
-async def add_faceit_channel(client, message, arg):
+async def cmd_add_faceit_channel(client, message, arg):
     print(message.channel, type(message.channel))
     channel = await get_channel_info(client, arg)
     if not channel:
@@ -169,15 +169,13 @@ async def check_faceit_stats(client):
                 old_toplist = sorted(old_toplist, key=lambda x: x[1])
                 item = record['faceit_nickname'], ranking
                 new_toplist.append(item)
-                new_toplist = sorted(new_toplist, key=lambda x: x[1])
 
                 if (str(current_elo) != str(player_stats['faceit_elo'])):
                     await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
                     if record['spam_channel_id']:
                         await spam_about_elo_changes(client, record['faceit_nickname'], int(record['spam_channel_id']),
                                                      int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
-                                                     int(player_stats['faceit_skill']), int(ranking), old_toplist,
-                                                     new_toplist)
+                                                     int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
             else:
                 current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
                                                                                              record['faceit_nickname'])
@@ -187,21 +185,45 @@ async def check_faceit_stats(client):
         log.info('Faceit stats checked')
         await asyncio.sleep(fetch_interval)
 
-async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, ranking, old_toplist, new_toplist):
+async def set_faceit_nickname(faceit_name, custom_nickname):
+    log.info("Setting nickname %s for: %s" % (faceit_name, custom_nickname))
+    await db.execute("UPDATE faceit_guild_players_list SET custom_nickname = $1 where faceit_nickname = $2", custom_nickname, faceit_name)
+
+async def cmd_add_faceit_nickname(client, message, arg):
+    if not arg:
+        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
+        return
+    faceit_name, custom_nickname = arg.split(' ',1)
+    if not faceit_name or not custom_nickname:
+        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius The pussy destroyer")
+        return
+    players = await get_guild_faceit_players()
+    for player in players:
+        if player['faceit_nickname'] == faceit_name:
+            await set_faceit_nickname(faceit_name, custom_nickname)
+            await client.send_message(message.channel, "Nickname %s set for %s." % (custom_nickname, faceit_name))
+            return
+    await client.send_message(message.channel, "Player %s not found in database. " % faceit_name)
+
+
+
+async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill, skill_before, custom_nickname):
     await asyncio.sleep(0.1)
     channel = discord.Object(id=spam_channel_id)
     if skill_before < current_skill:
-        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo and a new skill level! (**Skill level** %s, **Elo now:** %s)' % (faceit_nickname, int(current_elo - elo_before), current_skill, current_elo)))
+        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)' % (faceit_nickname, custom_nickname,  int(current_elo - elo_before), skill_before, current_skill,  current_elo)))
         return
     if skill_before > current_skill:
-        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo and lost a skill level! (**%s**)' % (faceit_nickname, int(current_elo - elo_before), current_skill)))
+        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)' % (faceit_nickname, custom_nickname,  int(current_elo - elo_before), skill_before, current_skill, current_elo)))
         return
     if current_elo > elo_before:
-        util.threadsafe(client, client.send_message(channel, '**%s** gained **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, int(current_elo - elo_before), elo_before, current_elo)))
+        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)' % (faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo)))
         return
     if elo_before > current_elo:
-        util.threadsafe(client, client.send_message(channel, '**%s** lost **%s** elo! (**%s** -> **%s**)' % (faceit_nickname, int(current_elo - elo_before), current_elo, elo_before)))
+        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)' % (faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo)))
         return
+
+
 
 async def get_guild_faceit_players():
     return await db.fetch("""
@@ -218,5 +240,6 @@ def register(client):
         'addfaceituser': cmd_add_faceit_user_into_database,
         'listfaceitusers': cmd_list_faceit_users,
         'deletefaceitusers': cmd_del_faceit_user,
-        'addfaceitchannel': add_faceit_channel
+        'addfaceitchannel': cmd_add_faceit_channel,
+        'addfaceitnickname': cmd_add_faceit_nickname
     }
