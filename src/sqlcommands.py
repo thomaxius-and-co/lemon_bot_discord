@@ -572,7 +572,7 @@ async def cmd_top(client, message, input):
         return
 
 async def get_faceit_leaderboard():
-    faceit_users = await db.fetch("SELECT faceit_nickname, faceit_guid FROM faceit_guild_players_list")
+    faceit_users = await db.fetch("SELECT faceit_nickname, faceit_guid FROM faceit_guild_players_list WHERE NOT deleted")
     if len(faceit_users) == 0:
         return None, None
     toplist = []

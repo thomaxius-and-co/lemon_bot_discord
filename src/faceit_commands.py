@@ -119,12 +119,12 @@ async def cmd_list_faceit_users(client, message, _):
         await client.send_message(message.channel, msg)
 
 async def delete_faceit_user_from_database_with_row_id(row_id):
-    log.info("DELETE from faceit_guild_players_list where id like %s" % row_id)
-    await db.execute("DELETE from faceit_guild_players_list where id = $1", row_id)
+    log.info("UPDATE faceit_guild_players_list SET deleted = true WHERE id = %s" % row_id)
+    await db.execute("UPDATE faceit_guild_players_list SET deleted = true WHERE id = $1", row_id)
 
 async def delete_faceit_user_from_database_with_faceit_nickname(faceit_nickname):
-    log.info("DELETE from faceit_guild_players_list where faceit_nickname like %s" % faceit_nickname)
-    await db.execute("DELETE from faceit_guild_players_list where faceit_nickname like $1", faceit_nickname)
+    log.info("UPDATE faceit_guild_players_list SET deleted = true WHERE faceit_nickname LIKE %s" % faceit_nickname)
+    await db.execute("UPDATE faceit_guild_players_list SET deleted = true WHERE faceit_nickname LIKE $1", faceit_nickname)
 
 async def get_faceit_stats_of_player(guid):
     return await db.fetchrow("""
@@ -226,12 +226,7 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
 
 
 async def get_guild_faceit_players():
-    return await db.fetch("""
-        SELECT 
-            *
-        FROM
-            faceit_guild_players_list
-        """)
+    return await db.fetch("SELECT * FROM faceit_guild_players_list WHERE NOT deleted")
 
 def register(client):
     util.start_task_thread(check_faceit_stats(client))

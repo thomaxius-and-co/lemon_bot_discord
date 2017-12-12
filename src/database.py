@@ -400,7 +400,11 @@ schema_migrations = {
             faceit_guild_players_list 
         ADD COLUMN 
             custom_nickname TEXT;
-            """
+            """,
+    35: """
+        ALTER TABLE faceit_guild_players_list
+        ADD COLUMN deleted BOOL NOT NULL DEFAULT FALSE
+    """,
 }
 
 _pool_holder = threading.local()
