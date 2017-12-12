@@ -51,8 +51,7 @@ import logger
 import faceit_commands
 import muutto
 import statistics
-import bitcoin
-import ethereum
+import crypto
 
 log = logger.get("BOT")
 
@@ -711,7 +710,7 @@ if __name__ == "__main__":
     loop.run_until_complete(db.initialize_schema())
     loop.run_until_complete(awards.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto, statistics, bitcoin, ethereum]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto, statistics, crypto]:
         commands.update(module.register(client))
 
     client.run(token)
