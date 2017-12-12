@@ -587,6 +587,8 @@ async def get_faceit_leaderboard():
         if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
             continue
         eu_ranking = batch_ranking[i]
+        if not eu_ranking:
+            continue
         new_item = eu_ranking, user['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
     toplist = sorted(toplist, key=lambda x: x[0])[:10]

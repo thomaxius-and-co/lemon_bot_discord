@@ -161,7 +161,7 @@ async def check_faceit_stats(client):
             player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
             if player_stats:
                 current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None, record['faceit_nickname'])
-                if current_elo == '-':
+                if (current_elo == '-') or (ranking == '-'):
                     continue
                 item = record['faceit_nickname'], player_stats['faceit_ranking']
 
@@ -179,7 +179,7 @@ async def check_faceit_stats(client):
             else:
                 current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
                                                                                              record['faceit_nickname'])
-                if current_elo == '-':
+                if (current_elo == '-') or (ranking == '-'):
                     continue
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
         log.info('Faceit stats checked')
