@@ -192,6 +192,7 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
         guid, elo, skill_level, ranking))
 
 async def check_faceit_stats(client):
+    log.info('Faceit stats checking started')
     fetch_interval = 60
     while True:
         faceit_players = await get_guild_faceit_players()
