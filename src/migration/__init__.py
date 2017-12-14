@@ -27,15 +27,16 @@ def find_new_migrations(version):
     migrations = find_migrations()
     new_migrations = list(filter(is_newer_than(version), migrations))
     log.info("Found {0} migrations of which {1} are new".format(len(migrations), len(new_migrations)))
-    return new_migrations, max(map(itemgetter(0), new_migrations))
+    return new_migrations, max(map(itemgetter(0), new_migrations), default=version)
 
 def find_migrations():
     path = os.path.dirname(__file__)
     return sorted(map(load_module, pkgutil.iter_modules([path])), key=itemgetter(0))
 
 def load_module(module_info):
-    version = int(module_info.name.split("-")[0])
-    imported_module = importlib.import_module("migration." + module_info.name)
+    module_name = module_info[1]
+    version = int(module_name.split("-")[0])
+    imported_module = importlib.import_module("migration." + module_name)
     return version, imported_module
 
 def is_newer_than(current_version):
