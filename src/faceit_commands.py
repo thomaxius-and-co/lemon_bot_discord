@@ -198,7 +198,7 @@ async def check_faceit_stats(client):
         faceit_players = await get_guild_faceit_players()
         if not faceit_players:
             return
-        log.info('Checking faceit stats')
+        log.info('Checking stats')
         old_toplist = []
         new_toplist = []
         for record in faceit_players:

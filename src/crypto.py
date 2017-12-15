@@ -13,8 +13,8 @@ def register(client):
     return {
         "bitcoin": cmd_bitcoin,
         "btc": cmd_bitcoin,
-        "ethereum": cmd_ethereum,
-        "eth": cmd_ethereum,
+        "roadtobillion": cmd_roadtobillion,
+        "rtb": cmd_roadtobillion,
         "crypto": cmd_crypto
     }
 
@@ -25,30 +25,66 @@ coins_dict = {'eth': 'Ethereum',
               'ltc': 'Litecoin',
               'bch': 'Bitcoin-Cash'}
 
-async def cmd_ethereum(client, message, user):
+async def cmd_roadtobillion(client, message, user):
     data = await get_current_price("Ethereum")
-    eur = data[0]["price_eur"]
-    usd = data[0]["price_usd"]
-    percent_change_day = data[0]["percent_change_24h"]
-    updated = to_helsinki(as_utc(datetime.fromtimestamp(int(data[0]["last_updated"]))))
-
-    reply = (
-        "Ethereum price as of {time}\n"
+    eth_eur = data[0]["price_eur"]
+    eth_usd = data[0]["price_usd"]
+    eth_percent_change_day = data[0]["percent_change_24h"]
+    eth_updated = to_helsinki(as_utc(datetime.fromtimestamp(int(data[0]["last_updated"]))))
+    reply = ""
+    reply += (
         "```\n"
-        "{eur} EUR\n"
-        "{usd} USD\n"
-        "24h change: {percent_change_day}\n"
-        "Thomaxius now has {amount} EUR (profit: {profit} EUR)"
+        "Ethereum price as of {time}\n"
+        "{eth_eur} EUR\n"
+        "{eth_usd} USD\n"
+        "24h change: {eth_percent_change_day}\n"
+        "Thomaxius now has {amount_thomaxius} EUR (profit: {profit_thomaxius} EUR)\n"
+        "Chimppa now has {amount_chimppa} EUR (profit: {profit_chimppa} EUR)\n\n"
+    ).format(
+        time=eth_updated.strftime("%Y-%m-%d %H:%M"),
+        eth_eur=round(float(eth_eur),3),
+        eth_usd=round(float(eth_usd),3),
+        eth_percent_change_day=eth_percent_change_day,
+        amount_thomaxius=round(int(0.25 * float(eth_eur)),3),
+        profit_thomaxius=round(int(0.25 * float(eth_eur)-100),3),
+        amount_chimppa = round(int(0.4296 * float(eth_eur)), 3),
+        profit_chimppa = round(int(0.4296 * float(eth_eur) - 250), 3)
+    )
+    litecoin_data = await get_current_price("Litecoin")
+    ltc_eur = litecoin_data[0]["price_eur"]
+    ltc_usd = litecoin_data[0]["price_usd"]
+    ltc_percent_change_day = litecoin_data[0]["percent_change_24h"]
+    ltc_updated = to_helsinki(as_utc(datetime.fromtimestamp(int(litecoin_data[0]["last_updated"]))))
+    amount_thomaxius = round(int(0.3247 * float(ltc_eur)),3)
+    profit_thomaxius = round(int(0.3247 * float(ltc_eur) - 100),3)
+    amount_chimppa = round(int(1.0921 * float(ltc_eur)),3)
+    profit_chimppa = round(int(1.0921 * float(ltc_eur) - 250),3)
+    operator_thom = '+' if profit_thomaxius > 0 else ''
+    operator_chimppa = '+' if profit_chimppa > 0 else ''
+
+    reply += (
+
+        "Litecoin price as of {time}\n"
+        "{ltc_eur} EUR\n"
+        "{ltc_usd} USD\n"
+        "24h change: {ltc_percent_change_day}\n"
+        "Thomaxius now has {amount_thomaxius} EUR (profit: {operator_thom}{profit_thomaxius} EUR)\n"
+        "Chimppa now has {amount_chimppa} EUR (profit: {operator_chimppa}{profit_chimppa} EUR)"        
         "```"
     ).format(
-        time=updated.strftime("%Y-%m-%d %H:%M"),
-        eur=round(float(eur),3),
-        usd=round(float(usd),3),
-        percent_change_day=percent_change_day,
-        amount=round(int(0.25 * float(eur)),3),
-        profit=round(int(0.25 * float(eur)-100),3)
+        time=ltc_updated.strftime("%Y-%m-%d %H:%M"),
+        ltc_eur=round(float(ltc_eur),3),
+        ltc_usd=round(float(ltc_usd),3),
+        ltc_percent_change_day=ltc_percent_change_day,
+        amount_thomaxius=amount_thomaxius,
+        operator_thom=operator_thom,
+        profit_thomaxius=profit_thomaxius,
+        amount_chimppa=amount_chimppa,
+        operator_chimppa=operator_chimppa,
+        profit_chimppa=profit_chimppa
     )
-    await client.send_message(message.channel, reply +  "This command is obsolete and replaced by !crypto.'")
+    await client.send_message(message.channel, reply)
+
 
 async def get_crypto_price(coin):
     data = await get_current_price(coin)
