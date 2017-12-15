@@ -25,50 +25,98 @@ coins_dict = {'eth': 'Ethereum',
               'ltc': 'Litecoin',
               'bch': 'Bitcoin-Cash'}
 
+#todo: Redo this command properly, so it isn't as ugly
 async def cmd_roadtobillion(client, message, user):
+    btc_data = await get_current_price("Bitcoin")
+    btc_eur = btc_data[0]["price_eur"]
+    btc_usd = btc_data[0]["price_usd"]
+    btc_percent_change_day = btc_data[0]["percent_change_24h"] #todo add plus symbol if positive number
+    btc_updated = to_helsinki(as_utc(datetime.fromtimestamp(int(btc_data[0]["last_updated"]))))
+    btc_amount_niske = round(int(0.00219075 * float(btc_eur)),3)
+    btc_profit_niske = round(int(0.00219075 * float(btc_eur) - 35),3)
+    operator_niske = '+' if btc_profit_niske > 0 else ''
+
+    reply = ""
+
+    reply += (
+        "```\n"
+        "Bitcoin price as of {time}\n"
+        "{btc_eur} EUR\n"
+        "{btc_usd} USD\n"
+        "24h change: {btc_percent_change_day}\n"
+        "Niske now has {amount_niske} EUR (profit: {operator_niske}{profit_niske} EUR)\n\n"
+    ).format(
+        time=btc_updated.strftime("%Y-%m-%d %H:%M"),
+        btc_eur=round(float(btc_eur),3),
+        btc_usd=round(float(btc_usd),3),
+        btc_percent_change_day=btc_percent_change_day,
+        amount_niske=btc_amount_niske,
+        operator_niske=operator_niske,
+        profit_niske=btc_profit_niske,
+    )
+
     data = await get_current_price("Ethereum")
     eth_eur = data[0]["price_eur"]
     eth_usd = data[0]["price_usd"]
     eth_percent_change_day = data[0]["percent_change_24h"]
     eth_updated = to_helsinki(as_utc(datetime.fromtimestamp(int(data[0]["last_updated"]))))
+
     eth_amount_thomaxius = round(int(0.25 * float(eth_eur)),3)
     eth_profit_thomaxius = round(int(0.25 * float(eth_eur) - 100),3)
+    operator_thomaxius = '+' if eth_profit_thomaxius > 0 else ''
+
     eth_amount_chimppa = round(int(0.4268 * float(eth_eur)),3)
     eth_profit_chimppa = round(int(0.4268 * float(eth_eur) - 250),3)
-    operator_thom = '+' if eth_profit_thomaxius > 0 else ''
     operator_chimppa = '+' if eth_profit_chimppa > 0 else ''
-    reply = ""
+
+    eth_amount_niske = round(int(0.04309901 * float(eth_eur)),3)
+    eth_profit_niske = round(int(0.04309901 * float(eth_eur) - 25), 3)
+    operator_niske = '+' if eth_profit_niske > 0 else ''
+
+
+
+
     reply += (
-        "```\n"
         "Ethereum price as of {time}\n"
         "{eth_eur} EUR\n"
         "{eth_usd} USD\n"
         "24h change: {eth_percent_change_day}\n"
-        "Thomaxius now has {amount_thomaxius} EUR (profit: {operator_thom}{profit_thomaxius} EUR)\n"
-        "Chimppa now has {amount_chimppa} EUR (profit: {operator_chimppa}{profit_chimppa} EUR)\n\n"
+        "Thomaxius now has {amount_thomaxius} EUR (profit: {operator_thomaxius}{profit_thomaxius} EUR)\n"
+        "Chimppa now has {amount_chimppa} EUR (profit: {operator_chimppa}{profit_chimppa} EUR)\n"
+        "Niske now has {amount_niske} EUR (profit: {operator_niske}{profit_niske} EUR)\n\n"
     ).format(
         time=eth_updated.strftime("%Y-%m-%d %H:%M"),
         eth_eur=round(float(eth_eur),3),
         eth_usd=round(float(eth_usd),3),
         eth_percent_change_day=eth_percent_change_day,
         amount_thomaxius=eth_amount_thomaxius,
-        operator_thom=operator_thom,
+        operator_thomaxius=operator_thomaxius,
         profit_thomaxius=eth_profit_thomaxius,
         amount_chimppa=eth_amount_chimppa,
         operator_chimppa=operator_chimppa,
-        profit_chimppa=eth_profit_chimppa
+        profit_chimppa=eth_profit_chimppa,
+        amount_niske=eth_amount_niske,
+        operator_niske=operator_niske,
+        profit_niske=eth_profit_niske,
     )
     litecoin_data = await get_current_price("Litecoin")
     ltc_eur = litecoin_data[0]["price_eur"]
     ltc_usd = litecoin_data[0]["price_usd"]
     ltc_percent_change_day = litecoin_data[0]["percent_change_24h"]
     ltc_updated = to_helsinki(as_utc(datetime.fromtimestamp(int(litecoin_data[0]["last_updated"]))))
+
     ltc_amount_thomaxius = round(int(0.3247 * float(ltc_eur)),3)
     ltc_profit_thomaxius = round(int(0.3247 * float(ltc_eur) - 100),3)
+    operator_thomaxius = '+' if ltc_profit_thomaxius > 0 else ''
+
     ltc_amount_chimppa = round(int(1.0921 * float(ltc_eur)),3)
     ltc_profit_chimppa = round(int(1.0921 * float(ltc_eur) - 250),3)
-    operator_thom = '+' if ltc_profit_thomaxius > 0 else ''
     operator_chimppa = '+' if ltc_profit_chimppa > 0 else ''
+
+    ltc_amount_niske = round(int(0.10539865 * float(ltc_eur)),3)
+    ltc_profit_niske = round(int(0.10539865 * float(ltc_eur) - 25),3)
+    operator_niske = '+' if ltc_profit_niske > 0 else ''
+
 
     reply += (
 
@@ -76,10 +124,12 @@ async def cmd_roadtobillion(client, message, user):
         "{ltc_eur} EUR\n"
         "{ltc_usd} USD\n"
         "24h change: {ltc_percent_change_day}\n"
-        "Thomaxius now has {amount_thomaxius} EUR (profit: {operator_thom}{profit_thomaxius} EUR)\n"
-        "Chimppa now has {amount_chimppa} EUR (profit: {operator_chimppa}{profit_chimppa} EUR)\n\n"
+        "Thomaxius now has {amount_thomaxius} EUR (profit: {operator_thomaxius}{profit_thomaxius} EUR)\n"
+        "Chimppa now has {amount_chimppa} EUR (profit: {operator_chimppa}{profit_chimppa} EUR)\n"
+        "Niske now has {amount_niske} EUR (profit: {operator_niske}{profit_niske} EUR)\n\n"        
         "Chimppa's total profit: {chimppa_total_profit}\n"
-        "Thomaxius' total profit: {thomaxius_total_profit}"
+        "Thomaxius' total profit: {thomaxius_total_profit}\n"
+        "Niske's total profit: {niske_total_profit}\n"
         "```"
     ).format(
         time=ltc_updated.strftime("%Y-%m-%d %H:%M"),
@@ -87,15 +137,19 @@ async def cmd_roadtobillion(client, message, user):
         ltc_usd=round(float(ltc_usd),3),
         ltc_percent_change_day=ltc_percent_change_day,
         amount_thomaxius=ltc_amount_thomaxius,
-        operator_thom=operator_thom,
+        operator_thomaxius=operator_thomaxius,
         profit_thomaxius=ltc_profit_thomaxius,
         amount_chimppa=ltc_amount_chimppa,
         operator_chimppa=operator_chimppa,
         profit_chimppa=ltc_profit_chimppa,
+        amount_niske=ltc_amount_niske,
+        operator_niske=operator_niske,
+        profit_niske=ltc_profit_niske,
         chimppa_total_profit='+' + str(eth_profit_chimppa + ltc_profit_chimppa) + ' EUR' if ((eth_profit_chimppa + ltc_profit_chimppa) > 0)
         else '' + str(eth_profit_chimppa + ltc_profit_chimppa) + ' EUR',
         thomaxius_total_profit='+' + str(eth_profit_thomaxius + ltc_profit_thomaxius) + ' EUR' if ((eth_profit_thomaxius + ltc_profit_thomaxius) > 0)
-        else '' + str(eth_profit_thomaxius + ltc_profit_thomaxius) + ' EUR'
+        else '' + str(eth_profit_thomaxius + ltc_profit_thomaxius) + ' EUR',
+        niske_total_profit = '+' + str(eth_profit_niske + ltc_profit_niske + btc_profit_niske) + ' EUR' if ((eth_profit_niske + ltc_profit_niske + btc_profit_niske) > 0) else '' + str(eth_profit_niske + ltc_profit_niske) + ' EUR'
     )
     await client.send_message(message.channel, reply)
 
