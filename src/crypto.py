@@ -26,7 +26,7 @@ coins_dict = {'eth': 'Ethereum',
               'bch': 'Bitcoin-Cash'}
 
 coin_owners_dict = {
-    'Ethereum': [('Thomaxius',0.25,100), ('Niske',0.04309901,25), ('Chimppa',0.4268,250)], #Coin name, coin amount, € amount bought with
+    'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.04309901,25), ('Thomaxius',0.25,100)], #Coin name, coin amount, € amount bought with
     'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.10539865,25), ('Thomaxius',0.3247,100)],
     'Bitcoin': [('Niske',0.00219075,35)]
 }
@@ -43,6 +43,7 @@ async def rtb_message_builder():
         msg += await rtb_get_crypto_price(coin)
     for owner in profit_dict:
         msg += ('\n%s total profit: %s%s EUR' % (owner, '+' if (profit_dict.get(owner) > 0) else '', profit_dict.get(owner)))
+    profit_dict.clear()
     return msg + '```'
 
 async def rtb_get_crypto_price(coin):
@@ -82,8 +83,6 @@ async def get_coin_owners_message(coin, coin_price_eur):
         reply += ('%s now has %s EUR (profit %s%s EUR)\n' % (name, amount_eur, operator, profit_eur))
     return reply
 
-
-
 async def get_crypto_price(coin):
     data = await get_current_price(coin)
     eur = data[0]["price_eur"]
@@ -105,7 +104,6 @@ async def get_crypto_price(coin):
         percent_change_day=percent_change_day
     ))
 
-
 async def cmd_bitcoin(client, message, user):
     await client.send_message(message.channel, "This command is obsolete and replaced by !crypto.")
 
@@ -126,7 +124,6 @@ async def message_builder(arg):
     for coin in coins:
         msg += await get_crypto_price(coin)
     return msg + '```'
-
 
 @retry.on_any_exception
 @perf.time_async("Coinmarketcap API")
