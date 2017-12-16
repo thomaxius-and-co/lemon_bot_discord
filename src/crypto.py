@@ -42,9 +42,10 @@ async def rtb_message_builder():
     for coin in coin_owners_dict:
         msg += await rtb_get_crypto_price(coin)
     for owner in profit_dict:
-        profit_data = profit_dict.get(owner)
-        total_profit = profit_data[0] - profit_data[1]
-        profit_percentage = ((profit_data[0] - profit_data[1]) / profit_data[0]) * 100
+        value, buy_value = profit_dict.get(owner)
+        total_profit = value - buy_value
+        profit_percentage = total_profit / buy_value * 100
+
         msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,3)) if profit_percentage > 0 else ''))
     profit_dict.clear()
     return msg + '```'
