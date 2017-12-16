@@ -31,7 +31,7 @@ coin_owners_dict = {
     'Bitcoin': [('Niske',0.00219075,35)]
 }
 
-profit_dict = {
+profit_dict = {#name: (amountofcoinineur, amountboughtwith)
 }
 
 async def cmd_roadtobillion(client, message, _):
@@ -42,7 +42,10 @@ async def rtb_message_builder():
     for coin in coin_owners_dict:
         msg += await rtb_get_crypto_price(coin)
     for owner in profit_dict:
-        msg += ('\n%s total profit: %s%s EUR' % (owner, '+' if (profit_dict.get(owner) > 0) else '', profit_dict.get(owner)))
+        profit_data = profit_dict.get(owner)
+        total_profit = profit_data[0] - profit_data[1]
+        profit_percentage = ((profit_data[0] - profit_data[1]) / profit_data[0]) * 100
+        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,3)) if profit_percentage > 0 else ''))
     profit_dict.clear()
     return msg + '```'
 
@@ -73,14 +76,17 @@ async def get_coin_owners_message(coin, coin_price_eur):
     for owner in coin_owners_dict.get(coin):
         name = owner[0]
         amount_eur = round(owner[1]*float(coin_price_eur),4)
-        profit_eur = round(amount_eur-owner[2],4)
-        operator = '+' if profit_eur > 0 else ''
+        total_cost = owner[2]
+        profit_eur = round(amount_eur,4)
+        operator = '+' if profit_eur-total_cost > 0 else ''
         if profit_dict.get(name, None) is None:
-            profit_dict.update({name:profit_eur})
+            profit_dict.update({name:(profit_eur, total_cost)})
         else:
-            current_profit = profit_dict.get(name)
-            profit_dict.update({name:round(current_profit+profit_eur,4)})
-        reply += ('%s now has %s EUR (profit %s%s EUR)\n' % (name, amount_eur, operator, profit_eur))
+            profit_owner = profit_dict.get(name)
+            current_profit = profit_owner[0]
+            current_cost = profit_owner[1]
+            profit_dict.update({name:(current_profit+profit_eur,current_cost+total_cost)})
+        reply += ('%s now has %s EUR (profit %s%s EUR)\n' % (name, amount_eur, operator, round(profit_eur-total_cost,4)))
     return reply
 
 async def get_crypto_price(coin):
