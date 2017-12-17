@@ -533,7 +533,8 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'faceit':
-        toplist, amountofpeople = await get_faceit_leaderboard()
+        guild_id = message.server.id
+        toplist, amountofpeople = await get_faceit_leaderboard(guild_id)
         if not toplist or not amountofpeople:
             await client.send_message(message.channel,
                                       'No faceit players have been added to the database, or none of them have rank.')
@@ -571,8 +572,14 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, msg[:2000])
         return
 
-async def get_faceit_leaderboard():
-    faceit_users = await db.fetch("SELECT faceit_nickname, faceit_guid FROM faceit_guild_players_list WHERE NOT deleted")
+async def get_faceit_leaderboard(guild_id):
+    faceit_users = await db.fetch("""
+        SELECT faceit_nickname, faceit_guid
+        FROM faceit_player
+        JOIN faceit_guild_ranking USING (faceit_guid)
+        WHERE guild_id = $1
+    """, guild_id)
+
     if len(faceit_users) == 0:
         return None, None
     toplist = []

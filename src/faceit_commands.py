@@ -36,75 +36,37 @@ async def get_faceit_guid(client, message, faceit_nickname):
     return user.get("guid", None)
 
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
+    guild_id = message.server.id
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname for it to be added.")
         return
     faceit_guid = await get_faceit_guid(client, message, faceit_nickname)
     if faceit_guid:
-        if await user_in_database_but_deleted(faceit_guid):
-            await unremove_user_from_database(faceit_guid)
+        await add_faceit_user_into_database(faceit_nickname, faceit_guid, message)
+        if not await assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
+            await client.send_message(message.channel, "%s is already in the database." % faceit_nickname)
         else:
-            if not await add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
-                await client.send_message(message.channel, "%s is already in the database." % faceit_nickname)
-                return
-        await client.send_message(message.channel, "Added %s into the database." % faceit_nickname)
+            await client.send_message(message.channel, "Added %s into the database." % faceit_nickname)
 
 
-async def unremove_user_from_database(faceit_guid):
-    await db.execute("""
-            UPDATE 
-                faceit_guild_players_list 
-            SET 
-                deleted = false 
-            WHERE 
-                faceit_guid = $1""", faceit_guid)
-    log.info('SET deleted = false WHERE faceit_guid = %s' % faceit_guid)
+async def assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
+    already_in_db = await db.fetchval("SELECT count(*) = 1 FROM faceit_guild_ranking WHERE guild_id = $1 AND faceit_guid = $2", guild_id, faceit_guid)
+    if already_in_db == True:
+        return False
 
-async def user_in_database_but_deleted(faceit_guid):
-    log.info('Cheking if %s is in database' % faceit_guid)
-    return (await db.fetchrow("""
-        SELECT 
-            *
-        FROM
-            faceit_guild_players_list
-        WHERE
-            faceit_guid = $1
-            AND
-            deleted = true
-        LIMIT
-            1
-        """, faceit_guid) is not None)
+    await db.execute("INSERT INTO faceit_guild_ranking (guild_id, faceit_guid) VALUES ($1, $2)", guild_id, faceit_guid)
+    return True
 
 async def add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
-        already_in_db = (await db.fetchrow("""
-        SELECT 
-            *
-        FROM
-            faceit_guild_players_list
-        WHERE
-            faceit_guid = $1
-        LIMIT
-            1
-        """, faceit_guid))
-        if already_in_db:
-            return False
+    await db.execute("INSERT INTO faceit_player (faceit_nickname, faceit_guid) VALUES ($1, $2) ON CONFLICT DO NOTHING", faceit_nickname, faceit_guid)
 
-        await db.execute("""
-            INSERT INTO faceit_guild_players_list AS a
-            (faceit_nickname, faceit_guid, message_id)
-            VALUES ($1, $2, $3)""", faceit_nickname, faceit_guid, message.id)
-        log.info('Added a player into database: %s, faceit_guid: %s, message_id %s, added by: %s' % (
-            faceit_nickname, faceit_guid, message.author.id, message.author))
-        return True
-
-
-async def update_faceit_channel(channel):
+async def update_faceit_channel(guild_id, channel_id):
     await db.execute("""
-                  UPDATE faceit_guild_players_list
-      SET spam_channel_id = $1""", channel)
-    log.info('Updated faceit spam channel: %s' % channel)
+        INSERT INTO faceit_notification_channel (guild_id, channel_id) VALUES ($1, $2)
+        ON CONFLICT (guild_id) DO UPDATE SET channel_id = EXCLUDED.channel_id
+    """, guild_id, channel_id)
 
-async def get_channel_info(client, user_channel_name):
+async def get_channel_id(client, user_channel_name):
     channels = client.get_all_channels()
     for channel in channels:
         if channel.name.lower() == user_channel_name.lower():
@@ -112,17 +74,18 @@ async def get_channel_info(client, user_channel_name):
     return False #If channel doesn't exist
 
 async def cmd_add_faceit_channel(client, message, arg):
-    print(message.channel, type(message.channel))
-    channel = await get_channel_info(client, arg)
-    if not channel:
+    guild_id = message.server.id
+    channel_id = await get_channel_id(client, arg)
+    if not channel_id:
         await client.send_message(message.channel, 'No such channel.')
         return
     else:
-        await update_faceit_channel(channel)
+        await update_faceit_channel(guild_id, channel_id)
         await client.send_message(message.channel, 'Faceit spam channel added.')
         return
 
 async def cmd_del_faceit_user(client, message, arg):
+    guild_id = message.server.id
     if not arg:
         await client.send_message(message.channel, "You must specify faceit nickname, or an ID to delete, eq. !delfaceituser 1. "
                                                    "Use !listfaceitusers to find out the correct ID.")
@@ -134,7 +97,7 @@ async def cmd_del_faceit_user(client, message, arg):
     if arg.isdigit():
         for entry in guild_faceit_players_entries:
             if int(arg) == entry['id']:
-                await delete_faceit_user_from_database_with_row_id(entry['id'])
+                await delete_faceit_user_from_database_with_row_id(guild_id, entry['id'])
                 await client.send_message(message.channel, "User %s succesfully deleted." % entry['faceit_nickname'])
                 return
         await client.send_message(message.channel, "No such ID in list. Use !listfaceitusers.")
@@ -142,7 +105,7 @@ async def cmd_del_faceit_user(client, message, arg):
     else:
         for entry in guild_faceit_players_entries:
             if arg == entry['faceit_nickname']:
-                await delete_faceit_user_from_database_with_faceit_nickname(entry['faceit_nickname'])
+                await delete_faceit_user_from_database_with_faceit_nickname(guild_id, entry['faceit_nickname'])
                 await client.send_message(message.channel, "Faceit user %s succesfully deleted." % entry['faceit_nickname'])
                 return
         await client.send_message(message.channel, "No such user in list. Use !listfaceitusers to display a list of ID's.")
@@ -161,13 +124,21 @@ async def cmd_list_faceit_users(client, message, _):
             msg += str(faceit_id) + '. ' + faceit_player + '\n'
         await client.send_message(message.channel, msg)
 
-async def delete_faceit_user_from_database_with_row_id(row_id):
-    log.info("UPDATE faceit_guild_players_list SET deleted = true WHERE id = %s" % row_id)
-    await db.execute("UPDATE faceit_guild_players_list SET deleted = true WHERE id = $1", row_id)
+async def delete_faceit_user_from_database_with_row_id(guild_id, row_id):
+    await db.execute("""
+        DELETE FROM faceit_guild_ranking
+        WHERE guild_id = $1 AND faceit_guid = (
+            SELECT faceit_guid FROM faceit_player WHERE id = $2
+        )
+    """, guild_id, row_id)
 
-async def delete_faceit_user_from_database_with_faceit_nickname(faceit_nickname):
-    log.info("UPDATE faceit_guild_players_list SET deleted = true WHERE faceit_nickname LIKE %s" % faceit_nickname)
-    await db.execute("UPDATE faceit_guild_players_list SET deleted = true WHERE faceit_nickname LIKE $1", faceit_nickname)
+async def delete_faceit_user_from_database_with_faceit_nickname(guild_id, faceit_nickname):
+    await db.execute("""
+        DELETE FROM faceit_guild_ranking
+        WHERE guild_id = $1 AND faceit_guid = (
+            SELECT faceit_guid FROM faceit_player WHERE faceit_nickname LIKE $2
+        )
+    """, guild_id, faceit_nickname)
 
 async def get_faceit_stats_of_player(guid):
     return await db.fetchrow("""
@@ -192,9 +163,14 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
         guid, elo, skill_level, ranking))
 
 async def check_faceit_stats(client):
-    log.info('Faceit stats checking started')
     fetch_interval = 60
     while True:
+        await check_faceit_stats_asdf(client)
+        await asyncio.sleep(fetch_interval)
+
+async def check_faceit_stats_asdf(client):
+    log.info('Faceit stats checking started')
+    try:
         faceit_players = await get_guild_faceit_players()
         if not faceit_players:
             return
@@ -213,11 +189,19 @@ async def check_faceit_stats(client):
                 old_toplist = sorted(old_toplist, key=lambda x: x[1])
                 item = record['faceit_nickname'], ranking
                 new_toplist.append(item)
-
                 if (str(current_elo) != str(player_stats['faceit_elo'])):
                     await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-                    if record['spam_channel_id']:
-                        await spam_about_elo_changes(client, record['faceit_nickname'], int(record['spam_channel_id']),
+                    rows = await db.fetch("""
+                        SELECT channel_id
+                        FROM faceit_notification_channel
+                        JOIN faceit_guild_ranking USING (guild_id)
+                        WHERE faceit_guid = $1
+                    """, record['faceit_guid'])
+                    channels_to_notify = list(map(lambda r: r["channel_id"], rows))
+                    log.info("channels_to_notify: %s", channels_to_notify)
+                    for channel_id in channels_to_notify:
+                        log.info("Notifying channel %s", channel_id)
+                        await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                      int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
                                                      int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
             else:
@@ -227,13 +211,20 @@ async def check_faceit_stats(client):
                     continue
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
         log.info('Faceit stats checked')
-        await asyncio.sleep(fetch_interval)
+    except Exception as e:
+        log.error("error %s", e)
+        await util.log_exception(log)
 
-async def set_faceit_nickname(faceit_name, custom_nickname):
+async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
     log.info("Setting nickname %s for: %s" % (faceit_name, custom_nickname))
-    await db.execute("UPDATE faceit_guild_players_list SET custom_nickname = $1 where faceit_nickname = $2", custom_nickname, faceit_name)
+    await db.execute("""
+        UPDATE faceit_guild_ranking
+        JOIN faceit_player USING (faceit_guid)
+        SET custom_nickname = $1 WHERE guild_id = $2 AND faceit_nickname = $3
+    """, custom_nickname, guild_id, faceit_name)
 
 async def cmd_add_faceit_nickname(client, message, arg):
+    guild_id = message.server.id
     if not arg:
         await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
         return
@@ -244,7 +235,7 @@ async def cmd_add_faceit_nickname(client, message, arg):
     players = await get_guild_faceit_players()
     for player in players:
         if player['faceit_nickname'] == faceit_name:
-            await set_faceit_nickname(faceit_name, custom_nickname)
+            await set_faceit_nickname(guild_id, faceit_name, custom_nickname)
             await client.send_message(message.channel, "Nickname %s set for %s." % (custom_nickname, faceit_name))
             return
     await client.send_message(message.channel, "Player %s not found in database. " % faceit_name)
@@ -266,7 +257,7 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
         return
 
 async def get_guild_faceit_players():
-    return await db.fetch("SELECT * FROM faceit_guild_players_list WHERE NOT deleted order by ID ASC")
+    return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
 
 def register(client):
     util.start_task_thread(check_faceit_stats(client))
