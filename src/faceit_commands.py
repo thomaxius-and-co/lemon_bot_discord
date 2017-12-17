@@ -90,7 +90,7 @@ async def cmd_del_faceit_user(client, message, arg):
         await client.send_message(message.channel, "You must specify faceit nickname, or an ID to delete, eq. !delfaceituser 1. "
                                                    "Use !listfaceitusers to find out the correct ID.")
         return
-    guild_faceit_players_entries = await get_guild_faceit_players()
+    guild_faceit_players_entries = await get_all_faceit_players()
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "There are no faceit players added.")
         return
@@ -112,7 +112,7 @@ async def cmd_del_faceit_user(client, message, arg):
         return
 
 async def cmd_list_faceit_users(client, message, _):
-    guild_faceit_players_entries = await get_guild_faceit_players()
+    guild_faceit_players_entries = await get_all_faceit_players()
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "No faceit users have been defined.")
         return
@@ -174,7 +174,7 @@ async def elo_notifier_task(client):
 
 async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
-    faceit_players = await get_guild_faceit_players()
+    faceit_players = await get_all_faceit_players()
     if not faceit_players:
         return
     log.info('Checking stats')
@@ -232,7 +232,7 @@ async def cmd_add_faceit_nickname(client, message, arg):
     if not faceit_name or not custom_nickname:
         await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius The pussy destroyer")
         return
-    players = await get_guild_faceit_players()
+    players = await get_all_faceit_players()
     for player in players:
         if player['faceit_nickname'] == faceit_name:
             await set_faceit_nickname(guild_id, faceit_name, custom_nickname)
@@ -256,7 +256,7 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
         util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)' % (faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo)))
         return
 
-async def get_guild_faceit_players():
+async def get_all_faceit_players():
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
 
 def register(client):
