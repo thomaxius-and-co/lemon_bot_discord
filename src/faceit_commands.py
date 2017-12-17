@@ -162,58 +162,58 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
     log.info('Added a player into stats database: faceit_guid: %s, elo %s, skill_level: %s, ranking: %s' % (
         guid, elo, skill_level, ranking))
 
-async def check_faceit_stats(client):
+async def elo_notifier_task(client):
     fetch_interval = 60
     while True:
-        await check_faceit_stats_asdf(client)
         await asyncio.sleep(fetch_interval)
+        try:
+            await check_faceit_elo(client)
+        except Exception as e:
+            log.error("Failed to check faceit stats")
+            await util.log_exception(log)
 
-async def check_faceit_stats_asdf(client):
+async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
-    try:
-        faceit_players = await get_guild_faceit_players()
-        if not faceit_players:
-            return
-        log.info('Checking stats')
-        old_toplist = []
-        new_toplist = []
-        for record in faceit_players:
-            player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
-            if player_stats:
-                current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None, record['faceit_nickname'])
-                if (current_elo == '-') or (ranking == '-'):
-                    continue
-                item = record['faceit_nickname'], player_stats['faceit_ranking']
+    faceit_players = await get_guild_faceit_players()
+    if not faceit_players:
+        return
+    log.info('Checking stats')
+    old_toplist = []
+    new_toplist = []
+    for record in faceit_players:
+        player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
+        if player_stats:
+            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None, record['faceit_nickname'])
+            if (current_elo == '-') or (ranking == '-'):
+                continue
+            item = record['faceit_nickname'], player_stats['faceit_ranking']
 
-                old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
-                old_toplist = sorted(old_toplist, key=lambda x: x[1])
-                item = record['faceit_nickname'], ranking
-                new_toplist.append(item)
-                if (str(current_elo) != str(player_stats['faceit_elo'])):
-                    await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-                    rows = await db.fetch("""
-                        SELECT channel_id
-                        FROM faceit_notification_channel
-                        JOIN faceit_guild_ranking USING (guild_id)
-                        WHERE faceit_guid = $1
-                    """, record['faceit_guid'])
-                    channels_to_notify = list(map(lambda r: r["channel_id"], rows))
-                    log.info("channels_to_notify: %s", channels_to_notify)
-                    for channel_id in channels_to_notify:
-                        log.info("Notifying channel %s", channel_id)
-                        await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
-                                                     int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
-                                                     int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
-            else:
-                current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
-                                                                                             record['faceit_nickname'])
-                if (current_elo == '-') or (ranking == '-'):
-                    continue
+            old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
+            old_toplist = sorted(old_toplist, key=lambda x: x[1])
+            item = record['faceit_nickname'], ranking
+            new_toplist.append(item)
+            if (str(current_elo) != str(player_stats['faceit_elo'])):
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
+                rows = await db.fetch("""
+                    SELECT channel_id
+                    FROM faceit_notification_channel
+                    JOIN faceit_guild_ranking USING (guild_id)
+                    WHERE faceit_guid = $1
+                """, record['faceit_guid'])
+                channels_to_notify = list(map(lambda r: r["channel_id"], rows))
+                log.info("channels_to_notify: %s", channels_to_notify)
+                for channel_id in channels_to_notify:
+                    log.info("Notifying channel %s", channel_id)
+                    await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
+                                                 int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
+                                                 int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
+        else:
+            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
+                                                                                         record['faceit_nickname'])
+            if (current_elo == '-') or (ranking == '-'):
+                continue
+            await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
         log.info('Faceit stats checked')
-    except Exception as e:
-        log.error("error %s", e)
-        await util.log_exception(log)
 
 async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
     log.info("Setting nickname %s for: %s" % (faceit_name, custom_nickname))
@@ -260,7 +260,7 @@ async def get_guild_faceit_players():
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
 
 def register(client):
-    util.start_task_thread(check_faceit_stats(client))
+    util.start_task_thread(elo_notifier_task(client))
     return {
         'faceitstats': cmd_faceit_stats,
         'addfaceituser': cmd_add_faceit_user_into_database,
