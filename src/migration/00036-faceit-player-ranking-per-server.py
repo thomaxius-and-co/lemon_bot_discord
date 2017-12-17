@@ -22,7 +22,6 @@ async def exec(log, tx):
     await tx.execute("""
         CREATE TABLE faceit_notification_channel (
             guild_id TEXT PRIMARY KEY,
-            channel_id TEXT NOT NULL,
-            PRIMARY KEY (guild_id)
+            channel_id TEXT NOT NULL
         )
     """)
