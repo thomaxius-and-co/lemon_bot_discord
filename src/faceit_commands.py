@@ -194,15 +194,7 @@ async def check_faceit_elo(client):
             new_toplist.append(item)
             if (str(current_elo) != str(player_stats['faceit_elo'])):
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-                rows = await db.fetch("""
-                    SELECT channel_id
-                    FROM faceit_notification_channel
-                    JOIN faceit_guild_ranking USING (guild_id)
-                    WHERE faceit_guid = $1
-                """, record['faceit_guid'])
-                channels_to_notify = list(map(lambda r: r["channel_id"], rows))
-                log.info("channels_to_notify: %s", channels_to_notify)
-                for channel_id in channels_to_notify:
+                for channel_id in await channels_to_notify_for_user(record["faceit_guid"]):
                     log.info("Notifying channel %s", channel_id)
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
@@ -214,6 +206,15 @@ async def check_faceit_elo(client):
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
         log.info('Faceit stats checked')
+
+async def channels_to_notify_for_user(guid):
+    rows = await db.fetch("""
+        SELECT channel_id
+        FROM faceit_notification_channel
+        JOIN faceit_guild_ranking USING (guild_id)
+        WHERE faceit_guid = $1
+    """, guid)
+    return list(map(lambda r: r["channel_id"], rows))
 
 async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
     log.info("Setting nickname %s for: %s" % (faceit_name, custom_nickname))
