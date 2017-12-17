@@ -142,8 +142,10 @@ async def delete_faceit_user_from_database_with_faceit_nickname(guild_id, faceit
 
 async def get_faceit_stats_of_player(guid):
     return await db.fetchrow("""
-        SELECT 
-            *
+        SELECT
+            faceit_ranking,
+            faceit_elo,
+            faceit_skill
         FROM
             faceit_live_stats
         WHERE
