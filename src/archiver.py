@@ -125,16 +125,18 @@ async def latest_message_id(tx, channel_id):
         latest_id = "0"
     return latest_id
 
-async def update_latest_message_id(tx, channel_id, message_id):
+async def update_latest_message_id(tx, guild_id, channel_id, message_id):
     await tx.execute("""
         INSERT INTO channel_archiver_status
-        (channel_id, message_id)
-        VALUES ($1, $2)
+        (guild_id, channel_id, message_id)
+        VALUES ($1, $2, $3)
         ON CONFLICT (channel_id)
-        DO UPDATE SET message_id = EXCLUDED.message_id
-    """, channel_id, message_id)
+        DO UPDATE SET
+            message_id = EXCLUDED.message_id,
+            guild_id = EXCLUDED.guild_id
+    """, guild_id, channel_id, message_id)
 
-async def archive_channel(channel_id):
+async def archive_channel(guild_id, channel_id):
     async with db.transaction() as tx:
         latest_id = await latest_message_id(tx, channel_id)
         all_messages = await fetch_messages_from(channel_id, latest_id)
@@ -143,7 +145,7 @@ async def archive_channel(channel_id):
                 await upsert_message(tx, message)
 
             new_latest_id = all_messages[0]["id"]
-            await update_latest_message_id(tx, channel_id, new_latest_id)
+            await update_latest_message_id(tx, guild_id, channel_id, new_latest_id)
 
         log.info("Fetched total %d messages", len(all_messages))
 
@@ -154,7 +156,7 @@ async def archive_guild(guild_id):
 
     for channel in text_channels:
         log.info("Archiving channel #%s", channel["name"])
-        await archive_channel(channel["id"])
+        await archive_channel(guild_id, channel["id"])
 
 async def run_archival():
     guilds = await get_user_guilds("@me")
