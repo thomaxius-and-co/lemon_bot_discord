@@ -1,6 +1,7 @@
-import os
 import aiohttp
+import enum
 import json
+import os
 
 import cache
 import logger
@@ -8,6 +9,10 @@ import perf
 import retry
 
 log = logger.get("OSU_API")
+
+class Mode(enum.Enum):
+    Standard = "0"
+    Mania = "3"
 
 def head(xs):
     return next(iter(xs), None)
@@ -125,29 +130,32 @@ async def call_api(endpoint, params):
         log.info("%s %s %s %s", r.method, str(r.url).replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())
         return await r.json()
 
-async def user_by_id(user_id):
+async def user_by_id(user_id, game_mode):
     users = map(User, await call_api("get_user", {
         "type": "id",
         "u": user_id,
+        "m": game_mode.value,
         "event_days": "1",
     }))
     return head(users)
 
-async def user(name):
+async def user(name, game_mode):
     users = map(User, await call_api("get_user", {
         "type": "u",
         "u": name,
+        "m": game_mode.value,
         "event_days": "1",
     }))
     return head(users)
 
-async def user_best(name, limit):
+async def user_best(name, limit, game_mode):
     if not (1 <= limit <= 100):
         raise Error("osu: invalid limit")
 
     return map(Play, await call_api("get_user_best", {
         "type": "u",
         "u": name,
+        "m": game_mode.value,
         "limit": str(limit),
     }))
 

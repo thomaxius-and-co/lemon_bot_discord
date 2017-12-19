@@ -7,12 +7,13 @@ import command
 import database as db
 import logger
 import osu_api as api
+from osu_api import Mode
 import util
 
 log = logger.get("OSU")
 
 async def cmd_osu(client, message, user):
-    user_info = await api.user(user)
+    user_info = await api.user(user, Mode.Standard)
 
     if not user_info:
         await client.send_message(message.channel, "User %s not found" % user)
@@ -20,7 +21,7 @@ async def cmd_osu(client, message, user):
 
     user_line = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=user_info)
 
-    scores = await api.user_best(user, 5)
+    scores = await api.user_best(user, 5, Mode.Standard)
     if not scores:
         await client.send_message(message.channel, "No scores found for user %s" % user)
         return
@@ -45,28 +46,55 @@ async def cmd_osu(client, message, user):
     await client.send_message(message.channel, reply)
 
 async def check_pps(client):
-    users = await db.fetch("SELECT osu_user_id, channel_id, last_pp, last_rank FROM osu_pp")
+    users = await db.fetch("SELECT osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank FROM osu_pp")
     for u in users:
-        await process_user(client, u)
+        await process_standard(client, u)
+        await process_mania(client, u)
 
-async def process_user(client, user):
-  user_id, channel_id, last_pp, last_rank = user
-  u = await api.user_by_id(user_id)
-  log.info("Checking player {0} performance".format(u.username))
+
+async def process_standard(client, user):
+  await process_user(client, user, "standard_pp", "standard_rank", Mode.Standard)
+
+async def process_mania(client, user):
+  await process_user(client, user, "mania_pp", "mania_rank", Mode.Mania)
+
+async def process_user(client, user, pp_key, rank_key, mode):
+  user_id = user["osu_user_id"]
+  channel_id = user["channel_id"]
+  last_pp = user[pp_key]
+  last_rank = user[rank_key]
+
+  u = await api.user_by_id(user_id, mode)
+  log.info("Checking player {0} performance ({1})".format(u.username, mode))
+
+  if last_pp is None or last_rank is None:
+    await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
+    return
 
   pp_diff = u.pp - float(last_pp)
   if abs(pp_diff) >= 0.1:
-    msg = "{username} has received {pp_diff} pp! (Rank {rank_diff})".format(
+    modename = "N/A"
+    if mode == Mode.Standard:
+      modename = "osu!"
+    elif mode == Mode.Mania:
+      modename = "osu!mania"
+
+    msg = "**[{modename}]** {username} has received {pp_diff} pp! (Rank {rank_diff})".format(
+      modename = modename,
       username = u.username,
       pp_diff = round(pp_diff, 1),
       rank_diff = u.rank - last_rank
     )
     util.threadsafe(client, client.send_message(discord.Object(id=channel_id), msg))
-    await db.execute("""
+    await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
+
+async def update_pp(pp_key, rank_key, pp, rank, user_id, channel_id):
+    sql = """
       UPDATE osu_pp
-      SET last_pp = $1, last_rank = $2, changed = current_timestamp
+      SET {pp_key} = $1, {rank_key} = $2, changed = current_timestamp
       WHERE osu_user_id = $3 AND channel_id = $4
-    """, u.pp, u.rank, user_id, channel_id)
+    """.format(pp_key=pp_key, rank_key=rank_key)
+    await db.execute(sql, pp, rank, user_id, channel_id)
 
 
 async def task(client):
