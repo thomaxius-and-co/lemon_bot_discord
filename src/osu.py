@@ -79,14 +79,26 @@ async def process_user(client, user, pp_key, rank_key, mode):
     elif mode == Mode.Mania:
       modename = "osu!mania"
 
-    msg = "**[{modename}]** {username} has received {pp_diff} pp! (Rank {rank_diff})".format(
+    rank_str = ""
+    rank_diff = last_rank - u.rank
+    if rank_diff != 0:
+      rank_str = " Rank " + format_change(rank_diff)
+
+    msg = "**[{modename}]** {username} has received {pp_diff} pp!{rank_str}".format(
       modename = modename,
       username = u.username,
       pp_diff = round(pp_diff, 1),
-      rank_diff = u.rank - last_rank
+      rank_str = rank_str
     )
     util.threadsafe(client, client.send_message(discord.Object(id=channel_id), msg))
     await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
+
+def format_change(diff):
+  if diff > 0:
+    return "+" + str(diff)
+  if diff < 0:
+    return str(diff)
+
 
 async def update_pp(pp_key, rank_key, pp, rank, user_id, channel_id):
     sql = """
