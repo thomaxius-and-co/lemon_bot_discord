@@ -62,6 +62,11 @@ async def fetchval(sql, *args):
     async with pool.acquire() as con:
         return await con.fetchval(sql, *args)
 
+async def explain(sql, *params, tx=None):
+    db_obj = tx if tx is not None else __import__(__name__)
+    rows = await db_obj.fetch("EXPLAIN " + sql, *params)
+    return "\n".join(map(lambda r: r["QUERY PLAN"], rows))
+
 class transaction:
     def __init__(self, readonly = False):
         self.readonly = readonly
