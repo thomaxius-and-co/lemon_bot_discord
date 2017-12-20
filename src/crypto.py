@@ -26,10 +26,12 @@ coins_dict = {'eth': 'Ethereum',
               'bch': 'Bitcoin-Cash'}
 
 coin_owners_dict = {
-    'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.04309901,25), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
-    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.10539865,25), ('Thomaxius',0.3247,100)],
-    'Bitcoin': [('Niske',0.00219075,35)],
-    'Bitcoin-Cash': [('Thomaxius',0.03461234,134)]
+    'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
+    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.3247,100)],
+    'Bitcoin': [('Niske',0.00372057,60)],
+    'Ripple': [('Thomaxius',20,13.4)],
+    'Stellar': [('Thomaxius',50,10.1)],
+    'Iota': [('Thomaxius',10,45.25)]
 }
 
 profit_dict = {#name: (amountofcoinineur, amountboughtwith)
