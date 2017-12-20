@@ -131,9 +131,7 @@ async def update_latest_message_id(tx, guild_id, channel_id, message_id):
         (guild_id, channel_id, message_id)
         VALUES ($1, $2, $3)
         ON CONFLICT (channel_id)
-        DO UPDATE SET
-            message_id = EXCLUDED.message_id,
-            guild_id = EXCLUDED.guild_id
+        DO UPDATE SET message_id = EXCLUDED.message_id
     """, guild_id, channel_id, message_id)
 
 async def archive_channel(guild_id, channel_id):
@@ -147,7 +145,17 @@ async def archive_channel(guild_id, channel_id):
             new_latest_id = all_messages[0]["id"]
             await update_latest_message_id(tx, guild_id, channel_id, new_latest_id)
 
+        stored_guild_id = await get_guild_id(tx, channel_id)
+        if stored_guild_id is None:
+            await set_guild_id(tx, channel_id, guild_id)
+
         log.info("Fetched total %d messages", len(all_messages))
+
+async def get_guild_id(tx, channel_id):
+    return await tx.fetchval("SELECT guild_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
+
+async def set_guild_id(tx, channel_id, guild_id):
+    return await tx.execute("UPDATE channel_archiver_status SET guild_id = $1 WHERE channel_id = $2", guild_id, channel_id)
 
 async def archive_guild(guild_id):
     channels = await get_channels(guild_id)
