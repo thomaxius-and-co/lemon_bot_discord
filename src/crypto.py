@@ -28,7 +28,8 @@ coins_dict = {'eth': 'Ethereum',
 coin_owners_dict = {
     'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.04309901,25), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
     'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.10539865,25), ('Thomaxius',0.3247,100)],
-    'Bitcoin': [('Niske',0.00219075,35)]
+    'Bitcoin': [('Niske',0.00219075,35)],
+    'Bitcoin-Cash': [('Thomaxius',0.03461234,134)]
 }
 
 profit_dict = {#name: (amountofcoinineur, amountboughtwith)
