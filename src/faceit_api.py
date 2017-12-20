@@ -17,6 +17,6 @@ async def user(nickname):
         response = await session.get(url)
         log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
         result = await response.json()
-        if result['result'] == 'error':
+        if result.get('result', None) == 'error':
             return None, result["message"].title()
         return result.get("payload", None), None
