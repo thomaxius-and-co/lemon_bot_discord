@@ -81,11 +81,11 @@ async def fetch_messages_from(channel_id, after_id):
 
     return all_messages
 
-async def upsert_message(tx, message):
-    await _upsert_message(tx, message, "DO UPDATE SET ts = EXCLUDED.ts, content = EXCLUDED.content, m = EXCLUDED.m")
+async def upsert_message(tx, guild_id, message):
+    await _upsert_message(tx, guild_id, message, "DO UPDATE SET ts = EXCLUDED.ts, content = EXCLUDED.content, m = EXCLUDED.m, guild_id = EXCLUDED.guild_id")
 
-async def insert_message(tx, message):
-    await _upsert_message(tx, message, "DO NOTHING")
+async def insert_message(tx, guild_id, message):
+    await _upsert_message(tx, guild_id, message, "DO NOTHING")
 
 def parse_ts(ts):
     """Parses Discord timestamp into datetime accepted by asyncpg"""
@@ -107,17 +107,17 @@ def parse_ts(ts):
         ts = ts[:-3] + ts[-2:]
     return datetime.datetime.strptime(ts, time_fmt).astimezone(pytz.utc).replace(tzinfo=None)
 
-async def _upsert_message(tx, message, upsert_clause):
+async def _upsert_message(tx, guild_id, message, upsert_clause):
     sql = """
         INSERT INTO message
-        (message_id, user_id, bot, ts, content, m)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        (guild_id, message_id, user_id, bot, ts, content, m)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (message_id)
         {upsert_clause}
     """.format(upsert_clause=upsert_clause)
 
     bot = message["author"].get("bot", False) != False
-    await tx.execute(sql, message["id"], message["author"]["id"], bot, parse_ts(message["timestamp"]), message["content"], json.dumps(message))
+    await tx.execute(sql, guild_id, message["id"], message["author"]["id"], bot, parse_ts(message["timestamp"]), message["content"], json.dumps(message))
 
 async def latest_message_id(tx, channel_id):
     latest_id = await tx.fetchval("SELECT message_id FROM channel_archiver_status WHERE channel_id = $1", channel_id)
@@ -125,25 +125,27 @@ async def latest_message_id(tx, channel_id):
         latest_id = "0"
     return latest_id
 
-async def update_latest_message_id(tx, channel_id, message_id):
+async def update_latest_message_id(tx, guild_id, channel_id, message_id):
     await tx.execute("""
         INSERT INTO channel_archiver_status
-        (channel_id, message_id)
-        VALUES ($1, $2)
+        (guild_id, channel_id, message_id)
+        VALUES ($1, $2, $3)
         ON CONFLICT (channel_id)
-        DO UPDATE SET message_id = EXCLUDED.message_id
-    """, channel_id, message_id)
+        DO UPDATE SET
+            message_id = EXCLUDED.message_id,
+            guild_id = EXCLUDED.guild_id
+    """, guild_id, channel_id, message_id)
 
-async def archive_channel(channel_id):
+async def archive_channel(guild_id, channel_id):
     async with db.transaction() as tx:
         latest_id = await latest_message_id(tx, channel_id)
         all_messages = await fetch_messages_from(channel_id, latest_id)
         if len(all_messages) > 0:
             for message in all_messages:
-                await upsert_message(tx, message)
+                await upsert_message(tx, guild_id, message)
 
             new_latest_id = all_messages[0]["id"]
-            await update_latest_message_id(tx, channel_id, new_latest_id)
+            await update_latest_message_id(tx, guild_id, channel_id, new_latest_id)
 
         log.info("Fetched total %d messages", len(all_messages))
 
@@ -154,7 +156,7 @@ async def archive_guild(guild_id):
 
     for channel in text_channels:
         log.info("Archiving channel #%s", channel["name"])
-        await archive_channel(channel["id"])
+        await archive_channel(guild_id, channel["id"])
 
 async def run_archival():
     guilds = await get_user_guilds("@me")
