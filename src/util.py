@@ -57,3 +57,7 @@ def start_task_thread(coroutine):
 async def pmap(async_func, xs):
     futures = map(async_func, xs)
     return await asyncio.gather(*futures)
+
+def grouped(xs, n):
+    for i in range(0, len(xs), n):
+        yield xs[i:i+n]
