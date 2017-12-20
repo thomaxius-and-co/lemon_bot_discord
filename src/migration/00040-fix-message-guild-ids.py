@@ -16,7 +16,7 @@ async def build_id_map(tx):
         FROM message
         JOIN channel_archiver_status
         ON message.m->>'channel_id' = channel_archiver_status.channel_id
-        WHERE message.guild_id IS NULL AND channel_archiver_status.channel_id IS NOT NULL
+        WHERE message.guild_id IS NULL AND channel_archiver_status.guild_id IS NOT NULL
     """)
 
     id_map = {}
