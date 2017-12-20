@@ -115,7 +115,7 @@ async def getslotstoplist():
     # toplist = addsymboltolist(toplist,7,' %')
     return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
 
-async def getquoteforquotegame(name):
+async def getquoteforquotegame(guild_id, name):
     for properquote in range(0,10):
         quote = await db.fetchrow("""
         SELECT
@@ -128,7 +128,8 @@ async def getquoteforquotegame(name):
         JOIN 
             discord_user USING (user_id)
         WHERE 
-            length(content) > 12 
+            guild_id = $1
+            AND length(content) > 12
             AND length(content) < 1000 
             AND content NOT LIKE '!%%' 
             AND content NOT LIKE '%wwww%'
@@ -137,12 +138,12 @@ async def getquoteforquotegame(name):
             AND content NOT LIKE '%.fi%'
             AND content ~* '^[A-ZÅÄÖ]'
             AND NOT bot 
-            AND coalesce(name, m->'author'->>'username') LIKE $1
+            AND coalesce(name, m->'author'->>'username') LIKE $2
         ORDER BY 
             random()
         LIMIT 
             1
-    """, name)
+    """, guild_id, name)
         if not invalid_quote(quote['content']):
             log.info('This quote is good {0}'.format(quote['content'].encode("utf-8")))
             return quote
@@ -165,13 +166,13 @@ def invalid_quote(quote):
 
     return is_gibberish(quote) or is_emoji(str(quote)) or is_custom_emoji(str(quote))
 
-def make_word_filters(words):
-    conditions = "content ~* $1"
-    params = ["|".join(words)]
+def make_word_filters(guild_id, words):
+    conditions = "content ~* $1 AND guild_id = $2"
+    params = ["|".join(words), guild_id]
     return conditions, params
 
-async def random(filter):
-    word_filters, params = make_word_filters(filter)
+async def random(guild_id, filter):
+    word_filters, params = make_word_filters(guild_id, filter)
     return await random_message_with_filter("AND ({0})".format(word_filters), params)
 
 async def random_quote_from_channel(channel_id):
@@ -394,7 +395,7 @@ def addsymboltolist(lst, position, symbol):
         newlst.append(tuple(olditem))
     return newlst
 
-async def checkifenoughmsgstoplay():
+async def checkifenoughmsgstoplay(guild_id):
     items = await db.fetch("""
         SELECT
             coalesce(name, m->'author'->>'username') AS name
@@ -403,7 +404,8 @@ async def checkifenoughmsgstoplay():
         JOIN 
             discord_user USING (user_id)
         WHERE 
-            NOT bot 
+            guild_id = $1
+            AND NOT bot
             AND length(content) > 12 
             AND content NOT LIKE '!%%' 
             AND content NOT LIKE '%wwww%'
@@ -415,7 +417,7 @@ async def checkifenoughmsgstoplay():
         GROUP BY 
             coalesce(name, m->'author'->>'username'), user_id
         HAVING 
-            count(*) >= 500""")
+            count(*) >= 500""", guild_id)
     return [item['name'] for item in items]
 
 def check_length(x,i):
@@ -468,7 +470,7 @@ async def cmd_top(client, message, input):
         customwords = await getcustomwords(input, message, client)
         if not customwords:
             return
-        filters, params = make_word_filters(customwords)
+        filters, params = make_word_filters(guild_id, customwords)
         custom_filter = "AND ({0})".format(filters)
         reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
         if not reply or not amountofpeople:
@@ -550,7 +552,7 @@ async def cmd_top(client, message, input):
             customwords = await getcustomwords(customwords, message, client)
             if not customwords:
                 return
-            filters, params = make_word_filters(customwords)
+            filters, params = make_word_filters(guild_id, customwords)
             custom_filter = "AND ({0})".format(filters)
             reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
             if not reply or not amountofpeople:
@@ -696,6 +698,7 @@ async def getcustomwords(input, message, client):
     return customwords
 
 async def cmd_randomquote(client, themessage, input):
+    guild_id = themessage.server.id
     channel = themessage.channel
     if themessage.author in playinglist:
         await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit.)")
@@ -704,7 +707,7 @@ async def cmd_randomquote(client, themessage, input):
         customwords = await getcustomwords(input, themessage, client)
         if not customwords:
             return
-        random_message = await random(customwords)
+        random_message = await random(guild_id, customwords)
         if random_message is None:
             await client.send_message(channel, "Sorry, no messages could be found")
             return
@@ -833,8 +836,9 @@ async def cmd_whosaidit(client, message, _):
 
 
 async def dowhosaidit(client, message, _):
+    guild_id = message.server.id
     channel = message.channel
-    listofspammers = await checkifenoughmsgstoplay()
+    listofspammers = await checkifenoughmsgstoplay(guild_id)
     if not listofspammers or len(listofspammers) < 5:
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
@@ -843,7 +847,7 @@ async def dowhosaidit(client, message, _):
     rand.shuffle(listofspammers)
     name = rand.choice(listofspammers)
     listofspammers.remove(name)
-    quote = await getquoteforquotegame(name)
+    quote = await getquoteforquotegame(guild_id, name)
     if not quote:
         await client.send_message(channel,
                                   'Not enough chat logged to play.') # I guess this is a pretty
