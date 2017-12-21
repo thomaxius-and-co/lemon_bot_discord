@@ -31,7 +31,8 @@ coin_owners_dict = {
     'Bitcoin': [('Niske',0.00372057,60)],
     'Ripple': [('Thomaxius',20,13.4)],
     'Stellar': [('Thomaxius',50,10.1)],
-    'Iota': [('Thomaxius',10,45.25)]
+    'Iota': [('Thomaxius',10,45.25)],
+    'Verge': [('Thomaxius',163.736,20)]
 }
 
 profit_dict = {#name: (amountofcoinineur, amountboughtwith)
@@ -49,7 +50,7 @@ async def rtb_message_builder():
         total_profit = value - buy_value
         profit_percentage = total_profit / buy_value * 100
 
-        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,3)) if profit_percentage > 0 else ''))
+        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,2)) if profit_percentage > 0 else ''))
     profit_dict.clear()
     return msg + '```'
 
@@ -63,15 +64,14 @@ async def rtb_get_crypto_price(coin):
 
     return ((
         "\n"
-        "{name} price as of {time}:\n"
+        "{name} price:\n"
         "{eur} EUR\n"
         "{usd} USD\n"
         "24h change: {percent_change_day}%\n"
     ).format(
         name=coin_name,
-        time=updated.strftime("%Y-%m-%d %H:%M"),
-        eur=round(float(coin_price_eur),3),
-        usd=round(float(coin_price_usd),3),
+        eur=round(float(coin_price_eur),2),
+        usd=round(float(coin_price_usd),2),
         percent_change_day=percent_change_day
     )) + await get_coin_owners_message(coin, coin_price_eur)
 
@@ -79,9 +79,10 @@ async def get_coin_owners_message(coin, coin_price_eur):
     reply = ''
     for owner in coin_owners_dict.get(coin):
         name = owner[0]
-        amount_eur = round(owner[1]*float(coin_price_eur),4)
+        amount_eur = round(owner[1]*float(coin_price_eur),2)
         total_cost = owner[2]
-        profit_eur = round(amount_eur,4)
+        profit_eur = amount_eur
+        total_profit = round(profit_eur-total_cost,3)
         operator = '+' if profit_eur-total_cost > 0 else ''
         if profit_dict.get(name, None) is None:
             profit_dict.update({name:(profit_eur, total_cost)})
@@ -90,7 +91,7 @@ async def get_coin_owners_message(coin, coin_price_eur):
             current_profit = profit_owner[0]
             current_cost = profit_owner[1]
             profit_dict.update({name:(current_profit+profit_eur,current_cost+total_cost)})
-        reply += ('%s now has %s EUR (profit %s%s EUR)\n' % (name, amount_eur, operator, round(profit_eur-total_cost,4)))
+        reply += ('%s now has %s EUR (profit %s%s EUR)\n' % (name, amount_eur, operator, total_profit))
     return reply
 
 async def get_crypto_price(coin):
@@ -109,8 +110,8 @@ async def get_crypto_price(coin):
         "24h change: {percent_change_day}%\n"
     ).format(
         name=name,
-        eur=round(float(eur),3),
-        usd=round(float(usd),3),
+        eur=round(float(eur),2),
+        usd=round(float(usd),2),
         percent_change_day=percent_change_day
     ))
 
