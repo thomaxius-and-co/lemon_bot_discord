@@ -50,7 +50,8 @@ async def rtb_message_builder():
         total_profit = value - buy_value
         profit_percentage = total_profit / buy_value * 100
 
-        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,2)) if profit_percentage > 0 else ''))
+        pct_str = ('+' if profit_percentage >= 0 else '') + str(round(profit_percentage, 2))
+        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), pct_str))
     profit_dict.clear()
     return msg + '```'
 
