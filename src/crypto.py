@@ -33,7 +33,7 @@ coin_owners_dict = {
     'Stellar': [('Thomaxius',50,10.1)],
     'Iota': [('Thomaxius',10,45.25)],
     'Verge': [('Thomaxius',163.736,20)],
-    'Bytecoin': [('Thomaxius',2000,13)],
+    'Bytecoin-bcn': [('Thomaxius',2000,13)],
     'Dent': [('Thomaxius',500,12)]
 }
 
