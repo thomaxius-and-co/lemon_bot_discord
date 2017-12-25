@@ -32,7 +32,9 @@ coin_owners_dict = {
     'Ripple': [('Thomaxius',78,64.4)],
     'Stellar': [('Thomaxius',50,10.1)],
     'Iota': [('Thomaxius',10,45.25)],
-    'Verge': [('Thomaxius',163.736,20)]
+    'Verge': [('Thomaxius',163.736,20)],
+    'Bytecoin': [('Thomaxius',2000,13)],
+    'Dent': [('Thomaxius',500,12)]
 }
 
 profit_dict = {#name: (amountofcoinineur, amountboughtwith)
