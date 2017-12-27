@@ -30,10 +30,12 @@ coin_owners_dict = {
     'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
     'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.3247,100)],
     'Bitcoin': [('Niske',0.00372057,60)],
-    'Ripple': [('Thomaxius',20,13.4)],
+    'Ripple': [('Thomaxius',78,64.4)],
     'Stellar': [('Thomaxius',50,10.1)],
     'Iota': [('Thomaxius',10,45.25)],
-    'Verge': [('Thomaxius',163.736,20)]
+    'Verge': [('Thomaxius',163.736,20)],
+    'Bytecoin-bcn': [('Thomaxius',2000,13)],
+    'Dent': [('Thomaxius',500,12)]
 }
 
 profit_dict = {  #name: (amountofcoinineur, amountboughtwith)
@@ -65,7 +67,8 @@ async def rtb_message_builder():
         total_profit = value - buy_value
         profit_percentage = total_profit / buy_value * 100
 
-        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), '+' + str(round(profit_percentage,2)) if profit_percentage > 0 else ''))
+        pct_str = ('+' if profit_percentage >= 0 else '') + str(round(profit_percentage, 2))
+        msg += ('\n%s total profit: %s%s EUR (%s%%)' % (owner, '+' if (total_profit > 0) else '', round(total_profit,4), pct_str))
     profit_dict.clear()
     return msg + '```'
 
