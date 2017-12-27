@@ -710,6 +710,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(db.initialize_schema())
     loop.run_until_complete(awards.main())
+    loop.run_until_complete(crypto.main())
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto, statistics, crypto]:
         commands.update(module.register(client))

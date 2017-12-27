@@ -19,7 +19,7 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
-    if error:
+    if error and client and message:
         await client.send_message(message.channel, error)
         return None, None, None, None
     csgo_name = user.get("csgo_name", "-")
@@ -185,11 +185,10 @@ async def check_faceit_elo(client):
     for record in faceit_players:
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
-            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None, record['faceit_nickname'])
+            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None, record['faceit_nickname'])
             if (current_elo == '-') or (ranking == '-'):
                 continue
-            item = record['faceit_nickname'], player_stats['faceit_ranking']
-
+            item = record['faceit_nickname'], int(player_stats['faceit_ranking'])
             old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
             old_toplist = sorted(old_toplist, key=lambda x: x[1])
             item = record['faceit_nickname'], ranking
@@ -202,12 +201,13 @@ async def check_faceit_elo(client):
                                                  int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
                                                  int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
         else:
-            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(None, None,
+            current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None,
                                                                                          record['faceit_nickname'])
             if (current_elo == '-') or (ranking == '-'):
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
         log.info('Faceit stats checked')
+    new_toplist = sorted(new_toplist, key=lambda x: x[1])
 
 async def channels_to_notify_for_user(guid):
     rows = await db.fetch("""

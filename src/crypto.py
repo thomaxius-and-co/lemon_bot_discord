@@ -11,19 +11,20 @@ log = logger.get("CRYPTO")
 
 def register(client):
     return {
-        "bitcoin": cmd_bitcoin,
-        "btc": cmd_bitcoin,
         "roadtobillion": cmd_roadtobillion,
         "rtb": cmd_roadtobillion,
         "crypto": cmd_crypto
     }
 
-coins = ['ethereum', 'bitcoin', 'litecoin', 'bitcoin-cash']
+available_coins_list = []
 
-coins_dict = {'eth': 'Ethereum',
-              'btc': 'Bitcoin',
-              'ltc': 'Litecoin',
-              'bch': 'Bitcoin-Cash'}
+coin_symbols = {  #{'btc': 'bitcoin'
+     }
+
+available_coins = {  #'bitcoin': 'bitcoin'
+     }
+
+default_coins = ['Bitcoin', 'Ethereum', 'Bitcoin-Cash', 'Litecoin']
 
 coin_owners_dict = {
     'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
@@ -35,8 +36,22 @@ coin_owners_dict = {
     'Verge': [('Thomaxius',163.736,20)]
 }
 
-profit_dict = {#name: (amountofcoinineur, amountboughtwith)
+profit_dict = {  #name: (amountofcoinineur, amountboughtwith)
 }
+
+async def main():
+    await get_available_coins()
+    log.info('tasks started')
+
+async def get_available_coins():
+    json = await get_all_coins()
+    for coin in json:
+        coin_name = coin.get('name')
+        coin_id = coin.get('id')
+        coin_symbol = coin.get('symbol')
+        available_coins.update({coin_name.lower():coin_id.lower()})
+        coin_symbols.update({coin_symbol.lower():coin_id.lower()})
+        available_coins_list.append(coin_name)
 
 async def cmd_roadtobillion(client, message, _):
     await client.send_message(message.channel, await rtb_message_builder())
@@ -60,7 +75,6 @@ async def rtb_get_crypto_price(coin):
     coin_price_usd = coin_data[0]["price_usd"]
     coin_name = coin_data[0]["name"]
     percent_change_day = '+' + str(coin_data[0]["percent_change_24h"]) if (float(coin_data[0]["percent_change_24h"]) > 0) else coin_data[0]["percent_change_24h"]
-    updated = to_helsinki(as_utc(datetime.fromtimestamp(int(coin_data[0]["last_updated"]))))
 
     return ((
         "\n"
@@ -115,15 +129,17 @@ async def get_crypto_price(coin):
         percent_change_day=percent_change_day
     ))
 
-async def cmd_bitcoin(client, message, user):
-    await client.send_message(message.channel, "This command is obsolete and replaced by !crypto.")
-
 async def cmd_crypto(client, message, arg):
-    if arg and (arg.lower() not in coins):
-        arg = coins_dict.get(arg.lower(), None)
+    arg = arg.lower()
+    if arg and (arg not in available_coins):
+        arg = coin_symbols.get(arg, None)
         if not arg:
-            await client.send_message(message.channel, 'Available cryptocoins: %s' % coins)
+            if not available_coins_list:
+                await get_available_coins()
+            await client.send_message(message.channel, 'Available cryptocoins: %s' % ', '.join(available_coins_list))
             return
+    else:
+        arg = available_coins.get(arg)
     await client.send_message(message.channel, await message_builder(arg if arg else None))
 
 async def message_builder(arg):
@@ -132,7 +148,7 @@ async def message_builder(arg):
         msg += await get_crypto_price(arg)
         return msg + '```'
     msg = 'Crypto prices as of %s:```' % await get_date_fetched()
-    for coin in coins:
+    for coin in default_coins:
         msg += await get_crypto_price(coin)
     return msg + '```'
 
@@ -146,6 +162,16 @@ async def get_current_price(coin):
         if r.status != 200:
             raise Exception("HTTP status error {0}".format(r.status))
 
+        text = await r.text()
+        return json.loads(text, encoding="utf-8")
+
+async def get_all_coins():
+    url = "https://api.coinmarketcap.com/v1/ticker/"
+    async with aiohttp.ClientSession() as session:
+        r = await session.get(url, headers={"Accept": "application/json"})
+        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        if r.status != 200:
+            raise Exception("HTTP status error {0}".format(r.status))
         text = await r.text()
         return json.loads(text, encoding="utf-8")
 
