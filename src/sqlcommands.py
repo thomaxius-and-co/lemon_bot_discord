@@ -424,6 +424,7 @@ def check_length(x,i):
     return len(str(x[i]))
 
 async def cmd_top(client, message, input):
+    guild_id = message.server.id
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
@@ -535,7 +536,7 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'faceit':
-        guild_id = message.server.id
+
         toplist, amountofpeople = await get_faceit_leaderboard(guild_id)
         if not toplist or not amountofpeople:
             await client.send_message(message.channel,
