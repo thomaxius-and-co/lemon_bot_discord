@@ -24,13 +24,13 @@ coin_symbols = {  #{'btc': 'bitcoin'
 available_coins = {  #'bitcoin': 'bitcoin'
      }
 
-default_coins = ['Bitcoin', 'Ethereum', 'Bitcoin-Cash', 'Litecoin']
+default_coins = ['Bitcoin', 'Ethereum', 'Bitcoin-Cash', 'Litecoin', 'Ripple']
 
 coin_owners_dict = {
-    'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.24297085,100)], #Coin name, coin amount, € amount bought with
-    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.3247,100)],
+    'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.4419598,292)], #Coin name, coin amount, € amount bought with
+    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.3247,50.84)],
     'Bitcoin': [('Niske',0.00372057,60)],
-    'Ripple': [('Thomaxius',78,64.4)],
+    'Ripple': [('Thomaxius',33,20.3)],
     'Stellar': [('Thomaxius',50,10.1)],
     'Iota': [('Thomaxius',10,45.25)],
     'Verge': [('Thomaxius',163.736,20)],
