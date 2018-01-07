@@ -28,6 +28,7 @@ default_coins = ['Bitcoin', 'Ethereum', 'Bitcoin-Cash', 'Litecoin', 'Ripple']
 
 coin_owners_dict = {
     'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.4419598,292)], #Coin name, coin amount, € amount bought with
+    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.1747,50.84)],
     'Bitcoin': [('Niske',0.00372057,60)],
     'Ripple': [('Thomaxius',33,20.3)],
     'Stellar': [('Thomaxius',50,10.1)],
@@ -128,7 +129,7 @@ async def get_crypto_price(coin):
         "{name}:\n"
         "{eur} EUR\n"
         "{usd} USD\n"
-        "Market cap: {market_cap_usd}\n"
+        "Market cap: {market_cap_usd} USD\n"
         "Rank: {rank}\n"
         "1h change: {percent_change_hour}%\n"
         "24h change: {percent_change_day}%\n"
