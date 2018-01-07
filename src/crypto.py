@@ -28,14 +28,16 @@ default_coins = ['Bitcoin', 'Ethereum', 'Bitcoin-Cash', 'Litecoin', 'Ripple']
 
 coin_owners_dict = {
     'Ethereum': [('Chimppa',0.4268,250), ('Niske',0.0759247,50), ('Thomaxius',0.4419598,292)], #Coin name, coin amount, € amount bought with
-    'Litecoin': [('Chimppa',1.0921, 250), ('Niske',0.18639323,50), ('Thomaxius',0.3247,50.84)],
     'Bitcoin': [('Niske',0.00372057,60)],
     'Ripple': [('Thomaxius',33,20.3)],
     'Stellar': [('Thomaxius',50,10.1)],
     'Iota': [('Thomaxius',10,45.25)],
     'Verge': [('Thomaxius',163.736,20)],
     'Bytecoin-bcn': [('Thomaxius',2000,13)],
-    'Dent': [('Thomaxius',500,12)]
+    'Dent': [('Thomaxius',887,40)],
+    'Siacoin': [('Thomaxius',100,14)],
+    #'Latoken': [('Thomaxius',30,25)],
+    'nxt': [('Thomaxius',20,10)]
 }
 
 profit_dict = {  #name: (amountofcoinineur, amountboughtwith)
@@ -116,7 +118,9 @@ async def get_crypto_price(coin):
     eur = data[0]["price_eur"]
     usd = data[0]["price_usd"]
     name = data[0]["name"]
-
+    market_cap_usd = data[0]["market_cap_usd"]
+    coin_rank = data[0]["rank"]
+    percent_change_hour = '+' + str(data[0]["percent_change_1h"]) if (float(data[0]["percent_change_1h"]) > 0) else data[0]["percent_change_1h"]
     percent_change_day = '+' + str(data[0]["percent_change_24h"]) if (float(data[0]["percent_change_24h"]) > 0) else data[0]["percent_change_24h"]
 
     return ((
@@ -124,22 +128,32 @@ async def get_crypto_price(coin):
         "{name}:\n"
         "{eur} EUR\n"
         "{usd} USD\n"
+        "Market cap: {market_cap_usd}\n"
+        "Rank: {rank}\n"
+        "1h change: {percent_change_hour}%\n"
         "24h change: {percent_change_day}%\n"
     ).format(
         name=name,
         eur=round(float(eur),2),
         usd=round(float(usd),2),
+        market_cap_usd=market_cap_usd,
+        rank=coin_rank,
+        percent_change_hour=percent_change_hour,
         percent_change_day=percent_change_day
     ))
 
 async def cmd_crypto(client, message, arg):
     arg = arg.lower()
+    if arg and (arg == 'list'):
+        await client.send_message(message.channel, 'Available cryptocoins: %s' % ', '.join(available_coins_list))
+        return
     if arg and (arg not in available_coins):
         arg = coin_symbols.get(arg, None)
         if not arg:
             if not available_coins_list:
                 await get_available_coins()
-            await client.send_message(message.channel, 'Available cryptocoins: %s' % ', '.join(available_coins_list))
+            await client.send_message(message.channel, 'Unknown coin. You can check available '
+                                                       'coins with !crypto list' % ', '.join(available_coins_list))
             return
     else:
         arg = available_coins.get(arg)
