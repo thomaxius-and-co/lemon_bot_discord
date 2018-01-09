@@ -5,6 +5,7 @@ import logger
 import database as db
 import discord
 import faceit_api
+
 log = logger.get("FACEIT")
 
 async def cmd_faceit_stats(client, message, faceit_nickname):

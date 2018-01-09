@@ -21,6 +21,6 @@ async def user(nickname):
             log.error(result["message"].title())
             return None, result["message"].title()
         if not result or (result.get('result', None) is None):
-            log.error('Unknown error: ', result)
+            log.error('Unknown error: %s', result)
             return None, 'There was an error, pls report'
         return result.get("payload", {}), None
