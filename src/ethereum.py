@@ -39,7 +39,7 @@ async def cmd_ethereum(client, message, user):
     )
     await client.send_message(message.channel, reply)
 
-@retry.on_any_exception
+@retry.on_any_exception()
 @perf.time_async("Coinmarketcap API")
 async def get_current_price():
     url = "https://api.coinmarketcap.com/v1/ticker/Ethereum/?convert=EUR"

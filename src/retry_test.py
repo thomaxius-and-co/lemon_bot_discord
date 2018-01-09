@@ -14,7 +14,7 @@ class Failer:
         self.attempts = 0
         self.fail_times = fail_times
 
-    @retry.on_any_exception
+    @retry.on_any_exception()
     async def attempt(self):
         self.attempts += 1
         if self.attempts < self.fail_times:

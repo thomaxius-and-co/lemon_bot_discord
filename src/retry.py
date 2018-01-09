@@ -1,39 +1,47 @@
 import asyncio
 import functools
+import itertools
 
 import logger
 
 log = logger.get("RETRY")
 
-def on_any_exception(func):
-    """
-    Retries the function call given amount of times if any exception is thrown.
-    Initially delays retry for 100 ms and doubles the delay after every attempt
-    up to a maximum of 5000 ms.
-    """
+def on_any_exception(max_attempts = 5, init_delay = 0.1, max_delay = 5.0):
+    def wrapper(func):
+        """
+        Retries the function call given amount of times if any exception is thrown.
+        Initially delays retry for 100 ms and doubles the delay after every attempt
+        up to a maximum of 5000 ms.
+        """
 
-    @functools.wraps(func)
-    async def func_with_retry(*args, **kwargs):
-        max_attempts = 5
-        init_delay = 0.1
-        max_delay = 5.0
-
-        attempts = 0
-        delay_seconds = init_delay
-        while attempts < max_attempts:
-            try:
-                return await func(*args, **kwargs)
-            except Exception as e:
-                attempts += 1
-                if attempts >= max_attempts:
-                    # TODO: What should we do?
-                    # - Throw the last exception
-                    # - Throw a custom exception that wraps all received ones?
-                    log.error("{0}.{1} failed {2} retries. Final exception: {3}".format(func.__module__, func.__name__, max_attempts, e))
-                    raise e
-                else:
-                    log.warn("Retrying {0}.{1} in {2} ms (attempt {3}). Exception:\n{4}".format(func.__module__, func.__name__, int(delay_seconds * 1000), attempts, e))
+        @functools.wraps(func)
+        async def func_with_retry(*args, **kwargs):
+            delay_generator = exponential(init_delay, max_delay)
+            attempts = 0
+            delay_seconds = next(delay_generator)
+            while True:
+                try:
+                    attempts += 1
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    if attempts == max_attempts:
+                        log_error(func, attempts, e)
+                        raise e
+                    log_retry(func, delay_seconds, attempts, e)
                     await asyncio.sleep(delay_seconds)
-                    delay_seconds = min(max_delay, delay_seconds * 2)
+                    delay_seconds = next(delay_generator)
 
-    return func_with_retry
+        return func_with_retry
+    return wrapper
+
+def exponential(base, limit):
+    for n in itertools.count():
+        yield min(base * (2 ** n), limit)
+
+def log_error(func, attempt, e):
+    fmt = "{0}.{1} failed {2} retries. Final exception: {3}"
+    log.error(fmt.format(func.__module__, func.__name__, attempt, e))
+
+def log_retry(func, delay_seconds, attempt, e):
+    fmt = "Retrying {0}.{1} in {2} ms (attempt {3}). Exception:\n{4}"
+    log.warn(fmt.format(func.__module__, func.__name__, int(delay_seconds * 1000), attempt, e))

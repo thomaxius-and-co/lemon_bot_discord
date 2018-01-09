@@ -11,6 +11,7 @@ import emoji
 import util
 import logger
 import perf
+import retry
 
 log = logger.get("FEED")
 
@@ -36,6 +37,7 @@ async def check_feeds(client):
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
 
+@retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 10)
 async def fetch_feed(url):
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)

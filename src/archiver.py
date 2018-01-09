@@ -24,7 +24,7 @@ class ChannelType(IntEnum):
 def response_is_error(response):
     return type(response) is dict and 'code' in response
 
-@retry.on_any_exception
+@retry.on_any_exception()
 async def get(path):
     headers = {
         "Authorization": "Bot %s" % os.environ["LEMONBOT_TOKEN"],
