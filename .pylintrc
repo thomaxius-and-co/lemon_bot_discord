@@ -18,7 +18,6 @@ disable=
   line-too-long,
   logging-format-interpolation,
   logging-not-lazy,
-  misplaced-comparison-constant,
   missing-docstring,
   missing-final-newline,
   multiple-statements,
