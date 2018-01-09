@@ -165,8 +165,7 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
         INSERT INTO faceit_live_stats AS a
         (faceit_guid, faceit_elo, faceit_skill, faceit_ranking, changed)
         VALUES ($1, $2, $3, $4, current_timestamp)""", str(guid), str(elo), str(skill_level), str(ranking))
-    log.info('Added a player into stats database: faceit_guid: %s, elo %s, skill_level: %s, ranking: %s' % (
-        guid, elo, skill_level, ranking))
+    log.info('Added a player into stats database: faceit_guid: %s, elo %s, skill_level: %s, ranking: %s', guid, elo, skill_level, ranking)
 
 async def elo_notifier_task(client):
     fetch_interval = 60
@@ -223,7 +222,7 @@ async def channels_to_notify_for_user(guid):
     return list(map(lambda r: r["channel_id"], rows))
 
 async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
-    log.info("Setting nickname %s for: %s" % (faceit_name, custom_nickname))
+    log.info("Setting nickname %s for: %s", faceit_name, custom_nickname)
     await db.execute("""
         UPDATE faceit_guild_ranking
         JOIN faceit_player USING (faceit_guid)

@@ -159,7 +159,7 @@ async def domath(channel, input):
     i2 = 2
     for char in range(len(input) - 1):
         if input[-1] in '+-/*':
-            log.info("Error: No digit specified after operator (last %s)." % (input[-1]))
+            log.info("Error: No digit specified after operator (last %s).", input[-1])
             return
         i += 2
         i2 += 2
@@ -294,7 +294,7 @@ async def cmd_wolframalpha(client, message, query):
     def valid(query):
         return len(query.strip()) > 0
 
-    log.info("Searching WolframAlpha for '%s'" % query)
+    log.info("Searching WolframAlpha for '%s'", query)
 
     if not valid(query):
         await client.send_message(message.channel, usage)
@@ -437,8 +437,7 @@ async def add_censored_word_into_database(censored_words, message_id, exchannel_
         INSERT INTO censored_words AS a
         (message_id, censored_words, exchannel_id, info_message)
         VALUES ($1, $2, $3, $4)""", message_id, censored_words, exchannel_id, infomessage)
-    log.info('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s' % (
-        censored_words, exchannel_id, infomessage, message_id))
+    log.info('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s', censored_words, exchannel_id, infomessage, message_id)
 
 async def get_censored_words():
     return await db.fetch("""

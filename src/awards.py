@@ -232,8 +232,7 @@ async def add_custom_award_to_database(name, conditions, message_id):
         INSERT INTO custom_trophies AS a
         (message_id, trophy_name, trophy_conditions)
         VALUES ($1, $2, $3)""", message_id, name, conditions)
-    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s' % (
-    message_id, name, conditions))
+    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s', message_id, name, conditions)
 
 
 async def cmd_alltrophies(client, message, arg):
@@ -578,7 +577,7 @@ async def do_hourly_weekly_spammer_check(client):
     while True:
         user_id, top_spammer, value = await get_spammer_of_the_week()
         if top_spammer and ((top_spammer is not old_spammer) and (value is not old_value)):
-            log.info("Setting new top spammer: %s with %s" % (top_spammer, value))
+            log.info("Setting new top spammer: %s with %s", top_spammer, value)
             await client.change_presence(game=discord.Game(name='Spammer of the week: %s with %s' % (top_spammer, value)))
             old_spammer, old_value = top_spammer, value
         await sleep(3600)
