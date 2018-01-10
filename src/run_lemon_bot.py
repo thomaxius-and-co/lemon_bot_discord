@@ -52,6 +52,7 @@ import faceit_commands
 import muutto
 import statistics
 import crypto
+import valokuitu
 
 log = logger.get("BOT")
 
@@ -712,7 +713,7 @@ if __name__ == "__main__":
     loop.run_until_complete(awards.main())
     loop.run_until_complete(crypto.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto, statistics, crypto]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, lightcommands, faceit_commands, muutto, statistics, crypto, valokuitu]:
         commands.update(module.register(client))
 
     client.run(token)
