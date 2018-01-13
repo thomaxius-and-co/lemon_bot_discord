@@ -768,7 +768,7 @@ async def getserveremojis(server):
 async def get_least_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = '$2'", emoji, server_id)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = $2", emoji, server_id)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
@@ -778,7 +778,7 @@ async def get_least_used_emojis(emojilist, server_id):
 async def get_most_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = '$2'", emoji, server_id)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = $2", emoji, server_id)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
