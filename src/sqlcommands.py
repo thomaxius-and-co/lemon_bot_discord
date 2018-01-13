@@ -765,20 +765,20 @@ async def getserveremojis(server):
             emojilist.append(str(emoji))
     return emojilist
 
-async def get_least_used_emojis(emojilist):
+async def get_least_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot", emoji)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = '$2'", emoji, server_id)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
     least_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1])[:25]
     return least_used_top_twentyfive
 
-async def get_most_used_emojis(emojilist):
+async def get_most_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot", emoji)
+        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = '$2'", emoji, server_id)
         emojiswithusage.append((emoji, count))
     if not emojiswithusage:
         return None
@@ -790,7 +790,7 @@ async def showleastusedemojis(client, message):
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
         return
-    least_used_top_twentyfive = await get_least_used_emojis(emojilist)
+    least_used_top_twentyfive = await get_least_used_emojis(emojilist, message.channel.server.id)
     if not least_used_top_twentyfive:
         await client.send_message(message.channel, 'No emoji has been used.')
         return
@@ -803,7 +803,7 @@ async def showmostusedemojis(client, message):
     if not emojilist:
         await client.send_message(message.channel, 'No emoji found.')
         return
-    most_used_top_twentyfive = await get_most_used_emojis(emojilist)
+    most_used_top_twentyfive = await get_most_used_emojis(emojilist, message.channel.server.id)
     if not most_used_top_twentyfive:
         await client.send_message(message.channel, 'No emoji has been used.')
         return

@@ -22,6 +22,9 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
     if error and client and message:
         await client.send_message(message.channel, error)
         return None, None, None, None
+    elif error and not client and not message:
+        log.error(error)
+        return
     csgo_name = user.get("csgo_name", "-")
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", "-")
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", "-")
