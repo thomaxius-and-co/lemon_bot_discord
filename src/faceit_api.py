@@ -16,6 +16,11 @@ async def user(nickname):
     async with aiohttp.ClientSession() as session:
         response = await session.get(url)
         log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
+
+        if response.status != 200:
+            log.error("Error fetching data from faceit: HTTP status %d", response.status)
+            return None, "Could not fetch data from faceit"
+
         result = await response.json()
         if result.get('result', None) == 'error':
             log.error(result["message"].title())
