@@ -19,7 +19,7 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_valokuitu(client, message, query):
-    valokuitu = to_utc(datetime.now().replace(hour=12, minute=00) + timedelta(days=1))
+    valokuitu = (datetime.now().replace(hour=12, minute=00) + timedelta(days=1))
     now = as_utc(datetime.now())
 
     delta = valokuitu - now
