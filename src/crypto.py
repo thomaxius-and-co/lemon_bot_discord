@@ -170,7 +170,7 @@ async def message_builder(arg):
         msg += await get_crypto_price(coin)
     return msg + '```'
 
-@retry.on_any_exception
+@retry.on_any_exception()
 @perf.time_async("Coinmarketcap API")
 async def get_current_price(coin):
     url = "https://api.coinmarketcap.com/v1/ticker/%s/?convert=EUR" % coin

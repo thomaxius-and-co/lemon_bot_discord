@@ -14,7 +14,7 @@ class Failer:
         self.attempts = 0
         self.fail_times = fail_times
 
-    @retry.on_any_exception
+    @retry.on_any_exception()
     async def attempt(self):
         self.attempts += 1
         if self.attempts < self.fail_times:
@@ -37,7 +37,7 @@ def test_throw_last_exception_on_failure():
         # - Throw a custom exception that wraps all received ones?
         loop.run_until_complete(failer.attempt())
 
-    assert "Should retry" == str(e.value)
+    assert str(e.value) == "Should retry"
     assert failer.attempts == 5
 
 def test_success_after_failures():

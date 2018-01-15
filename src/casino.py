@@ -600,7 +600,7 @@ async def cmd_blackjack(client, message, arg):
         dscore += dhand[
             -3]  # Sum the second card into existing score. 'dhand' contains suit, rank and letter of the card.
         await domessage(client, message, dhand[-2], dhand[-1], None, None, dscore, broke, player=False)
-    while 17 > dscore and not (blackjack or ('A' in dhand and dscore == 17)):  # Deal dealer's cards
+    while dscore < 17 and not (blackjack or ('A' in dhand and dscore == 17)):  # Deal dealer's cards
         await sleep(0.2)
         dscore, dhand = await dealhand(client, message, dscore, cards, broke, dhand, player=False)
         if (dscore == pscore and dscore > 16) or (dscore > pscore and dscore > 16) or (dscore > 21) or (

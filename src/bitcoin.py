@@ -43,7 +43,7 @@ async def cmd_bitcoin(client, message, user):
 def format_money(amount):
     return "{0:10,.2f}".format(amount).replace(",", " ").replace(".", ",")
 
-@retry.on_any_exception
+@retry.on_any_exception()
 @perf.time_async("CoinDesk API")
 async def get_current_price():
     url = "https://api.coindesk.com/v1/bpi/currentprice.json"
