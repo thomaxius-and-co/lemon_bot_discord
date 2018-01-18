@@ -20,12 +20,11 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
-    if error and client and message:
-        await client.send_message(message.channel, error)
-        return None, None, None, None
-    elif error and not client and not message:
+    if error:
         log.error(error)
-        return
+        if client and message:
+            await client.send_message(message.channel, error)
+        return None, None, None, None
     csgo_name = user.get("csgo_name", "-")
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", "-")
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", "-")
@@ -173,6 +172,8 @@ async def elo_notifier_task(client):
         await asyncio.sleep(fetch_interval)
         try:
             await check_faceit_elo(client)
+        except aiohttp.errors.ClientResponseError as e:
+            log.warning("Failed to check faceit stats")
         except Exception as e:
             log.error("Failed to check faceit stats")
             await util.log_exception(log)
