@@ -172,8 +172,6 @@ async def elo_notifier_task(client):
         await asyncio.sleep(fetch_interval)
         try:
             await check_faceit_elo(client)
-        except aiohttp.errors.ClientResponseError as e:
-            log.warning("Failed to check faceit stats")
         except Exception as e:
             log.error("Failed to check faceit stats")
             await util.log_exception(log)
