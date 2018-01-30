@@ -4,7 +4,7 @@ import retry
 
 log = logger.get("FACEIT_API")
 
-@retry.on_any_exception(max_attempts = 3, init_delay = 0.1, max_delay = 1)
+@retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
 async def ranking(guid, area="EU"):
     url = "https://api.faceit.com/ranking/v1/globalranking/csgo/" + area + "/" + guid
     async with aiohttp.ClientSession() as session:
@@ -13,7 +13,7 @@ async def ranking(guid, area="EU"):
         result = await response.json()
         return result.get("payload", 0)
 
-@retry.on_any_exception(max_attempts = 3, init_delay = 0.1, max_delay = 1)
+@retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
 async def user(nickname):
     url = "https://api.faceit.com/api/nicknames/" + nickname
     async with aiohttp.ClientSession() as session:
