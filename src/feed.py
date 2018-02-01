@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import discord
 import feedparser
+import io
 
 import database as db
 import command
@@ -42,8 +43,8 @@ async def fetch_feed(url):
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
         log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
-        xml = await r.text()
-        return feedparser.parse(xml, response_headers={'content-location': url})
+        body = io.BytesIO(await r.read())
+        return feedparser.parse(body, response_headers={'content-location': url})
 
 async def get_new_items(url, since):
     def parse_entry(e):
