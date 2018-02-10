@@ -15,18 +15,18 @@ const findPage = path => {
 }
 const currentPage = findPage(window.location.pathname)
 
-const App = React.createClass({
-  componentWillMount: function() {
+class App extends React.Component {
+  constructor(props) {
+    super(props)
     const initialState = JSON.parse(document.getElementById('applicationState').getAttribute('data-state'))
-    // TODO: Update state
-    this.replaceState(initialState)
-  },
+    this.state = initialState
+  }
 
-  render: function() {
+  render() {
     return this.state
       ? basePage(currentPage, this.state, window.CHECKSUMS)
       : <span>Loading...</span>
-  },
-})
+  }
+}
 
 window.onload = () => ReactDOM.render(<App/>, document)
