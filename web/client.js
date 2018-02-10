@@ -29,4 +29,4 @@ class App extends React.Component {
   }
 }
 
-window.onload = () => ReactDOM.render(<App/>, document)
+window.onload = () => ReactDOM.hydrate(<App/>, document)
