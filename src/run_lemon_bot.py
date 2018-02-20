@@ -220,13 +220,6 @@ async def cmd_countchars(client, message, input):
     else:
         await client.send_message(message.channel, "Usage: !countchars <character(s) and word(s) to be counted>.")
 
-async def cmd_coin(client, message, _):
-    coin = random.choice(["Heads", "Tails"])
-    await client.send_message(message.channel, "Just a moment, flipping the coin...")
-    await sleep(.5)
-    await client.send_message(message.channel, "The coin lands on: %s." % coin)
-    return coin
-
 # Delete 50 messages from channel
 async def cmd_clear(client, message, arg):
     limit = 10
@@ -592,7 +585,6 @@ commands = {
     '8ball': cmd_8ball,
     'weather': cmd_weather,
     'spank': cmd_spank,
-    'coin': cmd_coin,
     'help': cmd_help,
     'clear': cmd_clear,
     'math': cmd_math,

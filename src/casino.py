@@ -302,8 +302,7 @@ async def cmd_slots(client, message, arg, debug=False):
         await save_slots_stats(player, -bet, 0)
 
 
-# FIXME: Exact copy of cmd_coin in run_lemon_bot.py
-async def cmd_coin(client, message, _):
+async def toss_coin(client, message, _):
     coin = random.choice(["Heads", "Tails"])
     await client.send_message(message.channel, "Just a moment, flipping the coin...")
     await sleep(.5)
@@ -315,7 +314,7 @@ async def askifheadsortails(client, message, winnings):
     while True:
         answer = await client.wait_for_message(timeout=60, author=message.author)
         if answer and answer.content.lower() == 'heads' or answer.content.lower() == 'tails':
-            coin = await cmd_coin(client, message, winnings)
+            coin = await toss_coin(client, message, winnings)
             if coin.lower() == answer.content.lower():
                 winnings *= 2
                 await client.send_message(message.channel,
