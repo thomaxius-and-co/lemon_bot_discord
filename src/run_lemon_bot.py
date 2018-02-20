@@ -9,16 +9,6 @@
 # use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 # of the Software, and to permit persons to whom the Software is furnished to do so
 
-
-# TODO LIST
-#########################################
-# google search
-# wiki search
-# Limiter for the Slots, so you cant spam them. Maybe your arm is Tired wait a
-# little bit. ?
-# Zork Adventure game, in a channel of its own.
-# Improve blackjack
-
 import os
 import json
 import discord
