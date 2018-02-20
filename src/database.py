@@ -70,6 +70,9 @@ async def explain(sql, *params, tx=None):
 class transaction:
     def __init__(self, readonly = False):
         self.readonly = readonly
+        self.pool = None
+        self.con = None
+        self.tx = None
 
     async def __aenter__(self):
         self.pool = await get_pool()

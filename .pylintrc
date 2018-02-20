@@ -1,7 +1,6 @@
 [MESSAGES CONTROL]
 disable=
   anomalous-backslash-in-string,
-  attribute-defined-outside-init,
   bad-continuation,
   bad-indentation,
   bad-whitespace,
