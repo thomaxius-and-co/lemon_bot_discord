@@ -51,6 +51,7 @@ import faceit_commands
 import muutto
 import statistics
 import crypto
+import status
 
 log = logger.get("BOT")
 
@@ -699,7 +700,7 @@ def autocorrect_command(cmd):
 @client.event
 async def on_ready():
     await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
-    await awards.do_hourly_weekly_spammer_check(client)
+    await status.main(client)
 
 if __name__ == "__main__":
     logger.init()
@@ -710,7 +711,7 @@ if __name__ == "__main__":
     loop.run_until_complete(awards.main())
     loop.run_until_complete(crypto.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, faceit_commands, muutto, statistics, crypto]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, faceit_commands, muutto, statistics, crypto, status]:
         commands.update(module.register(client))
 
     client.run(token)

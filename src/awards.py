@@ -1,5 +1,4 @@
 import database as db
-import asyncio
 from asyncio import sleep
 import discord
 import logger
@@ -570,18 +569,6 @@ trophies = {
     'Worst grammar': get_worst_grammar,
     'Spammer of the week': get_spammer_of_the_week
 }
-
-
-async def do_hourly_weekly_spammer_check(client):
-    old_spammer, old_value = None, None
-    while True:
-        user_id, top_spammer, value = await get_spammer_of_the_week()
-        if top_spammer and ((top_spammer is not old_spammer) and (value is not old_value)):
-            log.info("Setting new top spammer: %s with %s", top_spammer, value)
-            await client.change_presence(game=discord.Game(name='Spammer of the week: %s with %s' % (top_spammer, value)))
-            old_spammer, old_value = top_spammer, value
-        await sleep(3600)
-
 
 def register(client):
     return {
