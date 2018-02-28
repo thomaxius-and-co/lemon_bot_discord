@@ -20,8 +20,8 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_lan(client, message, query):
-    lan = to_utc(as_helsinki(datetime(2017, 11, 17, 16, 0)))
-    lan_over = to_utc(as_helsinki(datetime(2017, 11, 19, 12, 0)))
+    lan = to_utc(as_helsinki(datetime(2018, 3, 30, 10, 0)))
+    lan_over = to_utc(as_helsinki(datetime(2018, 4, 1, 14, 0)))
     now = as_utc(datetime.now())
 
     if (lan < now) and (lan_over > now):
@@ -36,4 +36,3 @@ async def cmd_lan(client, message, query):
     template = "Time until HelmiLAN: {0} days, {1} hours, {2} minutes, {3} seconds"
     msg = template.format(*delta_to_tuple(delta))
     await client.send_message(message.channel, msg)
-
