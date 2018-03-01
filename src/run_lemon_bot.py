@@ -232,6 +232,7 @@ async def cmd_clear(client, message, arg):
     botperms = message.channel.permissions_for(message.channel.server.me)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        log.info("!CLEAR: User %s access denied" % message.author)
         return
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
@@ -245,9 +246,14 @@ async def cmd_clear(client, message, arg):
                                                "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author)
     if answer and answer.content.lower() == 'yes':
-        await client.purge_from(message.channel, limit=limit + 3)
-        await client.send_message(message.channel,
-                                  "%s messages succesfully deleted." % limit)
+        try:
+            await client.purge_from(message.channel, limit=limit + 3)
+            await client.send_message(message.channel,
+                                      "%s messages succesfully deleted." % limit)
+            log.info("!CLEAR: %s deleted %s messages." % (message.author, limit))
+        except discord.errors.HTTPException:
+            await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
+                                                     " please lower your message amount.")
     elif answer is None or answer.content.lower() == 'no':
         await client.send_message(message.channel,
                                   "Deletion of messages cancelled.")
@@ -276,9 +282,14 @@ async def cmd_clearbot(client, message, arg):
                               "or 'no' to cancel." % limit)
     answer = await client.wait_for_message(timeout=60, author=message.author)
     if answer and answer.content.lower() == 'yes':
-        await client.purge_from(message.channel, limit=limit + 3, check=isbot)
-        await client.send_message(message.channel,
-                                  "%s of bot's messages succesfully deleted." % limit)
+        try:
+            await client.purge_from(message.channel, limit=limit + 3, check=isbot)
+            await client.send_message(message.channel,
+                                      "%s bot messages succesfully deleted." % limit)
+            log.info("!CLEARBOT: %s deleted %s bot messages." % (message.author, limit))
+        except discord.errors.HTTPException:
+            await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
+                                                     " please lower your message amount.")
     elif answer is None or answer.content.lower() == 'no':
         await client.send_message(message.channel,
                                   "Deletion of messages cancelled.")
@@ -318,20 +329,6 @@ async def cmd_version(client, message, args):
         "Current version of the bot: 0.09",
         "Changelog: Improvements to slots and blackjack",
     ]))
-
-async def cmd_status(client, message, input):
-    perms = message.channel.permissions_for(message.author)
-    if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
-        return
-    if not input:
-        await client.send_message(message.channel,
-                                  'You need to specify a status. For example: ```!status I am online!```')
-        return
-    if len(input) > 128:
-        await client.send_message(message.channel, 'Maximum allowed length for status is 128 characters.')
-        return
-    await client.change_presence(game=discord.Game(name=input))
 
 def pos_in_string(string, arg):
     return string.find(arg)
@@ -600,7 +597,6 @@ commands = {
     'pickone': cmd_pickone,
     'version': cmd_version,
     'clearbot': cmd_clearbot,
-    'status': cmd_status,
     'randomcolor': cmd_randomcolor,
     'addcensoredwords': cmd_add_censored_word,
     'listcensoredwords': cmd_list_censored_words,
