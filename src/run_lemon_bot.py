@@ -251,9 +251,10 @@ async def cmd_clear(client, message, arg):
             await client.send_message(message.channel,
                                       "%s messages succesfully deleted." % limit)
             log.info("!CLEAR: %s deleted %s messages." % (message.author, limit))
-        except discord.errors.HTTPException:
-            await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
-                                                     " please lower your message amount.")
+        except discord.errors.HTTPException as e:
+            if e.text == "You can only bulk delete messages that are under 14 days old.":
+                await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
+                                                           " please lower your message amount.")
     elif answer is None or answer.content.lower() == 'no':
         await client.send_message(message.channel,
                                   "Deletion of messages cancelled.")
@@ -287,9 +288,10 @@ async def cmd_clearbot(client, message, arg):
             await client.send_message(message.channel,
                                       "%s bot messages succesfully deleted." % limit)
             log.info("!CLEARBOT: %s deleted %s bot messages." % (message.author, limit))
-        except discord.errors.HTTPException:
-            await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
-                                                     " please lower your message amount.")
+        except discord.errors.HTTPException as e:
+            if e.text == "You can only bulk delete messages that are under 14 days old.":
+                await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
+                                                           " please lower your message amount.")
     elif answer is None or answer.content.lower() == 'no':
         await client.send_message(message.channel,
                                   "Deletion of messages cancelled.")
