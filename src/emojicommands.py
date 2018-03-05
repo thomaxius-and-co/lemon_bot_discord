@@ -1,6 +1,8 @@
 import database as db
 import discord
+from asyncio import sleep
 
+#todo: Add some sort of calculation of how many times certain emoji has been used per day since# it was added, mainly to give a more accurate 'popularity' ranking.
 
 async def doemojilist(client, message):
     emojilist = []
@@ -21,14 +23,16 @@ async def doemojilist(client, message):
         return
     else:
         msg = ''
+        i = 1
         for list in emojilist, animated_emojilist:
             for item in list:
                 if (len(msg) + len(''.join(map(''.join, item)))) > 1999:
-                    await client.send_message(message.channel, ("Animated emojis: \n" + msg) if animated_emojilist else msg)
+                    await client.send_message(message.channel, "Animated emojis: " + msg if (animated_emojilist and i == 2) else msg)
                     msg = ''
                 msg += ''.join(map(''.join, item))
                 if item == emojilist[-1]:
-                    await client.send_message(message.channel, ("Animated emojis: \n" + msg) if animated_emojilist else msg)
+                    await client.send_message(message.channel, "Animated emojis: " + msg if (animated_emojilist and i == 2) else msg)
+            i += 1
 
 async def get_emojis(server):
     return [str(x) for x in server.emojis if (x.url[-4:] != ".gif")]
@@ -91,7 +95,7 @@ async def showmostusedemojis(client, message):
         await client.send_message(message.channel, 'Top 25 most used emoji:'
                                                '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive ]))
                               + '\n(emoji, number of times used)')
-    await sleep(0.25)
+    await sleep(.25)
     if top_twentyfive_animated:
         await client.send_message(message.channel, 'Top 25 most used emoji (animated):'
                                                '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive_animated ]))
