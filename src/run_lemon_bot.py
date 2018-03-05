@@ -52,6 +52,7 @@ import muutto
 import statistics
 import crypto
 import status
+import emojicommands
 
 log = logger.get("BOT")
 
@@ -709,7 +710,7 @@ if __name__ == "__main__":
     loop.run_until_complete(awards.main())
     loop.run_until_complete(crypto.main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, faceit_commands, muutto, statistics, crypto, status]:
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva, faceit_commands, muutto, statistics, crypto, status, emojicommands]:
         commands.update(module.register(client))
 
     client.run(token)
