@@ -888,7 +888,6 @@ def register(client):
         'randomquote': cmd_randomquote,
         'whosaidit': cmd_whosaidit,
         'top': cmd_top,
-        'emoji': cmd_emojicommands,
         'addexcludeduser': cmd_add_excluded_user,
         'delexcludeduser': cmd_delete_excluded_user
     }
