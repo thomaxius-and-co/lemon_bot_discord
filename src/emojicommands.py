@@ -17,7 +17,7 @@ async def doemojilist(client, message):
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
             created_at = emoji.created_at.date()  # Waiting for brother Henry to implement converttoguildtimezone(time)
-            log.info(emoji.url, "Emoji url")
+            log.info(str(emoji.url) + " Emoji url")
             if emoji.url[-4:] == ".gif":
                 animated_emojilist.append((rankandemoji, emojiname, str(created_at) + '\n'))
             else:
