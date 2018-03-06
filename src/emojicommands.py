@@ -3,6 +3,7 @@ import discord
 from asyncio import sleep
 import logger
 from util import pmap
+from time_util import as_utc
 
 log = logger.get("emojicommands")
 
@@ -57,15 +58,15 @@ async def get_least_used_emojis(emojilist, server_id):
             message 
         WHERE 
             content ~ $2 AND NOT bot AND guild_id = $3"""
-        , emoji.created_at, str(emoji), server_id)
+        , as_utc(emoji.created_at), str(emoji), server_id)
         if result:
             for item in result:
                 count = item['count']
                 used_per_day = count / item['daystocreated']
-                emojiswithusage.append((str(emoji), count, used_per_day))
+                emojiswithusage.append((str(emoji), count, round(used_per_day,3)))
     if not emojiswithusage:
         return None
-    least_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1])[:25]
+    least_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[2])[:25]
     return least_used_top_twentyfive
 
 async def get_most_used_emojis(emojilist, server_id):
@@ -79,12 +80,12 @@ async def get_most_used_emojis(emojilist, server_id):
             message 
         WHERE 
             content ~ $2 AND NOT bot AND guild_id = $3"""
-        , emoji.created_at, str(emoji), server_id)
+        , as_utc(emoji.created_at), str(emoji), server_id)
         if result:
             for item in result:
                 count = item['count']
                 used_per_day = count / item['daystocreated']
-                emojiswithusage.append((str(emoji), count, used_per_day))
+                emojiswithusage.append((str(emoji), count, round(used_per_day,3)))
     if not emojiswithusage:
         return None
     most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1], reverse=True)[:25]
