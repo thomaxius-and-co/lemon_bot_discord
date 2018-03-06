@@ -1,6 +1,10 @@
 import database as db
 import discord
 from asyncio import sleep
+import logger
+from util import pmap
+
+log = logger.get("emojicommands")
 
 #todo: Add some sort of calculation of how many times certain emoji has been used per day since# it was added, mainly to give a more accurate 'popularity' ranking.
 
@@ -13,6 +17,7 @@ async def doemojilist(client, message):
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
             created_at = emoji.created_at.date()  # Waiting for brother Henry to implement converttoguildtimezone(time)
+            log.info(emoji.url, "Emoji url")
             if emoji.url[-4:] == ".gif":
                 animated_emojilist.append((rankandemoji, emojiname, str(created_at) + '\n'))
             else:
