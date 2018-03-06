@@ -17,7 +17,6 @@ async def doemojilist(client, message):
             rankandemoji = str(x) + ': ' + str(emoji)
             emojiname = ' :' + emoji.name + ': '
             created_at = emoji.created_at.date()  # Waiting for brother Henry to implement converttoguildtimezone(time)
-            log.info(str(emoji.url) + " Emoji url")
             if emoji.url[-4:] == ".gif":
                 animated_emojilist.append((rankandemoji, emojiname, str(created_at) + '\n'))
             else:
@@ -42,16 +41,28 @@ async def doemojilist(client, message):
                     await client.send_message(message.channel, msg)
 
 async def get_emojis(server):
-    return [str(x) for x in server.emojis if (x.url[-4:] != ".gif")]
+    return [x for x in server.emojis if (x.url[-4:] != ".gif")]
 
 async def get_animated_emojis(server):
-    return [str(x) for x in server.emojis if (x.url[-4:] != ".png")]
+    return [x for x in server.emojis if (x.url[-4:] != ".png")]
 
 async def get_least_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = $2", emoji, server_id)
-        emojiswithusage.append((emoji, count))
+        result = await db.fetch("""
+        SELECT 
+            count(*) as count,
+            extract(epoch from current_timestamp - $1) / 60 / 60 / 24 as daystocreated
+        FROM 
+            message 
+        WHERE 
+            content ~ $2 AND NOT bot AND guild_id = $3"""
+        , emoji.created_at, str(emoji), server_id)
+        if result:
+            for item in result:
+                count = item['count']
+                used_per_day = count / item['daystocreated']
+                emojiswithusage.append((str(emoji), count, used_per_day))
     if not emojiswithusage:
         return None
     least_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1])[:25]
@@ -60,9 +71,20 @@ async def get_least_used_emojis(emojilist, server_id):
 async def get_most_used_emojis(emojilist, server_id):
     emojiswithusage = []
     for emoji in emojilist:
-        count = await db.fetchval("select count(*) from message where content ~ $1 AND NOT bot AND guild_id = $2", emoji, server_id)
-        if count:
-            emojiswithusage.append((emoji, count))
+        result = await db.fetch("""
+        SELECT 
+            count(*) as count,
+            extract(epoch from current_timestamp - $1) / 60 / 60 / 24 as daystocreated
+        FROM 
+            message 
+        WHERE 
+            content ~ $2 AND NOT bot AND guild_id = $3"""
+        , emoji.created_at, str(emoji), server_id)
+        if result:
+            for item in result:
+                count = item['count']
+                used_per_day = count / item['daystocreated']
+                emojiswithusage.append((str(emoji), count, used_per_day))
     if not emojiswithusage:
         return None
     most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1], reverse=True)[:25]
@@ -80,13 +102,20 @@ async def showleastusedemojis(client, message):
         await client.send_message(message.channel, 'No emoji has been used.')
         return
     if top_twentyfive:
-        await client.send_message(message.channel, 'Top 25 least used emoji:'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive ]))
-                              + '\n(emoji, number of times used)')
+        msg = ('Top 25 least used emoji :'
+               '\n' + '\n'.join(
+            map(''.join, [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive]))
+               + '\n(emoji, number of times used, times used per day)')
+        await client.send_message(message.channel, msg[:1999])
+
+    await sleep(.25)
     if top_twentyfive_animated:
-        await client.send_message(message.channel, 'Top 25 least used emoji (animated):'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive_animated ]))
-                              + '\n(emoji, number of times used)')
+        msg = ('Top 25 least used emoji (animated):'
+               '\n' + '\n'.join(map(''.join,
+                                    [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in
+                                     top_twentyfive_animated]))
+               + '\n(emoji, number of times used, times used per day)')
+        await client.send_message(message.channel, msg[:1999])
 
 async def showmostusedemojis(client, message):
     animated_emojilist = await get_animated_emojis(message.channel.server)
@@ -96,18 +125,22 @@ async def showmostusedemojis(client, message):
         return
     top_twentyfive = await get_most_used_emojis(emojilist, message.channel.server.id)
     top_twentyfive_animated = await get_most_used_emojis(animated_emojilist, message.channel.server.id)
+
     if not top_twentyfive and not top_twentyfive_animated:
         await client.send_message(message.channel, 'No emoji has been used.')
         return
     if top_twentyfive:
-        await client.send_message(message.channel, 'Top 25 most used emoji:'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive ]))
-                              + '\n(emoji, number of times used)')
+        msg = ('Top 25 most used emoji :'
+                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive]))
+                              + '\n(emoji, number of times used, times used per day)')
+        await client.send_message(message.channel, msg[:1999])
+
     await sleep(.25)
     if top_twentyfive_animated:
-        await client.send_message(message.channel, 'Top 25 most used emoji (animated):'
-                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3)) for x in top_twentyfive_animated ]))
-                              + '\n(emoji, number of times used)')
+        msg = ('Top 25 most used emoji (animated):'
+                                               '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive_animated]))
+                              + '\n(emoji, number of times used, times used per day)')
+        await client.send_message(message.channel, msg[:1999])
 
 async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'leastused':
