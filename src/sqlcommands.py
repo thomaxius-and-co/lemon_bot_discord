@@ -5,7 +5,6 @@ import json
 import database as db
 import columnmaker
 import emoji
-import aiohttp
 import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
