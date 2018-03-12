@@ -223,9 +223,9 @@ async def channels_to_notify_for_user(guid):
 async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
     log.info("Setting nickname %s for: %s", faceit_name, custom_nickname)
     await db.execute("""
-        UPDATE faceit_guild_ranking
-        JOIN faceit_player USING (faceit_guid)
-        SET custom_nickname = $1 WHERE guild_id = $2 AND faceit_nickname = $3
+        UPDATE faceit_guild_ranking gr SET gr.custom_nickname = $1
+        FROM faceit_player p WHERE p.faceit_guid = gr.faceit_guid
+        AND gr.guild_id = $2 AND p.faceit_nickname = $3
     """, custom_nickname, guild_id, faceit_name)
 
 async def cmd_add_faceit_nickname(client, message, arg):
