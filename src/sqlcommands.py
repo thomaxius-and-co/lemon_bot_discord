@@ -494,9 +494,9 @@ async def cmd_top(client, message, input):
             return
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
-        msg = await get_time_until_reset()
+        time_until_reset = await get_time_until_reset()
         await client.send_message(message.channel,
-                                  ('```%s \n' % title + ranking + '\n' + msg + '```'))
+                                  ('```%s \n' % title + ranking + '\n' + time_until_reset + '```'))
         return
 
     elif input == 'whosaidit weekly':
@@ -871,7 +871,7 @@ async def del_excluded_user_from_database(excluded_user_id):
         """,excluded_user_id)
     log.info('Removed an excluded user from the database:'.format(excluded_user_id))
 
-def get_time_until_reset():
+async def get_time_until_reset():
     datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     if datenow.weekday() == 0:
         datenow += timedelta(1)
