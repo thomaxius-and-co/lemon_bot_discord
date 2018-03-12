@@ -871,8 +871,10 @@ async def del_excluded_user_from_database(excluded_user_id):
         """,excluded_user_id)
     log.info('Removed an excluded user from the database:'.format(excluded_user_id))
 
-async def get_time_until_reset():
+def get_time_until_reset():
     datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    if datenow.weekday() == 0:
+        datenow += timedelta(1)
     while datenow.weekday() != 0:
         datenow += timedelta(1)
     timeuntilreset = to_helsinki(as_utc(datenow))
