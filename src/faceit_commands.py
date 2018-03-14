@@ -185,6 +185,7 @@ async def check_faceit_elo(client):
     old_toplist = []
     new_toplist = []
     for record in faceit_players:
+        await asyncio.sleep(.25)
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None, record['faceit_nickname'])
