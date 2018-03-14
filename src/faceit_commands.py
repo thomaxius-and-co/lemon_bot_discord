@@ -181,23 +181,23 @@ async def check_faceit_elo(client):
     faceit_players = await get_all_faceit_players()
     if not faceit_players:
         return
-    spam_channel_id = None
+    spam_channel_ids = []
     old_toplist = []
     new_toplist = []
     for record in faceit_players:
-        await asyncio.sleep(.25)
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None, record['faceit_nickname'])
             if (current_elo == '-') or (ranking == '-') or not player_stats['faceit_ranking'] or (player_stats['faceit_ranking'] == 'None'): # Currently, only EU ranking is supported
                 continue
-            item = record['faceit_nickname'], int(player_stats['faceit_ranking'])
+            item = record['faceit_nickname'], int(player_stats['faceit_ranking']), int(player_stats['faceit_elo'])
             old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
-            item = record['faceit_nickname'], ranking
+            item = record['faceit_nickname'], ranking, int(current_elo)
             new_toplist.append(item)
             if (str(current_elo) != str(player_stats['faceit_elo'])):
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
                 for channel_id in await channels_to_notify_for_user(record["faceit_guid"]):
+                    spam_channel_ids.append(channel_id)
                     log.info("Notifying channel %s", channel_id)
                     spam_channel_id = channel_id
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
@@ -214,26 +214,33 @@ async def check_faceit_elo(client):
         new_toplist = sorted(new_toplist, key=lambda x: x[1])
         if old_toplist == new_toplist: # if ranks are somehow unchanged entirely, we don't do pointless work
             return
-        await check_rank_changes(client,  old_toplist, new_toplist, spam_channel_id)
+        await check_rank_changes(client,  old_toplist, new_toplist, spam_channel_ids)
     log.info('Faceit stats checked')
 
-async def check_rank_changes(client, old_toplist, new_toplist, channel_id):
+async def check_rank_changes(client, old_toplist, new_toplist, spam_channel_ids):
     log.info("Checking rank changes")
-    log.info("old toplist", old_toplist)
-    log.info("new toplist", new_toplist)
+    log.info("old toplist %s" % old_toplist)
+    log.info("new toplist %s" % new_toplist)
     i = 0
-    channel = discord.Object(id=channel_id)
     for x, y in zip(old_toplist, new_toplist):
         if x[0] != y[0]:
-            old_ranking = [item for item in old_toplist if item[0] == y[0]]
-            new_ranking = [item for item in new_toplist if item[0] == y[0]]
+            old_ranking = [item for item in old_toplist if item[0] == y[0] and (item[2] != y[2])]
+            new_ranking = [item for item in new_toplist if item[0] == y[0] and (item[2] != x[2])]
             if new_ranking:
                 player_name = str(new_ranking[0][0])
                 new_rank = new_toplist.index(new_ranking[0]) + 1
                 old_rank = old_toplist.index(old_ranking[0]) + 1
                 if new_rank < old_rank:
-                    await asyncio.sleep(0.25)
-                    util.threadsafe(client, client.send_message(channel, "**%s** gained rank! old rank **#%s**, new rank **#%s**" % (player_name, old_rank, new_rank)))
+                    for channel_id in spam_channel_ids:
+                        channel = discord.Object(id=channel_id)
+                        await asyncio.sleep(0.25)
+                        util.threadsafe(client, client.send_message(channel, "**%s** gained rank! old rank **#%s**, new rank **#%s**" % (player_name, old_rank, new_rank)))
+                else:
+                    for channel_id in spam_channel_ids:
+                        channel = discord.Object(id=channel_id)
+                        await asyncio.sleep(0.25)
+                        util.threadsafe(client, client.send_message(channel, "**%s** lost rank! old rank **#%s**, new rank **#%s**" % (player_name, old_rank, new_rank)))
+
         i += 1
     log.info("Rank changes checked")
 
