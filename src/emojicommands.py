@@ -88,7 +88,7 @@ async def get_most_used_emojis(emojilist, server_id):
                 emojiswithusage.append((str(emoji), count, round(used_per_day,3)))
     if not emojiswithusage:
         return None
-    most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[1], reverse=True)[:25]
+    most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[2], reverse=True)[:25]
     return most_used_top_twentyfive
 
 async def showleastusedemojis(client, message):
