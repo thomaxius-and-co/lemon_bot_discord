@@ -209,12 +209,12 @@ async def check_faceit_elo(client):
             if (current_elo == '-') or (ranking == '-') or (ranking == 'None') or not ranking:  # Currently, only EU ranking is supported
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-    if old_toplist and new_toplist:
-        old_toplist = sorted(old_toplist, key=lambda x: x[1])
-        new_toplist = sorted(new_toplist, key=lambda x: x[1])
-        if old_toplist == new_toplist: # if ranks are somehow unchanged entirely, we don't do pointless work
-            return
-        await check_rank_changes(client,  old_toplist, new_toplist, spam_channel_ids)
+    #if old_toplist and new_toplist:
+     #   old_toplist = sorted(old_toplist, key=lambda x: x[1])
+      #  new_toplist = sorted(new_toplist, key=lambda x: x[1])
+       # if old_toplist == new_toplist: # if ranks are somehow unchanged entirely, we don't do pointless work
+        #    return
+        #await check_rank_changes(client,  old_toplist, new_toplist, spam_channel_ids)
     log.info('Faceit stats checked')
 
 async def check_rank_changes(client, old_toplist, new_toplist, spam_channel_ids):
