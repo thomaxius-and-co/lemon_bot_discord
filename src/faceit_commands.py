@@ -173,7 +173,7 @@ async def elo_notifier_task(client):
         try:
             await check_faceit_elo(client)
         except Exception as e:
-            log.error("Failed to check faceit stats")
+            log.error("Failed to check faceit stats: ")
             await util.log_exception(log)
 
 async def check_faceit_elo(client):
@@ -181,35 +181,72 @@ async def check_faceit_elo(client):
     faceit_players = await get_all_faceit_players()
     if not faceit_players:
         return
-    log.info('Checking stats')
+    spam_channel_ids = []
     old_toplist = []
     new_toplist = []
     for record in faceit_players:
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None, record['faceit_nickname'])
-            if (current_elo == '-') or (ranking == '-'):
+            if (current_elo == '-') or (ranking == '-') or not player_stats['faceit_ranking'] or (player_stats['faceit_ranking'] == 'None'): # Currently, only EU ranking is supported
                 continue
-            item = record['faceit_nickname'], int(player_stats['faceit_ranking'])
+            item = record['faceit_nickname'], int(player_stats['faceit_ranking']), int(player_stats['faceit_elo'])
             old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
-            old_toplist = sorted(old_toplist, key=lambda x: x[1])
-            item = record['faceit_nickname'], ranking
+            item = record['faceit_nickname'], ranking, int(current_elo)
             new_toplist.append(item)
             if (str(current_elo) != str(player_stats['faceit_elo'])):
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
                 for channel_id in await channels_to_notify_for_user(record["faceit_guid"]):
+                    spam_channel_ids.append(channel_id)
                     log.info("Notifying channel %s", channel_id)
+                    spam_channel_id = channel_id
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
                                                  int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
         else:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None,
                                                                                          record['faceit_nickname'])
-            if (current_elo == '-') or (ranking == '-'):
+            if (current_elo == '-') or (ranking == '-') or (ranking == 'None') or not ranking:  # Currently, only EU ranking is supported
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-        log.info('Faceit stats checked')
-    new_toplist = sorted(new_toplist, key=lambda x: x[1])
+    if old_toplist and new_toplist:
+        old_toplist = sorted(old_toplist, key=lambda x: x[1])
+        new_toplist = sorted(new_toplist, key=lambda x: x[1])
+        if old_toplist == new_toplist: # if ranks are somehow unchanged entirely, we don't do pointless work
+            return
+        await check_rank_changes(client,  old_toplist, new_toplist, spam_channel_ids)
+    log.info('Faceit stats checked')
+
+async def check_rank_changes(client, old_toplist, new_toplist, spam_channel_ids):
+    log.info("Checking rank changes")
+    log.info("old toplist %s" % old_toplist)
+    log.info("new toplist %s" % new_toplist)
+    msg = ""
+    for item_at_oldlists_index, item_at_newlists_index in zip(old_toplist, new_toplist): #Compare each item of both lists side to side
+        name_in_old_item = item_at_oldlists_index[0]  #Name of player in old toplist
+        name_in_new_item = item_at_newlists_index[0] #Name of player in the same index in new toplist
+
+        if name_in_old_item != name_in_new_item: # If the players don't match, it means player has dropped in the leaderboard
+            player_new_rank_item = [item for item in new_toplist if
+                                     item[0] == name_in_old_item and item[2] != item_at_oldlists_index[2]] # Find the player's item in the new toplist, but only if their ELO has changed aswell
+            if player_new_rank_item: # If the player is found in new toplist
+                old_rank = old_toplist.index(item_at_oldlists_index) + 1 # Player's old position (rank) in the old toplist
+                new_rank = new_toplist.index(player_new_rank_item[0]) + 1 # Player's new position (rank) in the new toplist
+                player_name = player_new_rank_item[0]
+                if old_rank < new_rank:
+                    msg += "**%s** gained rank! old rank **#%s**, new rank **#%s**\n" % (player_name, old_rank, new_rank)
+                    for channel_id in spam_channel_ids:
+                        channel = discord.Object(id=channel_id)
+                        await asyncio.sleep(0.25)
+                        util.threadsafe(client, client.send_message(channel, "**%s** gained rank! old rank **#%s**, new rank **#%s**" % (player_name, old_rank, new_rank)))
+                else:
+                    msg += "**%s** lost rank! old rank **#%s**, new rank **#%s**\n" % (player_name, old_rank, new_rank)
+    if msg:
+        for channel_id in spam_channel_ids:
+            channel = discord.Object(id=channel_id)
+            await asyncio.sleep(0.25)
+            util.threadsafe(client, client.send_message(channel, msg))
+    log.info("Rank changes checked")
 
 async def channels_to_notify_for_user(guid):
     rows = await db.fetch("""
@@ -233,7 +270,11 @@ async def cmd_add_faceit_nickname(client, message, arg):
     if not arg:
         await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
         return
-    faceit_name, custom_nickname = arg.split(' ',1)
+    try:
+        faceit_name, custom_nickname = arg.split(' ',1)
+    except ValueError:
+        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
+        return
     if not faceit_name or not custom_nickname:
         await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius The pussy destroyer")
         return
