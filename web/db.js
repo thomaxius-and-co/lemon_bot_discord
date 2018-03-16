@@ -41,6 +41,7 @@ const fetchPrecalculatedStatistics = statisticsId =>
   
 const findMessageCountByUser = userId =>
   db.query(`SELECT count(*) FROM message WHERE user_id = $1`, userId).then(rows => rows[0].count)
+
 const topBlackjack = () =>
   db.query(`
 	SELECT
@@ -135,7 +136,51 @@ const whosaiditWeeklyWinners = () =>
           where not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 2
         order by dateadded desc
   `)    
-  
+
+const faceitTopTen = () =>
+db.query(`
+  WITH 
+      last_month_elo as 
+    (
+        SELECT DISTINCT ON
+            (faceit_guid) faceit_guid, 
+            faceit_elo as last_month_elo,
+            faceit_ranking as last_month_ranking
+        FROM 
+            faceit_live_stats
+        WHERE
+            date_part('month', changed) = date_part('month', current_timestamp)-1
+        ORDER BY 
+            faceit_guid, changed desc
+    ), 
+      current_elo as 
+    (
+        SELECT DISTINCT ON
+            (faceit_guid) faceit_guid, 
+            faceit_elo as current_elo,
+            faceit_ranking as current_ranking
+        FROM 
+            faceit_live_stats 
+        ORDER BY 
+            faceit_guid, changed desc
+    )   
+  SELECT 
+    faceit_guid, 
+    current_elo,
+    current_ranking,
+    current_elo - last_month_elo as difference,
+    faceit_nickname as name, 
+    concat('#', row_number() OVER (ORDER BY current_ranking asc)) AS rank
+  FROM 
+    current_elo
+  JOIN 
+    faceit_player USING  (faceit_guid)
+  LEFT JOIN
+    last_month_elo USING (faceit_guid)
+  ORDER BY 
+    current_ranking ASC
+`)  
+
 const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
 
@@ -153,4 +198,5 @@ module.exports = {
   topBlackjack,
   topWhosaidit,
   whosaiditWeeklyWinners,
+  faceitTopTen
 }

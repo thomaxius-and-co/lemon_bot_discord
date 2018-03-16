@@ -4,6 +4,7 @@ const ReactDOM = require('react-dom')
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
+const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 const adminPage = require('./pages/adminPage')
 
 const findPage = path => {
@@ -11,7 +12,8 @@ const findPage = path => {
   case "/": return statisticsPage
   case "/admin": return adminPage
   case "/gameStatisticsPage": return gameStatisticsPage  
-  }
+  case "/faceitStatisticsPage": return faceitStatisticsPage    
+}
 }
 const currentPage = findPage(window.location.pathname)
 

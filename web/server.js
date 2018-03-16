@@ -11,6 +11,7 @@ const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
 const adminPage = require('./pages/adminPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
+const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 
 const app = express()
 auth.init(app)
@@ -82,7 +83,13 @@ const buildInitialState = req => {
         topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners
       })
 	  )
-
+  case '/faceitStatisticsPage':
+  return Promise.join(
+    db.faceitTopTen(),
+    (topFaceit) => ({
+      topFaceit
+    })
+  )
   default:
     return Promise.resolve({})
   }
@@ -98,8 +105,9 @@ renderApp = (req, res, next) => {
     page = statisticsPage
   } else if (path === '/gameStatisticsPage') {
     page = gameStatisticsPage
+  } else if (path === '/faceitStatisticsPage') {
+    page = faceitStatisticsPage
   }  
-
   if (page) {
     Promise.join(
       buildInitialState(req),
@@ -120,6 +128,7 @@ renderApp = (req, res, next) => {
 app.get("/admin", auth.requireAdmin, renderApp)
 app.get("/", renderApp)
 app.get("/gameStatisticsPage", renderApp)
+app.get("/faceitStatisticsPage", renderApp)
 
 const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))

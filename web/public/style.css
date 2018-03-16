@@ -169,7 +169,7 @@ tbody {
 
 td:nth-child(2),
 td:nth-child(3) {
-  text-align: right;
+  text-align: left;
 }
 tbody tr:nth-child(odd) {
   background-color: #eee;
