@@ -12,6 +12,8 @@ const initialState = {
 const withSign = n => {
   if (n > 0) {
     return '+' + n
+  } else if (n === null) {
+    return '-'
   } else {
     return String(n)
   }
