@@ -9,6 +9,14 @@ const initialState = {
 
 }
 
+const withSign = n => {
+  if (n > 0) {
+    return '+' + n
+  } else {
+    return String(n)
+  }
+}
+
 const topFaceitTable = topFaceit =>
 <table className="row">
 <thead>
@@ -27,12 +35,11 @@ const topFaceitTable = topFaceit =>
       <td>{x.name}</td>
       <td>{x.current_ranking}</td>
       <td>{x.current_elo}</td>
-      <td>{(('+' + x.difference) ? x.difference > 0 : x.difference) ? x.difference : '-'}</td>
+      <td>{withSign(x.difference)}</td>
     </tr>
   )}
 </tbody>
 </table>
-
 
 const renderPage = state => {
   return <div>
