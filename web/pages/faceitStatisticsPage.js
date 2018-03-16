@@ -12,7 +12,7 @@ const initialState = {
 const withSign = n => {
   if (n > 0) {
     return '+' + n
-  } else if (n === null) {
+  } else if ((n === null) || (n == 0)) {
     return '-'
   } else {
     return String(n)
@@ -25,9 +25,11 @@ const topFaceitTable = topFaceit =>
   <tr>
       <td>Rank</td>
       <td>Name</td>
-      <td>Ranking</td>
+      <td>EU ranking</td>
       <td>Elo</td>
-      <td>Elo change 30 days</td>
+      <td>Best elo</td>
+      <td>Elo +- 30 days</td>
+      <td>Elo +- 7 days</td>      
   </tr>
 </thead>
 <tbody>
@@ -37,7 +39,9 @@ const topFaceitTable = topFaceit =>
       <td>{x.name}</td>
       <td>{x.current_ranking}</td>
       <td>{x.current_elo}</td>
-      <td>{withSign(x.difference)}</td>
+      <td>{x.best_score}</td>         
+      <td>{withSign(x.difference_month)}</td>
+      <td>{withSign(x.difference_week)}</td>
     </tr>
   )}
 </tbody>

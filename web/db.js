@@ -150,9 +150,26 @@ db.query(`
             faceit_live_stats
         WHERE
             date_part('month', changed) = date_part('month', current_timestamp)-1
+        GROUP BY
+            faceit_guid, last_month_elo, last_month_ranking, changed            
         ORDER BY 
             faceit_guid, changed desc
-    ), 
+    ),
+    last_week_elo as 
+    (
+        SELECT DISTINCT ON
+            (faceit_guid) faceit_guid, 
+            faceit_elo as last_week_elo,
+            faceit_ranking as last_week_ranking
+        FROM 
+            faceit_live_stats
+        WHERE
+            date_part('week', changed) = date_part('week', current_timestamp)-1
+        GROUP BY
+            faceit_guid, last_week_elo, last_week_ranking, changed
+        ORDER BY 
+            faceit_guid, changed desc
+    ),    
       current_elo as 
     (
         SELECT DISTINCT ON
@@ -160,25 +177,45 @@ db.query(`
             faceit_elo as current_elo,
             faceit_ranking as current_ranking
         FROM 
-            faceit_live_stats 
+            faceit_live_stats
+        GROUP BY
+            faceit_guid, current_elo, current_ranking, changed    
         ORDER BY 
             faceit_guid, changed desc
-    )   
-  SELECT 
-    faceit_guid, 
-    current_elo,
-    current_ranking,
-    current_elo - last_month_elo as difference,
-    faceit_nickname as name, 
-    concat('#', row_number() OVER (ORDER BY current_ranking asc)) AS rank
-  FROM 
-    current_elo
-  JOIN 
-    faceit_player USING  (faceit_guid)
-  LEFT JOIN
-    last_month_elo USING (faceit_guid)
-  ORDER BY 
-    current_ranking ASC
+
+    ),
+      best_score as
+    (
+        SELECT 
+            faceit_guid, 
+            max(faceit_elo) as best_score
+        FROM 
+            faceit_live_Stats 
+        GROUP BY 
+            faceit_guid
+        ORDER BY max(faceit_elo)
+    ) 
+    SELECT 
+      faceit_guid, 
+      current_elo,
+      current_ranking,
+      current_elo - last_month_elo as difference_month,
+      current_elo - last_week_elo as difference_week,
+      faceit_nickname as name,
+      best_score,
+      concat('#', row_number() OVER (ORDER BY current_ranking asc)) AS rank
+    FROM 
+      current_elo
+    JOIN 
+      faceit_player USING  (faceit_guid)
+    LEFT JOIN
+      last_month_elo USING (faceit_guid)
+    LEFT JOIN
+      last_week_elo USING (faceit_guid)
+    LEFT JOIN
+      best_score USING (faceit_guid)
+    ORDER BY 
+      current_ranking ASC
 `)  
 
 const countMessagesByWeekdays = days =>
