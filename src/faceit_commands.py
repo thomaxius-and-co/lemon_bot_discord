@@ -25,11 +25,11 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
         if client and message:
             await client.send_message(message.channel, error)
         return None, None, None, None
-    csgo_name = user.get("csgo_name", "-")
-    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", "-")
-    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", "-")
-    ranking = await faceit_api.ranking(user.get("guid", {})) if csgo_elo != "-" else "-"
-    return str(csgo_elo), str(skill_level), csgo_name, ranking
+    csgo_name = user.get("csgo_name", None)
+    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", None)
+    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", None)
+    ranking = await faceit_api.ranking(user.get("guid", {})) if csgo_elo else None
+    return csgo_elo, skill_level, csgo_name, ranking
 
 async def get_faceit_guid(client, message, faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
@@ -163,7 +163,7 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
     await db.execute("""
         INSERT INTO faceit_live_stats AS a
         (faceit_guid, faceit_elo, faceit_skill, faceit_ranking, changed)
-        VALUES ($1, $2, $3, $4, current_timestamp)""", str(guid), str(elo), str(skill_level), str(ranking))
+        VALUES ($1, $2, $3, $4, current_timestamp)""", str(guid), elo, skill_level, ranking)
     log.info('Added a player into stats database: faceit_guid: %s, elo %s, skill_level: %s, ranking: %s', guid, elo, skill_level, ranking)
 
 async def elo_notifier_task(client):
@@ -188,25 +188,25 @@ async def check_faceit_elo(client):
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None, record['faceit_nickname'])
-            if (current_elo == '-') or (ranking == '-') or not player_stats['faceit_ranking'] or (player_stats['faceit_ranking'] == 'None'): # Currently, only EU ranking is supported
+            if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats['faceit_ranking']: # Currently, only EU ranking is supported
                 continue
-            item = record['faceit_nickname'], int(player_stats['faceit_ranking']), int(player_stats['faceit_elo'])
+            item = record['faceit_nickname'], player_stats['faceit_ranking'], player_stats['faceit_elo']
             old_toplist.append(item) #These are for later on, compare old list with new and see which player one passes..
-            item = record['faceit_nickname'], ranking, int(current_elo)
+            item = record['faceit_nickname'], ranking, current_elo
             new_toplist.append(item)
-            if (str(current_elo) != str(player_stats['faceit_elo'])):
+            if current_elo != player_stats['faceit_elo']:
                 await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
                 for channel_id in await channels_to_notify_for_user(record["faceit_guid"]):
                     spam_channel_ids.append(channel_id)
                     log.info("Notifying channel %s", channel_id)
                     spam_channel_id = channel_id
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
-                                                 int(current_elo), int(player_stats['faceit_elo']), int(skill_level),
-                                                 int(player_stats['faceit_skill']), (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
+                                                 current_elo, player_stats['faceit_elo'], skill_level,
+                                                 player_stats['faceit_skill'], (' "' + record['custom_nickname'] + '"' if record['custom_nickname'] else ''))
         else:
             current_elo, skill_level, csgo_name, ranking = await get_user_stats_from_api(client, None,
                                                                                          record['faceit_nickname'])
-            if (current_elo == '-') or (ranking == '-') or (ranking == 'None') or not ranking:  # Currently, only EU ranking is supported
+            if not current_elo or not ranking: # Currently, only EU ranking is supported
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
     #if old_toplist and new_toplist:

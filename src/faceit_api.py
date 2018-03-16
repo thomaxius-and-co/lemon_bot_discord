@@ -11,7 +11,7 @@ async def ranking(guid, area="EU"):
         response = await session.get(url)
         log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
         result = await response.json()
-        return result.get("payload", 0)
+        return result.get("payload", None)
 
 @retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
 async def user(nickname):
