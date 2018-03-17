@@ -155,7 +155,7 @@ db.query(`
         ORDER BY 
             faceit_guid, changed desc
     ),
-    last_week_elo as 
+      last_week_elo as 
     (
         SELECT DISTINCT ON
             (faceit_guid) faceit_guid, 
@@ -164,13 +164,13 @@ db.query(`
         FROM 
             faceit_live_stats
         WHERE
-            date_part('week', changed) = date_part('week', current_timestamp) 
+            changed >= (current_timestamp - interval '7 days')
         GROUP BY
             faceit_guid, last_week_elo, last_week_ranking, changed
         ORDER BY 
-            faceit_guid, changed desc
-    ),    
-      current_elo as 
+            faceit_guid, changed asc
+    ),
+    current_elo as 
     (
         SELECT DISTINCT ON
             (faceit_guid) faceit_guid, 
@@ -178,12 +178,14 @@ db.query(`
             faceit_ranking as current_ranking
         FROM 
             faceit_live_stats
+        WHERE
+            changed <= current_timestamp        
         GROUP BY
-            faceit_guid, current_elo, current_ranking, changed    
+            faceit_guid, current_elo, changed, faceit_ranking
         ORDER BY 
             faceit_guid, changed desc
 
-    ),
+    ),      
       best_score as
     (
         SELECT 
@@ -209,9 +211,9 @@ db.query(`
     JOIN 
       faceit_player USING  (faceit_guid)
     LEFT JOIN
-      last_month_elo USING (faceit_guid)
-    LEFT JOIN
       last_week_elo USING (faceit_guid)
+    LEFT JOIN
+      last_month_elo USING (faceit_guid)              
     LEFT JOIN
       best_score USING (faceit_guid)
     ORDER BY 
