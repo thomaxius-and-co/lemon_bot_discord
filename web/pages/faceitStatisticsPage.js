@@ -20,6 +20,8 @@ const withSign = n => {
   }
 }
 
+let i = 1
+
 const topFaceitTable = topFaceit =>
 <table className="row">
 <thead>
@@ -33,10 +35,11 @@ const topFaceitTable = topFaceit =>
       <td>Elo +- 7 days</td>      
   </tr>
 </thead>
+
 <tbody>
   {topFaceit.map(x =>
     <tr key={x.epoch}>
-      <td>{x.rank}</td>
+      <td>#{i++}</td>
       <td>{x.name}</td>
       <td>{x.current_ranking}</td>
       <td>{x.current_elo}</td>

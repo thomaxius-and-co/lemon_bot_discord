@@ -140,33 +140,31 @@ const whosaiditWeeklyWinners = () =>
 const faceitTopTen = () =>
 db.query(`
   WITH 
-      last_month_elo as 
-    (
-        SELECT DISTINCT ON
-            (faceit_guid) faceit_guid, 
-            faceit_elo as last_month_elo,
-            faceit_ranking as last_month_ranking
-        FROM 
-            faceit_live_stats
-        WHERE
-            changed >= (current_timestamp - interval '30 days')
-        GROUP BY
-            faceit_guid, last_month_elo, last_month_ranking, changed            
-        ORDER BY 
-            faceit_guid, changed desc
-    ),
+    last_month_elo as 
+  (
+      SELECT DISTINCT ON
+          (faceit_guid) faceit_guid, 
+          faceit_elo as last_month_elo
+      FROM 
+          faceit_live_stats
+      WHERE
+          changed >= (current_timestamp - interval '30 days')
+      GROUP BY
+          faceit_guid, last_month_elo, changed
+      ORDER BY 
+          faceit_guid, changed asc
+  ),
       last_week_elo as 
     (
         SELECT DISTINCT ON
             (faceit_guid) faceit_guid, 
-            faceit_elo as last_week_elo,
-            faceit_ranking as last_week_ranking
+            faceit_elo as last_week_elo
         FROM 
             faceit_live_stats
         WHERE
             changed >= (current_timestamp - interval '7 days')
         GROUP BY
-            faceit_guid, last_week_elo, last_week_ranking, changed
+            faceit_guid, last_week_elo, changed
         ORDER BY 
             faceit_guid, changed asc
     ),
@@ -204,8 +202,7 @@ db.query(`
       current_elo - last_month_elo as difference_month,
       current_elo - last_week_elo as difference_week,
       faceit_nickname as name,
-      best_score,
-      concat('#', row_number() OVER (ORDER BY current_ranking asc)) AS rank
+      best_score
     FROM 
       current_elo
     JOIN 
