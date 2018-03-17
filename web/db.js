@@ -149,7 +149,7 @@ db.query(`
         FROM 
             faceit_live_stats
         WHERE
-            date_part('month', changed) = date_part('month', current_timestamp)-1
+            date_part('month', changed) = date_part('month', current_timestamp)
         GROUP BY
             faceit_guid, last_month_elo, last_month_ranking, changed            
         ORDER BY 
@@ -164,7 +164,7 @@ db.query(`
         FROM 
             faceit_live_stats
         WHERE
-            date_part('week', changed) = date_part('week', current_timestamp)-1
+            date_part('week', changed) = date_part('week', current_timestamp) 
         GROUP BY
             faceit_guid, last_week_elo, last_week_ranking, changed
         ORDER BY 
