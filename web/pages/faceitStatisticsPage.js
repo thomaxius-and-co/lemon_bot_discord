@@ -10,9 +10,10 @@ const initialState = {
 }
 
 const withSign = n => {
+  n = parseInt(n)
   if (n > 0) {
     return '+' + n
-  } else if ((n === null) || (n === 0)) {
+  } else if (n === null || n === 0 || !n) {
     return '-'
   } else {
     return String(n)
