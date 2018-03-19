@@ -85,9 +85,9 @@ const buildInitialState = req => {
 	  )
   case '/faceitStatisticsPage':
   return Promise.join(
-    db.faceitTopTen(),
-    (topFaceit) => ({
-      topFaceit
+    db.faceitTopTen(), db.getLatestFaceitEntry(),
+    (topFaceit, latestFaceitEntry ) => ({
+      topFaceit, latestFaceitEntry
     })
   )
   default:

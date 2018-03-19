@@ -149,6 +149,7 @@ db.query(`
           faceit_live_stats
       WHERE
           changed >= (current_timestamp - interval '30 days')
+          AND removed = False
       GROUP BY
           faceit_guid, last_month_elo, changed
       ORDER BY 
@@ -163,6 +164,7 @@ db.query(`
             faceit_live_stats
         WHERE
             changed >= (current_timestamp - interval '7 days')
+            AND removed = False
         GROUP BY
             faceit_guid, last_week_elo, changed
         ORDER BY 
@@ -178,6 +180,7 @@ db.query(`
             faceit_live_stats
         WHERE
             changed <= current_timestamp        
+            AND removed = False
         GROUP BY
             faceit_guid, current_elo, changed, faceit_ranking
         ORDER BY 
@@ -190,7 +193,9 @@ db.query(`
             faceit_guid, 
             max(faceit_elo) as best_score
         FROM 
-            faceit_live_Stats 
+            faceit_live_Stats
+        WHERE
+            removed = False
         GROUP BY 
             faceit_guid
         ORDER BY max(faceit_elo)

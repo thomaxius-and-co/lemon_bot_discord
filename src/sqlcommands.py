@@ -578,10 +578,16 @@ async def cmd_top(client, message, input):
 
 async def get_faceit_leaderboard(guild_id):
     faceit_users = await db.fetch("""
-        SELECT faceit_nickname, faceit_guid
-        FROM faceit_player
-        JOIN faceit_guild_ranking USING (faceit_guid)
-        WHERE guild_id = $1
+      SELECT 
+            faceit_nickname, faceit_guid
+      FROM 
+            faceit_player
+      JOIN 
+            faceit_guild_ranking USING (faceit_guid)
+      JOIN 
+            faceit_live_stats USING (faceit_guid)
+      WHERE 
+            guild_id = $1 and removed = FALSE
     """, guild_id)
 
     if len(faceit_users) == 0:
@@ -636,7 +642,7 @@ async def get_archieved_toplist(guild_id):
               join 
                   faceit_guild_ranking using (faceit_guid) 
               where 
-                  guild_id = $1  
+                  guild_id = $1 AND removed = FALSE
               order by faceit_guid, changed desc
               ),
             last_changed as 
@@ -649,7 +655,7 @@ async def get_archieved_toplist(guild_id):
             join 
               faceit_guild_ranking using (faceit_guid) 
             where 
-              guild_id = $1
+              guild_id = $1 AND removed = FALSE
             group BY 
               guild_id                
             )
