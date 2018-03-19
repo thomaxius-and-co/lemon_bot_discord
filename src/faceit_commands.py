@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import util
 import logger
+import inspect
 import database as db
 import discord
 import faceit_api
@@ -9,6 +10,7 @@ import faceit_api
 log = logger.get("FACEIT")
 
 async def cmd_faceit_stats(client, message, faceit_nickname):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
@@ -17,6 +19,43 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
         await client.send_message(message.channel, "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s" % (faceit_nickname, csgo_name,  ranking_eu, csgo_elo, skill_level))
     else:
         return
+
+async def cmd_faceit_commands(client, message, arg):
+    errormessage = "Available faceit commands: " \
+                   "```" \
+                   "\n!faceit + " \
+                   "\n<stats> <faceit nickname>" \
+                   "\n<adduser> <faceit nickname>" \
+                   "\n<listusers>" \
+                   "\n<deluser> <faceit nickname or id (use !faceit listusers>" \
+                   "\n<setchannel> <channel name where faceit spam will be spammed>" \
+                   "\n<addnick <faceit actual nickname> <faceit custom nickname>" \
+                   "```"
+    if not arg:
+        await client.send_message(message.channel, errormessage)
+        return
+    arg = arg.lower()
+    if arg in obsolete_commands:
+        await client.send_message(message.channel, 'This command is obsolete and will be replaced by ' + obsolete_commands_new_equilevant.get(arg))
+        obsolete_commands.get(arg)
+        return
+    if arg == 'listusers':
+        await cmd_list_faceit_users(client, message, arg)
+        return
+    try:
+        arg, secondarg = arg.split(' ',1)
+    except ValueError:
+        secondarg = None
+    if arg == 'stats':
+        await cmd_faceit_stats(client, message, secondarg)
+    if arg == 'adduser':
+        await cmd_add_faceit_user_into_database(client, message, secondarg)
+    if arg == 'deluser':
+        await cmd_del_faceit_user(client, message, secondarg)
+    if arg == 'setchannel':
+        await cmd_add_faceit_channel(client, message, secondarg)
+    if arg == 'addnick':
+        await cmd_add_faceit_nickname(client, message, secondarg)
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
@@ -39,9 +78,11 @@ async def get_faceit_guid(client, message, faceit_nickname):
     return user.get("guid", None)
 
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     guild_id = message.server.id
     if not faceit_nickname:
-        await client.send_message(message.channel, "You need to specify a faceit nickname for it to be added.")
+        await client.send_message(message.channel, "You need to specify a faceit nickname for the user to be added, "
+                                                   "for example: !faceit adduser Jallu-rce")
         return
     faceit_guid = await get_faceit_guid(client, message, faceit_nickname)
     if faceit_guid:
@@ -77,6 +118,7 @@ async def get_channel_id(client, user_channel_name):
     return False #If channel doesn't exist
 
 async def cmd_add_faceit_channel(client, message, arg):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     guild_id = message.server.id
     channel_id = await get_channel_id(client, arg)
     if not channel_id:
@@ -88,10 +130,11 @@ async def cmd_add_faceit_channel(client, message, arg):
         return
 
 async def cmd_del_faceit_user(client, message, arg):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     guild_id = message.server.id
     if not arg:
-        await client.send_message(message.channel, "You must specify faceit nickname, or an ID to delete, eq. !delfaceituser 1. "
-                                                   "Use !listfaceitusers to find out the correct ID.")
+        await client.send_message(message.channel, "You must specify faceit nickname, or an ID to delete, eq. !faceit deluser 1. "
+                                                   "Use !faceit list to find out the correct ID.")
         return
     guild_faceit_players_entries = await get_all_faceit_players()
     if not guild_faceit_players_entries:
@@ -103,7 +146,7 @@ async def cmd_del_faceit_user(client, message, arg):
                 await delete_faceit_user_from_database_with_row_id(guild_id, entry['id'])
                 await client.send_message(message.channel, "User %s succesfully deleted." % entry['faceit_nickname'])
                 return
-        await client.send_message(message.channel, "No such ID in list. Use !listfaceitusers.")
+        await client.send_message(message.channel, "No such ID in list. Use !faceit listusers.")
         return
     else:
         for entry in guild_faceit_players_entries:
@@ -111,10 +154,11 @@ async def cmd_del_faceit_user(client, message, arg):
                 await delete_faceit_user_from_database_with_faceit_nickname(guild_id, entry['faceit_nickname'])
                 await client.send_message(message.channel, "Faceit user %s succesfully deleted." % entry['faceit_nickname'])
                 return
-        await client.send_message(message.channel, "No such user in list. Use !listfaceitusers to display a list of ID's.")
+        await client.send_message(message.channel, "No such user in list. Use !faceit list to display a list of ID's.")
         return
 
 async def cmd_list_faceit_users(client, message, _):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     guild_faceit_players_entries = await get_all_faceit_players()
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "No faceit users have been defined.")
@@ -265,18 +309,25 @@ async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
         AND gr.guild_id = $2 AND p.faceit_nickname = $3
     """, custom_nickname, guild_id, faceit_name)
 
+async def check_caller_name(client, message, caller_name):
+    if caller_name != 'cmd_faceit_commands':
+        await client.send_message(message.channel, '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(caller_name))
+        await asyncio.sleep(0.15)
+
 async def cmd_add_faceit_nickname(client, message, arg):
+    await check_caller_name(client, message, inspect.stack()[0][3])
     guild_id = message.server.id
+    errormessage = "Usage: !faceit addnick <faceit user> <nickname>\n for example: !faceit addnick rce jallulover69"
     if not arg:
-        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
+        await client.send_message(message.channel, errormessage)
         return
     try:
         faceit_name, custom_nickname = arg.split(' ',1)
     except ValueError:
-        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius pussydestroyer")
+        await client.send_message(message.channel, errormessage)
         return
     if not faceit_name or not custom_nickname:
-        await client.send_message(message.channel, "Usage: !addfaceitnickname <faceit user> <nickname>\n for example: !addfaceitnickname Thomaxius The pussy destroyer")
+        await client.send_message(message.channel, errormessage)
         return
     players = await get_all_faceit_players()
     for player in players:
@@ -305,9 +356,19 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
 async def get_all_faceit_players():
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
 
+obsolete_commands_new_equivalents = {
+    'cmd_add_faceit_user_into_database': 'adduser',
+    'cmd_list_faceit_users': 'list',
+    'cmd_del_faceit_user': 'deluser',
+    'cmd_add_faceit_channel': 'addchannel',
+    'cmd_add_faceit_nickname': 'addnick',
+    'cmd_faceit_stats': 'stats'
+}
+
 def register(client):
     util.start_task_thread(elo_notifier_task(client))
     return {
+        'faceit': cmd_faceit_commands,
         'faceitstats': cmd_faceit_stats,
         'addfaceituser': cmd_add_faceit_user_into_database,
         'listfaceitusers': cmd_list_faceit_users,
