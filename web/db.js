@@ -179,7 +179,7 @@ db.query(`
         FROM 
             faceit_live_stats
         WHERE
-            changed <= current_timestamp        
+            changed <= current_timestamp
             AND removed = False
         GROUP BY
             faceit_guid, current_elo, changed, faceit_ranking
@@ -236,7 +236,7 @@ db.query(`
 `)
 
 const getLatestFaceitEntry = () =>
-  db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`)
+  db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`).then(rows => rows[0])
 
 const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
