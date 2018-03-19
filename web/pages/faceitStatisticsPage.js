@@ -5,8 +5,10 @@ const {LineChart} = require('./chart')
 
 const pageTitle = 'Faceit statistics'
 
-const initialState = {
+const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:mm')
 
+const initialState = {
+  faceit: -1,
 }
 
 const withSign = n => {
@@ -51,10 +53,15 @@ const topFaceitTable = topFaceit =>
 </tbody>
 </table>
 
+const Faceit = ({faceit}) => {
+ return <p>As of <b>{formatDate(faceit.latest_entry)} UTC</b></p>
+}
+
 const renderPage = state => {
   return <div>
     <div className="row">
-      <h1>Server faceit toplist</h1>
+      <h1>Server toplist</h1> 
+      {<Faceit faceit={state.latestFaceitEntry} />}
     </div>
     {topFaceitTable(state.topFaceit)}
   </div>  

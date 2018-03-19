@@ -17,6 +17,8 @@ from util import pmap
 log = logger.get("SQLCOMMANDS")
 playinglist = []
 
+FACEIT_API_ERROR = False
+
 def sanitize_message(content, mentions):
     for m in mentions:
         content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
@@ -548,7 +550,7 @@ async def cmd_top(client, message, input):
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
-            customwords = await get_custom_trophy_conditions(trophy)
+            customwords = await get_custom_trophy_conditions(trophy) # todo?
             customwords = await getcustomwords(customwords, message, client)
             if not customwords:
                 return
@@ -600,12 +602,77 @@ async def get_faceit_leaderboard(guild_id):
             continue
         new_item = eu_ranking, user['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
-    toplist = sorted(toplist, key=lambda x: x[0])[:10]
-    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
+    global FACEIT_API_ERROR
+    if FACEIT_API_ERROR:
+        toplist = []
+        FACEIT_API_ERROR = False
+        ranking = await get_archieved_toplist(guild_id)
+        for item in ranking:
+            eu_ranking, faceit_nickname, csgo_elo, skill_level, last_entry_time = item
+            if not eu_ranking:
+                continue
+            new_item = eu_ranking, faceit_nickname, csgo_elo, skill_level
+            toplist.append(new_item)
+        toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist)
+        return toplist_string + ('\nShowing archieved stats as of %s as faceit live stats could not be fetched.' % to_helsinki(last_entry_time).strftime("%d/%m/%y %H:%M")), len(toplist)
+    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], sorted(toplist, key=lambda x: x[0])[:10]), len(toplist)
+
+async def get_archieved_toplist(guild_id):
+    return await db.fetch("""
+            with ranking as 
+            (
+              select distinct ON 
+                (faceit_guid) faceit_guid, 
+                 faceit_ranking, 
+                 faceit_nickname, 
+                 faceit_elo, 
+                 faceit_skill,
+                 guild_id,
+                 changed 
+              from 
+                  faceit_live_stats  
+              join 
+                  faceit_player using (faceit_guid) 
+              join 
+                  faceit_guild_ranking using (faceit_guid) 
+              where 
+                  guild_id = $1  
+              order by faceit_guid, changed desc
+              ),
+            last_changed as 
+            (
+            select
+              max(changed) as last_entry_time,
+              guild_id
+            from
+              faceit_live_stats
+            join 
+              faceit_guild_ranking using (faceit_guid) 
+            where 
+              guild_id = $1
+            group BY 
+              guild_id                
+            )
+            select 
+              faceit_ranking, 
+              faceit_nickname, 
+              faceit_elo, 
+              faceit_skill,
+              last_entry_time
+            from 
+              last_changed
+            LEFT JOIN 
+              ranking using (guild_id)     
+            order by 
+              faceit_ranking asc
+            limit 10
+            """, guild_id)
 
 async def get_user_stats_from_api(faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
     if error:
+        global FACEIT_API_ERROR
+        FACEIT_API_ERROR = True
         return None, None
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)

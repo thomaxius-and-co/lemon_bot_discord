@@ -194,7 +194,17 @@ db.query(`
         GROUP BY 
             faceit_guid
         ORDER BY max(faceit_elo)
-    ) 
+    ),
+    latest_entry as
+    (
+        SELECT 
+            max(changed) as latest_entry,
+            faceit_guid
+        FROM 
+            faceit_live_Stats 
+        GROUP BY
+            faceit_guid
+          )    
     SELECT 
       faceit_guid, 
       current_elo,
@@ -202,11 +212,14 @@ db.query(`
       current_elo - last_month_elo as difference_month,
       current_elo - last_week_elo as difference_week,
       faceit_nickname as name,
-      best_score
+      best_score,
+      latest_entry
     FROM 
       current_elo
     JOIN 
       faceit_player USING  (faceit_guid)
+    JOIN 
+      latest_entry USING  (faceit_guid)
     LEFT JOIN
       last_week_elo USING (faceit_guid)
     LEFT JOIN
@@ -215,7 +228,10 @@ db.query(`
       best_score USING (faceit_guid)
     ORDER BY 
       current_ranking ASC
-`)  
+`)
+
+const getLatestFaceitEntry = () =>
+  db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`)
 
 const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
@@ -234,5 +250,6 @@ module.exports = {
   topBlackjack,
   topWhosaidit,
   whosaiditWeeklyWinners,
-  faceitTopTen
+  faceitTopTen,
+  getLatestFaceitEntry
 }
