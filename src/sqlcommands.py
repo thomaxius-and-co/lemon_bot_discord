@@ -592,7 +592,6 @@ async def get_faceit_leaderboard(guild_id):
         pmap(get_user_stats_from_api, map(lambda u: u["faceit_nickname"], faceit_users)),
         pmap(faceit_api.ranking, map(lambda u: u["faceit_guid"], faceit_users)),
     )
-
     for i, user in enumerate(faceit_users):
         csgo_elo, skill_level = batch_stats[i]
         if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
@@ -602,6 +601,7 @@ async def get_faceit_leaderboard(guild_id):
             continue
         new_item = eu_ranking, user['faceit_nickname'], csgo_elo, skill_level
         toplist.append(new_item)
+
     global FACEIT_API_ERROR
     if FACEIT_API_ERROR:
         toplist = []
@@ -615,7 +615,8 @@ async def get_faceit_leaderboard(guild_id):
             toplist.append(new_item)
         toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist)
         return toplist_string + ('\nShowing archieved stats as of %s as faceit live stats could not be fetched.' % to_helsinki(last_entry_time).strftime("%d/%m/%y %H:%M")), len(toplist)
-    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], sorted(toplist, key=lambda x: x[0])[:10]), len(toplist)
+    toplist = sorted(toplist, key=lambda x: x[0])[:10]
+    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
 
 async def get_archieved_toplist(guild_id):
     return await db.fetch("""
