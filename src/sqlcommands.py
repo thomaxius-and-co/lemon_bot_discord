@@ -537,7 +537,8 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'faceit':
-
+        await client.send_message(message.channel,
+                                  'This command is obsolete and will be replaced by !faceit toplist.')
         toplist, amountofpeople = await get_faceit_leaderboard(guild_id)
         if not toplist or not amountofpeople:
             await client.send_message(message.channel,
@@ -606,7 +607,7 @@ async def get_faceit_leaderboard(guild_id):
     if FACEIT_API_ERROR:
         toplist = []
         FACEIT_API_ERROR = False
-        ranking = await get_archieved_toplist(guild_id)
+        ranking = await get_guild_archieved_toplist(guild_id)
         for item in ranking:
             eu_ranking, faceit_nickname, csgo_elo, skill_level, last_entry_time = item
             if not eu_ranking:
@@ -618,7 +619,7 @@ async def get_faceit_leaderboard(guild_id):
     toplist = sorted(toplist, key=lambda x: x[0])[:10]
     return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
 
-async def get_archieved_toplist(guild_id):
+async def get_guild_archieved_toplist(guild_id):
     return await db.fetch("""
             with ranking as 
             (
