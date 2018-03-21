@@ -169,7 +169,7 @@ async def cmd_del_faceit_user(client, message, arg, obsolete=True):
         await client.send_message(message.channel, "You must specify faceit nickname, or an ID to delete, eq. !faceit deluser 1. "
                                                    "Use !faceit list to find out the correct ID.")
         return
-    guild_faceit_players_entries = await get_all_faceit_players()
+    guild_faceit_players_entries = await get_all_faceit_players(message.server.id)
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "There are no faceit players added.")
         return
@@ -195,7 +195,7 @@ async def cmd_list_faceit_users(client, message, _, obsolete=True):
         await client.send_message(message.channel,
                                   '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
                                       inspect.stack()[0][3]))
-    guild_faceit_players_entries = await get_all_faceit_players()
+    guild_faceit_players_entries = await get_all_faceit_players(message.server.id)
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "No faceit users have been defined.")
         return
@@ -287,7 +287,7 @@ async def elo_notifier_task(client):
 
 async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
-    faceit_players = await get_all_faceit_players()
+    faceit_players = await get_all_faceit_players(None)
     if not faceit_players:
         return
     old_toplist_dict = await get_server_rankings_per_guild()
@@ -320,8 +320,8 @@ async def compare_toplists(client, old_toplist_dict):
         spam_channel_id = await get_spam_channel_by_guild(key)
         if not spam_channel_id: # Server doesn't like to be spammed, no need to do any work
             return
-        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])[:11]
-        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])[:11]
+        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])[:110]
+        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])[:110]
         log.info(old_toplist_sorted)
         log.info(new_toplist_sorted)
         if len(old_toplist_sorted) != len(new_toplist_sorted):
@@ -346,16 +346,18 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
             if player_new_rank_item: # If the player is found in new toplist
                 old_rank = old_toplist.index(item_at_oldlists_index) + 1 # Player's old position (rank) in the old toplist
                 new_rank = new_toplist.index(player_new_rank_item[0]) + 1 # Player's new position (rank) in the new toplist
+                old_elo = old_toplist[old_toplist.index((item_at_oldlists_index))][1]
+                new_elo = new_toplist[new_toplist.index((player_new_rank_item[0]))][1]
                 player_name = player_new_rank_item[0][0]
-                if old_rank > new_rank:
-                    print('msg', msg)
+                if (old_rank > new_rank) and (new_elo > old_elo):
                     msg += "**%s** rose in server ranking! old rank **#%s**, new rank **#%s**\n" % (player_name, old_rank, new_rank)
-                else:
+                elif (old_rank < new_rank) and (old_elo > new_elo):
                     msg += "**%s** fell in server ranking! old rank **#%s**, new rank **#%s**\n" % (player_name, old_rank, new_rank)
     if msg:
         log.info('Attempting to spam channel %s with the following message: %s' % (spam_channel_id, msg))
         channel = discord.Object(id=spam_channel_id)
         util.threadsafe(client, client.send_message(channel, msg))
+        await asyncio.sleep(.25)
     log.info("Rank changes checked")
 
 async def channels_to_notify_for_user(guid):
@@ -401,7 +403,7 @@ async def cmd_add_faceit_nickname(client, message, arg, obsolete=True):
     if not faceit_name or not custom_nickname:
         await client.send_message(message.channel, errormessage)
         return
-    players = await get_all_faceit_players()
+    players = await get_all_faceit_players(message.guild_id)
     for player in players:
         if player['faceit_nickname'] == faceit_name:
             await set_faceit_nickname(guild_id, faceit_name, custom_nickname)
@@ -542,8 +544,10 @@ async def cmd_do_faceit_toplist(client, message, input):
                               ('```%s \n' % title + toplist + '```'))
     return
 
-async def get_all_faceit_players():
-    return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
+async def get_all_faceit_players(guild_id):
+    guild_id_string = ("WHERE guild_id = {guild_id}").format(guild_id=guild_id) if guild_id else ""
+    return await db.fetch(("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) {where_clause}"
+                           " ORDER BY id ASC").format(where_clause=guild_id_string))
 
 obsolete_commands_new_equivalents = {
     'cmd_add_faceit_user_into_database': 'adduser',
