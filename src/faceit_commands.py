@@ -41,13 +41,14 @@ async def cmd_faceit_commands(client, message, arg):
                    "\n<toplist>" \
                    "```"
     if not arg:
-        await client.send_message(message.channel, errormessage)
+        await client.send_message(message.channel, infomessage)
         return
     if arg.lower() == 'listusers':
         await cmd_list_faceit_users(client, message, arg, obsolete=False)
         return
     elif arg.lower() == 'toplist':
         await cmd_do_faceit_toplist(client, message, arg)
+        return
     try:
         arg, secondarg = arg.split(' ',1)
     except ValueError:
