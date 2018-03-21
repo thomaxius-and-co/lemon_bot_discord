@@ -320,8 +320,8 @@ async def compare_toplists(client, old_toplist_dict):
         spam_channel_id = await get_spam_channel_by_guild(key)
         if not spam_channel_id: # Server doesn't like to be spammed, no need to do any work
             return
-        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])[:110]
-        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])[:110]
+        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])[:11]
+        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])[:11]
         log.info(old_toplist_sorted)
         log.info(new_toplist_sorted)
         if len(old_toplist_sorted) != len(new_toplist_sorted):
