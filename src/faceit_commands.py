@@ -325,10 +325,8 @@ async def compare_toplists(client, old_toplist_dict):
         spam_channel_id = await get_spam_channel_by_guild(key)
         if not spam_channel_id: # Server doesn't like to be spammed, no need to do any work
             return
-        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])[:11]
-        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])[:11]
-        log.info(old_toplist_sorted)
-        log.info(new_toplist_sorted)
+        old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])
+        new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])
         if len(old_toplist_sorted) != len(new_toplist_sorted):
             log.info("Someone was added to faceit database, not making toplist comparision.")
             return
@@ -336,7 +334,7 @@ async def compare_toplists(client, old_toplist_dict):
             log.info("No changes in rankings, not making comparsions")
             return
         else:
-            await check_and_spam_rank_changes(client, old_toplist_sorted, new_toplist_sorted, spam_channel_id)
+            await check_and_spam_rank_changes(client, old_toplist_sorted[:11], new_toplist_sorted[:11], spam_channel_id)
 
 async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_channel_id):
     log.info("Checking rank changes")
@@ -551,7 +549,7 @@ async def cmd_do_faceit_toplist(client, message, input):
     return
 
 async def get_all_faceit_players(guild_id):
-    guild_id_string = ("WHERE guild_id = {guild_id}").format(guild_id=guild_id) if guild_id else ""
+    guild_id_string = ("WHERE guild_id = '{guild_id}'").format(guild_id=guild_id) if guild_id else ""
     return await db.fetch(("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) {where_clause}"
                            " ORDER BY id ASC").format(where_clause=guild_id_string))
 
