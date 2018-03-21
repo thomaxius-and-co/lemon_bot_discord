@@ -29,7 +29,7 @@ async def cmd_faceit_stats(client, message, faceit_nickname, obsolete=True):
         return
 
 async def cmd_faceit_commands(client, message, arg):
-    errormessage = "Available faceit commands: " \
+    infomessage = "Available faceit commands: " \
                    "```" \
                    "\n!faceit + " \
                    "\n<stats> <faceit nickname>" \
@@ -55,16 +55,21 @@ async def cmd_faceit_commands(client, message, arg):
     arg = arg.lower()
     if arg == 'stats':
         await cmd_faceit_stats(client, message, secondarg, obsolete=False)
+        return
     elif arg == 'adduser':
         await cmd_add_faceit_user_into_database(client, message, secondarg, obsolete=False)
+        return
     elif arg == 'deluser':
         await cmd_del_faceit_user(client, message, secondarg, obsolete=False)
+        return
     elif arg == 'setchannel':
         await cmd_add_faceit_channel(client, message, secondarg, obsolete=False)
+        return
     elif arg == 'addnick':
         await cmd_add_faceit_nickname(client, message, secondarg, obsolete=False)
+        return
     else:
-        await client.send_message(message.channel, errormessage)
+        await client.send_message(message.channel, infomessage)
         return
 
 
@@ -335,6 +340,7 @@ async def compare_toplists(client, old_toplist_dict):
 
 async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_channel_id):
     log.info("Checking rank changes")
+    log.info("old toplist %s\nnew toplist %s" % (old_toplist, new_toplist))
     msg = ""
     for item_at_oldlists_index, item_at_newlists_index in zip(old_toplist, new_toplist): #Compare each item of both lists side to side
         name_in_old_item = item_at_oldlists_index[0]  #Name of player in old toplist
@@ -346,8 +352,8 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
             if player_new_rank_item: # If the player is found in new toplist
                 old_rank = old_toplist.index(item_at_oldlists_index) + 1 # Player's old position (rank) in the old toplist
                 new_rank = new_toplist.index(player_new_rank_item[0]) + 1 # Player's new position (rank) in the new toplist
-                old_elo = old_toplist[old_toplist.index((item_at_oldlists_index))][1]
-                new_elo = new_toplist[new_toplist.index((player_new_rank_item[0]))][1]
+                old_elo = item_at_oldlists_index[1]
+                new_elo = player_new_rank_item[0][1]
                 player_name = player_new_rank_item[0][0]
                 if (old_rank > new_rank) and (new_elo > old_elo):
                     msg += "**%s** rose in server ranking! old rank **#%s**, new rank **#%s**\n" % (player_name, old_rank, new_rank)
