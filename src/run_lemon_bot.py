@@ -193,7 +193,7 @@ async def cmd_translate(client, message, arg):
         return
 
     fromlang, tolang, input = parse(arg)
-    translator = Translator(bing_client_id, client_secret)
+    translator = Translator(bing_client_id, bing_client_secret)
     translation = translator.translate(input, tolang, fromlang)
     await client.send_message(message.channel, translation)
 
