@@ -325,18 +325,18 @@ async def compare_toplists(client, old_toplist_dict):
     for key in old_toplist_dict:
         spam_channel_id = await get_spam_channel_by_guild(key)
         if not spam_channel_id: # Server doesn't like to be spammed, no need to do any work
-            return
+            continue
         old_toplist_sorted = sorted(old_toplist_dict.get(key), key=lambda x: x[2])
         new_toplist_sorted = sorted(new_toplist_dict.get(key), key=lambda x: x[2])
         if len(old_toplist_sorted) != len(new_toplist_sorted):
             log.info("Someone was added to faceit database, not making toplist comparision.")
-            return
+            continue
         elif old_toplist_sorted == new_toplist_sorted:
             log.info("No changes in rankings, not making comparsions")
-            return
+            continue
         else:
             await check_and_spam_rank_changes(client, old_toplist_sorted[:11], new_toplist_sorted[:11], spam_channel_id)
-
+    
 async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_channel_id):
     log.info("Checking rank changes")
     log.info("old toplist %s\nnew toplist %s" % (old_toplist, new_toplist))
