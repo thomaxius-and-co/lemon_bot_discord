@@ -11,6 +11,8 @@ from time_util import to_helsinki
 from util import pmap
 
 FACEIT_API_ERROR = False
+NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
+
 
 log = logger.get("FACEIT")
 
@@ -40,6 +42,9 @@ async def cmd_faceit_commands(client, message, arg):
                    "\n<addnick <faceit actual nickname> <faceit custom nickname>" \
                    "\n<toplist>" \
                    "```"
+    if message.channel.is_private:
+        await private_faceit_commands(client, message, arg)
+        return
     if not arg:
         await client.send_message(message.channel, infomessage)
         return
@@ -73,6 +78,23 @@ async def cmd_faceit_commands(client, message, arg):
         await client.send_message(message.channel, infomessage)
         return
 
+async def private_faceit_commands(client, message, arg):
+    infomessage = "Available private faceit commands: " \
+                   "```" \
+                   "\n!faceit + " \
+                   "\n<stats> <faceit nickname>" \
+                   "```"
+    try:
+        arg, secondarg = arg.split(' ',1)
+    except ValueError:
+        secondarg = None
+    arg = arg.lower()
+    if arg == 'stats':
+        await cmd_faceit_stats(client, message, secondarg, obsolete=False)
+        return
+    else:
+        await client.send_message(message.channel, infomessage)
+        return
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     user, error = await faceit_api.user(faceit_nickname)
@@ -538,6 +560,10 @@ async def get_archieved_toplist(guild_id):
             """, guild_id)
 
 async def cmd_do_faceit_toplist(client, message, input):
+    if message.channel.is_private:
+        await client.send_message(message.channel,
+                                  'This command does not work on private servers.')
+        return
     guild_id = message.server.id
     toplist, amountofpeople = await get_faceit_leaderboard(guild_id)
     if not toplist or not amountofpeople:
