@@ -422,6 +422,16 @@ async def add_censored_word_into_database(censored_words, message_id, exchannel_
         VALUES ($1, $2, $3, $4)""", message_id, censored_words, exchannel_id, infomessage)
     log.info('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s', censored_words, exchannel_id, infomessage, message_id)
 
+async def get_guild_censored_words(client, guild_id):
+    censored_word_entries = get_censored_words()
+    for channel in client.get_all_channels():
+        if channel.server.id == guild_id:
+            for entry in censored_word_entries:
+                if entry['exchannel_id'] == channel.id:
+                    print('here')
+
+
+
 async def get_censored_words():
     return await db.fetch("""
         SELECT 
@@ -457,7 +467,7 @@ async def cmd_list_censored_words(client, message, _):
     if not perms.administrator:
         await client.send_message(message.channel, "You do not have sufficient permissions.")
         return
-    censored_word_entries = await get_censored_words()
+    censored_word_entries = await get_guild_censored_words(client, message.server.id)
     if not censored_word_entries:
         await client.send_message(message.channel, "No censored words have been defined.")
         return
@@ -485,7 +495,7 @@ async def cmd_del_censored_words(client, message, arg):
         await client.send_message(message.channel, "You must specify an ID to delete, eq. !deletecensoredwords 1. "
                                                    "Use !listcensoredwords to find out the correct ID.")
         return
-    censored_word_entries = await get_censored_words()
+    censored_word_entries = await get_guild_censored_words(client, message.server.id)
     if not censored_word_entries:
         await client.send_message(message.channel, "No censored words have been defined.")
         return
@@ -545,7 +555,7 @@ async def cmd_randomcolor(client, message, _):
 
 async def do_censored_words_check(client, message):
     message_words = message.content.split(' ')
-    illegal_messages = await get_censored_words()
+    illegal_messages = await get_guild_censored_words(client, message.server.id)
     if not illegal_messages:
         return True
     for row in illegal_messages:
