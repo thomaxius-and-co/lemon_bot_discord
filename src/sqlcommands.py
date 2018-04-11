@@ -848,7 +848,7 @@ async def dowhosaidit(client, message, _):
         await client.send_message(channel,
                                   'Not enough chat logged to play.') # I guess this is a pretty
         #  rare occasion, # but just in case
-        await remove_user_from_playing_dict(message.server.id, author)
+        await remove_user_from_playing_dict(message.server.id, message.author)
         return
     await send_question(client, message, listofspammers, quote)
 
@@ -873,7 +873,7 @@ async def send_question(client, message, listofspammers, thequote):
         answer = 'wrong'
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
-    await remove_user_from_playing_dict(message.server.id, author)
+    await remove_user_from_playing_dict(message.server.id, message.author)
     return
 
 async def getresponse(client, name, options, message):
