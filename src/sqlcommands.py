@@ -15,7 +15,7 @@ import logger
 from util import pmap
 
 log = logger.get("SQLCOMMANDS")
-playinglist = []
+playing_dict = {}
 
 FACEIT_API_ERROR = False
 
@@ -766,10 +766,29 @@ async def getcustomwords(input, message, client):
         return
     return customwords
 
+async def add_user_to_playing_dict(guild_id, author):
+    if guild_id not in playing_dict:
+        playing_dict.update({guild_id:[author]})
+    else:
+        guild_playinglist = playing_dict.get(guild_id)
+        if author not in guild_playinglist:
+            guild_playinglist.append(author)
+            dict.update({guild_id:guild_playinglist})
+
+async def remove_user_from_playing_dict(guild_id, author):
+    playing_dict.get(guild_id).remove(author)
+
+async def is_playing(guild_id, name):
+    playing_list = playing_dict.get(guild_id, [])
+    if name in playing_list:
+        return True
+    else:
+        return False
+
 async def cmd_randomquote(client, themessage, input):
     guild_id = themessage.server.id
     channel = themessage.channel
-    if themessage.author in playinglist:
+    if await is_playing(guild_id, themessage.author):
         await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit.)")
         return
     if input is not None and 'custom' in input.lower()[0:6]:
@@ -803,8 +822,8 @@ async def cmd_randomquote(client, themessage, input):
         await send_quote(client, themessage.channel, random_message)
 
 async def cmd_whosaidit(client, message, _):
-    if message.author not in playinglist:
-        playinglist.append(message.author)
+    if not await is_playing(message.server.id, message.author):
+        await add_user_to_playing_dict(message.server.id, message.author)
     else:
         await client.send_message(message.channel,
                                   '%s: Cannot play: You already have an unfinished game.' % message.author.name)
@@ -819,7 +838,7 @@ async def dowhosaidit(client, message, _):
     if not listofspammers or len(listofspammers) < 5:
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
-        playinglist.remove(message.author)
+        await remove_user_from_playing_dict(message.server.id, message.author)
         return
     rand.shuffle(listofspammers)
     name = rand.choice(listofspammers)
@@ -829,7 +848,7 @@ async def dowhosaidit(client, message, _):
         await client.send_message(channel,
                                   'Not enough chat logged to play.') # I guess this is a pretty
         #  rare occasion, # but just in case
-        playinglist.remove(message.author)
+        await remove_user_from_playing_dict(message.server.id, author)
         return
     await send_question(client, message, listofspammers, quote)
 
@@ -854,7 +873,7 @@ async def send_question(client, message, listofspammers, thequote):
         answer = 'wrong'
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
-    playinglist.remove(message.author)
+    await remove_user_from_playing_dict(message.server.id, author)
     return
 
 async def getresponse(client, name, options, message):

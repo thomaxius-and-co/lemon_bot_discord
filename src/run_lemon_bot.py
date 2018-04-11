@@ -423,12 +423,17 @@ async def add_censored_word_into_database(censored_words, message_id, exchannel_
     log.info('Defined a new censored word: censored words: %s, exchannel: %s, infomessage %s, message_id %s', censored_words, exchannel_id, infomessage, message_id)
 
 async def get_guild_censored_words(client, guild_id):
-    censored_word_entries = get_censored_words()
-    for channel in client.get_all_channels():
-        if channel.server.id == guild_id:
-            for entry in censored_word_entries:
-                if entry['exchannel_id'] == channel.id:
-                    print('here')
+    censored_word_entries = await get_censored_words()
+    guild_censored_words = []
+    if censored_word_entries:
+        for channel in client.get_all_channels():
+            if channel.server.id == guild_id:
+                for entry in censored_word_entries:
+                    if entry['exchannel_id'] == channel.id:
+                        guild_censored_words.append(entry)
+        return guild_censored_words
+    else:
+        return None
 
 
 
