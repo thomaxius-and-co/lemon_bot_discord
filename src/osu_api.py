@@ -21,11 +21,25 @@ class User:
     def __init__(self, json):
         self.json = json
         self.username = json["username"]
-        self.rank = int(json["pp_rank"])
-        self.pp = float(json["pp_raw"])
-        self.pp_rounded = round(self.pp)
-        self.accuracy = float(json["accuracy"])
-        self.accuracy_rounded = round(self.accuracy, 2)
+
+        if json["pp_rank"] is None:
+            self.rank = None
+        else:
+            self.rank = int(json["pp_rank"])
+
+        if json["pp_raw"] is None:
+            self.pp = None
+            self.pp_rounded = None
+        else:
+            self.pp = float(json["pp_raw"])
+            self.pp_rounded = round(self.pp)
+
+        if json["accuracy"] is None:
+            self.accuracy = None
+            self.accuracy_rounded = None
+        else:
+            self.accuracy = float(json["accuracy"])
+            self.accuracy_rounded = round(self.accuracy, 2)
 
         self._best = None
 

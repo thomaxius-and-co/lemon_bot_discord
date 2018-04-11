@@ -67,6 +67,10 @@ async def process_user(client, user, pp_key, rank_key, mode):
   u = await api.user_by_id(user_id, mode)
   log.info("Checking player {0} performance ({1})".format(u.username, mode))
 
+  if u.pp is None or u.rank is None:
+    log.info("Player {0} does not have data for game mode {1}".format(u.username, mode))
+    return
+
   if last_pp is None or last_rank is None:
     await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
     return
@@ -107,7 +111,6 @@ async def update_pp(pp_key, rank_key, pp, rank, user_id, channel_id):
       WHERE osu_user_id = $3 AND channel_id = $4
     """.format(pp_key=pp_key, rank_key=rank_key)
     await db.execute(sql, pp, rank, user_id, channel_id)
-
 
 async def task(client):
     util.threadsafe(client, client.wait_until_ready())
