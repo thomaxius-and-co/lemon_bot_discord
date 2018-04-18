@@ -712,4 +712,9 @@ if __name__ == "__main__":
                    faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes]:
         commands.update(module.register(client))
 
-    client.run(token)
+    try:
+        loop.run_until_complete(client.start(token))
+        raise Exception("client.start(...) returned (loop.is_closed() == {0})".format(loop.is_closed()))
+    except Exception as e:
+        new_loop = asyncio.new_event_loop()
+        new_loop.run_until_complete(util.log_exception(log))
