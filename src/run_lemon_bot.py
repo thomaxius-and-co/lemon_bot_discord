@@ -559,6 +559,8 @@ async def cmd_randomcolor(client, message, _):
     await client.send_message(message.channel, link)
 
 async def do_censored_words_check(client, message):
+    if message.server is None:
+        return True
     message_words = message.content.split(' ')
     illegal_messages = await get_guild_censored_words(client, message.server.id)
     if not illegal_messages:
