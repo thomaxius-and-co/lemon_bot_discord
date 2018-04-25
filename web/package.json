@@ -34,7 +34,9 @@
     "passport-discord": "0.1.3",
     "pg-promise": "7.4.1",
     "react": "16.2.0",
-    "react-dom": "16.2.0"
+    "react-dom": "16.2.0",
+    "request": "2.85.0",
+    "request-promise": "4.2.2"
   },
   "devDependencies": {
     "nodemon": "1.12.1",

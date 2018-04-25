@@ -72,4 +72,4 @@ const init = app => {
   })
 }
 
-module.exports = {init, requireAdmin}
+module.exports = {init, requireAdmin, requireLogin}

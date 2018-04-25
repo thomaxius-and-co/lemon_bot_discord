@@ -12,6 +12,7 @@ const initialState = {
   messagesInLastMonth: -1,
   spammer: -1,
   lastMonthDailyMessageCounts: [],
+  nokiaDevices: undefined,
 }
 
 const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
@@ -21,10 +22,20 @@ const formatNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ")
 const Spammer = ({spammer}) =>
   <p>Spammer of the day: <b>{spammer.spammeroftheday}</b> with {spammer.message_count} messages.</p>
 
+const NokiaLogin = ({user}) =>
+  <a href="/auth/nokia">Link Nokia Health account</a>
+
+const NokiaInfo = ({nokiaDevices}) =>
+  <pre>
+   {JSON.stringify(nokiaDevices, null, 2)}
+  </pre>
+
 const renderPage = state =>
   <div>
     <div className="row">
       {state.user && <UserStats user={state.user} messageCount={state.messageCountByUser}/>}
+      {state.user && <NokiaLogin user={state.user}/>}
+      {state.nokiaDevices && <NokiaInfo nokiaDevices={state.nokiaDevices} />}
       <h1>Global statistics</h1>
       <p>Total messages: <b>{formatNum(state.userMessages + state.botMessages)}</b></p>
       <p><i>({formatNum(state.userMessages)} by users, {formatNum(state.botMessages)} by bots)</i></p>
