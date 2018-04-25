@@ -522,6 +522,11 @@ async def cmd_sql(client, message, query):
         "Usage: `!sql <query>`\n"
     )
 
+    ADMIN_USER_IDS = list(filter(len, os.environ.get("ADMIN_USER_IDS", "").split(",")))
+    if message.author.id not in ADMIN_USER_IDS:
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+
     def valid(query):
         return len(query) > 0
 
