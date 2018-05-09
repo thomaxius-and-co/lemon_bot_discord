@@ -78,9 +78,11 @@ async def rtb_message_builder():
 
 async def rtb_get_crypto_price(coin):
     coin_data = await get_current_price(coin)
-    coin_price_eur = coin_data[0]["price_eur"]
-    coin_price_usd = coin_data[0]["price_usd"]
-    coin_name = coin_data[0]["name"]
+    coin_price_eur = coin_data[0].get("price_eur", None)
+    coin_price_usd = coin_data[0].get("price_usd", None)
+    coin_name = coin_data[0].get("name", coin)
+    if not coin_price_eur:
+        return "\nNot showing data for %s as it is unavailable at this time.\n" % coin_name
     percent_change_day = '+' + str(coin_data[0]["percent_change_24h"]) if (float(coin_data[0]["percent_change_24h"]) > 0) else coin_data[0]["percent_change_24h"]
 
     return ((
@@ -155,7 +157,7 @@ async def cmd_crypto(client, message, arg):
             if not available_coins_list:
                 await get_available_coins()
             await client.send_message(message.channel, 'Unknown coin. You can check available '
-                                                       'coins with !crypto list' % ', '.join(available_coins_list))
+                                                       'coins with !crypto list')
             return
     else:
         arg = available_coins.get(arg)
