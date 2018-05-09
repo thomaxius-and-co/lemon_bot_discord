@@ -6,6 +6,7 @@ const ReactDOMServer = require('react-dom/server')
 
 const db = require('./db')
 const auth = require("./auth")
+const nokia = require("./nokia")
 
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
@@ -15,6 +16,7 @@ const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 
 const app = express()
 auth.init(app)
+nokia.setup(app)
 
 const checksumPromise = filePath => new Promise((resolve, reject) => {
   require('fs').readFile(filePath, (error, fileContent) => {
@@ -47,6 +49,8 @@ const buildInitialState = req => {
     })
   case '/':
     const messageCountByUser = req.user ? db.findMessageCountByUser(req.user.id) : Promise.resolve(-1)
+    const nokiaDevices = !req.user ? Promise.resolve(undefined) :
+      nokia.getDevice(req.user.id)
     return Promise.join(
       messageCountByUser,
       db.findUserMessageCount(),
@@ -60,7 +64,8 @@ const buildInitialState = req => {
       db.countMessagesByWeekdays(30),
       db.countMessagesByWeekdays(90),
       db.countMessagesByWeekdays(360),
-      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, spammer, lastMonthDailyMessageCounts, rolling7DayMessageCounts, messagesPerWeekday7, messagesPerWeekday30, messagesPerWeekday90, messagesPerWeekday360) => ({
+      nokiaDevices,
+      (messageCountByUser, userMessages, botMessages, messagesInLastWeek, messagesInLastMonth, spammer, lastMonthDailyMessageCounts, rolling7DayMessageCounts, messagesPerWeekday7, messagesPerWeekday30, messagesPerWeekday90, messagesPerWeekday360, nokiaDevices) => ({
         user: req.user,
         messageCountByUser,
         userMessages,
@@ -74,6 +79,7 @@ const buildInitialState = req => {
         messagesPerWeekday30,
         messagesPerWeekday90,
         messagesPerWeekday360,
+        nokiaDevices,
       })
 	  ) 
   case '/gameStatisticsPage':

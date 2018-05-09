@@ -237,6 +237,7 @@ const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
 
 module.exports = {
+  db: db,
   findUserMessageCount,
   findBotMessageCount,
   messagesInLastWeek,

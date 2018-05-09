@@ -4,6 +4,7 @@ import json
 import os
 
 import cache
+import http_util
 import logger
 import perf
 import retry
@@ -130,15 +131,12 @@ class Beatmap:
         self.stars = float(json["difficultyrating"])
         self.stars_rounded = round(self.stars, 2)
 
-def make_query_string(params):
-    return "?" + "&".join(map(lambda x: "=".join(x), params.items()))
-
 @retry.on_any_exception()
 @perf.time_async("osu! API")
 async def call_api(endpoint, params):
     params = params.copy()
     params.update({"k": os.environ["OSU_API_KEY"]})
-    url = "https://osu.ppy.sh/api/%s%s" % (endpoint, make_query_string(params))
+    url = "https://osu.ppy.sh/api/%s%s" % (endpoint, http_util.make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
         log.info("%s %s %s %s", r.method, str(r.url).replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())

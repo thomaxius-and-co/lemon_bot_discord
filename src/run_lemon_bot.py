@@ -44,6 +44,7 @@ import crypto
 import status
 import emojicommands
 import lossimpsonquotes
+import nokia
 
 log = logger.get("BOT")
 
@@ -522,6 +523,11 @@ async def cmd_sql(client, message, query):
         "Usage: `!sql <query>`\n"
     )
 
+    ADMIN_USER_IDS = list(filter(len, os.environ.get("ADMIN_USER_IDS", "").split(",")))
+    if message.author.id not in ADMIN_USER_IDS:
+        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        return
+
     def valid(query):
         return len(query) > 0
 
@@ -559,6 +565,8 @@ async def cmd_randomcolor(client, message, _):
     await client.send_message(message.channel, link)
 
 async def do_censored_words_check(client, message):
+    if message.server is None:
+        return True
     message_words = message.content.split(' ')
     illegal_messages = await get_guild_censored_words(client, message.server.id)
     if not illegal_messages:
@@ -709,7 +717,12 @@ if __name__ == "__main__":
     loop.run_until_complete(crypto.main())
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
-                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes]:
+                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia]:
         commands.update(module.register(client))
 
-    client.run(token)
+    try:
+        loop.run_until_complete(client.start(token))
+        raise Exception("client.start(...) returned (loop.is_closed() == {0})".format(loop.is_closed()))
+    except Exception as e:
+        new_loop = asyncio.new_event_loop()
+        new_loop.run_until_complete(util.log_exception(log))
