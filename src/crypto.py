@@ -78,25 +78,35 @@ async def rtb_message_builder():
 
 async def rtb_get_crypto_price(coin):
     coin_data = await get_current_price(coin)
-    coin_price_eur = coin_data[0].get("price_eur", None)
-    coin_price_usd = coin_data[0].get("price_usd", None)
+    coin_price_eur = await get_correct_type(coin_data[0].get("price_eur", None),2)
+    coin_price_usd = await get_correct_type(coin_data[0].get("price_usd", None),2)
     coin_name = coin_data[0].get("name", coin)
-    if not coin_price_eur:
+    percent_change_day_str = await get_percent_change_day_str(coin_data[0].get("percent_change_24h",None))
+    if not coin_price_eur and coin_price_usd:
         return "\nNot showing data for %s as it is unavailable at this time.\n" % coin_name
-    percent_change_day = '+' + str(coin_data[0]["percent_change_24h"]) if (float(coin_data[0]["percent_change_24h"]) > 0) else coin_data[0]["percent_change_24h"]
-
     return ((
         "\n"
         "{name} price:\n"
         "{eur} EUR\n"
         "{usd} USD\n"
-        "24h change: {percent_change_day}%\n"
+        "24h change: {percent_change_day}\n"
     ).format(
         name=coin_name,
-        eur=round(float(coin_price_eur),2),
-        usd=round(float(coin_price_usd),2),
-        percent_change_day=percent_change_day
-    )) + await get_coin_owners_message(coin, coin_price_eur)
+        eur=coin_price_eur,
+        usd=coin_price_usd,
+        percent_change_day=percent_change_day_str
+    )) + await get_coin_owners_message(coin, coin_price_eur) if coin_price_eur else ''
+
+async def get_correct_type(arg, decimals):
+    return round(float(arg),decimals) if arg is not None else '-'
+
+async def get_percent_change_day_str(percent_change_day):
+    if ((percent_change_day is not None) and (float(percent_change_day) > 0)):
+        return '+' + percent_change_day + '%'
+    elif ((percent_change_day is not None) and (float(percent_change_day) < 0)):
+        return percent_change_day  + '%'
+    elif percent_change_day is None:
+        return '-'
 
 async def get_coin_owners_message(coin, coin_price_eur):
     reply = ''
