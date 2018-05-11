@@ -82,7 +82,7 @@ async def rtb_get_crypto_price(coin):
     coin_price_usd = await get_correct_type(coin_data[0].get("price_usd", None),2)
     coin_name = coin_data[0].get("name", coin)
     percent_change_day_str = await get_percent_change_day_str(coin_data[0].get("percent_change_24h",None))
-    if not coin_price_eur and coin_price_usd:
+    if not coin_price_eur and not coin_price_usd:
         return "\nNot showing data for %s as it is unavailable at this time.\n" % coin_name
     return ((
         "\n"
