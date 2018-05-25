@@ -513,8 +513,8 @@ async def get_faceit_leaderboard(guild_id):
 
 
 async def inactive_player(last_entry_time_string):
-    entry_time = to_helsinki(last_entry_time_string)
-    now = to_helsinki(datetime.now())
+    entry_time = to_utc(as_helsinki(last_entry_time_string))
+    now = to_utc(as_helsinki(datetime.now()))
     if (entry_time + timedelta(days=14)) < now:
         return True
     else:
