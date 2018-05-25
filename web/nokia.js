@@ -7,39 +7,33 @@ function setup(app) {
 }
 
 function getDevice(userId) {
-  return db.query(`select access_token, refresh_token from nokia_health_link where user_id = $1`, [userId]).then(rows => {
-    if (rows.length === 0) {
+  return getTokens(userId).then(tokens => {
+    if (!tokens) {
       // No access token available for the user
       return undefined
     }
 
-    const accessToken = rows[0].access_token
-    const refreshToken = rows[0].refresh_token
-    const options = {
+    const accessToken = tokens.access_token
+    return request({
       method: 'GET',
       uri: `https://api.health.nokia.com/v2/user?action=getdevice&access_token=${accessToken}`,
       json: true,
-    }
-    return request(options).then(json => {
-      if (json.status === 401) {
-        console.log(`User access_token might be expired. Refresh the access token and try again.`)
-        return refreshAccessToken(userId, refreshToken).then(() => request(options))
-      }
-      return json
     })
   })
 }
 
-function refreshAccessToken(userId, refreshToken) {
-  return request({
-    url: `https://account.health.nokia.com/oauth2/token`,
-    method: 'POST',
-    form: makeRefreshRequest(refreshToken),
-    json: true,
-  }).then(response => {
-    console.log(`Refreshed Nokia Health access token`)
-    return upsertToken(userId, response)
-  })
+function refreshAccessToken(userId) {
+  return getTokens(userId).then(tokens =>
+    request({
+      url: `https://account.health.nokia.com/oauth2/token`,
+      method: 'POST',
+      form: makeRefreshRequest(tokens.refresh_token),
+      json: true,
+    }).then(response => {
+      console.log(`Refreshed Nokia Health access token`)
+      return upsertToken(userId, response)
+    })
+  )
 }
 
 function redirectToNokiaHealth(req, res) {
@@ -114,7 +108,27 @@ function makeRefreshRequest(refreshToken) {
   }
 }
 
+function autoRefreshTokens(func) {
+  return function(userId, ...args) {
+    return func(userId, ...args).then(json => {
+      if (json.status === 401) {
+        console.log(`User access_token might be expired. Refresh the access token and try again.`)
+        return refreshAccessToken(userId).then(() => func(userId, ...args))
+      }
+      return json
+    })
+  }
+}
+
+function getTokens(userId) {
+  return db.query(`select access_token, refresh_token from nokia_health_link where user_id = $1`, [userId]).then(head)
+}
+
+function head(xs) {
+  return xs.length > 0 ? xs[0] : undefined
+}
+
 module.exports = {
   setup,
-  getDevice,
+  getDevice: autoRefreshTokens(getDevice),
 }
