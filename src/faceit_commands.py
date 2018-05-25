@@ -508,13 +508,13 @@ async def get_faceit_leaderboard(guild_id):
     toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'INACTIVE'],
                                              toplist)
     return toplist_string + (
-                '\n\nLast changed: %s' % to_helsinki(
+                '\nLast changed: %s' % to_helsinki(
             last_entry_time).strftime("%d/%m/%y %H:%M")), len(toplist)
 
 
 async def inactive_player(last_entry_time_string):
-    entry_time = to_helsinki(last_entry_time_string)
-    now = as_helsinki(datetime.now())
+    entry_time = to_utc(as_helsinki(last_entry_time_string))
+    now = to_utc(as_helsinki(datetime.now()))
     if (entry_time + timedelta(days=14)) < now:
         return True
     else:
