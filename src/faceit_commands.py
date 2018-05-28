@@ -504,23 +504,26 @@ async def get_faceit_leaderboard(guild_id):
         eu_ranking, faceit_nickname, csgo_elo, skill_level, last_entry_time, player_last_played = item
         if not eu_ranking:
             continue
-        new_item = eu_ranking, faceit_nickname, csgo_elo, skill_level, 'X' if await inactive_player(
-            player_last_played) else ''
+        new_item = eu_ranking, faceit_nickname, csgo_elo, skill_level, await get_last_seen_string(
+            player_last_played)
         toplist.append(new_item)
-    toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'INACTIVE'],
+    toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'LAST SEEN'],
                                              toplist)
     return toplist_string + (
                 '\nLast changed: %s' % to_utc(as_helsinki(
             last_entry_time)).strftime("%d/%m/%y %H:%M")), len(toplist)
 
 
-async def inactive_player(last_entry_time_string):
+async def get_last_seen_string(last_entry_time_string):
     entry_time = to_utc(as_helsinki(last_entry_time_string))
     now = to_utc(as_helsinki(datetime.now()))
-    if (entry_time + timedelta(days=14)) < now:
-        return True
+    difference_in_days = (now - entry_time).days
+    if difference_in_days == 0:
+        return 'Today'
+    elif abs(difference_in_days) == 1:
+        return 'Yesterday'
     else:
-        return False
+        return str(abs(difference_in_days)) + ' Days ago'
 
 
 async def get_server_rankings_per_guild():
