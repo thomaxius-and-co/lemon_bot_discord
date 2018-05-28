@@ -111,7 +111,7 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
     skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", None)
     csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", None)
     ranking = await faceit_api.ranking(user.get("guid", {})) if csgo_elo else None
-    last_played = user.get("last_quick_matches", {}).get("csgo", {}).get("inserted_at", {})
+    last_played = user.get("last_quick_matches", {}).get("csgo", {}).get("inserted_at", '-')
     return csgo_elo, skill_level, csgo_name, ranking, last_played
 
 
