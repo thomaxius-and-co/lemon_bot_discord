@@ -498,6 +498,8 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
 async def get_faceit_leaderboard(guild_id):
     toplist = []
     ranking = await get_toplist_from_db(guild_id)
+    if not ranking:
+        return None, None
     for item in ranking:
         eu_ranking, faceit_nickname, csgo_elo, skill_level, last_entry_time, player_last_played = item
         if not eu_ranking:
