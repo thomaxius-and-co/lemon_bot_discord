@@ -6,6 +6,7 @@ import inspect
 import database as db
 import discord
 import faceit_api
+from faceit_api import UserNotFound, UnknownError
 import columnmaker
 from time_util import as_helsinki, as_utc, to_utc, to_helsinki
 from util import pmap
@@ -100,27 +101,39 @@ async def private_faceit_commands(client, message, arg):
         await client.send_message(message.channel, infomessage)
         return
 
+async def latest_match_timestamp(player_id):
+    json = await faceit_api.player_history(player_id)
+    matches = json.get("items")
+    timestamps = flat_map(lambda m: [m.get("started_at"), m.get("finished_at")], matches)
+    return max_or(timestamps, None)
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
-    user, error = await faceit_api.user(faceit_nickname)
-    if error:
+    try:
+        user = await faceit_api.user(faceit_nickname)
+        player_id = user.get("player_id")
+        last_activity = await latest_match_timestamp(player_id)
+    except UserNotFound as e:
+        log.error(str(e))
         if client and message:
-            await client.send_message(message.channel, error)
+            await client.send_message(message.channel, str(e))
         return None, None, None, None, None
-    csgo_name = user.get("csgo_name", None)
-    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", None)
-    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", None)
-    ranking = await faceit_api.ranking(user.get("guid", {})) if csgo_elo else None
-    last_played = user.get("last_quick_matches", {}).get("csgo", {}).get("inserted_at", '-')
-    return csgo_elo, skill_level, csgo_name, ranking, last_played
+    except UnknownError as e:
+        log.error("Unknown error: {0}".format(str(e)))
+        if client and message:
+            await client.send_message(message.channel, "Unknown error")
+        return None, None, None, None, None
+
+    csgo = user.get("games", {}).get("csgo", {})
+    nickname = user.get("nickname", None) # Is this even needed
+    skill_level = csgo.get("skill_level", None)
+    csgo_elo = csgo.get("faceit_elo", None)
+    ranking = await faceit_api.ranking(player_id) if csgo_elo else None
+    return csgo_elo, skill_level, nickname, ranking, last_activity
 
 
-async def get_faceit_guid(client, message, faceit_nickname):
-    user, error = await faceit_api.user(faceit_nickname)
-    if error:
-        await client.send_message(message.channel, error)
-        return None
-    return user.get("guid", None)
+async def get_faceit_guid(faceit_nickname):
+    user = await faceit_api.user(faceit_nickname)
+    return user.get("player_id", None)
 
 
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname, obsolete=True):
@@ -133,13 +146,17 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname, ob
         await client.send_message(message.channel, "You need to specify a faceit nickname for the user to be added, "
                                                    "for example: !faceit adduser Jallu-rce")
         return
-    faceit_guid = await get_faceit_guid(client, message, faceit_nickname)
-    if faceit_guid:
-        await add_faceit_user_into_database(faceit_nickname, faceit_guid, message)
+    try:
+        faceit_guid = await get_faceit_guid(faceit_nickname)
+        await add_faceit_user_into_database(faceit_nickname, faceit_guid)
         if not await assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
             await client.send_message(message.channel, "%s is already in the database." % faceit_nickname)
         else:
             await client.send_message(message.channel, "Added %s into the database." % faceit_nickname)
+    except UserNotFound as e:
+        await client.send_message(message.channel, str(e))
+    except UnknownError as e:
+        await client.send_message(message.channel, "Unknown error")
 
 
 async def assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
@@ -151,11 +168,8 @@ async def assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
     await db.execute("INSERT INTO faceit_guild_ranking (guild_id, faceit_guid) VALUES ($1, $2)", guild_id, faceit_guid)
     return True
 
-
-async def add_faceit_user_into_database(faceit_nickname, faceit_guid, message):
-    await db.execute("INSERT INTO faceit_player (faceit_nickname, faceit_guid) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-                     faceit_nickname, faceit_guid)
-
+async def add_faceit_user_into_database(faceit_nickname, faceit_guid):
+    await db.execute("INSERT INTO faceit_player (faceit_nickname, faceit_guid) VALUES ($1, $2) ON CONFLICT DO NOTHING", faceit_nickname, faceit_guid)
 
 async def update_faceit_channel(guild_id, channel_id):
     await db.execute("""
@@ -636,3 +650,10 @@ def register(client):
         'addfaceitchannel': cmd_add_faceit_channel,
         'addfaceitnickname': cmd_add_faceit_nickname
     }
+
+def flat_map(func, xs):
+    from itertools import chain
+    return list(chain.from_iterable(map(func, xs)))
+
+def max_or(xs, fallback):
+    return max(xs) if len(xs) > 0 else fallback
