@@ -68,9 +68,7 @@ To run the statistics web page, use
 | Commands        | description |
 | ------------- |:-------------:|
 | !youtube [search_term]| Searches youtube for text that the user passes, then gives back a link to one of the videos. |
-| !enchant [target_level][fail_stacks] |  this is a Black Desert command that figures out the enchanting chances for black stone upgrades. |
 | !roll |  This rolls from 0-100, and returns the users name and the roll value. |
-| !coin | Simple coin toss command, gives you a 50/50 chance. |
 | !8ball [question] | This returns the eightball prediction and the question the user asked. |
 | !spank [target_user] | This will return with a punishment for the target user. |
 | !join [server join url] | Send the join URL to a sever where lemon bot is in and he will join the other server. |
@@ -105,6 +103,15 @@ To run the statistics web page, use
 |   !addcensoredwords <words=> <exchannel=> <infomessage=> | Add a censored word entry.
 |   !deletecensoredwords <ID> | Delete a censored words -entry. You can get the ID from !listcensoredwords.
 |   !listcensoredwords | Gives you a list of censored words.
+| Faceit commands:
+|   !faceit +
+|   stats <faceit nickname> | Display stats of certain player
+| adduser <faceit nickname> | Add a user into the server's database. After this, their stats are updated into the server database.
+| listusers | List added faceit users.
+| deluser <faceit nickname or id (use !faceit listusers> | Delete user from server's faceit database
+| setchannel <channel name where faceit spam will be spammed> | Set spam channel where elo change spam etc. will be sent to.
+| addnick <faceit actual nickname> <faceit custom nickname> | Add a nickname that will show up in elo change messages.
+| toplist | Display top 10 players of the server.
 
 
 ## Help:
