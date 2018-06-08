@@ -14,10 +14,13 @@ def main():
             "name": {"type": "str", "required": True},
             "path": {"type": "str", "required": True},
             "handler": {"type": "str", "required": True},
+            "runtime": {"type": "str", "required": True, "choices": ["nodejs6.10", "nodejs8.10"]},
             "role": {"type": "str", "required": True},
             "env": {"type": "dict", "required": True},
         }
     )
+
+    # TODO: Run npm install with proper version of nodejs
 
     client = boto3.client("lambda")
 
@@ -26,7 +29,7 @@ def main():
     if func is None:
         func = client.create_function(
             FunctionName=module.params["name"],
-            Runtime="nodejs6.10",
+            Runtime=module.params["runtime"],
             Role=module.params["role"],
             Handler=module.params["handler"],
             Code={"ZipFile": zip_file},

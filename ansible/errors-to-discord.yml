@@ -1,0 +1,58 @@
+- name: Create role for errors to Discord lambda
+  iam_role:
+    state: present
+    name: "{{ prefix }}-errors-to-discord-lambda-role"
+    assume_role_policy_document: >
+      {
+        "Version": "2008-10-17",
+        "Statement": [{
+          "Effect": "Allow",
+          "Principal": {"Service": ["lambda.amazonaws.com"]},
+          "Action": "sts:AssumeRole"
+        }]
+      }
+  register: errors_to_discord_lambda_role_out
+
+- name: Give permissions to write logs
+  iam_policy:
+    state: present
+    iam_type: role
+    iam_name: "{{ prefix }}-errors-to-discord-lambda-role"
+    policy_name: "{{ prefix }}-errors-to-discord-lambda-role-policy"
+    skip_duplicates: no
+    policy_json: >
+      {
+        "Version": "2012-10-17",
+        "Statement": [{
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "arn:aws:logs:*:*:*"
+        }]
+      }
+
+- name: Create errors to Discord lambda
+  aws_lambda:
+    name: "{{ prefix }}-errors-to-discord-lambda"
+    path: "../errors-to-discord"
+    role: "{{ errors_to_discord_lambda_role_out.iam_role.arn }}"
+    handler: "errors-to-discord.handler"
+    runtime: "nodejs8.10"
+    env:
+      DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
+  register: errors_to_discord_lambda_out
+
+# TODO: Write this into proper module
+- name: Give Cloudwatch Logs permission to trigger the function
+  shell: "aws lambda add-permission --function-name {{ prefix }}-errors-to-discord-lambda --statement-id {{ prefix }}-errors-to-discord-lambda-statement --action lambda:InvokeFunction --principal logs.eu-west-1.amazonaws.com"
+  ignore_errors: yes
+
+- name: Subscribe errors to Discord lambda to error logs
+  aws_cloudwatch_logs_subscription_filter:
+    logGroupName: "{{ prefix }}-bot"
+    filterName: "{{ prefix }}-bot-errors-subscription-filter"
+    filterPattern: "[date, time, level=ERROR, ...]"
+    destinationArn: "{{ errors_to_discord_lambda_out.Configuration.FunctionArn }}"
