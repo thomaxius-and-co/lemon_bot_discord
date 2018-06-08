@@ -42,7 +42,8 @@ async def check_feeds(client):
 async def fetch_feed(url):
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        content = "...snip..." if r.status == 200 else (await r.text())
+        log.info("%s %s %s %s", r.method, r.url, r.status, content)
         body = io.BytesIO(await r.read())
         return feedparser.parse(body, response_headers={'content-location': url})
 
