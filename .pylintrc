@@ -42,7 +42,6 @@ disable=
   undefined-variable,
   ungrouped-imports,
   unidiomatic-typecheck,
-  unnecessary-lambda,
   unused-argument,
   unused-import,
   unused-variable,

@@ -395,7 +395,7 @@ async def compare_toplists(client, old_toplist_dict):
 
 async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_channel_id):
     log.info("Checking rank changes")
-    log.info("old toplist %s\nnew toplist %s" % (old_toplist, new_toplist))
+    log.info("old toplist %s\nnew toplist %s", old_toplist, new_toplist)
     msg = ""
     for item_at_oldlists_index, item_at_newlists_index in zip(old_toplist,
                                                               new_toplist):  # Compare each item of both lists side to side
@@ -421,7 +421,7 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
                     msg += "**%s** fell in server ranking! old rank **#%s**, new rank **#%s**\n" % (
                     player_name, old_rank, new_rank)
     if msg:
-        log.info('Attempting to spam channel %s with the following message: %s' % (spam_channel_id, msg))
+        log.info('Attempting to spam channel %s with the following message: %s', spam_channel_id, msg)
         channel = discord.Object(id=spam_channel_id)
         util.threadsafe(client, client.send_message(channel, msg))
         await asyncio.sleep(.25)

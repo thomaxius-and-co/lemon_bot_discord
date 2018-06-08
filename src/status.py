@@ -20,7 +20,7 @@ async def check_user_and_message_count(client):
         total_messages = await get_message_count()
         if total_messages and ((total_users != old_user_count) or (total_messages != old_message_count)) and \
                 ((not CUSTOM_STATUS) or (CUSTOM_STATUS and CUSTOM_STATUS_DISPLAYED)):
-            log.info("Setting new values: %s total users, %s messages" % (total_users, total_messages))
+            log.info("Setting new values: %s total users, %s messages", total_users, total_messages)
             await change_status(client, ('Total users: %s | Total messages: %s' % (total_users, total_messages)))
             old_user_count, old_message_count = total_users, total_messages
             CUSTOM_STATUS_DISPLAYED = False

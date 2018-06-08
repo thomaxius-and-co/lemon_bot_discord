@@ -780,10 +780,7 @@ async def remove_user_from_playing_dict(guild_id, author):
 
 async def is_playing(guild_id, name):
     playing_list = playing_dict.get(guild_id, [])
-    if name in playing_list:
-        return True
-    else:
-        return False
+    return name in playing_list
 
 async def cmd_randomquote(client, themessage, input):
     guild_id = themessage.server.id

@@ -218,7 +218,7 @@ async def cmd_clear(client, message, arg):
     botperms = message.channel.permissions_for(message.channel.server.me)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
-        log.info("!CLEAR: User %s access denied" % message.author)
+        log.info("!CLEAR: User %s access denied", message.author)
         return
     if not botperms.manage_messages:
         await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
@@ -236,7 +236,7 @@ async def cmd_clear(client, message, arg):
             await client.purge_from(message.channel, limit=limit + 3)
             await client.send_message(message.channel,
                                       "%s messages succesfully deleted." % limit)
-            log.info("!CLEAR: %s deleted %s messages." % (message.author, limit))
+            log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
         except discord.errors.HTTPException as e:
             if e.text == "You can only bulk delete messages that are under 14 days old.":
                 await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
@@ -273,7 +273,7 @@ async def cmd_clearbot(client, message, arg):
             await client.purge_from(message.channel, limit=limit + 3, check=isbot)
             await client.send_message(message.channel,
                                       "%s bot messages succesfully deleted." % limit)
-            log.info("!CLEARBOT: %s deleted %s bot messages." % (message.author, limit))
+            log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
         except discord.errors.HTTPException as e:
             if e.text == "You can only bulk delete messages that are under 14 days old.":
                 await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
