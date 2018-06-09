@@ -107,7 +107,7 @@ fn fetch_journald_logs(unit_name: &str, last_usec_opt: Option<u64>, tx: mpsc::Se
 
 fn process_log_rows(client: Box<CloudWatchLogs>, rx: mpsc::Receiver<(u64, String)>, log_group_name: &str, initial_upload_sequence_token: Option<String>) -> () {
     println!("Started CloudWatch Logs uploader");
-    let batch_size = 500;
+    let batch_size = 50;
     let batch_max_wait = time::Duration::from_secs(2);
 
     let mut token = initial_upload_sequence_token;
