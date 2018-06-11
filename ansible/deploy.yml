@@ -26,7 +26,7 @@
         path: "../alarms-to-discord"
         role: "{{ lambda_role_out.iam_role.arn }}"
         handler: "alarms-to-discord.handler"
-        runtime: "nodejs6.10"
+        runtime: "nodejs8.10"
         env:
           DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
       register: lambda_out
