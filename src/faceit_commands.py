@@ -107,6 +107,25 @@ async def latest_match_timestamp(player_id):
     timestamps = flat_map(lambda m: [m.get("started_at"), m.get("finished_at")], matches)
     return max_or(timestamps, None)
 
+async def get_user_stats_from_api_by_id(player_id):
+    try:
+        user = await faceit_api.user_by_id(player_id)
+        player_id = user.get("player_id")
+        last_activity = await latest_match_timestamp(player_id)
+    except UserNotFound as e:
+        log.error(str(e))
+        return None, None, None, None, None
+    except UnknownError as e:
+        log.error("Unknown error: {0}".format(str(e)))
+        return None, None, None, None, None
+
+    csgo = user.get("games", {}).get("csgo", {})
+    nickname = user.get("nickname", None) # Is this even needed
+    skill_level = csgo.get("skill_level", None)
+    csgo_elo = csgo.get("faceit_elo", None)
+    ranking = await faceit_api.ranking(player_id) if csgo_elo else None
+    return csgo_elo, skill_level, nickname, ranking, last_activity
+
 async def get_user_stats_from_api(client, message, faceit_nickname):
     try:
         user = await faceit_api.user(faceit_nickname)
@@ -350,8 +369,7 @@ async def check_faceit_elo(client):
     for record in faceit_players:
         player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
         if player_stats:
-            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api(client, None,
-                                                                                         record['faceit_nickname'])
+            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(record['faceit_guid'])
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
                 continue
@@ -365,8 +383,7 @@ async def check_faceit_elo(client):
                                                      ' "' + record['custom_nickname'] + '"' if record[
                                                          'custom_nickname'] else ''))
         else:
-            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api(client, None,
-                                                                                         record['faceit_nickname'])
+            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(record['faceit_guid'])
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
                 continue
             await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
