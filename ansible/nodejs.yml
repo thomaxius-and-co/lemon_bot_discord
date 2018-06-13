@@ -1,18 +1,5 @@
-- name: Check if nodejs is installed
-  stat: path=/usr/bin/node
-  register: stat_node
-
-- name: Fetch ppa install script
-  get_url: url=https://deb.nodesource.com/setup_6.x dest=/tmp/setup_6.x
-  when: not stat_node.stat.exists
-
-- name: Run ppa install script
-  shell: bash /tmp/setup_6.x
-  when: not stat_node.stat.exists
-
 - name: Install nodejs
-  apt: name=nodejs
+  apt: deb=https://deb.nodesource.com/node_8.x/pool/main/n/nodejs/nodejs_8.10.0-1nodesource1_amd64.deb
 
 - name: Install jq for successful npm installs with only 512mb ram. This is a horrible hack. Please kill me.
   apt: name=jq
-

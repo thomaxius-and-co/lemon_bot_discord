@@ -35,7 +35,7 @@
 - Virtualenv
 - Vagrant
 - Virtual Box
-- NodeJS (only if you wish to run the webfront)
+- NodeJS v8.10.0 (only if you wish to run the webfront)
 
 On Windows you also need Visual C++ build tools from http://landinghub.visualstudio.com/visual-cpp-build-tools
 
@@ -61,7 +61,7 @@ To run the statistics web page, use
    * Install Vagrant
    * Install Virtual box
    * Install Python
-   * If you wish to use the webfront, install NodeJS
+   * If you wish to use the webfront, install NodeJS v8.10.0
 
  
 ## Commands:

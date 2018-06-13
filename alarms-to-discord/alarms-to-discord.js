@@ -3,10 +3,17 @@ const https = require("https")
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
-function log(...args) {
-  const timestamp = (new Date()).toISOString()
-  const strings = args.map(_ => typeof _ === "object" ? JSON.stringify(_, null, 2) : String(_))
-  console.log(timestamp, ...strings)
+exports.handler = async function(event) {
+  console.log("Handling event", JSON.stringify(event, null, 2))
+  const messages = event.Records.map(_ => JSON.parse(_.Sns.Message))
+
+  const messagePayloads = messages.map(({AlarmName, NewStateReason}) => {
+    return {embeds: [{title: AlarmName, description: NewStateReason, color: 0xff0000}]}
+  })
+
+  for (const data of messagePayloads) {
+    await post(DISCORD_WEBHOOK_URL, data)
+  }
 }
 
 function post(url, data) {
@@ -25,8 +32,7 @@ function post(url, data) {
       res.on("data", chunk => chunks.push(chunk))
       res.on("end", () => {
         const result = chunks.join("")
-
-        log("POST", url, res.statusCode, data, result)
+        console.log("POST", url, res.statusCode, JSON.stringify(data, null, 2), result)
         resolve(result)
       })
     })
@@ -34,23 +40,4 @@ function post(url, data) {
     req.write(JSON.stringify(data))
     req.end()
   })
-}
-
-exports.handler = function(event, context) {
-  log("Handling event", event)
-  const messages = event.Records.map(_ => JSON.parse(_.Sns.Message))
-
-  const promises = messages.map(({AlarmName, NewStateReason}) => {
-    const data = {embeds: [{title: AlarmName, description: NewStateReason, color: 0xff0000}]}
-    return post(DISCORD_WEBHOOK_URL, data)
-  })
-  Promise.all(promises)
-    .then(results => {
-      log("OK", results)
-      context.succeed()
-    })
-    .catch(err => {
-      log("ERROR", err)
-      context.fail(err)
-    })
 }

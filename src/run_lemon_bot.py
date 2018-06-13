@@ -9,6 +9,7 @@
 # use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 # of the Software, and to permit persons to whom the Software is furnished to do so
 
+import asyncpg
 import os
 import json
 import discord
@@ -552,10 +553,9 @@ async def cmd_sql(client, message, query):
             msg = "\n".join(map(str, results))
             msg = limit_msg_length("```%s```", msg)
             await client.send_message(message.channel, msg)
-    except Exception as err:
+    except asyncpg.exceptions.PostgresError as err:
         msg = limit_msg_length("```ERROR: %s```", str(err))
         await client.send_message(message.channel, msg)
-        return
 
 async def cmd_randomcolor(client, message, _):
     # Credits to colorcombos.com

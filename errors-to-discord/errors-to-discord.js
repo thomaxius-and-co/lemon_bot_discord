@@ -5,14 +5,12 @@ const zlib = require("zlib")
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
 exports.handler = async function(event, context) {
-  log("Handling event:", event)
+  console.log("Handling event:", JSON.stringify(event, null, 2))
   const payload = await gunzipObj(event.awslogs.data)
-  log("Payload:", payload)
+  console.log("Payload:", JSON.stringify(payload, null, 2))
 
   if (payload.messageType === "DATA_MESSAGE") {
-    const {logEvents} = payload
-    const logMessages = payload.logEvents.map(e => e.message)
-    for (const e of logEvents) {
+    for (const e of payload.logEvents) {
       const data = {
         username: "Errors",
         icon_url: "https://rce.fi/error.png",
@@ -21,8 +19,6 @@ exports.handler = async function(event, context) {
       await post(DISCORD_WEBHOOK_URL + "/slack", data)
     }
   }
-
-  context.succeed()
 }
 
 async function gunzipObj(base64data) {
@@ -43,7 +39,7 @@ async function gunzip(buf) {
   })
 }
 
-async function post(url, data) {
+function post(url, data) {
   return new Promise((resolve, reject) => {
     const {hostname, path} = parseUrl(url)
     const options = {
@@ -59,8 +55,7 @@ async function post(url, data) {
       res.on("data", chunk => chunks.push(chunk))
       res.on("end", () => {
         const result = chunks.join("")
-
-        log("POST", url, res.statusCode, data, result)
+        console.log("POST", url, res.statusCode, JSON.stringify(data, null, 2), result)
         resolve(result)
       })
     })
@@ -68,10 +63,4 @@ async function post(url, data) {
     req.write(JSON.stringify(data))
     req.end()
   })
-}
-
-function log(...args) {
-  const timestamp = (new Date()).toISOString()
-  const strings = args.map(_ => typeof _ === "object" ? JSON.stringify(_, null, 2) : String(_))
-  console.log(timestamp, ...strings)
 }

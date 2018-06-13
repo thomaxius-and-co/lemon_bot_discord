@@ -43,6 +43,16 @@ async def user(nickname):
     else:
         raise UnknownError(response)
 
+async def user_by_id(player_id):
+    response = await _call_api("/players/{0}".format(player_id))
+    json = await response.json()
+    if response.status == 200:
+        return json
+    elif response.status == 404:
+        raise UserNotFound("User not found (player_id: {0})".format(player_id))
+    else:
+        raise UnknownError(response)
+
 async def ranking(player_id, region="EU", game_id="csgo"):
     response = await _call_api("/rankings/games/{0}/regions/{1}/players/{2}".format(game_id, region, player_id))
     json = await response.json()

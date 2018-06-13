@@ -102,11 +102,14 @@ impl Journal {
         while ffi_try!(sd_journal_enumerate_data(self.j, &data, &mut size)) > 0 {
             unsafe {
                 let b = ::std::slice::from_raw_parts_mut(data, size);
-                let field = ::std::str::from_utf8_unchecked(b);
-                let mut name_value = field.splitn(2, '=');
-                let name = name_value.next().unwrap();
-                let value = name_value.next().unwrap();
-                ret.insert(From::from(name), From::from(value));
+                if let Ok(field) = ::std::str::from_utf8(b) {
+                    let mut name_value = field.splitn(2, '=');
+                    let name = name_value.next().unwrap();
+                    let value = name_value.next().unwrap();
+                    ret.insert(From::from(name), From::from(value));
+                } else {
+                    println!("ERROR journald entry contained field with invalid UTF-8");
+                }
             }
         }
 
