@@ -233,6 +233,14 @@ db.query(`
 const getLatestFaceitEntry = () =>
   db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`).then(rows => rows[0])
 
+const getEloForPast30Days = () =>
+  db.query(`select faceit_nickname, extract(epoch from changed::date) * 1000 as day, max(faceit_elo) as elo
+  from faceit_live_stats
+  join faceit_player using (faceit_guid)
+  where changed > current_timestamp - interval '1 month'
+  group by faceit_nickname, extract(epoch from changed::date) * 1000
+  order by day`).then(rows => rows)
+
 const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
 
@@ -244,6 +252,7 @@ module.exports = {
   messagesInLastMonth,
   findLastMonthDailyMessageCounts,
   findRolling7DayMessageCounts,
+  getEloForPast30Days,
   findMessageCountByUser,
   findSpammerOfTheDay,
   countMessagesByWeekdays,
