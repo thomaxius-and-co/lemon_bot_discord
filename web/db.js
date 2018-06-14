@@ -234,7 +234,7 @@ const getLatestFaceitEntry = () =>
   db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`).then(rows => rows[0])
 
 const getEloForPast30Days = () =>
-  db.query(`select faceit_nickname, extract(epoch from changed::date) * 1000 as day, max(faceit_elo) as elo
+  db.query(`select faceit_nickname, extract(epoch from changed::date) * 1000 as day, round(avg(faceit_elo),0) as elo
   from faceit_live_stats
   join faceit_player using (faceit_guid)
   where changed > current_timestamp - interval '1 month'
