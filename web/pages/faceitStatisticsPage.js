@@ -65,7 +65,7 @@ const topFaceitTable = topFaceit =>
 
 <tbody>
   {topFaceit.map((x, i) =>
-    <tr key={x.epoch}>
+    <tr key={x.name}>
       <td>#{i+1}</td>
       <td>{x.name}</td>
       <td>{x.current_ranking}</td>
