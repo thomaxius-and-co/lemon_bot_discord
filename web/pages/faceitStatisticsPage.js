@@ -194,7 +194,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
   return (
     <div>
      <h2>Average elo for the past 30 days</h2>
-      <LineChart data={data} axis={axis} grid={grid} />
+      <LineChart data={data} axis={axis} grid={grid} line={{connectNull: true}} />
     </div>
   )
 }

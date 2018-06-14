@@ -233,13 +233,44 @@ db.query(`
 const getLatestFaceitEntry = () =>
   db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`).then(rows => rows[0])
 
-const getEloForPast30Days = () =>
-  db.query(`SELECT faceit_nickname, extract(epoch from changed::date) * 1000 as day, round(avg(faceit_elo),0) as elo
-  from faceit_live_stats
-  join faceit_player using (faceit_guid)
-  where changed > current_timestamp - interval '1 month' and faceit_guid in (select faceit_guid from faceit_guild_ranking)
-  group by faceit_nickname, extract(epoch from changed::date) * 1000
-  order by day`).then(rows => rows)
+async function getEloForPast30Days() {
+  const elos = await db.query(`
+    select
+      date_trunc('day', changed) as day,
+      faceit_guid,
+      round(avg(faceit_elo), 0) as elo
+    from faceit_live_stats
+    where changed > current_timestamp - interval '1 month'
+    and faceit_guid in (select faceit_guid from faceit_guild_ranking)
+    group by date_trunc('day', changed), faceit_guid
+  `)
+  const playerIds = distinct(elos.map(s => s.faceit_guid))
+  const playerNames = await getPlayerNames(playerIds)
+  return elos.map(assignName(playerNames))
+}
+
+async function getPlayerNames(playerIds) {
+  const rows = await db.query(`SELECT faceit_guid, faceit_nickname FROM faceit_player WHERE faceit_guid = ANY ($1)`, [playerIds])
+  const pairs = rows.map(r => [r.faceit_guid, r.faceit_nickname])
+  return pairsToObject(pairs)
+}
+
+function assignName(nameMap) {
+  return obj => Object.assign({}, obj, {faceit_nickname: nameMap[obj.faceit_guid]})
+}
+
+// Transforms [[a, b], [c, d]] to {a: b, c: d}
+function pairsToObject(pairs) {
+  let obj = {}
+  for (const [k, v] of pairs) {
+    obj[k] = v
+  }
+  return obj
+}
+
+function distinct(xs) {
+  return Array.from(new Set(xs))
+}
 
 const countMessagesByWeekdays = days =>
   fetchPrecalculatedStatistics(`MESSAGES_BY_WEEKDAYS_${Number(days)}D`)
