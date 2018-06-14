@@ -176,14 +176,24 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     },
   }
   const grid = {
-    x: {
+    y: {
       lines: [
+        { value: 0, text: "Level 1" },
+        { value: 801, text: "Level 2" },
+        { value: 951, text: "Level 3" },
+        { value: 1101, text: "Level 4" },
+        { value: 1251, text: "Level 5" },
+        { value: 1401, text: "Level 6" },
+        { value: 1551, text: "Level 7" },
+        { value: 1701, text: "Level 8" },
+        { value: 1851, text: "Level 9" },
+        { value: 2001, text: "Level 10" },
       ]
     }
   }
   return (
     <div>
-      <h2>Average elo for the past 30 days</h2>
+     <h2>Average elo for the past 30 days</h2>
       <LineChart data={data} axis={axis} grid={grid} />
     </div>
   )

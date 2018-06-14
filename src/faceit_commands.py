@@ -248,7 +248,7 @@ async def cmd_del_faceit_user(client, message, arg, obsolete=True):
                 await client.send_message(message.channel,
                                           "Faceit user %s succesfully deleted." % entry['faceit_nickname'])
                 return
-        await client.send_message(message.channel, "No such user in list. Use !faceit list to display a list of ID's.")
+        await client.send_message(message.channel, "No such user in list. Use !faceit listusers to display a list of ID's.")
         return
 
 
