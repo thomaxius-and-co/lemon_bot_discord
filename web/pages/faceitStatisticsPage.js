@@ -150,8 +150,8 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     }
   })
 
- console.log(data)
 
+  console.log(columns)
   columns.forEach(element => { // Because not every player plays every day, we need to store their elo value from previous day as their elo value for the day they haven't played
     element.forEach(subElement => {
       if (typeof subElement != 'string' && (typeof element[element.indexOf(subElement)-1] != 'string' && element[element.indexOf(subElement)-1] != null) && subElement == null) {
@@ -162,8 +162,8 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
       }
     
       })})
-    
-  console.log(data)
+      console.log(columns)
+
 
   const data = {
     x: "x",
@@ -190,6 +190,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
       ]
     }
   }
+  console.log(data)
   return (
     <div>
       <h2>Elo developement for past 30 days</h2>
