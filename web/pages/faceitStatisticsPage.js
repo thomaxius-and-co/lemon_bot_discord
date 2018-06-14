@@ -34,6 +34,7 @@ function subStractTime(date) {
 
 const initialState = {
   faceit: -1,
+  niskeFaceitDailyElo: [],
 }
 
 const withSign = n => {
@@ -94,46 +95,71 @@ const renderPage = state =>
     {thirtyDaysFaceitEloChart(state.eloForPast30Days)}
   </div>  
 
-
-function getPlayerElementFromList(list, playername) {
-  let playerElement = list.find(function(element) {
-    if (element[0] == playername) {
-      return element
+function countOccurence(array) {
+  let count = 0
+  array.forEach(element => {
+    let thecount = countOccurenceHelperFunction(array, element.faceit_nickname)
+    if (thecount > count) {
+      count = thecount
     }
-  });
-
-  if (playerElement) {
-    return playerElement
-  }
-  else {
-    return false
-  }
+  })
+  return count
 }
 
-const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
+function countOccurenceHelperFunction(array, faceit_nickname) {
+  let count = 0
+  array.forEach(element => {
+    if (element.faceit_nickname == faceit_nickname) {
+      count++
+    }
+  })
+  return count
+}
 
+
+
+const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
+  count = countOccurence(dailyEloMonth) //Count how many days that contain elo updates are in the database
   var x = ["x"]
   var columns = [x]
   var groups = []
 
-  dailyEloMonth.forEach(element => {
+  // Add each playername that has elo updates into columns array, and set a null value for each elo per day
+  dailyEloMonth.forEach(element => {groups.indexOf(element.faceit_nickname) == -1 && groups.push(element.faceit_nickname)}) 
+  groups.forEach(faceit_nickname => {
+    let playerArrayElement = new Array()
+    playerArrayElement.push(faceit_nickname)
+    for (i=1;count>=i;i++) {
+      playerArrayElement.push(null)
+    }
+    columns.push(playerArrayElement)
+  })
+  
+  dailyEloMonth.forEach(element => { // add dates into dates array
     let date = formatDate(element.day)
     if (x.indexOf(date) == -1) {
       x.push(date)
     }
-    if (groups.indexOf(element.faceit_nickname == -1)) {
-      groups.push(element.faceit_nickname)
-    }
-    let PlayerElement = getPlayerElementFromList(columns, element.faceit_nickname)
-    if (PlayerElement) {
-      let indexAtColumns = columns.indexOf(PlayerElement)
-      columns[indexAtColumns].push(parseInt(element.elo))
-    }
-    else {
-      columns.push(new Array(element.faceit_nickname, parseInt(element.elo)))
+
+    let playerElement = columns.find(subElement => subElement[0] == element.faceit_nickname) // get existing players element
+    if (playerElement) {
+      let indexOfPlayerElementAtColumns = columns.indexOf(playerElement)
+      playerElement[x.indexOf(date)] = parseInt(element.elo)
+      columns[indexOfPlayerElementAtColumns] = playerElement
     }
   })
 
+  columns.forEach(element => { // Because not every player plays every day, we need to store their elo value from previous day as their elo value for the day they haven't played
+    element.forEach(subElement => {
+      if (typeof subElement != 'string' && (typeof element[element.indexOf(subElement)-1] != 'string' && element[element.indexOf(subElement)-1] != null) && subElement == null) {
+        element[element.indexOf(subElement)] = element[element.indexOf(subElement)-1]
+      }
+      else if (element[element.length-1] == null) {
+        element[element.length-1] = element[element.length-2]
+      }
+    
+      })})
+    
 
   const data = {
     x: "x",
