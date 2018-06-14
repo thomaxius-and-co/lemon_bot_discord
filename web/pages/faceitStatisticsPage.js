@@ -120,9 +120,9 @@ function countOccurenceHelperFunction(array, faceit_nickname) {
 
 const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
   count = countOccurence(dailyEloMonth) //Count how many days that contain elo updates are in the database
-  var x = ["x"]
-  var columns = [x]
-  var groups = []
+  let x = ["x"]
+  let columns = [x]
+  let groups = []
 
   // Add each playername that has elo updates into columns array, and set a null value for each elo per day
   dailyEloMonth.forEach(element => {groups.indexOf(element.faceit_nickname) == -1 && groups.push(element.faceit_nickname)}) 
@@ -149,6 +149,8 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     }
   })
 
+ console.log(data)
+
   columns.forEach(element => { // Because not every player plays every day, we need to store their elo value from previous day as their elo value for the day they haven't played
     element.forEach(subElement => {
       if (typeof subElement != 'string' && (typeof element[element.indexOf(subElement)-1] != 'string' && element[element.indexOf(subElement)-1] != null) && subElement == null) {
@@ -160,6 +162,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     
       })})
     
+  console.log(data)
 
   const data = {
     x: "x",
