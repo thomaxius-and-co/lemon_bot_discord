@@ -119,6 +119,7 @@ function countOccurenceHelperFunction(array, faceit_nickname) {
 
 
 const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
+  console.log(dailyEloMonth)
   count = countOccurence(dailyEloMonth) //Count how many days that contain elo updates are in the database
   let x = ["x"]
   let columns = [x]
