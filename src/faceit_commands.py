@@ -29,6 +29,7 @@ async def cmd_faceit_stats(client, message, faceit_nickname, obsolete=True):
                                   "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s" % (
                                   faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played))
 
+
 async def cmd_faceit_commands(client, message, arg):
     infomessage = "Available faceit commands: " \
                   "```" \
@@ -96,6 +97,7 @@ async def private_faceit_commands(client, message, arg):
         await client.send_message(message.channel, infomessage)
         return
 
+
 async def latest_match_timestamp(player_id):
     json = await faceit_api.player_history(player_id)
     matches = json.get("items")
@@ -120,6 +122,7 @@ async def get_user_stats_from_api_by_id(player_id):
     csgo_elo = csgo.get("faceit_elo", None)
     ranking = await faceit_api.ranking(player_id) if csgo_elo else None
     return csgo_elo, skill_level, nickname, ranking, last_activity
+
 
 async def get_user_stats_from_api(client, message, faceit_nickname):
     try:
@@ -167,6 +170,12 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname, ob
             await client.send_message(message.channel, "%s is already in the database." % faceit_nickname)
         else:
             await client.send_message(message.channel, "Added %s into the database." % faceit_nickname)
+            log.info("Adding stats for added player %s, guid %s" % (faceit_nickname, faceit_guid))
+            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(faceit_guid)
+            if not current_elo or not ranking:  # Currently, only EU ranking is supported
+                return
+            await insert_data_to_player_stats_table(faceit_guid, current_elo, skill_level, ranking)
+
     except UserNotFound as e:
         await client.send_message(message.channel, str(e))
     except UnknownError as e:
@@ -628,8 +637,10 @@ async def cmd_do_faceit_toplist(client, message, input):
     title = 'Top %s ranked faceit CS:GO players:' % (amountofpeople)
     await client.send_message(message.channel, ('```%s \n' % title + toplist + '```'))
 
+
 async def get_all_players():
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
+
 
 async def get_players_in_guild(guild_id):
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC", guild_id)
@@ -656,9 +667,11 @@ def register(client):
         'addfaceitnickname': cmd_add_faceit_nickname
     }
 
+
 def flat_map(func, xs):
     from itertools import chain
     return list(chain.from_iterable(map(func, xs)))
+
 
 def max_or(xs, fallback):
     return max(xs) if len(xs) > 0 else fallback
