@@ -8,17 +8,8 @@ const pageTitle = 'Faceit statistics'
 const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
 const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
 
-function getDaysAgoString (date) {
-  var daysAgo = subStractTime(date)
-  if (daysAgo == 0) {
-    return 'Today'
-  }
-  else if (daysAgo == 1) {
-    return 'Yesterday'
-  }
-  else {
-    return daysAgo + ' days ago'
-  }
+function relativeTime(date) {
+  return moment(date).tz('UTC').fromNow()
 }
 
 function subStractTime(date) {
@@ -73,7 +64,7 @@ const topFaceitTable = topFaceit =>
       <td>{x.best_score}</td>         
       <td>{withSign(x.difference_month)}</td>
       <td>{withSign(x.difference_week)}</td>
-      <td>{getDaysAgoString(x.latest_entry)}</td>
+      <td>{relativeTime(x.latest_entry)}</td>
     </tr>
   )}
 </tbody>
