@@ -49,10 +49,6 @@ const renderPage = state =>
 
 const dailyMessageCountChart = (lastMonthDailyMessageCounts, rolling7DayMessageCounts) => {
   const averages = rolling7DayMessageCounts.map(_ => Math.round(_.average))
-  console.log("daily")
-  console.log(lastMonthDailyMessageCounts)
-  console.log("7days")
-  console.log(rolling7DayMessageCounts)
   const data = {
     x: "x",
     columns: [
@@ -92,7 +88,7 @@ const dailyMessageCountChart = (lastMonthDailyMessageCounts, rolling7DayMessageC
       ]
     }
   }
-  console.log(data)
+
   return (
     <div>
       <h2>Messages per per day in the last month</h2>

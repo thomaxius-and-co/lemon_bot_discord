@@ -243,6 +243,7 @@ async function getEloForPast30Days() {
     where changed > current_timestamp - interval '1 month'
     and faceit_guid in (select faceit_guid from faceit_guild_ranking)
     group by date_trunc('day', changed), faceit_guid
+    order by date_trunc('day', changed)
   `)
   const playerIds = distinct(elos.map(s => s.faceit_guid))
   const playerNames = await getPlayerNames(playerIds)

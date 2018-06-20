@@ -5,7 +5,7 @@ const {LineChart} = require('./chart')
 
 const pageTitle = 'Faceit statistics'
 
-const formatDate = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD')
+const formatDate = date => moment(date).format('YYYY-MM-DD')
 const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
 
 function relativeTime(date) {
@@ -125,7 +125,9 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
   })
   
   dailyEloMonth.forEach(element => { // add dates into dates array
+
     let date = formatDate(element.day)
+
     if (x.indexOf(date) == -1) {
       x.push(date)
     }
