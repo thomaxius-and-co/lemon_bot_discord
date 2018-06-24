@@ -88,7 +88,7 @@ def mkdtemp():
 
 def rmtree(path):
     try:
-        shutil.rmtree(tmp_dir)
+        shutil.rmtree(path)
     except:
         pass
 

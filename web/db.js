@@ -1,5 +1,6 @@
 const Promise = require('bluebird')
 const pgp = require('pg-promise')({ promiseLib: Promise })
+const {distinct} = require('./util.js')
 
 const connectionDetails = {
   host:     'localhost',
@@ -279,10 +280,6 @@ function pairsToObject(pairs) {
     obj[k] = v
   }
   return obj
-}
-
-function distinct(xs) {
-  return Array.from(new Set(xs))
 }
 
 const countMessagesByWeekdays = days =>
