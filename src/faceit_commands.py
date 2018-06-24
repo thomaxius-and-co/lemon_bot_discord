@@ -23,11 +23,11 @@ async def cmd_faceit_stats(client, message, faceit_nickname, obsolete=True):
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
-    csgo_elo, skill_level, csgo_name, ranking_eu, last_played = await get_user_stats_from_api(client, message, faceit_nickname)
+    csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api(client, message, faceit_nickname)
     if csgo_name:
         await client.send_message(message.channel,
-                                  "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played))
+                                  "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s\n**Faceit url**: %s" % (
+                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played, faceit_url))
 
 
 async def cmd_faceit_commands(client, message, arg):
@@ -144,8 +144,11 @@ async def get_user_stats_from_api(client, message, faceit_nickname):
     nickname = user.get("nickname", None) # Is this even needed
     skill_level = csgo.get("skill_level", None)
     csgo_elo = csgo.get("faceit_elo", None)
+    faceit_url = user.get("faceit_url", None)
+    if faceit_url:
+        faceit_url = faceit_url.format(lang='en')
     ranking = await faceit_api.ranking(player_id) if csgo_elo else None
-    return csgo_elo, skill_level, nickname, ranking, last_activity
+    return csgo_elo, skill_level, nickname, ranking, last_activity, faceit_url
 
 
 async def get_faceit_guid(faceit_nickname):
