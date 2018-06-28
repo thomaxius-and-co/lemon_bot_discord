@@ -374,15 +374,18 @@ async def check_faceit_elo(client):
         return
     old_toplist_dict = await get_server_rankings_per_guild()
     for record in faceit_players:
-        player_stats = await get_faceit_stats_of_player(record['faceit_guid'])
+        player_guid = record['faceit_guid']
+        player_database_nick = record['faceit_nickname']
+        player_stats = await get_faceit_stats_of_player(player_guid)
         if player_stats:
-            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(record['faceit_guid'])
+            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
+            await do_nick_change_check(player_guid, csgo_name, player_database_nick)
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
                 continue
             if current_elo != player_stats['faceit_elo']:
-                await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
-                for channel_id in await channels_to_notify_for_user(record["faceit_guid"]):
+                await insert_data_to_player_stats_table(player_guid, current_elo, skill_level, ranking)
+                for channel_id in await channels_to_notify_for_user(player_guid):
                     log.info("Notifying channel %s", channel_id)
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
@@ -390,12 +393,25 @@ async def check_faceit_elo(client):
                                                      ' "' + record['custom_nickname'] + '"' if record[
                                                          'custom_nickname'] else ''))
         else:
-            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(record['faceit_guid'])
+            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
                 continue
-            await insert_data_to_player_stats_table(record['faceit_guid'], current_elo, skill_level, ranking)
+            await insert_data_to_player_stats_table(player_guid, current_elo, skill_level, ranking)
     await compare_toplists(client, old_toplist_dict)
     log.info('Faceit stats checked')
+
+async def do_nick_change_check(guid, api_player_name, database_player_name):
+    log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
+    if api_player_name != database_player_name:
+        log.info("Nickname change detected for user %s: old %s, new %s" % (guid, database_player_name, api_player_name))
+        await add_alias(guid, api_player_name)
+    else:
+        log.info("No nickname changes detected for user %s " % guid)
+        return
+
+async def add_alias(guid, api_player_name):
+    await db.execute("INSERT INTO faceit_alias (faceit_guid, faceit_nickname) VALUES ($1, $2)", guid, api_player_name)
+    log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
 async def compare_toplists(client, old_toplist_dict):
