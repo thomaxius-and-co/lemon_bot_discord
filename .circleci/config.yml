@@ -8,6 +8,13 @@ jobs:
     working_directory: ~/repo
     docker:
       - image: ubuntu:16.04
+      - image: postgres:9.5.13
+        environment:
+          POSTGRES_USER: lemon
+          POSTGRES_PASSWORD: lemon
+          POSTGRES_DB: lemon
+      - image: redis:3.2.12
+
     steps:
       - checkout
       - run: ./circleci.sh
