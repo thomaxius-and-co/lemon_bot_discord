@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE schema_version (
     version NUMERIC NOT NULL,
     upgraded TIMESTAMP NOT NULL DEFAULT current_timestamp

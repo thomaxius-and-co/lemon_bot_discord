@@ -5,10 +5,16 @@ set -o errexit
 apt-get update
 apt-get install -y \
   zip \
-  build-essential git python-minimal python-pip findutils python3-minimal
+  build-essential git python-minimal python-pip findutils python3-minimal python3-dev
 pip install -r ansible/requirements.txt
-pip install tox==2.5.0
 
-#./test.sh
+DATABASE_HOST="localhost" \
+DATABASE_PORT="5432" \
+DATABASE_NAME="lemon" \
+DATABASE_USERNAME="lemon" \
+DATABASE_PASSWORD="lemon" \
+REDIS_HOST="localhost" \
+REDIS_PORT="6379" \
+./test.sh
 ./journald-cloudwatch/build.sh
 ./deploy.sh

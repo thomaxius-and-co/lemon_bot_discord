@@ -15,9 +15,11 @@ MAX_CONNECTION_POOL_SIZE = 15
 
 _pool_holder = threading.local()
 
-_connect_string = "postgres://%s:%s@localhost:5432/%s" % (
+_connect_string = "postgres://%s:%s@%s:%s/%s" % (
     os.environ["DATABASE_USERNAME"],
     os.environ["DATABASE_PASSWORD"],
+    os.environ["DATABASE_HOST"],
+    os.environ["DATABASE_PORT"],
     os.environ["DATABASE_NAME"]
 )
 
