@@ -404,14 +404,16 @@ async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
     if api_player_name != database_player_name:
         log.info("Nickname change detected for user %s: old %s, new %s" % (guid, database_player_name, api_player_name))
-        await add_alias(guid, api_player_name)
+        await update_nickname(guid, api_player_name)
     else:
         log.info("No nickname changes detected for user %s " % guid)
         return
 
-async def add_alias(guid, api_player_name):
-    await db.execute("INSERT INTO faceit_alias (faceit_guid, faceit_nickname) VALUES ($1, $2)", guid, api_player_name)
-    log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
+async def update_nickname(guid, api_player_name):
+    async with db.transaction() as tx:
+        await tx.execute("INSERT INTO faceit_alias (faceit_guid, faceit_nickname) VALUES ($1, $2)", guid, api_player_name)
+        await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, guid)
+        log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
 async def compare_toplists(client, old_toplist_dict):
