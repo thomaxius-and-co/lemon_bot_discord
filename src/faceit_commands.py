@@ -413,7 +413,7 @@ async def update_nickname(guid, api_player_name):
     async with db.transaction() as tx:
         await tx.execute("INSERT INTO faceit_alias (faceit_guid, faceit_nickname) VALUES ($1, $2)", guid, api_player_name)
         await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, guid)
-        log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
+        log.info("Added new nickname %s for user %s" % (api_player_name, guid))
 
 
 async def compare_toplists(client, old_toplist_dict):
