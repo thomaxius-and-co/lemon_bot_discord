@@ -22,6 +22,7 @@ function run_test {
 }
 
 ansible-playbook --syntax-check ansible/deploy.yml
+check_dependencies
 init_virtualenv
 python_syntax_check
 run_test
