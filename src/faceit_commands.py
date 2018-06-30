@@ -24,7 +24,7 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
     if csgo_name:
         await client.send_message(message.channel,
                                   "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played, aliases_string, faceit_url))
+                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M"), aliases_string, faceit_url))
 
 async def get_player_aliases_string(faceit_guid, faceit_nickname):
     aliases_query_result = await get_player_aliases(faceit_guid)
@@ -36,7 +36,7 @@ async def get_player_aliases_string(faceit_guid, faceit_nickname):
                 alias_string += alias + ', '
         return alias_string[::-1].replace(",","",1)[::-1]
     else:
-        return ''
+        return '-'
 
 async def get_player_aliases(faceit_guid):
     return await db.fetch("""        
