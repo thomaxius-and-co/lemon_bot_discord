@@ -15,20 +15,39 @@ NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
 log = logger.get("FACEIT")
 
-async def cmd_faceit_stats(client, message, faceit_nickname, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_faceit_stats(client, message, faceit_nickname):
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
-    csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api(client, message, faceit_nickname)
+    csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api_by_nickname(client, message, faceit_nickname)
+    aliases_string = "\n**Previous nicknames**: %s" % await get_player_aliases_string(await get_faceit_guid(faceit_nickname), faceit_nickname)
     if csgo_name:
         await client.send_message(message.channel,
-                                  "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s\n**Faceit url**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played, faceit_url))
+                                  "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
+                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, last_played, aliases_string, faceit_url))
 
+async def get_player_aliases_string(faceit_guid, faceit_nickname):
+    aliases_query_result = await get_player_aliases(faceit_guid)
+    if aliases_query_result:
+        alias_string = ''
+        for record in aliases_query_result:
+            alias = record['faceit_nickname']
+            if alias != faceit_nickname:
+                alias_string += alias + ', '
+        return alias_string[::-1].replace(",","",1)[::-1]
+    else:
+        return ''
+
+async def get_player_aliases(faceit_guid):
+    return await db.fetch("""        
+        SELECT
+            faceit_nickname
+        FROM
+            faceit_aliases
+        WHERE
+            faceit_guid = $1
+        ORDER BY
+            created DESC""", faceit_guid)
 
 async def cmd_faceit_commands(client, message, arg):
     infomessage = "Available faceit commands: " \
@@ -49,7 +68,7 @@ async def cmd_faceit_commands(client, message, arg):
         await client.send_message(message.channel, infomessage)
         return
     if arg.lower() == 'listusers':
-        await cmd_list_faceit_users(client, message, arg, obsolete=False)
+        await cmd_list_faceit_users(client, message, arg)
         return
     elif arg.lower() == 'toplist':
         await cmd_do_faceit_toplist(client, message, arg)
@@ -60,19 +79,19 @@ async def cmd_faceit_commands(client, message, arg):
         secondarg = None
     arg = arg.lower()
     if arg == 'stats':
-        await cmd_faceit_stats(client, message, secondarg, obsolete=False)
+        await cmd_faceit_stats(client, message, secondarg)
         return
     elif arg == 'adduser':
-        await cmd_add_faceit_user_into_database(client, message, secondarg, obsolete=False)
+        await cmd_add_faceit_user_into_database(client, message, secondarg)
         return
     elif arg == 'deluser':
-        await cmd_del_faceit_user(client, message, secondarg, obsolete=False)
+        await cmd_del_faceit_user(client, message, secondarg)
         return
     elif arg == 'setchannel':
-        await cmd_add_faceit_channel(client, message, secondarg, obsolete=False)
+        await cmd_add_faceit_channel(client, message, secondarg)
         return
     elif arg == 'addnick':
-        await cmd_add_faceit_nickname(client, message, secondarg, obsolete=False)
+        await cmd_add_faceit_nickname(client, message, secondarg)
         return
     else:
         await client.send_message(message.channel, infomessage)
@@ -91,7 +110,7 @@ async def private_faceit_commands(client, message, arg):
         secondarg = None
     arg = arg.lower()
     if arg == 'stats':
-        await cmd_faceit_stats(client, message, secondarg, obsolete=False)
+        await cmd_faceit_stats(client, message, secondarg)
         return
     else:
         await client.send_message(message.channel, infomessage)
@@ -124,7 +143,7 @@ async def get_user_stats_from_api_by_id(player_id):
     return csgo_elo, skill_level, nickname, ranking, last_activity
 
 
-async def get_user_stats_from_api(client, message, faceit_nickname):
+async def get_user_stats_from_api_by_nickname(client, message, faceit_nickname):
     try:
         user = await faceit_api.user(faceit_nickname)
         player_id = user.get("player_id")
@@ -156,11 +175,7 @@ async def get_faceit_guid(faceit_nickname):
     return user.get("player_id", None)
 
 
-async def cmd_add_faceit_user_into_database(client, message, faceit_nickname, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
     guild_id = message.server.id
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname for the user to be added, "
@@ -211,11 +226,7 @@ async def get_channel_id(client, user_channel_name):
     return False  # If channel doesn't exist
 
 
-async def cmd_add_faceit_channel(client, message, arg, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_add_faceit_channel(client, message, arg):
     if not arg:
         await client.send_message(message.channel, 'You must specify a channel name.')
         return
@@ -230,11 +241,7 @@ async def cmd_add_faceit_channel(client, message, arg, obsolete=True):
         return
 
 
-async def cmd_del_faceit_user(client, message, arg, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_del_faceit_user(client, message, arg):
     guild_id = message.server.id
     if not arg:
         await client.send_message(message.channel,
@@ -264,11 +271,7 @@ async def cmd_del_faceit_user(client, message, arg, obsolete=True):
         return
 
 
-async def cmd_list_faceit_users(client, message, _, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_list_faceit_users(client, message, _):
     guild_faceit_players_entries = await get_players_in_guild(message.server.id)
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "No faceit users have been defined.")
@@ -400,20 +403,19 @@ async def check_faceit_elo(client):
     await compare_toplists(client, old_toplist_dict)
     log.info('Faceit stats checked')
 
+
 async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
     if api_player_name != database_player_name:
         log.info("Nickname change detected for user %s: old %s, new %s" % (guid, database_player_name, api_player_name))
-        await update_nickname(guid, api_player_name)
+        await add_alias(guid, database_player_name)
     else:
         log.info("No nickname changes detected for user %s " % guid)
         return
 
-async def update_nickname(guid, api_player_name):
-    async with db.transaction() as tx:
-        await tx.execute("INSERT INTO faceit_alias (faceit_guid, faceit_nickname) VALUES ($1, $2)", guid, api_player_name)
-        await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, guid)
-        log.info("Added new nickname %s for user %s" % (api_player_name, guid))
+async def add_alias(faceit_guid, api_player_name):
+    await db.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
+    log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
 async def compare_toplists(client, old_toplist_dict):
@@ -497,11 +499,7 @@ async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
     """, custom_nickname, guild_id, faceit_name)
 
 
-async def cmd_add_faceit_nickname(client, message, arg, obsolete=True):
-    if obsolete:
-        await client.send_message(message.channel,
-                                  '**This command is obsolete and will be replaced by:** !faceit ' + obsolete_commands_new_equivalents.get(
-                                      inspect.stack()[0][3]))
+async def cmd_add_faceit_nickname(client, message, arg):
     guild_id = message.server.id
     errormessage = "Usage: !faceit addnick <faceit user> <nickname>\n for example: !faceit addnick rce jallulover69"
     if not arg:
@@ -666,26 +664,12 @@ async def get_all_players():
 async def get_players_in_guild(guild_id):
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC", guild_id)
 
-obsolete_commands_new_equivalents = {
-    'cmd_add_faceit_user_into_database': 'adduser',
-    'cmd_list_faceit_users': 'list',
-    'cmd_del_faceit_user': 'deluser',
-    'cmd_add_faceit_channel': 'addchannel',
-    'cmd_add_faceit_nickname': 'addnick',
-    'cmd_faceit_stats': 'stats'
-}
 
 
 def register(client):
     util.start_task_thread(elo_notifier_task(client))
     return {
         'faceit': cmd_faceit_commands,
-        'faceitstats': cmd_faceit_stats,
-        'addfaceituser': cmd_add_faceit_user_into_database,
-        'listfaceitusers': cmd_list_faceit_users,
-        'deletefaceitusers': cmd_del_faceit_user,
-        'addfaceitchannel': cmd_add_faceit_channel,
-        'addfaceitnickname': cmd_add_faceit_nickname
     }
 
 
