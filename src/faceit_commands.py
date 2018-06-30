@@ -60,6 +60,7 @@ async def cmd_faceit_commands(client, message, arg):
                   "\n<setchannel> <channel name where faceit spam will be spammed>" \
                   "\n<addnick <faceit actual nickname> <faceit custom nickname>" \
                   "\n<toplist>" \
+                  "\n<aliases>" \
                   "```"
     if message.channel.is_private:
         await private_faceit_commands(client, message, arg)
@@ -93,10 +94,36 @@ async def cmd_faceit_commands(client, message, arg):
     elif arg == 'addnick':
         await cmd_add_faceit_nickname(client, message, secondarg)
         return
+    elif arg == 'aliases':
+        await cmd_show_aliases(client, message, secondarg)
+        return
     else:
         await client.send_message(message.channel, infomessage)
         return
 
+
+async def cmd_show_aliases(client, message, faceit_nickname):
+    guild_players = await get_players_in_guild(message.server.id)
+    for record in guild_players:
+        log.info(record)
+        log.info(record['faceit_nickname'])
+        if faceit_nickname == record['faceit_nickname']:
+                player_guid = await get_faceit_guid(faceit_nickname)
+                if player_guid:
+                    aliases_query_result = await get_player_aliases(player_guid)
+                    if aliases_query_result:
+                        alias_string = ''
+                        for record in aliases_query_result:
+                            alias = record['faceit_nickname']
+                            if alias != faceit_nickname:
+                                alias_string += alias + ', '
+                        await client.send_message(message.channel, "**%s** has the following aliases: %s" % (faceit_nickname, alias_string[::-1].replace(",", "", 1)[::-1]))
+                        return
+                    else:
+                        await client.send_message(message.channel, "**%s** has no aliases." % (
+                        faceit_nickname))
+                        return
+    await client.send_message(message.channel, "No such player in the server, use !faceit listusers.")
 
 async def private_faceit_commands(client, message, arg):
     infomessage = "Available private faceit commands: " \
@@ -408,13 +435,15 @@ async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
     if api_player_name != database_player_name:
         log.info("Nickname change detected for user %s: old %s, new %s" % (guid, database_player_name, api_player_name))
-        await add_alias(guid, database_player_name)
+        await update_nickname(guid, api_player_name)
     else:
         log.info("No nickname changes detected for user %s " % guid)
         return
 
-async def add_alias(faceit_guid, api_player_name):
-    await db.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
+async def update_nickname(faceit_guid, api_player_name):
+    async with db.transaction() as tx:
+        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
+        await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, faceit_guid)
     log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
