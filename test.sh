@@ -23,6 +23,6 @@ function run_test {
 
 ansible-playbook --syntax-check ansible/deploy.yml
 check_dependencies
-init_virtualenv
+init_virtualenv "$(which python3.6)"
 python_syntax_check
 run_test

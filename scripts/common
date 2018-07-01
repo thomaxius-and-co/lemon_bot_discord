@@ -57,13 +57,10 @@ function start_vm {
 
 function init_virtualenv {
   echo "+ Initializing virtualenv"
+  local python_cmd="${1:-$(which python)}"
 
   if [ ! -d .venv ]; then
-    if type python3 &> /dev/null; then
-      virtualenv --python=python3 "$ROOT/.venv" > /dev/null
-    else
-      virtualenv "$ROOT/.venv" > /dev/null
-    fi
+    virtualenv --python=$python_cmd "$ROOT/.venv" > /dev/null
   fi
 
   if [ -f "$ROOT/.venv/Scripts/activate" ]; then
