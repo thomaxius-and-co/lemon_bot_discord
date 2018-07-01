@@ -6,7 +6,7 @@ set -o errexit
 apt-get update
 apt-get install -y software-properties-common
 
-add-apt-repository ppa:deadsnakes/ppa
+add-apt-repository -y ppa:deadsnakes/ppa
 apt-get update
 
 apt-get install -y \
