@@ -67,9 +67,7 @@
         - restart services
 
     - name: Install Python dependencies
-      pip:
-        requirements: "/home/{{ app_name }}/src/requirements.txt"
-        executable: pip3
+      shell: "python3.6 -m pip install -r /home/{{ app_name }}/src/requirements.txt"
       notify:
         - restart services
 
