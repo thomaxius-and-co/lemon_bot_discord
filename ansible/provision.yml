@@ -16,6 +16,17 @@
   tasks:
     - include: deployment_dependencies.yml
 
+    - name: Add Deadsnakes PPA
+      apt_repository:
+        repo: ppa:deadsnakes/ppa
+
+    - name: Install Python 3.6
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - python3.6
+        - python3.6-dev
+
     - name: Create group
       group:
         name: "{{ app_name }}"
