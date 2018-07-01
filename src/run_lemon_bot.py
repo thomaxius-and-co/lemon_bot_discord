@@ -550,7 +550,7 @@ async def cmd_sql(client, message, query):
         async with db.transaction(readonly=True) as tx:
             cur = await tx.cursor(query)
             results = await cur.fetch(100)
-            msg = "\n".join(map(str, results))
+            msg = "\n".join(map(str, results)) if results else "No results"
             msg = limit_msg_length("```%s```", msg)
             await client.send_message(message.channel, msg)
     except asyncpg.exceptions.PostgresError as err:
