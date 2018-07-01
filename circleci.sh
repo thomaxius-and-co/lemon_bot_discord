@@ -2,8 +2,10 @@
 
 set -o errexit
 
+add-apt-repository ppa:deadsnakes/ppa
 apt-get update
 apt-get install -y \
+  python3.6 \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
 pip install -r ansible/requirements.txt
