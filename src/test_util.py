@@ -15,12 +15,11 @@ async def reset_db():
         await clear_schema(tx, "public")
 
 async def clear_schema(tx, schema):
+  print("Initializing database")
   for table in await get_tables(tx, schema):
-    print("Dropping table {0}".format(table))
     await tx.execute("drop table if exists {0} cascade".format(table))
 
   with open("./sql/{0}.sql".format(schema)) as f:
-    print("Initializing database")
     await tx.execute(f.read())
 
 async def get_tables(tx, schema):
