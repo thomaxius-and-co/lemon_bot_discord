@@ -8,7 +8,7 @@ import logger
 log = logger.get("MIGRATION")
 
 async def run_migrations(tx):
-    all_migrations = find_migrations()
+    migrations = find_migrations()
     version = await get_current_schema_version(tx)
     if not version:
         await init_migration_table(tx, migrations)
@@ -16,10 +16,10 @@ async def run_migrations(tx):
 
     log.info("Current schema version is {0}".format(version))
 
-    migrations, new_version = find_new_migrations(all_migrations, version)
+    new_migrations, new_version = find_new_migrations(migrations, version)
 
-    if len(migrations) > 0:
-        for version, module in migrations:
+    if len(new_migrations) > 0:
+        for version, module in new_migrations:
             name = module.__name__[len("migration."):]
             log.info("Running migration {0}".format(name))
             await module.exec(log, tx)
