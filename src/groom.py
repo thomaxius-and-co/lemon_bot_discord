@@ -7,6 +7,10 @@ import logger
 
 log = logger.get("GROOM")
 
+SERVICE_BASIC = 27
+SERVICE_SPECIAL = 2
+SERVICE_RELAX = 2
+
 def register(client):
     return {"groom": cmd_groom}
 
@@ -67,15 +71,16 @@ def match_city(city):
 async def get_times(date, location):
     assert isinstance(date, datetime.date)
     date_str = date.strftime("%Y-%m-%d")
-    json = await call_api(f"/locations/{location}/views/palvelut/services/2/available?worker_id=0&date={date_str}&search_next_date=true")
+    params = {"worker_id": "0", "date": date_str, "search_next_date": "true"}
+    json = await call_api(f"/locations/{location}/views/palvelut/services/{SERVICE_BASIC}/available", params=params)
     days = json.get("data", [])
     today = next(filter(lambda d: d["date"] == date_str, days), {})
     avail = today.get("available", [])
     return list(a["from"] for a in avail)
 
-async def call_api(path):
+async def call_api(path, *, params=None):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://www.varaaheti.fi/groom/fi/api/public{path}") as r:
+        async with session.get(f"https://www.varaaheti.fi/groom/fi/api/public{path}", params=params) as r:
             log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
             if r.status != 200:
                 raise Exception(f"Unexpected HTTP status {r.status}")
