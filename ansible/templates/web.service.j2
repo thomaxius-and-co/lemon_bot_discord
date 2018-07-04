@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+Restart=always
 User={{ app_name }}
 Group={{ app_name }}
 ExecStart=/home/{{ app_name }}/web/run.sh
