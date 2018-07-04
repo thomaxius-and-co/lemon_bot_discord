@@ -6,8 +6,10 @@ import logger
 
 log = logger.get("CACHE")
 
-HOUR = 60 * 60
-WEEK = 7 * 24 * HOUR
+MINUTE = 60
+HOUR = 60 * MINUTE
+DAY = 24 * HOUR
+WEEK = 7 * DAY
 
 def make_key(func, args, kwargs):
     args_pickled = pickle.dumps((args, sorted(kwargs.items())), pickle.HIGHEST_PROTOCOL)

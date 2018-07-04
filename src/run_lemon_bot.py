@@ -46,6 +46,7 @@ import status
 import emojicommands
 import lossimpsonquotes
 import nokia
+import groom
 
 log = logger.get("BOT")
 
@@ -717,7 +718,8 @@ if __name__ == "__main__":
     loop.run_until_complete(crypto.main())
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
-                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia]:
+                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia,
+                   groom]:
         commands.update(module.register(client))
 
     try:
