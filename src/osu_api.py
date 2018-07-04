@@ -139,7 +139,7 @@ async def call_api(endpoint, params):
     url = "https://osu.ppy.sh/api/%s%s" % (endpoint, http_util.make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.info("%s %s %s %s", r.method, str(r.url).replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())
+        log.debug("%s %s %s %s", r.method, str(r.url).replace(os.environ["OSU_API_KEY"], "<REDACTED>"), r.status, await r.text())
         return await r.json()
 
 async def user_by_id(user_id, game_mode):

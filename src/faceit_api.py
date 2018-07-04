@@ -68,7 +68,7 @@ async def _call_api(path, query=None):
     url = "https://open.faceit.com/data/v4{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         response = await session.get(url, headers=AUTH_HEADER)
-        log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
+        log.debug("%s %s %s %s", response.method, response.url, response.status, await response.text())
         if response.status not in [200, 404]:
             raise Exception("Error fetching data from faceit: HTTP status {0}".format(response.status))
         return response

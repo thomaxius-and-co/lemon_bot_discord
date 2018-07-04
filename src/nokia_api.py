@@ -39,7 +39,7 @@ async def getdevice(user_id):
     url = "https://api.health.nokia.com/v2/user{0}".format(http_util.make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.info("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, await r.text())
+        log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, await r.text())
         return await r.json(content_type='text/json')
 
 async def refresh_access_token(user_id):
@@ -52,7 +52,7 @@ async def refresh_access_token(user_id):
             "client_secret": os.environ.get("NOKIA_HEALTH_CLIENT_SECRET"),
             "refresh_token": refresh_token,
         })
-        log.info("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, "<REDACTED>")
+        log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, "<REDACTED>")
         token_response = await r.json(content_type='application/json')
         await upsert_access_token(user_id, token_response)
         return token_response['access_token'], token_response['refresh_token']

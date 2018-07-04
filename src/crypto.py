@@ -189,7 +189,7 @@ async def get_current_price(coin):
     url = "https://api.coinmarketcap.com/v1/ticker/%s/?convert=EUR" % coin
     async with aiohttp.ClientSession() as session:
         r = await session.get(url, headers={"Accept": "application/json"})
-        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
         if r.status != 200:
             raise Exception("HTTP status error {0}".format(r.status))
 
@@ -200,7 +200,7 @@ async def get_all_coins():
     url = "https://api.coinmarketcap.com/v1/ticker/"
     async with aiohttp.ClientSession() as session:
         r = await session.get(url, headers={"Accept": "application/json"})
-        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
         if r.status != 200:
             raise Exception("HTTP status error {0}".format(r.status))
         text = await r.text()
@@ -210,7 +210,7 @@ async def get_date_fetched():
     url = "https://api.coinmarketcap.com/v1/ticker/Bitcoin/?convert=EUR"
     async with aiohttp.ClientSession() as session:
         r = await session.get(url, headers={"Accept": "application/json"})
-        log.info("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
         if r.status != 200:
             raise Exception("HTTP status error {0}".format(r.status))
         text = await r.text()
