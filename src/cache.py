@@ -31,12 +31,12 @@ def cache(ttl=None):
             cache_key = make_key(func, args, kwargs)
             cached = await redis.get_binary(cache_key)
             if cached is not None:
-                log.info("get %s", cache_key)
+                log.debug("GET %s", cache_key)
                 return pickle.loads(cached)
 
             result = await func(*args, **kwargs)
             await redis.set(cache_key, pickle.dumps(result), expire=ttl)
-            log.info("set %s", cache_key)
+            log.debug("SET %s", cache_key)
             return result
         return func_with_cache
     return wrap_func_with_cache

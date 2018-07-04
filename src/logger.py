@@ -9,5 +9,8 @@ def init():
     for name in ['discord', 'websockets']:
         logging.getLogger(name).setLevel(logging.INFO)
 
+    for name in ['CACHE']:
+        logging.getLogger(name).setLevel(logging.INFO)
+
 def get(name):
     return logging.getLogger(name)
