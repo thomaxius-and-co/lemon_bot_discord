@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import itertools
+import random
 
 import logger
 
@@ -37,6 +38,13 @@ def on_any_exception(max_attempts = 5, init_delay = 0.1, max_delay = 5.0):
 def exponential(base, limit):
     for n in itertools.count():
         yield min(base * (2 ** n), limit)
+
+def jitter(gen, low=0.5):
+    for x in gen:
+        yield random_between(low, 1.0) * x
+
+def random_between(low, high):
+    return low + (high - low) * random.random()
 
 def log_error(func, attempt, e):
     fmt = "{0}.{1} failed {2} retries. Final exception: {3}"

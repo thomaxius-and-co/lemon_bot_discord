@@ -1,9 +1,10 @@
 import aiohttp
-import logger
+import asyncio
 import os
 
-import retry
 import http_util
+import logger
+import retry
 
 log = logger.get("FACEIT_API")
 
@@ -67,8 +68,16 @@ async def ranking(player_id, region="EU", game_id="csgo"):
 async def _call_api(path, query=None):
     url = "https://open.faceit.com/data/v4{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
-        response = await session.get(url, headers=AUTH_HEADER)
-        log.debug("%s %s %s %s", response.method, response.url, response.status, await response.text())
-        if response.status not in [200, 404]:
-            raise Exception("Error fetching data from faceit: HTTP status {0}".format(response.status))
-        return response
+        for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
+            response = await session.get(url, headers=AUTH_HEADER)
+            log.debug("%s %s %s %s", response.method, response.url, response.status, await response.text())
+
+            # Hit ratelimits! Always retry after a delay
+            if response.status == 429:
+                log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")
+                await asyncio.sleep(ratelimit_delay)
+                continue
+
+            if response.status not in [200, 404]:
+                raise Exception("Error fetching data from faceit: HTTP status {0}".format(response.status))
+            return response
