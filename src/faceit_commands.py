@@ -415,13 +415,12 @@ async def check_faceit_elo(client):
                 continue
             if current_elo != player_stats['faceit_elo']:
                 await insert_data_to_player_stats_table(player_guid, current_elo, skill_level, ranking)
-                for channel_id in await channels_to_notify_for_user(player_guid):
+                for channel_id, custom_nickname in await channels_to_notify_for_user(player_guid):
                     log.info("Notifying channel %s", channel_id)
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
                                                  player_stats['faceit_skill'], (
-                                                     ' "' + record['custom_nickname'] + '"' if record[
-                                                         'custom_nickname'] else ''))
+                                                     ' "' + custom_nickname + '"' if custom_nickname else ''))
         else:
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
@@ -503,12 +502,12 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
 
 async def channels_to_notify_for_user(guid):
     rows = await db.fetch("""
-        SELECT channel_id
+        SELECT channel_id, custom_nickname
         FROM faceit_notification_channel
         JOIN faceit_guild_ranking USING (guild_id)
         WHERE faceit_guid = $1
     """, guid)
-    return list(map(lambda r: r["channel_id"], rows))
+    return map(lambda r: (r["channel_id"], r["custom_nickname"]), rows)
 
 
 async def get_spam_channel_by_guild(guild_id):
