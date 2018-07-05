@@ -687,13 +687,14 @@ async def cmd_do_faceit_toplist(client, message, input):
 
 
 async def get_all_players():
-    return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) ORDER BY id ASC")
-
+    return await db.fetch("""
+        SELECT faceit_guid, faceit_nickname FROM faceit_player
+        WHERE faceit_guid IN (SELECT DISTINCT faceit_guid FROM faceit_guild_ranking)
+        ORDER BY id ASC
+    """)
 
 async def get_players_in_guild(guild_id):
     return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC", guild_id)
-
-
 
 def register(client):
     util.start_task_thread(elo_notifier_task(client))
