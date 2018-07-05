@@ -10,6 +10,7 @@ from faceit_api import UserNotFound, UnknownError
 import columnmaker
 from time_util import as_helsinki, to_utc
 from datetime import datetime, timedelta
+from util import pmap
 
 NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
@@ -396,19 +397,21 @@ async def elo_notifier_task(client):
             log.error("Failed to check faceit stats: ")
             await util.log_exception(log)
 
-
 async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
     faceit_players = await get_all_players()
     if not faceit_players:
         return
     old_toplist_dict = await get_server_rankings_per_guild()
+    log.info(f"Fetching stats from FACEIT for {len(faceit_players)} players")
+    player_ids = list(map(lambda p: p["faceit_guid"], faceit_players))
+    api_responses = await fetch_players_batch(player_ids)
     for record in faceit_players:
         player_guid = record['faceit_guid']
         player_database_nick = record['faceit_nickname']
         player_stats = await get_faceit_stats_of_player(player_guid)
         if player_stats:
-            current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
+            current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
             await do_nick_change_check(player_guid, csgo_name, player_database_nick)
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
@@ -429,6 +432,9 @@ async def check_faceit_elo(client):
     await compare_toplists(client, old_toplist_dict)
     log.info('Faceit stats checked')
 
+async def fetch_players_batch(player_ids):
+    responses = await pmap(get_user_stats_from_api_by_id, player_ids)
+    return dict(zip(player_ids, responses))
 
 async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
