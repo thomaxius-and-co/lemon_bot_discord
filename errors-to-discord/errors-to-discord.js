@@ -1,6 +1,7 @@
 const parseUrl = require("url").parse
 const https = require("https")
 const zlib = require("zlib")
+const splitMessage = require("./split.js")
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
@@ -11,12 +12,15 @@ exports.handler = async function(event, context) {
 
   if (payload.messageType === "DATA_MESSAGE") {
     for (const e of payload.logEvents) {
-      const data = {
-        username: "Errors",
-        icon_url: "https://rce.fi/error.png",
-        text: "```" + e.message + "```",
+      const messages = splitMessage(e.message,  2000)
+      for (const msg of messages) {
+        const data = {
+          username: "Errors",
+          icon_url: "https://rce.fi/error.png",
+          text: "```" + msg + "```",
+        }
+        await post(DISCORD_WEBHOOK_URL + "/slack", data)
       }
-      await post(DISCORD_WEBHOOK_URL + "/slack", data)
     }
   }
 }
