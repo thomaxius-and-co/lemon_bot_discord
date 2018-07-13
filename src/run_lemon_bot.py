@@ -79,6 +79,25 @@ languages = ['af', 'ar', 'bs-Latn', 'bg', 'ca', 'zh-CHS', 'zh-CHT', 'hr', 'cs', 
              'ja', 'sw', 'tlh', 'tlh-Qaak', 'ko', 'lv', 'lt', 'ms', 'mt', 'no', 'fa', 'pl', 'pt',
              'otq', 'ro', 'ru', 'sr-Cyrl', 'sr-Latn', 'sk', 'sl', 'es', 'sv', 'th', 'tr', 'uk', 'ur', 'vi', 'cy', 'yua']
 
+async def main():
+    logger.init()
+    # Database schema has to be initialized before running the bot
+    await db.initialize_schema()
+    await awards.main()
+    await crypto.main()
+
+    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
+                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia,
+                   groom]:
+        commands.update(module.register(client))
+
+    try:
+        await client.start(token)
+        raise Exception("client.start() returned")
+    except Exception as e:
+        await util.log_exception(log)
+        os._exit(0)
+
 def parse(input):
     args = input.split(' ', 2)
     if len(args) < 3:
@@ -709,22 +728,7 @@ async def on_ready():
     await status.main(client)
 
 if __name__ == "__main__":
-    logger.init()
-
-    # Database schema has to be initialized before running the bot
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(db.initialize_schema())
-    loop.run_until_complete(awards.main())
-    loop.run_until_complete(crypto.main())
+    loop.run_until_complete(main())
 
-    for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
-                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia,
-                   groom]:
-        commands.update(module.register(client))
 
-    try:
-        loop.run_until_complete(client.start(token))
-        raise Exception("client.start() returned")
-    except Exception as e:
-        loop.run_until_complete(util.log_exception(log))
-        os._exit(1)
