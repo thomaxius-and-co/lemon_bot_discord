@@ -12,7 +12,7 @@ exports.handler = async function(event, context) {
 
   if (payload.messageType === "DATA_MESSAGE") {
     for (const e of payload.logEvents) {
-      const messages = splitMessage(e.message,  2000)
+      const messages = splitMessage(e.message.split("\n"),  2000)
       for (const msg of messages) {
         const data = {
           username: "Errors",
