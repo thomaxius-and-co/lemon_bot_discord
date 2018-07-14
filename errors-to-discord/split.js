@@ -1,6 +1,6 @@
-module.exports = function splitMessage(pieces, limit) {
+module.exports = function splitMessage(pieces, joinStr, limit) {
   // Message is OK
-  const joined = pieces.join("\n")
+  const joined = pieces.join(joinStr)
   if (joined.length <= limit) {
     return [joined]
   }
@@ -10,15 +10,15 @@ module.exports = function splitMessage(pieces, limit) {
     const p = pieces[0]
     return [
       p.slice(0, limit),
-      ...splitMessage([p.slice(limit, p.length)], limit),
+      ...splitMessage([p.slice(limit, p.length)], joinStr, limit),
     ]
   }
 
   // Normal split in the middle
   const [a, b] = splitList(pieces)
   return [
-    ...splitMessage(a, limit),
-    ...splitMessage(b, limit),
+    ...splitMessage(a, joinStr, limit),
+    ...splitMessage(b, joinStr, limit),
   ]
 }
 

@@ -5,6 +5,8 @@ const splitMessage = require("./split.js")
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
+const MAX_MESSAGE_LENGTH = 2000 - "``````".length
+
 exports.handler = async function(event, context) {
   console.log("Handling event:", JSON.stringify(event, null, 2))
   const payload = await gunzipObj(event.awslogs.data)
@@ -12,7 +14,8 @@ exports.handler = async function(event, context) {
 
   if (payload.messageType === "DATA_MESSAGE") {
     for (const e of payload.logEvents) {
-      const messages = splitMessage(e.message.split("\n"),  2000)
+      const lines = e.message.split("\n")
+      const messages = splitMessage(lines, "\n", MAX_MESSAGE_LENGTH)
       for (const msg of messages) {
         const data = {
           username: "Errors",
