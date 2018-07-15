@@ -28,6 +28,16 @@
   args:
     creates: "/etc/letsencrypt/live/{{ certbot_domain }}"
 
+- name: Directory for certbot systemd unit overrides
+  file: path="/etc/systemd/system/certbot.service.d" state=directory owner=root group=root mode=0755
+
+- name: Reload reload nginx config after running certbot
+  copy:
+    dest: "/etc/systemd/system/certbot.service.d/override.conf"
+    content: >
+      [Service]
+      ExecStartPost=/bin/systemctl reload nginx
+
 - name: Start and enable certbot timer
   service:
     name: certbot.timer
