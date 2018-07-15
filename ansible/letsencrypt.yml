@@ -37,6 +37,8 @@
     content: >
       [Service]
       ExecStartPost=/bin/systemctl reload nginx
+  notify:
+    - reload unit files
 
 - name: Start and enable certbot timer
   service:
