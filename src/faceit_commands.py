@@ -220,6 +220,11 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(faceit_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
                 return
+            if not (await get_player_aliases(faceit_guid)):
+                await add_nickname(faceit_guid, csgo_name)
+            else:
+                log.info("Not adding a nickname for user since he already has one")
+                await(do_nick_change_check(faceit_guid, csgo_name, await get_player_current_database_nickname(faceit_guid)))
             await insert_data_to_player_stats_table(faceit_guid, current_elo, skill_level, ranking)
 
     except UserNotFound as e:
@@ -347,6 +352,17 @@ async def get_faceit_stats_of_player(guid):
             1
         """, guid)
 
+async def get_player_current_database_nickname(guid):
+    return await db.fetchval("""
+        SELECT
+            faceit_nickname
+        FROM
+            faceit_player
+        WHERE
+            faceit_guid = $1
+        LIMIT
+            1
+        """, guid)
 
 async def get_toplist_per_guild_from_db():
     return await db.fetch("""
@@ -449,8 +465,12 @@ async def update_nickname(faceit_guid, api_player_name):
     async with db.transaction() as tx:
         await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
         await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, faceit_guid)
-    log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
+    log.info("Updated nickname %s for user %s" % (api_player_name, faceit_guid))
 
+async def add_nickname(faceit_guid, api_player_name):
+    async with db.transaction() as tx:
+        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
+    log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 async def compare_toplists(client, old_toplist_dict):
     new_toplist_dict = await get_server_rankings_per_guild()
