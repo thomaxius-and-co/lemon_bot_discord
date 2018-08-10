@@ -1,4 +1,3 @@
-import asyncio
 import discord
 import re
 import json
@@ -8,16 +7,12 @@ import emoji
 import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
-from time_util import as_helsinki, as_utc, to_utc, to_helsinki
+from time_util import as_utc, to_helsinki
 from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
-import faceit_api
 import logger
-from util import pmap
 
 log = logger.get("SQLCOMMANDS")
 playing_dict = {}
-
-FACEIT_API_ERROR = False
 
 def sanitize_message(content, mentions):
     for m in mentions:
@@ -151,9 +146,6 @@ async def getquoteforquotegame(guild_id, name):
         else:
             log.info('This quote is bad, fetching a new one.. {0}'.format(quote['content'].encode("utf-8")))
     return None
-
-
-
 
 def invalid_quote(quote):
     def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
@@ -564,109 +556,6 @@ async def cmd_top(client, message, input):
             msg += ", " + ", ".join(CUSTOM_TROPHY_NAMES)
         await client.send_message(message.channel, msg[:2000])
         return
-
-async def get_faceit_leaderboard(guild_id):
-    faceit_users = await db.fetch("""
-        SELECT faceit_nickname, faceit_guid
-        FROM faceit_player
-        JOIN faceit_guild_ranking USING (faceit_guid)
-        WHERE guild_id = $1
-    """, guild_id)
-
-    if len(faceit_users) == 0:
-        return None, None
-    toplist = []
-
-    batch_stats, batch_ranking = await asyncio.gather(
-        pmap(get_user_stats_from_api, map(lambda u: u["faceit_nickname"], faceit_users)),
-        pmap(faceit_api.ranking, map(lambda u: u["faceit_guid"], faceit_users)),
-    )
-    for i, user in enumerate(faceit_users):
-        csgo_elo, skill_level = batch_stats[i]
-        if (not csgo_elo and not skill_level) or not csgo_elo: #If the user is deleted from faceit database, or doesn't have elo
-            continue
-        eu_ranking = batch_ranking[i]
-        if not eu_ranking:
-            continue
-        new_item = eu_ranking, user['faceit_nickname'], csgo_elo, skill_level
-        toplist.append(new_item)
-
-    global FACEIT_API_ERROR
-    if FACEIT_API_ERROR:
-        toplist = []
-        FACEIT_API_ERROR = False
-        ranking = await get_guild_archieved_toplist(guild_id)
-        for item in ranking:
-            eu_ranking, faceit_nickname, csgo_elo, skill_level, last_entry_time = item
-            if not eu_ranking:
-                continue
-            new_item = eu_ranking, faceit_nickname, csgo_elo, skill_level
-            toplist.append(new_item)
-        toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist)
-        return toplist_string + ('\nShowing archieved stats as of %s as faceit live stats could not be fetched.' % to_helsinki(last_entry_time).strftime("%d/%m/%y %H:%M")), len(toplist)
-    toplist = sorted(toplist, key=lambda x: x[0])[:10]
-    return columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL'], toplist), len(toplist)
-
-async def get_guild_archieved_toplist(guild_id):
-    return await db.fetch("""
-            with ranking as 
-            (
-              select distinct ON 
-                (faceit_guid) faceit_guid, 
-                 faceit_ranking, 
-                 faceit_nickname, 
-                 faceit_elo, 
-                 faceit_skill,
-                 guild_id,
-                 changed 
-              from 
-                  faceit_live_stats  
-              join 
-                  faceit_player using (faceit_guid) 
-              join 
-                  faceit_guild_ranking using (faceit_guid) 
-              where 
-                  guild_id = $1  
-              order by faceit_guid, changed desc
-              ),
-            last_changed as 
-            (
-            select
-              max(changed) as last_entry_time,
-              guild_id
-            from
-              faceit_live_stats
-            join 
-              faceit_guild_ranking using (faceit_guid) 
-            where 
-              guild_id = $1
-            group BY 
-              guild_id                
-            )
-            select 
-              faceit_ranking, 
-              faceit_nickname, 
-              faceit_elo, 
-              faceit_skill,
-              last_entry_time
-            from 
-              last_changed
-            LEFT JOIN 
-              ranking using (guild_id)     
-            order by 
-              faceit_ranking asc
-            limit 10
-            """, guild_id)
-
-async def get_user_stats_from_api(faceit_nickname):
-    user, error = await faceit_api.user(faceit_nickname)
-    if error:
-        global FACEIT_API_ERROR
-        FACEIT_API_ERROR = True
-        return None, None
-    skill_level = user.get("games", {}).get("csgo", {}).get("skill_level", 0)
-    csgo_elo = user.get("games", {}).get("csgo", {}).get("faceit_elo", 0)
-    return csgo_elo, skill_level
 
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
