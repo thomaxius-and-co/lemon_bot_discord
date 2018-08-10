@@ -536,18 +536,6 @@ async def cmd_top(client, message, input):
         await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
         return
 
-    elif input == 'faceit':
-        await client.send_message(message.channel,
-                                  'This command is obsolete and will be replaced by !faceit toplist.')
-        toplist, amountofpeople = await get_faceit_leaderboard(guild_id)
-        if not toplist or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'No faceit players have been added to the database, or none of them have rank.')
-            return
-        title = 'Top %s ranked faceit CS:GO players:' % (amountofpeople)
-        await client.send_message(message.channel,
-                                  ('```%s \n' % title + toplist + '```'))
-        return
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
