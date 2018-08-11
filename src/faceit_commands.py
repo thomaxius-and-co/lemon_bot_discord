@@ -23,26 +23,47 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
     csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api_by_nickname(client, message, faceit_nickname)
     aliases_string = "\n**Previous nicknames**: %s" % await get_player_aliases_string(await get_faceit_guid(faceit_nickname), faceit_nickname)
     if csgo_name:
-        await client.send_message(message.channel,
-                                  "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M"), aliases_string, faceit_url))
+        msg = "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
+                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M"), aliases_string, faceit_url)
+        await client.send_message(message.channel, msg[:2000])
 
 async def get_player_aliases_string(faceit_guid, faceit_nickname):
     aliases_query_result = await get_player_aliases(faceit_guid)
     if aliases_query_result:
+        alias_add_date = await get_player_add_date(faceit_guid)
         alias_string = ''
         for record in aliases_query_result:
             alias = record['faceit_nickname']
+            until_date = record['created'].date()
+            date_string = await get_alias_duration_string(alias_add_date, until_date)
             if alias != faceit_nickname:
-                alias_string += alias + ', '
+                alias_string += alias + date_string + ', '
+            alias_add_date = record['created'].date()
         return alias_string[::-1].replace(",","",1)[::-1]
     else:
         return '-'
 
+async def get_alias_duration_string(alias_add_date, until_date):
+    if alias_add_date == until_date:
+        return (" *(%s)*" % until_date)
+    else:
+        return (" *(%s-%s)*" % (alias_add_date, until_date))
+
+async def get_player_add_date(faceit_guid):
+    query_result  = await db.fetchval("""        
+        SELECT
+            min(changed)
+        FROM
+            faceit_live_stats
+        WHERE
+            faceit_guid = $1
+            """, faceit_guid)
+    return query_result.date()
+
 async def get_player_aliases(faceit_guid):
     return await db.fetch("""        
         SELECT
-            faceit_nickname
+            faceit_nickname, created
         FROM
             faceit_aliases
         WHERE
@@ -106,19 +127,14 @@ async def cmd_faceit_commands(client, message, arg):
 async def cmd_show_aliases(client, message, faceit_nickname):
     guild_players = await get_players_in_guild(message.server.id)
     for record in guild_players:
-        log.info(record)
-        log.info(record['faceit_nickname'])
         if faceit_nickname == record['faceit_nickname']:
                 player_guid = await get_faceit_guid(faceit_nickname)
                 if player_guid:
                     aliases_query_result = await get_player_aliases(player_guid)
-                    if aliases_query_result:
-                        alias_string = ''
-                        for record in aliases_query_result:
-                            alias = record['faceit_nickname']
-                            if alias != faceit_nickname:
-                                alias_string += alias + ', '
-                        await client.send_message(message.channel, "**%s** has the following aliases: %s" % (faceit_nickname, alias_string[::-1].replace(",", "", 1)[::-1]))
+                    if aliases_query_result: #This is a bit lazy
+                        alias_string = await get_player_aliases_string(player_guid, faceit_nickname)
+                        msg = "**%s** has the following aliases: %s" % (faceit_nickname, alias_string)
+                        await client.send_message(message.channel, msg[:2000]) #todo: replace this with some sort of 'long message splitter'
                         return
                     else:
                         await client.send_message(message.channel, "**%s** has no aliases." % (
