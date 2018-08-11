@@ -46,7 +46,7 @@ async def get_player_aliases(faceit_guid):
         FROM
             faceit_aliases
         WHERE
-            faceit_guid = $1
+            faceit_guid = $1 AND faceit_nickname not in (SELECT faceit_nickname FROM faceit_player)
         ORDER BY
             created DESC""", faceit_guid)
 
