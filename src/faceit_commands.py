@@ -21,10 +21,11 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
     csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api_by_nickname(client, message, faceit_nickname)
+    log.info("%s, %s, %s, %s, %s, %s)" % (csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url))
     aliases_string = "\n**Previous nicknames**: %s" % await get_player_aliases_string(await get_faceit_guid(faceit_nickname), faceit_nickname)
     if csgo_name:
         msg = "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M"), aliases_string, faceit_url)
+                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M") if last_played else '-', aliases_string, faceit_url)
         await client.send_message(message.channel, msg[:2000])
 
 async def get_player_aliases_string(faceit_guid, faceit_nickname):
@@ -196,12 +197,12 @@ async def get_user_stats_from_api_by_nickname(client, message, faceit_nickname):
         log.error(str(e))
         if client and message:
             await client.send_message(message.channel, str(e))
-        return None, None, None, None, None
+        return None, None, None, None, None, None
     except UnknownError as e:
         log.error("Unknown error: {0}".format(str(e)))
         if client and message:
             await client.send_message(message.channel, "Unknown error")
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
     csgo = user.get("games", {}).get("csgo", {})
     nickname = user.get("nickname", None) # Is this even needed
