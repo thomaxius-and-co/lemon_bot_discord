@@ -21,15 +21,15 @@ def time_to_datetime(struct_time):
 
 def get_date(entry):
     if hasattr(entry, "published_parsed"):
-        sturct_time = entry.published_parsed
+        struct_time = entry.published_parsed
     elif hasattr(entry, "created_parsed"):
-        sturct_time = entry.created_parsed
+        struct_time = entry.created_parsed
     elif hasattr(entry, "updated_parsed"):
-        sturct_time = entry.updated_parsed
+        struct_time = entry.updated_parsed
     elif hasattr(entry, "expred_parsed"):
-        sturct_time = entry.expred_parsed
+        struct_time = entry.expred_parsed
 
-    return time_to_datetime(sturct_time)
+    return time_to_datetime(struct_time)
 
 @perf.time_async("Checking feeds")
 async def check_feeds(client):
