@@ -26,8 +26,8 @@ def get_date(entry):
         struct_time = entry.created_parsed
     elif hasattr(entry, "updated_parsed"):
         struct_time = entry.updated_parsed
-    elif hasattr(entry, "expred_parsed"):
-        struct_time = entry.expred_parsed
+    elif hasattr(entry, "expired_parsed"):
+        struct_time = entry.expired_parsed
 
     return time_to_datetime(struct_time)
 
