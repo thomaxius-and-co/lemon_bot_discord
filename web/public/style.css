@@ -12,7 +12,7 @@ body {
 }
 
 /* Colors and stuff */
-h1, h2, h3, h4, h5, h6, thead {
+h1, h2, h3, h4, h5, h6, thead, a {
   color: #7289da;
   margin: 0;
   padding: 0;
@@ -159,6 +159,11 @@ li.dropdown {
 /* Tables */
 table { width: 100%; }
 
+a {
+  display: inline-block;
+  color: #7289da;
+  text-decoration: none;
+}
 thead {
   font-weight: bold;
 }

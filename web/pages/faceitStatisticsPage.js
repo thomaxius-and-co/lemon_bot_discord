@@ -45,7 +45,7 @@ class TopFaceitTable extends React.Component {
           if (!isNaN(parseInt(a[sortby])) && !isNaN(parseInt(b[sortby]))) {
             return parseInt(a[sortby]) - parseInt(b[sortby])
           }
-          if (typeof a[sortby] === 'string' || a[sortby] instanceof String) {
+          if ((typeof a[sortby] === 'string' || a[sortby] instanceof String) && (typeof b[sortby] === 'string' || b[sortby] instanceof String)) {
             let x = a[sortby].toLowerCase();
             let y = b[sortby].toLowerCase();
               if (x < y) {
@@ -83,12 +83,12 @@ class TopFaceitTable extends React.Component {
     <thead>
       <tr>
           <td>Rank</td>
-          <td onClick={() => this.sortTable("name")}>Name</td>
-          <td onClick={() => this.sortTable("current_ranking")}>EU ranking</td>
-          <td onClick={() => this.sortTable("current_elo")}>Elo</td>
-          <td onClick={() => this.sortTable("best_score")}>Best elo</td>
-          <td onClick={() => this.sortTable("difference_month")}>Elo +- 30 days</td>
-          <td onClick={() => this.sortTable("difference_week")}>Elo +- 7 days</td>
+          <td onClick={() => this.sortTable("name")}><a className='pylly' href="#">Name</a></td>
+          <td onClick={() => this.sortTable("current_ranking")}><a href="#">EU ranking</a></td>
+          <td onClick={() => this.sortTable("current_elo")}><a href="#">Elo</a></td>
+          <td onClick={() => this.sortTable("best_score")}><a href="#">Best elo</a></td>
+          <td onClick={() => this.sortTable("difference_month")}><a href="#">Elo +- 30 days</a></td>
+          <td onClick={() => this.sortTable("difference_week")}><a href="#">Elo +- 7 days</a></td>
           <td>Last seen</td> 
       </tr>
     </thead>
