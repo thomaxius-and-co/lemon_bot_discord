@@ -42,8 +42,10 @@ class TopFaceitTable extends React.Component {
     topFaceit.sort(
       function(a, b) 
         {
-          if (!isNaN(parseInt(a[sortby])) && !isNaN(parseInt(b[sortby]))) {
-            return parseInt(a[sortby]) - parseInt(b[sortby])
+          if (!isNaN(a[sortby]) && !isNaN(b[sortby])) {
+            a = parseInt(a[sortby]) 
+            b = parseInt(b[sortby])
+            return  (b != null) - (a != null) || a - b
           }
           if ((typeof a[sortby] === 'string' || a[sortby] instanceof String) && (typeof b[sortby] === 'string' || b[sortby] instanceof String)) {
             let x = a[sortby].toLowerCase();
@@ -83,7 +85,7 @@ class TopFaceitTable extends React.Component {
     <thead>
       <tr>
           <td>Rank</td>
-          <td onClick={() => this.sortTable("name")}><a className='pylly' href="#">Name</a></td>
+          <td onClick={() => this.sortTable("name")}><a href="#">Name</a></td>
           <td onClick={() => this.sortTable("current_ranking")}><a href="#">EU ranking</a></td>
           <td onClick={() => this.sortTable("current_elo")}><a href="#">Elo</a></td>
           <td onClick={() => this.sortTable("best_score")}><a href="#">Best elo</a></td>
