@@ -39,30 +39,7 @@ class TopFaceitTable extends React.Component {
 
   sortTable(sortby) {
     let topFaceit = copy(this.state.topFaceit)
-    topFaceit.sort(
-      function(a, b) 
-        {
-          if (!isNaN(a[sortby]) && !isNaN(b[sortby])) {
-            a = parseInt(a[sortby]) 
-            b = parseInt(b[sortby])
-            return  (b != null) - (a != null) || a - b
-          }
-          if ((typeof a[sortby] === 'string' || a[sortby] instanceof String) && (typeof b[sortby] === 'string' || b[sortby] instanceof String)) {
-            let x = a[sortby].toLowerCase();
-            let y = b[sortby].toLowerCase();
-              if (x < y) {
-                return -1
-              }
-              if (x > y) {
-                return 1
-              }
-              return 0
-            }
-            else {
-              return
-            }
-        }
-      )
+    topFaceit.sort((a, b) => a[sortby] < b[sortby] ? -1 : a[sortby] > b[sortby] ? 1 : 0)
     let lastSorted = sortby
     if (lastSorted == this.state.lastSorted) {
       topFaceit.reverse()

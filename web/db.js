@@ -210,8 +210,8 @@ db.query(`
       faceit_guid, 
       current_elo,
       current_ranking,
-      current_elo - last_month_elo as difference_month,
-      current_elo - last_week_elo as difference_week,
+      coalesce(current_elo - last_month_elo, 0) as difference_month,
+      coalesce(current_elo - last_week_elo, 0) as difference_week,
       faceit_nickname as name,
       best_score,
       latest_entry
@@ -231,7 +231,17 @@ db.query(`
       faceit_guid in (select faceit_guid from faceit_guild_ranking)
     ORDER BY 
       current_ranking ASC
-`)
+  `)
+  .then(rows => rows.map(convertTopListTypes))
+
+const convertTopListTypes = row =>
+  Object.assign({}, row, {
+    current_elo: Number(row.current_elo),
+    current_ranking: Number(row.current_ranking),
+    best_score: Number(row.best_score),
+    difference_month: Number(row.difference_month),
+    difference_week: Number(row.difference_week),
+  })
 
 const getLatestFaceitEntry = () =>
   db.query(`SELECT max(changed) as latest_entry FROM faceit_live_Stats`).then(rows => rows[0])
