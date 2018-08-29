@@ -38,26 +38,20 @@ class TopFaceitTable extends React.Component {
   }
 
   sortTable(sortby) {
-    let topFaceit = copy(this.state.topFaceit)
-    topFaceit.sort((a, b) => a[sortby] < b[sortby] ? -1 : a[sortby] > b[sortby] ? 1 : 0)
+    const topFaceit = copy(this.state.topFaceit)
+      .sort((a, b) => this.compare(a[sortby], b[sortby]))
+
     let lastSorted = sortby
     if (lastSorted == this.state.lastSorted) {
       topFaceit.reverse()
       lastSorted = ''
     }
-
-    this.setState(() => {
-      return {
-        topFaceit: topFaceit,
-        lastSorted: lastSorted
-      }
-    })
-    
+    this.setState({ topFaceit, lastSorted })
   }
-  render() {
 
+  render() {
     const topFaceit = this.state.topFaceit
-        return(
+    return (
     <table className="row">
     <thead>
       <tr>
@@ -88,6 +82,10 @@ class TopFaceitTable extends React.Component {
     </tbody>
     </table>
     )
+  }
+
+  compare(x, y) {
+    return x < y ? -1 : x > y ? 1 : 0
   }
 }
 
@@ -169,8 +167,6 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     </div>
   )
 }
-
-
 
 module.exports = {
   pageTitle,
