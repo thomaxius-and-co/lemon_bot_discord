@@ -2,7 +2,7 @@ const React = require('react')
 const moment = require('moment')
 require('moment-timezone')
 const {LineChart} = require('./chart')
-const {distinct} = require('../util.js')
+const {distinct, copy} = require('../util.js')
 
 const pageTitle = 'Faceit statistics'
 
@@ -30,15 +30,15 @@ const withSign = n => {
 class TopFaceitTable extends React.Component {
   constructor(props) {
     super(props)
-    this.state = props.state
     this.sortTable = this.sortTable.bind(this)
     this.state = {
+      topFaceit: copy(this.props.topFaceit),
       lastSorted: ''
     }
   }
-    
+
   sortTable(sortby) {
-    let topFaceit = this.props.topFaceit
+    let topFaceit = copy(this.state.topFaceit)
     topFaceit.sort(
       function(a, b) 
         {
@@ -79,7 +79,7 @@ class TopFaceitTable extends React.Component {
   }
   render() {
 
-    const topFaceit = this.props.topFaceit    
+    const topFaceit = this.state.topFaceit
         return(
     <table className="row">
     <thead>
