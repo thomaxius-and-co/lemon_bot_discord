@@ -144,6 +144,8 @@ const c3CssFilePath = path.resolve(`${__dirname}/node_modules/c3/c3.min.css`)
 app.get('/c3.min.css', serveStaticResource(c3CssFilePath))
 
 process.on('SIGUSR2', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
+
 app.listen(3000, () => {
   console.log('Listening on port 3000')
 })
