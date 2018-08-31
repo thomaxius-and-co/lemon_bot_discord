@@ -37,7 +37,7 @@ const topSlotsTable = topSlots =>
     <tbody>
       {topSlots.map(x =>
         <tr key={x.epoch}>
-          <td>{x.rank}</td>
+          <td className="rank">{x.rank}</td>
           <td>{x.name}</td>
           <td>{x.total}</td>
           <td>{x.wins_slots}</td>
@@ -69,7 +69,7 @@ const topBlackjackTable = topBlackjack =>
     <tbody>
       {topBlackjack.map(x =>
         <tr key={x.epoch}>
-          <td>{x.rank}</td>
+          <td className="rank">{x.rank}</td>
           <td>{x.name}</td>
 		  <td>{formatNum(Number(x.total_games), 0)}</td>
           <td>{x.wins_bj}</td>
@@ -123,7 +123,7 @@ const topWhosaiditTable = topWhosaidit =>
     <tbody>
       {topWhosaidit.map(x =>
         <tr key={x.epoch}>
-          <td>{x.rank}</td>
+          <td className="rank">{x.rank}</td>
 		  <td>{x.name}</td>
           <td>{x.total}</td>
 		  <td>{x.wins}</td>

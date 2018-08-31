@@ -157,25 +157,39 @@ li.dropdown {
 }
 
 /* Tables */
-table { width: 100%; }
+table {
+  width: 100%;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
 
 a {
   display: inline-block;
   color: #7289da;
   text-decoration: none;
 }
+
 thead {
   font-weight: bold;
 }
 
 tbody {
-  font-family: monospace;
+  font-family: sans-serif;
 }
 
-td:nth-child(2),
-td:nth-child(3) {
-  text-align: left;
+tr {
+  height: 35px;
 }
+
+td {
+  vertical-align: middle;
+}
+
+td.rank {
+  text-align: center;
+  width: 50px;
+}
+
 tbody tr:nth-child(odd) {
   background-color: #eee;
 }

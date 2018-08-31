@@ -69,7 +69,7 @@ class TopFaceitTable extends React.Component {
     <tbody>
       {topFaceit.map((x, i) =>
         <tr key={x.name}>
-          <td>#{i+1}</td>
+          <td className="rank">#{i+1}</td>
           <td>{x.name}</td>
           <td>{x.current_ranking}</td>
           <td>{x.current_elo}</td>
