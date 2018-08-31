@@ -2,6 +2,7 @@ import asyncio
 import discord
 import os
 import json
+from asyncpg.exceptions import UniqueViolationError
 
 import command
 import database as db
@@ -12,7 +13,14 @@ import util
 
 log = logger.get("OSU")
 
+
 async def cmd_osu(client, message, user):
+    cmd, arg = command.parse(user, prefix="")
+    if cmd == "add":
+        return await cmd_osu_add(client, message, arg)
+    elif cmd in ["rm", "remove", "delete", "del"]:
+        return await cmd_osu_remove(client, message, arg)
+
     user_info = await api.user(user, Mode.Standard)
 
     if not user_info:
@@ -44,6 +52,33 @@ async def cmd_osu(client, message, user):
 
     reply = "**{user_line}**\n```{plays}```".format(user_line=user_line, plays="\n".join(plays))
     await client.send_message(message.channel, reply)
+
+async def cmd_osu_add(client, message, arg):
+    user = arg.strip()
+    if not user: return
+
+    log.info(f"Deleting osu player '{user}' by user {message.author.id} ({message.author.name})")
+    user_std = await api.user(user, Mode.Standard)
+    user_mania = await api.user(user, Mode.Mania)
+    if not user_std or not user_mania:
+        return await client.send_message(message.channel, "User could not be found")
+
+    try:
+        await db.execute("""
+            INSERT INTO osu_pp (osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank, changed)
+            VALUES ($1, $2, $3, $4, $5, $6, current_timestamp)
+        """, user_std.id, message.channel.id, user_std.pp, user_std.rank, user_mania.pp, user_mania.rank)
+    except UniqueViolationError:
+        return await client.send_message(message.channel, f"User is already added")
+
+async def cmd_osu_remove(client, message, arg):
+    user = arg.strip()
+    if not user: return
+
+    log.info(f"Deleting osu player '{user}' by user {message.author.id} ({message.author.name})")
+
+    user_std = await api.user(user, Mode.Standard)
+    await db.execute("DELETE FROM osu_pp WHERE osu_user_id = $1", user_std.id)
 
 async def check_pps(client):
     users = await db.fetch("SELECT osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank FROM osu_pp")

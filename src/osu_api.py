@@ -21,6 +21,7 @@ def head(xs):
 class User:
     def __init__(self, json):
         self.json = json
+        self.id = json["user_id"]
         self.username = json["username"]
 
         if json["pp_rank"] is None:
