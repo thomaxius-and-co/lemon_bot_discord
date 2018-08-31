@@ -173,6 +173,10 @@ thead {
   font-weight: bold;
 }
 
+/* Sorting indicators */
+thead tr td.sorted:after { content: '\25B2'; }
+thead tr td.sorted.reversed:after { content: '\25BC'; }
+
 tbody {
   font-family: sans-serif;
 }

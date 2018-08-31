@@ -32,36 +32,52 @@ class TopFaceitTable extends React.Component {
     super(props)
     this.sortTable = this.sortTable.bind(this)
     this.state = {
-      topFaceit: copy(this.props.topFaceit),
-      lastSorted: ''
+      sortMethod: 'current_ranking',
+      reversed: false,
     }
   }
 
-  sortTable(sortby) {
-    const topFaceit = copy(this.state.topFaceit)
+  toggleSort(sortMethod) {
+    const reversed = this.state.sortMethod == sortMethod && !this.state.reversed
+    this.setState({
+      sortMethod,
+      reversed,
+    })
+  }
+
+  sortTable(list, sortby, reversed) {
+    const topFaceit = copy(list)
       .sort((a, b) => this.compare(a[sortby], b[sortby]))
 
-    let lastSorted = sortby
-    if (lastSorted == this.state.lastSorted) {
-      topFaceit.reverse()
-      lastSorted = ''
-    }
-    this.setState({ topFaceit, lastSorted })
+    if (reversed) topFaceit.reverse()
+    return topFaceit
+  }
+
+  renderHeader(text, sortMethod) {
+    const cls = (this.state.sortMethod == sortMethod && this.state.reversed) ? "sorted reversed" :
+      (this.state.sortMethod == sortMethod) ? "sorted" : ""
+    return (
+      <td className={cls}
+          onClick={() => this.toggleSort(sortMethod)}>
+        <a href="#">{text}</a>
+      </td>
+    )
   }
 
   render() {
-    const topFaceit = this.state.topFaceit
+    const {sortMethod, reversed} = this.state
+    const topFaceit = this.sortTable(this.props.topFaceit, sortMethod, reversed)
     return (
     <table className="row">
     <thead>
       <tr>
           <td>Rank</td>
-          <td onClick={() => this.sortTable("name")}><a href="#">Name</a></td>
-          <td onClick={() => this.sortTable("current_ranking")}><a href="#">EU ranking</a></td>
-          <td onClick={() => this.sortTable("current_elo")}><a href="#">Elo</a></td>
-          <td onClick={() => this.sortTable("best_score")}><a href="#">Best elo</a></td>
-          <td onClick={() => this.sortTable("difference_month")}><a href="#">Elo +- 30 days</a></td>
-          <td onClick={() => this.sortTable("difference_week")}><a href="#">Elo +- 7 days</a></td>
+          {this.renderHeader("Name", "name")}
+          {this.renderHeader("EU ranking", "current_ranking")}
+          {this.renderHeader("Elo", "current_elo")}
+          {this.renderHeader("Best elo", "best_score")}
+          {this.renderHeader("Elo +- 30 days", "difference_month")}
+          {this.renderHeader("Elo +- 7 days", "difference_week")}
           <td>Last seen</td> 
       </tr>
     </thead>
