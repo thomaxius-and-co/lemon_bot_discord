@@ -13,6 +13,8 @@ const statisticsPage = require('./pages/statisticsPage')
 const adminPage = require('./pages/adminPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
 const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
+const personalFaceitStatsPage = require('./pages/personalFaceitStatsPage')
+const validPlayers = db.getAvailablePlayers()
 
 const app = express()
 auth.init(app)
@@ -27,6 +29,8 @@ const checksumPromise = filePath => new Promise((resolve, reject) => {
     }
   })
 })
+
+
 
 const serveStaticResource = filePath => (req, res, next) => {
   checksumPromise(filePath).then(checksum => {
@@ -84,7 +88,7 @@ const buildInitialState = req => {
 	  ) 
   case '/gameStatisticsPage':
     return Promise.join(
-      db.topBlackjack(), db.topSlots(), db.topWhosaidit(), db.whosaiditWeeklyWinners(), db.countMessagesByWeekdays,
+      db.topBlackjack(), db.topSlots(), db.topWhosaidit(), db.whosaiditWeeklyWinners(),
       (topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners) => ({
         topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners
       })
@@ -96,14 +100,20 @@ const buildInitialState = req => {
       topFaceit, latestFaceitEntry, eloForPast30Days
     })
   )
+  case '/personalFaceitStatsPage':
+  return Promise.join(
+    db.getNiskeElo(req.query.name), db.getLatestFaceitEntry(),
+    (niskeFaceit, latestFaceitEntry) => ({
+      niskeFaceit, latestFaceitEntry
+    })
+  )  
   default:
     return Promise.resolve({})
   }
 }
 
-renderApp = (req, res, next) => {
-  console.log(`Requested ${req.originalUrl}`)
-  const path = req.originalUrl
+renderApp = async (req, res, next) => {
+  const path = req.path
   let page = undefined
   if (path === '/admin') {
     page = adminPage
@@ -113,7 +123,9 @@ renderApp = (req, res, next) => {
     page = gameStatisticsPage
   } else if (path === '/faceitStatisticsPage') {
     page = faceitStatisticsPage
-  }  
+  } else if (path === '/personalFaceitStatsPage') {
+    page = personalFaceitStatsPage
+  }
   if (page) {
     Promise.join(
       buildInitialState(req),
@@ -126,7 +138,8 @@ renderApp = (req, res, next) => {
         res.send(ReactDOMServer.renderToString(basePage(page, initialState, checksums)))
       }
     ).catch(next)
-  } else {
+  }
+   else {
     next()
   }
 }
@@ -135,6 +148,7 @@ app.get("/admin", auth.requireAdmin, renderApp)
 app.get("/", renderApp)
 app.get("/gameStatisticsPage", renderApp)
 app.get("/faceitStatisticsPage", renderApp)
+app.get("/personalFaceitStatsPage", renderApp)
 
 const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))

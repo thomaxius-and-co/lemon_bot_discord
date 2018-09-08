@@ -273,6 +273,62 @@ async function getEloForPast30Days() {
   return elos.map(assignName(playerNames))
 }
 
+async function getEloForPast30Days() {
+  const elos = await db.query(`
+    SELECT
+      date_trunc('day', changed) as day,
+      faceit_guid,
+      round(avg(faceit_elo), 0) as elo
+    FROM 
+      faceit_live_stats
+    WHERE 
+      changed > current_timestamp - interval '1 month'
+      AND 
+      faceit_guid IN 
+        (
+          SELECT 
+            faceit_guid 
+          FROM 
+            faceit_guild_ranking)
+    GROUP BY 
+      date_trunc('day', changed), faceit_guid
+    ORDER BY 
+      date_trunc('day', changed)
+  `)
+  const playerIds = distinct(elos.map(s => s.faceit_guid))
+  const playerNames = await getPlayerNames(playerIds)
+  return elos.map(assignName(playerNames))
+}
+
+async function getNiskeElo(name) {
+  const elos = await db.query(`
+      SELECT
+      date_trunc('day', changed) as day,
+      faceit_live_stats.faceit_guid,
+      round(avg(faceit_elo), 0) as elo,
+      faceit_nickname
+    FROM 
+      faceit_live_stats
+    JOIN faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
+    WHERE 
+      changed > current_timestamp - interval '1 month'
+      AND 
+      faceit_live_stats.faceit_guid IN 
+        (
+          SELECT 
+            faceit_guid 
+          FROM 
+            faceit_guild_ranking)
+    AND
+    faceit_nickname = $1
+    GROUP BY 
+      date_trunc('day', changed), faceit_live_stats.faceit_guid,       faceit_nickname
+    ORDER BY 
+      date_trunc('day', changed)
+  `, name)
+  return elos
+}
+
 async function getPlayerNames(playerIds) {
   const rows = await db.query(`SELECT faceit_guid, faceit_nickname FROM faceit_player WHERE faceit_guid = ANY ($1)`, [playerIds])
   const pairs = rows.map(r => [r.faceit_guid, r.faceit_nickname])
@@ -282,6 +338,13 @@ async function getPlayerNames(playerIds) {
 function assignName(nameMap) {
   return obj => Object.assign({}, obj, {faceit_nickname: nameMap[obj.faceit_guid]})
 }
+
+
+
+const getAvailablePlayers = () => db.query(`
+SELECT faceit_nickname FROM faceit_player
+`).then(rows => rows.map((e) => e.faceit_nickname) )
+
 
 // Transforms [[a, b], [c, d]] to {a: b, c: d}
 function pairsToObject(pairs) {
@@ -312,5 +375,7 @@ module.exports = {
   topWhosaidit,
   whosaiditWeeklyWinners,
   faceitTopTen,
-  getLatestFaceitEntry
+  getLatestFaceitEntry,
+  getNiskeElo,
+  getAvailablePlayers
 }
