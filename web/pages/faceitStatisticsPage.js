@@ -86,7 +86,7 @@ class TopFaceitTable extends React.Component {
       {topFaceit.map((x, i) =>
         <tr key={x.name}>
           <td className="rank">#{i+1}</td>
-          <td><a href={"/personalFaceitStatsPage?name=" + x.name}>{x.name}</a></td>
+          <td><a href={"/personalFaceitStatsPage?faceit_guid=" + x.faceit_guid}>{x.name}</a></td>
           <td>{x.current_ranking}</td>
           <td>{x.current_elo}</td>
           <td>{x.best_score}</td>         
@@ -132,7 +132,6 @@ const renderPage = state => <Page state={state} />
 const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
   const days = distinct(dailyEloMonth.map(x => x.day))
   const nicknames = distinct(dailyEloMonth.map(x => x.faceit_nickname))
-
   const playerColumns = nicknames.map(nickname => {
     const findRowForDate = day => dailyEloMonth.find(row => row.faceit_nickname === nickname && row.day === day)
     const optElo = row => row ? Number(row.elo) : null
@@ -150,6 +149,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
     columns,
     xFormat: "%Y-%m-%dT%H:%M:%S.%L%Z",
   }
+
   const axis = {
     x: {
       label: "Date",
@@ -160,6 +160,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
       label: "Elo",
     },
   }
+
   const grid = {
     y: {
       lines: [

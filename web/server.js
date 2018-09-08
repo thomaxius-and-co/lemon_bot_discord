@@ -101,18 +101,24 @@ const buildInitialState = req => {
     })
   )
   case '/personalFaceitStatsPage':
-  return Promise.join(
-    db.getNiskeElo(req.query.name), db.getLatestFaceitEntry(),
-    (niskeFaceit, latestFaceitEntry) => ({
-      niskeFaceit, latestFaceitEntry
-    })
-  )  
+    if (isValidGetParameter(req.query.faceit_guid)) {
+      return Promise.join(
+        db.getPersonalElo(req.query.faceit_guid), db.getLatestFaceitEntry(),
+        (personalFaceit, latestFaceitEntry) => ({
+          personalFaceit, latestFaceitEntry
+        })
+      )
+    }
+      return Promise.resolve({}) 
   default:
     return Promise.resolve({})
   }
 }
 
+const isValidGetParameter = (parameter) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.exec(parameter) // check if get parameter is a guid
+
 renderApp = async (req, res, next) => {
+  console.log(`Requested ${req.originalUrl}`)
   const path = req.path
   let page = undefined
   if (path === '/admin') {

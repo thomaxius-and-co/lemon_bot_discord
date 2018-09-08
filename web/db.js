@@ -300,32 +300,31 @@ async function getEloForPast30Days() {
   return elos.map(assignName(playerNames))
 }
 
-async function getNiskeElo(name) {
+async function getPersonalElo(guid) {
   const elos = await db.query(`
-      SELECT
-      date_trunc('day', changed) as day,
+    SELECT
+      concat(date_part('week', changed),'/',date_part('year', changed)) as week,
       faceit_live_stats.faceit_guid,
-      round(avg(faceit_elo), 0) as elo,
+      round(max(faceit_elo), 0) as elo,
       faceit_nickname
     FROM 
       faceit_live_stats
-    JOIN faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
+    JOIN 
+        faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
     WHERE 
-      changed > current_timestamp - interval '1 month'
-      AND 
-      faceit_live_stats.faceit_guid IN 
-        (
-          SELECT 
-            faceit_guid 
-          FROM 
-            faceit_guild_ranking)
+        faceit_live_stats.faceit_guid IN 
+      (
+        SELECT 
+          faceit_guid 
+        FROM 
+          faceit_guild_ranking)
     AND
-    faceit_nickname = $1
+        faceit_live_stats.faceit_guid = $1
     GROUP BY 
-      date_trunc('day', changed), faceit_live_stats.faceit_guid,       faceit_nickname
+        date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname
     ORDER BY 
-      date_trunc('day', changed)
-  `, name)
+        date_trunc('week', changed)
+  `, guid)
   return elos
 }
 
@@ -342,7 +341,7 @@ function assignName(nameMap) {
 
 
 const getAvailablePlayers = () => db.query(`
-SELECT faceit_nickname FROM faceit_player
+SELECT faceit_guid FROM faceit_player
 `).then(rows => rows.map((e) => e.faceit_nickname) )
 
 
@@ -376,6 +375,6 @@ module.exports = {
   whosaiditWeeklyWinners,
   faceitTopTen,
   getLatestFaceitEntry,
-  getNiskeElo,
+  getPersonalElo,
   getAvailablePlayers
 }

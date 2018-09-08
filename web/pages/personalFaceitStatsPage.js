@@ -27,39 +27,39 @@ class Page extends React.Component {
     return(
       <div>
         {<LastUpdateTime faceit={this.state.latestFaceitEntry} />}
-        {thirtyDaysFaceitEloChart(this.state.niskeFaceit)}
+        {thirtyDaysFaceitEloChart(this.state.personalFaceit)}
       </div>)
   }
 }
 
 const renderPage = state => <Page state={state} />
 
-const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
-  const days = distinct(dailyEloMonth.map(x => x.day))
-  const nicknames = distinct(dailyEloMonth.map(x => x.faceit_nickname))
+const thirtyDaysFaceitEloChart = (weeklyElo) => {
+  const weeks = distinct(weeklyElo.map(x => x.week))
+
+  const nicknames = distinct(weeklyElo.map(x => x.faceit_nickname))
 
   const playerColumns = nicknames.map(nickname => {
-    const findRowForDate = day => dailyEloMonth.find(row => row.faceit_nickname === nickname && row.day === day)
+    const findRowForDate = week => weeklyElo.find(row => row.faceit_nickname === nickname && row.week === week)
     const optElo = row => row ? Number(row.elo) : null
-    const points = days.map(findRowForDate).map(optElo)
+    const points = weeks.map(findRowForDate).map(optElo)
     return [nickname, ...points]
   })
-
   const columns = [
-    ["x", ...days],
+    ["x", ...weeks],
     ...playerColumns,
   ]
 
   const data = {
     x: "x",
     columns,
-    xFormat: "%Y-%m-%dT%H:%M:%S.%L%Z",
+    xFormat: "%W/%Y",
   }
   const axis = {
     x: {
-      label: "Date",
+      label: "Week",
       type: "timeseries",
-      tick: {format: "%Y-%m-%d"}
+      tick: {format: "%W/%Y"}
     },
     y: {
       label: "Elo",
@@ -83,7 +83,7 @@ const thirtyDaysFaceitEloChart = (dailyEloMonth) => {
   }
   return (
     <div>
-     <h2>Elo history for this specific player</h2>
+     <h2>Elo history for this very specific player whose name will be displayed here in the future</h2>
       <LineChart data={data} axis={axis} grid={grid} line={{connectNull: true}} />
     </div>
   )
