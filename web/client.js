@@ -5,6 +5,7 @@ const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
 const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
+const personalFaceitStatsPage = require('./pages/personalFaceitStatsPage')
 const adminPage = require('./pages/adminPage')
 
 const findPage = path => {
@@ -12,7 +13,8 @@ const findPage = path => {
   case "/": return statisticsPage
   case "/admin": return adminPage
   case "/gameStatisticsPage": return gameStatisticsPage  
-  case "/faceitStatisticsPage": return faceitStatisticsPage    
+  case "/faceitStatisticsPage": return faceitStatisticsPage
+  case "/personalFaceitStatsPage": return personalFaceitStatsPage  
 }
 }
 const currentPage = findPage(window.location.pathname)
