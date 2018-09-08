@@ -47,6 +47,7 @@ import emojicommands
 import lossimpsonquotes
 import nokia
 import groom
+import shrek
 
 log = logger.get("BOT")
 
@@ -88,7 +89,7 @@ async def main():
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
                    faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia,
-                   groom]:
+                   groom, shrek]:
         commands.update(module.register(client))
 
     try:
