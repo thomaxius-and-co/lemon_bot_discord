@@ -15,4 +15,7 @@ async def cmd_shrek(client, message, arg):
         now = datetime.now()
         difference = abs(now - birthyear).days * 1440
         age_in_shreks = difference / 95
-        await client.send_message(message.channel, "You are %s shreks old." % round(age_in_shreks, 2))
+        if birthyear > now:
+            await client.send_message(message.channel, "Your baby will be born in %s shreks." % round(age_in_shreks, 2))
+        else:
+            await client.send_message(message.channel, "You are %s shreks old." % round(age_in_shreks, 2))

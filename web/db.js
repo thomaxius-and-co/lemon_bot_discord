@@ -303,6 +303,8 @@ async function getEloForPast30Days() {
 async function getPersonalElo(guid) {
   const elos = await db.query(`
     SELECT
+      distinct on (date_trunc('week',changed))
+      changed,
       concat(date_part('week', changed),'/',date_part('year', changed)) as week,
       faceit_live_stats.faceit_guid,
       round(max(faceit_elo), 0) as elo,
@@ -321,9 +323,9 @@ async function getPersonalElo(guid) {
     AND
         faceit_live_stats.faceit_guid = $1
     GROUP BY 
-        date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname
-    ORDER BY 
-        date_trunc('week', changed)
+        changed, date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname
+    ORDER BY
+        date_trunc('week',changed), changed desc
   `, guid)
   return elos
 }
