@@ -296,7 +296,7 @@ async function getPersonalElo(guid) {
     AND
         faceit_live_stats.faceit_guid = $1
     GROUP BY 
-        changed, date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname
+        changed, date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit nickname, faceit_elo
     ORDER BY
         date_trunc('week',changed), changed desc
   `, guid)
