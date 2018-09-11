@@ -248,25 +248,26 @@ const getLatestFaceitEntry = () =>
 
 async function getEloForPast30Days() {
   const elos = await db.query(`
-    SELECT
-      date_trunc('day', changed) as day,
-      faceit_guid,
-      round(avg(faceit_elo), 0) as elo
-    FROM 
-      faceit_live_stats
-    WHERE 
-      changed > current_timestamp - interval '1 month'
-      AND 
-      faceit_guid IN 
-        (
-          SELECT 
-            faceit_guid 
-          FROM 
-            faceit_guild_ranking)
-    GROUP BY 
-      date_trunc('day', changed), faceit_guid
-    ORDER BY 
-      date_trunc('day', changed)
+  SELECT
+    distinct on (faceit_guid, date_trunc('day', changed))
+    date_trunc('day', changed) as day,
+    faceit_guid,
+    faceit_elo as elo
+  FROM 
+    faceit_live_stats
+  WHERE 
+    changed > current_timestamp - interval '1 month'
+  AND 
+    faceit_guid IN 
+      (
+        SELECT 
+          faceit_guid 
+        FROM 
+          faceit_guild_ranking)
+  GROUP BY 
+    date_trunc('day', changed), faceit_guid, faceit_elo, changed
+  ORDER BY 
+    date_trunc('day', changed), faceit_guid, changed desc
   `)
   const playerIds = distinct(elos.map(s => s.faceit_guid))
   const playerNames = await getPlayerNames(playerIds)
