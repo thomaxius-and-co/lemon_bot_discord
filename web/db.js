@@ -264,8 +264,6 @@ async function getEloForPast30Days() {
           faceit_guid 
         FROM 
           faceit_guild_ranking)
-  GROUP BY 
-    date_trunc('day', changed), faceit_guid, faceit_elo, changed
   ORDER BY 
     date_trunc('day', changed), faceit_guid, changed desc
   `)
