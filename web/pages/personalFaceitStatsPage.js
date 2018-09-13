@@ -54,10 +54,11 @@ const thirtyDaysFaceitEloChart = (weeklyElo, weeklyMedian) => {
     let currentWeek = ''
     weeklyMedian.forEach((element) => {
       !currentWeek && (currentWeek = element.week)
-      element.week == currentWeek && tempArr.push(element.elo)
+      element.week == currentWeek && tempArr.push(Number(element.elo))
       if ((element.week != currentWeek) || (element == weeklyMedian[weeklyMedian.length -1])) {
-        medianArr.push(Number(median(tempArr)))
+        medianArr.push(median(tempArr))
         tempArr = []
+        currentWeek = element.week
       }
 
     })
