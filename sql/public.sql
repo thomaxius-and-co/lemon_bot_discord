@@ -200,7 +200,7 @@ CREATE TABLE faceit_notification_channel (
 CREATE TABlE faceit_aliases (
 	faceit_guid TEXT NOT NULL REFERENCES faceit_player (faceit_guid),
 	faceit_nickname TEXT NOT NULL, 
-	added timestamp without time zone DEFAULT current_timestamp NOT NULL
+	created timestamp without time zone DEFAULT current_timestamp NOT NULL
 );
 
 -- Nokia Health

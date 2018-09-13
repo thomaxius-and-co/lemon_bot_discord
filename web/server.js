@@ -14,7 +14,6 @@ const adminPage = require('./pages/adminPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
 const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 const personalFaceitStatsPage = require('./pages/personalFaceitStatsPage')
-const validPlayers = db.getAvailablePlayers()
 
 const app = express()
 auth.init(app)
@@ -103,9 +102,9 @@ const buildInitialState = req => {
   case '/personalFaceitStatsPage':
     if (isValidGetParameter(req.query.faceit_guid)) {
       return Promise.join(
-        db.getPersonalElo(req.query.faceit_guid), db.getLatestFaceitEntry(),
-        (personalFaceit, latestFaceitEntry) => ({
-          personalFaceit, latestFaceitEntry
+        db.getPersonalWeeklyElo(req.query.faceit_guid), db.getPersonalEloForWeeklyMedian(req.query.faceit_guid), db.getLatestFaceitEntry(),
+        (personalWeeklyElo, personalEloWeeklyMedian, latestFaceitEntry) => ({
+          personalWeeklyElo, personalEloWeeklyMedian, latestFaceitEntry
         })
       )
     }

@@ -8,15 +8,18 @@ const pageTitle = 'Faceit statistics'
 
 const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
 
+const median = (numbers) => {
+  numbers.sort()
+  return numbers.length % 2 === 0 ? ((numbers[numbers.length / 2 - 1] + numbers[numbers.length / 2]) / 2) : numbers[(numbers.length - 1) / 2]
+  }
+
 const initialState = {
   faceit: -1
 }
 
 const LastUpdateTime = ({faceit}) => {
- return <p>As of <b>{formatDateWithHHMM(faceit.latest_entry)} UTC</b></p>
+  return <p>As of <b>{formatDateWithHHMM(faceit.latest_entry)} UTC</b></p>
 }
-
-
 
 class Page extends React.Component {
   constructor(props) {
@@ -27,29 +30,44 @@ class Page extends React.Component {
     return(
       <div>
         {<LastUpdateTime faceit={this.state.latestFaceitEntry} />}
-        {thirtyDaysFaceitEloChart(this.state.personalFaceit)}
+        {thirtyDaysFaceitEloChart(this.state.personalWeeklyElo, this.state.personalEloWeeklyMedian)}
       </div>)
   }
 }
 
 const renderPage = state => <Page state={state} />
 
-const thirtyDaysFaceitEloChart = (weeklyElo) => {
+const thirtyDaysFaceitEloChart = (weeklyElo, weeklyMedian) => {
   const weeks = distinct(weeklyElo.map(x => x.week))
+  const nickname = distinct(weeklyElo.map(x => x.faceit_nickname))
 
-  const nicknames = distinct(weeklyElo.map(x => x.faceit_nickname))
-
-  const playerColumns = nicknames.map(nickname => {
+  const playersColumns = nickname.map(nickname => {
     const findRowForDate = week => weeklyElo.find(row => row.faceit_nickname === nickname && row.week === week)
     const optElo = row => row ? Number(row.elo) : null
     const points = weeks.map(findRowForDate).map(optElo)
-    return [nickname, ...points]
+    return ["Weekly elo", ...points]
   })
+
+  function getPlayersMedianColumns() { //TODO: Make this horrification properly
+    let tempArr = []
+    let medianArr = []
+    let currentWeek = ''
+    weeklyMedian.forEach((element) => {
+      !currentWeek && (currentWeek = element.week)
+      element.week == currentWeek && tempArr.push(element.elo)
+      if ((element.week != currentWeek) || (element == weeklyMedian[weeklyMedian.length -1])) {
+        medianArr.push(Number(median(tempArr)))
+        tempArr = []
+      }
+
+    })
+    return [["Median", ...medianArr]]
+  }
+
   const columns = [
     ["x", ...weeks],
-    ...playerColumns,
+    ...playersColumns, ...getPlayersMedianColumns()
   ]
-
   const data = {
     x: "x",
     columns,
@@ -83,7 +101,7 @@ const thirtyDaysFaceitEloChart = (weeklyElo) => {
   }
   return (
     <div>
-     <h2>Elo history for this very specific player whose name will be displayed here in the future</h2>
+     <h2>All time weekly elo history for {nickname}</h2>
       <LineChart data={data} axis={axis} grid={grid} line={{connectNull: true}} />
     </div>
   )

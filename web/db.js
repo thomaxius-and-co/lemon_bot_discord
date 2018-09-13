@@ -272,9 +272,9 @@ async function getEloForPast30Days() {
   return elos.map(assignName(playerNames))
 }
 
-async function getPersonalElo(guid) {
+async function getPersonalWeeklyElo(guid) {
   const elos = await db.query(`
-    SELECT
+      SELECT
       distinct on (date_trunc('week',changed))
       changed,
       concat(date_part('week', changed),'/',date_part('year', changed)) as week,
@@ -302,6 +302,35 @@ async function getPersonalElo(guid) {
   return elos
 }
 
+async function getPersonalEloForWeeklyMedian(guid) {
+  const elos = await db.query(`
+    SELECT
+      changed,
+      concat(date_part('week', changed),'/',date_part('year', changed)) as week,
+      faceit_live_stats.faceit_guid,
+      faceit_elo as elo,
+      faceit_nickname
+    FROM 
+      faceit_live_stats
+    JOIN 
+        faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
+    WHERE 
+        faceit_live_stats.faceit_guid IN 
+      (
+        SELECT 
+          faceit_guid 
+        FROM 
+          faceit_guild_ranking)
+    AND
+    faceit_live_stats.faceit_guid = $1
+    GROUP BY 
+        changed, faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname, faceit_elo
+    ORDER BY
+        changed desc
+  `, guid)
+  return elos
+}
+
 async function getPlayerNames(playerIds) {
   const rows = await db.query(`SELECT faceit_guid, faceit_nickname FROM faceit_player WHERE faceit_guid = ANY ($1)`, [playerIds])
   const pairs = rows.map(r => [r.faceit_guid, r.faceit_nickname])
@@ -311,13 +340,6 @@ async function getPlayerNames(playerIds) {
 function assignName(nameMap) {
   return obj => Object.assign({}, obj, {faceit_nickname: nameMap[obj.faceit_guid]})
 }
-
-
-
-const getAvailablePlayers = () => db.query(`
-SELECT faceit_guid FROM faceit_player
-`).then(rows => rows.map((e) => e.faceit_nickname) )
-
 
 // Transforms [[a, b], [c, d]] to {a: b, c: d}
 function pairsToObject(pairs) {
@@ -349,6 +371,7 @@ module.exports = {
   whosaiditWeeklyWinners,
   faceitTopTen,
   getLatestFaceitEntry,
-  getPersonalElo,
-  getAvailablePlayers
+  getPersonalWeeklyElo,
+  getPersonalEloForWeeklyMedian
 }
+
