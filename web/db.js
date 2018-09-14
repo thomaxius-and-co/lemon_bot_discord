@@ -297,7 +297,8 @@ async function getPersonalWeeklyElo(guid) {
     GROUP BY 
         changed, date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname, faceit_elo
     ORDER BY
-        date_trunc('week',changed), changed desc
+        date_trunc('week',changed), changed 
+        ASC
   `, guid)
   return elos
 }
