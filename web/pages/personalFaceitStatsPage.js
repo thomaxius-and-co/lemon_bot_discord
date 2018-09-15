@@ -8,11 +8,6 @@ const pageTitle = 'Faceit statistics'
 
 const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
 
-const median = (numbers) => {
-  numbers.sort()
-  return numbers.length % 2 === 0 ? ((numbers[numbers.length / 2 - 1] + numbers[numbers.length / 2]) / 2) : numbers[(numbers.length - 1) / 2]
-  }
-
 const initialState = {
   faceit: -1
 }
@@ -30,14 +25,14 @@ class Page extends React.Component {
     return(
       <div>
         {<LastUpdateTime faceit={this.state.latestFaceitEntry} />}
-        {thirtyDaysFaceitEloChart(this.state.personalWeeklyElo, this.state.personalEloWeeklyMedian)}
+        {thirtyDaysFaceitEloChart(this.state.personalWeeklyElo, this.state.rollingAverageElo)}
       </div>)
   }
 }
 
 const renderPage = state => <Page state={state} />
 
-const thirtyDaysFaceitEloChart = (weeklyElo, weeklyMedian) => {
+const thirtyDaysFaceitEloChart = (weeklyElo, rollingAverage) => {
   const weeks = distinct(weeklyElo.map(x => x.week))
   const nickname = distinct(weeklyElo.map(x => x.faceit_nickname))
 
@@ -48,26 +43,16 @@ const thirtyDaysFaceitEloChart = (weeklyElo, weeklyMedian) => {
     return ["Weekly elo", ...points]
   })
 
-  function getPlayersMedianColumns() { //TODO: Make this horrification properly
-    let tempArr = []
-    let medianArr = []
-    let currentWeek = ''
-    weeklyMedian.forEach((element) => {
-      !currentWeek && (currentWeek = element.week)
-      element.week == currentWeek && tempArr.push(Number(element.elo))
-      if ((element.week != currentWeek) || (element == weeklyMedian[weeklyMedian.length -1])) {
-        medianArr.push(median(tempArr))
-        tempArr = []
-        currentWeek = element.week
-      }
-
-    })
-    return [["Median", ...medianArr]]
-  }
+  const playersrollingAverageColumns = nickname.map(nickname => {
+    const findRowForDate = week => rollingAverage.find(row => row.faceit_nickname === nickname && row.week === week)
+    const optElo = row => row ? Number(row.average) : null
+    const points = weeks.map(findRowForDate).map(optElo)
+    return ["Rolling 4 week average", ...points]
+  })
 
   const columns = [
     ["x", ...weeks],
-    ...playersColumns, ...getPlayersMedianColumns()
+    ...playersColumns, ...playersrollingAverageColumns
   ]
   const data = {
     x: "x",

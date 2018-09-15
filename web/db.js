@@ -303,33 +303,46 @@ async function getPersonalWeeklyElo(guid) {
   return elos
 }
 
-async function getPersonalEloForWeeklyMedian(guid) {
+async function getRollingAverageElo(player_guid) {
   const elos = await db.query(`
-    SELECT
-      changed,
-      concat(date_part('week', changed),'/',date_part('year', changed)) as week,
-      faceit_live_stats.faceit_guid,
-      faceit_elo as elo,
-      faceit_nickname
-    FROM 
-      faceit_live_stats
-    JOIN 
-        faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
-    WHERE 
-        faceit_live_stats.faceit_guid IN 
+    WITH a as 
       (
-        SELECT 
-          faceit_guid 
+        SELECT
+          distinct on (date_trunc('week',changed))
+          changed,
+          concat(date_part('week', changed),'/',date_part('year', changed)) as week,
+          faceit_live_stats.faceit_guid,
+          faceit_elo as elo,
+          faceit_nickname
         FROM 
-          faceit_guild_ranking)
-    AND
-    faceit_live_stats.faceit_guid = $1
-    GROUP BY 
-        changed, faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname, faceit_elo
-    ORDER BY
-        changed 
-        ASC
-  `, guid)
+          faceit_live_stats
+        JOIN 
+            faceit_player on faceit_live_stats.faceit_guid = faceit_player.faceit_guid
+        WHERE 
+            faceit_live_stats.faceit_guid IN 
+          (
+            SELECT 
+              faceit_guid 
+            FROM 
+              faceit_guild_ranking)
+        AND
+            faceit_live_stats.faceit_guid = $1
+        GROUP BY 
+            changed, date_trunc('week', changed), faceit_live_stats.faceit_guid, concat(date_part('week', changed),'/',date_part('year', changed)), faceit_nickname, faceit_elo
+        ORDER BY
+            date_trunc('week',changed), changed
+        DESC
+      )
+    SELECT
+        week,
+        faceit_guid,
+        faceit_nickname,
+        avg(elo) OVER (ORDER BY changed desc ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)::float AS average
+    FROM
+        a
+    ORDER BY 
+        changed
+  `, player_guid)
   return elos
 }
 
@@ -374,6 +387,6 @@ module.exports = {
   faceitTopTen,
   getLatestFaceitEntry,
   getPersonalWeeklyElo,
-  getPersonalEloForWeeklyMedian
+  getRollingAverageElo
 }
 

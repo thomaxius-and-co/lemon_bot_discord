@@ -102,9 +102,9 @@ const buildInitialState = req => {
   case '/personalFaceitStatsPage':
     if (isValidGetParameter(req.query.faceit_guid)) {
       return Promise.join(
-        db.getPersonalWeeklyElo(req.query.faceit_guid), db.getPersonalEloForWeeklyMedian(req.query.faceit_guid), db.getLatestFaceitEntry(),
-        (personalWeeklyElo, personalEloWeeklyMedian, latestFaceitEntry) => ({
-          personalWeeklyElo, personalEloWeeklyMedian, latestFaceitEntry
+        db.getPersonalWeeklyElo(req.query.faceit_guid), db.getRollingAverageElo(req.query.faceit_guid), db.getLatestFaceitEntry(),
+        (personalWeeklyElo, rollingAverageElo, latestFaceitEntry) => ({
+          personalWeeklyElo, rollingAverageElo, latestFaceitEntry
         })
       )
     }
