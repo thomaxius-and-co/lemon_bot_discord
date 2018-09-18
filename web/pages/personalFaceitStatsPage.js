@@ -33,18 +33,56 @@ class Page extends React.Component {
 const renderPage = state => <Page state={state} />
 
 const faceitStats = (apiStats) => {
+
+  const getSpecificPerMatchStat = (arg) => {
+    let total = 0
+    apiStats.segments.forEach((element) => total += parseInt(element.stats[arg]))
+    let average = (total / (parseInt(apiStats.lifetime['Matches'].replace(',','').replace(' ','')))).toFixed(2) // kudos to the person who decided to put numbers as strings in the api
+    return total + ` (${average} per match)`
+  }
+
+
+  const getSpecificPerRoundStat = (arg) => {
+    let total = 0
+    let totalRounds = 0
+    apiStats.segments.forEach((element) => {
+      total += parseInt(element.stats[arg].replace(',',''))  // kudos to the person who decided to put numbers as strings in the api
+      totalRounds += parseInt(element.stats['Rounds'].replace(',','')) 
+    })
+    let average = (total / totalRounds).toFixed(2)
+    return total + ` (${average} per round)`
+  }
+
+  const getBestMapWinPercentage = () => {
+    let mapWinPercentage = 0
+    let mapNames = []
+    apiStats.segments.forEach((element) => { // I was too tired to turn this into an oneliner
+      if (parseInt(element.stats["Win Rate %"]) >= mapWinPercentage && (element.stats["Wins"] >= 10)) {
+        mapWinPercentage = element.stats["Win Rate %"]
+        mapNames.push(element.label)
+      }
+    })
+    return mapWinPercentage + "% " + mapNames.join(', ')
+  }
+
+
   return (
   <div>
-  Average headshot percentage: {apiStats.lifetime['Average Headshots %']} %<br/>
-  Average K/D Ratio: {apiStats.lifetime['Average K/D Ratio']}<br/>
-  Current Win Streak: {apiStats.lifetime['Current Win Streak']}<br/>
-  K/D Ratio: {parseFloat(apiStats.lifetime['K/D Ratio'].replace(',','.').replace(' ','')).toFixed(2)}<br/>
-  Longest Win Streak: {apiStats.lifetime['Longest Win Streak']}<br/>
-  Total matches: {apiStats.lifetime['Matches']}<br/>
-  Last five matches: {apiStats.lifetime['Recent Results'].map((element) => (element == 0) ? <font color="red">L </font> : <font color="green ">W </font>)}<br/>
-  Total Headshot %: {parseFloat(apiStats.lifetime['Total Headshots %'].replace(',','.').replace(' ','')).toFixed(2)}<br/>
-  Win Rate %: {apiStats.lifetime['Win Rate %']}<br/>
-  Total Wins: {apiStats.lifetime['Wins']}<br/>
+  <b>Total matches</b>: {apiStats.lifetime['Matches']}<br/>
+  <b>Total Wins</b>: {apiStats.lifetime['Wins']}<br/>
+  <b>Win Rate</b>: {apiStats.lifetime['Win Rate %'] + '%'}<br/>
+  <b>Best map winrate</b>: {getBestMapWinPercentage()}<br/>
+  <b>Average headshot percentage</b>: {apiStats.lifetime['Average Headshots %']} %<br/>
+  <b>Average K/D Ratio</b>: {apiStats.lifetime['Average K/D Ratio']}<br/>
+  <b>Total MVP's</b>: {getSpecificPerRoundStat("MVPs")}<br/>
+  <b>Total kills</b>: {getSpecificPerRoundStat("Kills")}<br/> 
+  <b>Total deaths</b>: {getSpecificPerRoundStat("Deaths")}<br/> 
+  <b>Current Win Streak</b>: {apiStats.lifetime['Current Win Streak']}<br/>
+  <b>Longest Win Streak</b>: {apiStats.lifetime['Longest Win Streak']}<br/>
+  <b>Total Penta kills</b>: {getSpecificPerMatchStat("Penta Kills")}<br/>
+  <b>Total Quadro Kills</b>: {getSpecificPerMatchStat("Quadro Kills")}<br/>
+  <b>Total Triple Kills</b>: {getSpecificPerMatchStat("Triple Kills")}<br/>
+  <b>Last five matches</b>: {apiStats.lifetime['Recent Results'].map((element) => (element == 0) ? <font color="red">L </font> : <font color="green ">W </font>)}<br/>
   <br/>
   </div>
 )
