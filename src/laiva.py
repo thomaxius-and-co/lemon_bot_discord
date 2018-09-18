@@ -20,8 +20,8 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_laiva(client, message, query):
-    laiva = to_utc(as_helsinki(datetime(2017, 11, 26, 8, 30)))
-    laivaover = to_utc(as_helsinki(datetime(2017, 11, 26, 21, 0)))
+    laiva = to_utc(as_helsinki(datetime(2018, 11, 9, 16, 0)))
+    laivaover = to_utc(as_helsinki(datetime(2018, 11, 11, 14, 0)))
     now = as_utc(datetime.now())
     now_to_last_laivaover = now - laivaover
 
