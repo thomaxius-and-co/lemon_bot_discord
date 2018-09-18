@@ -3,7 +3,6 @@ const moment = require('moment')
 const {distinct} = require('../util.js')
 require('moment-timezone')
 const {LineChart} = require('./chart')
-
 const pageTitle = 'Faceit statistics'
 
 const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
@@ -25,14 +24,33 @@ class Page extends React.Component {
     return(
       <div>
         {<LastUpdateTime faceit={this.state.latestFaceitEntry} />}
-        {thirtyDaysFaceitEloChart(this.state.personalWeeklyElo, this.state.rollingAverageElo)}
+        {faceitStats(this.state.stats)}
+        {faceitEloChart(this.state.personalWeeklyElo, this.state.rollingAverageElo)}
       </div>)
   }
 }
 
 const renderPage = state => <Page state={state} />
 
-const thirtyDaysFaceitEloChart = (weeklyElo, rollingAverage) => {
+const faceitStats = (apiStats) => {
+  return (
+  <div>
+  Average headshot percentage: {apiStats.lifetime['Average Headshots %']} %<br/>
+  Average K/D Ratio: {apiStats.lifetime['Average K/D Ratio']}<br/>
+  Current Win Streak: {apiStats.lifetime['Current Win Streak']}<br/>
+  K/D Ratio: {parseFloat(apiStats.lifetime['K/D Ratio'].replace(',','.').replace(' ','')).toFixed(2)}<br/>
+  Longest Win Streak: {apiStats.lifetime['Longest Win Streak']}<br/>
+  Total matches: {apiStats.lifetime['Matches']}<br/>
+  Last five matches: {apiStats.lifetime['Recent Results'].map((element) => (element == 0) ? <font color="red">L </font> : <font color="green ">W </font>)}<br/>
+  Total Headshot %: {parseFloat(apiStats.lifetime['Total Headshots %'].replace(',','.').replace(' ','')).toFixed(2)}<br/>
+  Win Rate %: {apiStats.lifetime['Win Rate %']}<br/>
+  Total Wins: {apiStats.lifetime['Wins']}<br/>
+  <br/>
+  </div>
+)
+}
+
+const faceitEloChart = (weeklyElo, rollingAverage) => {
   const weeks = distinct(weeklyElo.map(x => x.week))
   const nickname = distinct(weeklyElo.map(x => x.faceit_nickname))
 
@@ -85,6 +103,7 @@ const thirtyDaysFaceitEloChart = (weeklyElo, rollingAverage) => {
       ]
     }
   }
+
   return (
     <div>
      <h2>All time weekly elo history for {nickname}</h2>

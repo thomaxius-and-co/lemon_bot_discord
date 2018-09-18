@@ -1,4 +1,3 @@
-const express = require("express")
 const passport = require("passport")
 const DiscordStrategy = require("passport-discord").Strategy
 const session = require("express-session")

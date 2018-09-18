@@ -14,7 +14,7 @@ const adminPage = require('./pages/adminPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
 const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 const personalFaceitStatsPage = require('./pages/personalFaceitStatsPage')
-
+const faceit_api = require('./faceit_api')
 const app = express()
 auth.init(app)
 nokia.setup(app)
@@ -102,9 +102,9 @@ const buildInitialState = req => {
   case '/personalFaceitStatsPage':
     if (isValidGetParameter(req.query.faceit_guid)) {
       return Promise.join(
-        db.getPersonalWeeklyElo(req.query.faceit_guid), db.getRollingAverageElo(req.query.faceit_guid), db.getLatestFaceitEntry(),
-        (personalWeeklyElo, rollingAverageElo, latestFaceitEntry) => ({
-          personalWeeklyElo, rollingAverageElo, latestFaceitEntry
+        db.getPersonalWeeklyElo(req.query.faceit_guid), db.getRollingAverageElo(req.query.faceit_guid), db.getLatestFaceitEntry(), faceit_api.getStats(req.query.faceit_guid),
+        (personalWeeklyElo, rollingAverageElo, latestFaceitEntry, stats) => ({
+          personalWeeklyElo, rollingAverageElo, latestFaceitEntry, stats
         })
       )
     }
