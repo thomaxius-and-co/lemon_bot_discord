@@ -1,6 +1,6 @@
 const React = require('react')
 const moment = require('moment')
-const {distinct} = require('../util.js')
+const {distinct, copy} = require('../util.js')
 require('moment-timezone')
 const {LineChart} = require('./chart')
 const pageTitle = 'Faceit statistics'
@@ -53,25 +53,25 @@ const faceitStats = (apiStats) => {
     return total + ` (${average} per round)`
   }
 
-  const getBestMapWinPercentage = () => {
-    let mapWinPercentage = 0
-    let mapNames = []
-    apiStats.segments.forEach((element) => { // I was too tired to turn this into an oneliner
-      if (parseInt(element.stats["Win Rate %"]) >= mapWinPercentage && (element.stats["Wins"] >= 10)) {
-        mapWinPercentage = element.stats["Win Rate %"]
-        mapNames.push(element.label)
-      }
-    })
+  const getBestMapWinPercentage = segments => {
+    const sorted = copy(segments)
+      .filter(s => Number(s.stats["Wins"]) >= 10)
+      .sort((a, b) => Number(a.stats["Win Rate %"]) - Number(b.stats["Win Rate %"]))
+      .reverse()
+    let mapWinPercentage = Number(sorted[0].stats["Win Rate %"])
+    let mapNames = sorted.filter(_ => Number(_.stats["Win Rate %"]) === mapWinPercentage).map(_ => _.label)
+    console.log(mapNames)
     return mapWinPercentage + "% " + mapNames.join(', ')
   }
 
 
   return (
   <div>
+  <p>Note: Due to a bug in the Faceit api, some of the stats on this page are currently inaccurate.</p>
   <b>Total matches</b>: {apiStats.lifetime['Matches']}<br/>
   <b>Total Wins</b>: {apiStats.lifetime['Wins']}<br/>
   <b>Win Rate</b>: {apiStats.lifetime['Win Rate %'] + '%'}<br/>
-  <b>Best map winrate</b>: {getBestMapWinPercentage()}<br/>
+  <b>Best map winrate</b>: {getBestMapWinPercentage(apiStats.segments)}<br/>
   <b>Average headshot percentage</b>: {apiStats.lifetime['Average Headshots %']} %<br/>
   <b>Average K/D Ratio</b>: {apiStats.lifetime['Average K/D Ratio']}<br/>
   <b>Total MVP's</b>: {getSpecificPerRoundStat("MVPs")}<br/>
