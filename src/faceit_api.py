@@ -66,7 +66,7 @@ async def ranking(player_id, region="EU", game_id="csgo"):
 
 @retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
 async def _call_api(path, query=None):
-    url = "https://open.faceit.com/data/v4/rankings/games/csgo/regions/EU/players/{2}".format(path, http_util.make_query_string(query))
+    url = "https://open.faceit.com/data/v4{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.get(url, headers=AUTH_HEADER)
