@@ -11,4 +11,13 @@ function getStats(playerGuid) {
     })
   }
 
-module.exports = {getStats}
+function getPlayerDetails(playerGuid) {
+    return request({
+      headers: {Authorization: "Bearer " + faceit_api},
+      method: 'GET',
+      uri: `https://open.faceit.com/data/v4/players/${playerGuid}`,
+      json: true,
+    })
+  }
+
+module.exports = {getStats, getPlayerDetails}

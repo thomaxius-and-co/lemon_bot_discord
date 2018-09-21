@@ -5,15 +5,10 @@ require('moment-timezone')
 const {LineChart} = require('./chart')
 const pageTitle = 'Faceit statistics'
 
-const formatDateWithHHMM = epochMs => moment(epochMs).tz('UTC').format('YYYY-MM-DD HH:MM')
-
 const initialState = {
   faceit: -1
 }
 
-const LastUpdateTime = ({faceit}) => {
-  return <p>As of <b>{formatDateWithHHMM(faceit.latest_entry)} UTC</b></p>
-}
 
 class Page extends React.Component {
   constructor(props) {
@@ -23,7 +18,9 @@ class Page extends React.Component {
   render() {
     return(
       <div>
-        {<LastUpdateTime faceit={this.state.latestFaceitEntry} />}
+      <br/>{/*Todo: Hiero css:ää mieluummin*/}
+        <h2>Personal stats for {this.state.playerDetails.nickname} <img src={this.state.playerDetails.avatar} height="52" width="52"/></h2>
+        {faceitDetails(this.state.playerDetails)}
         {faceitStats(this.state.stats)}
         {faceitEloChart(this.state.personalWeeklyElo, this.state.rollingAverageElo)}
       </div>)
@@ -31,6 +28,22 @@ class Page extends React.Component {
 }
 
 const renderPage = state => <Page state={state} />
+
+const faceitDetails = (apiPlayerDetails) => {
+  const steamUrl = `https://steamcommunity.com/profiles/${apiPlayerDetails.steam_id_64}`
+  const faceitUrl = apiPlayerDetails.faceit_url.replace('{lang}','en')
+
+  return (
+    <div>
+    <p><a href={steamUrl}><img src={"https://orig00.deviantart.net/8fb4/f/2015/192/5/1/steam_logo_by_koolartist69-d90x4u8.png"} height="32" width="42"/></a> {/*I know this is dirty to link images and resize here, 
+  but I'm not going to fight with making local images work today*/}
+<a href={faceitUrl}><img src={"https://developers.faceit.com/static/media/logo.6c58ba31.svg"} height="32" width="32"/></a></p>
+    <b>Membership type:</b> {apiPlayerDetails.membership_type}<br/>
+    <b>Country:</b> {apiPlayerDetails.country}<br/>
+    {<b>Player bans:</b> && apiPlayerDetails.bans}
+    </div>
+  )
+}
 
 const faceitStats = (apiStats) => {
 
@@ -60,7 +73,6 @@ const faceitStats = (apiStats) => {
       .reverse()
     let mapWinPercentage = Number(sorted[0].stats["Win Rate %"])
     let mapNames = sorted.filter(_ => Number(_.stats["Win Rate %"]) === mapWinPercentage).map(_ => _.label)
-    console.log(mapNames)
     return mapWinPercentage + "% " + mapNames.join(', ')
   }
 
@@ -144,7 +156,7 @@ const faceitEloChart = (weeklyElo, rollingAverage) => {
 
   return (
     <div>
-     <h2>All time weekly elo history for {nickname}</h2>
+     <h2>All time weekly elo history </h2>
       <LineChart data={data} axis={axis} grid={grid} line={{connectNull: true}} />
     </div>
   )
