@@ -7,7 +7,10 @@ import database as db
 import http_util
 import logger
 
-log = logger.get("NOKIA_API")
+log = logger.get("WITHINGS_API")
+
+AUTH_HOSTNAME = "account.withings.com"
+API_HOSTNAME = "wbsapi.withings.net"
 
 class AccountNotLinkedException(Exception):
     pass
@@ -15,7 +18,7 @@ class AccountNotLinkedException(Exception):
 def auto_refresh_token(func):
     """
     Annotation that refreshes access token and retries if needed for functions
-    that return raw Nokia Health API responses.
+    that return raw Withings API responses.
     """
     @functools.wraps(func)
     async def func_with_retry(user_id, *args, **kwargs):
@@ -27,7 +30,7 @@ def auto_refresh_token(func):
     return func_with_retry
 
 async def get_tokens(user_id):
-    row = await db.fetchrow("SELECT access_token, refresh_token FROM nokia_health_link WHERE user_id = $1", user_id)
+    row = await db.fetchrow("SELECT access_token, refresh_token FROM withings_link WHERE user_id = $1", user_id)
     if row is None:
         raise AccountNotLinkedException()
     return row["access_token"], row["refresh_token"]
@@ -36,7 +39,7 @@ async def get_tokens(user_id):
 async def getdevice(user_id):
     access_token, refresh_token = await get_tokens(user_id)
     params = {"action": "getdevice", "access_token": access_token}
-    url = "https://api.health.nokia.com/v2/user{0}".format(http_util.make_query_string(params))
+    url = f"https://{API_HOSTNAME}/v2/user{http_util.make_query_string(params)}"
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
         log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, await r.text())
@@ -45,11 +48,11 @@ async def getdevice(user_id):
 async def refresh_access_token(user_id):
     access_token, refresh_token = await get_tokens(user_id)
     async with aiohttp.ClientSession() as session:
-        url = "https://account.health.nokia.com/oauth2/token"
+        url = f"https://{AUTH_HOSTNAME}/oauth2/token"
         r = await session.post(url, data={
             "grant_type": "refresh_token",
-            "client_id": os.environ.get("NOKIA_HEALTH_CLIENT_ID"),
-            "client_secret": os.environ.get("NOKIA_HEALTH_CLIENT_SECRET"),
+            "client_id": os.environ.get("WITHINGS_CLIENT_ID"),
+            "client_secret": os.environ.get("WITHINGS_CLIENT_SECRET"),
             "refresh_token": refresh_token,
         })
         log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, "<REDACTED>")
@@ -60,7 +63,7 @@ async def refresh_access_token(user_id):
 
 async def upsert_access_token(user_id, token_response):
     sql = """
-        INSERT INTO nokia_health_link (user_id, access_token, refresh_token, original, changed, created)
+        INSERT INTO withings_link (user_id, access_token, refresh_token, original, changed, created)
         VALUES ($1, $2, $3, $4, current_timestamp, current_timestamp)
         ON CONFLICT (user_id) DO UPDATE SET
             access_token = EXCLUDED.access_token,

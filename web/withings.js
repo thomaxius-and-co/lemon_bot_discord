@@ -1,9 +1,12 @@
 const request = require('request-promise')
 const {db} = require('./db')
 
+const API_HOSTNAME = `wbsapi.withings.net`
+const AUTH_HOSTNAME = `account.withings.com`
+
 function setup(app) {
-  app.get('/auth/nokia', redirectToNokiaHealth)
-  app.get('/auth/nokia/callback', handleCallback)
+  app.get(`/auth/withings`, redirectToAuth)
+  app.get(`/auth/withings/callback`, handleCallback)
 }
 
 function getDevice(userId) {
@@ -16,7 +19,7 @@ function getDevice(userId) {
     const accessToken = tokens.access_token
     return request({
       method: 'GET',
-      uri: `https://api.health.nokia.com/v2/user?action=getdevice&access_token=${accessToken}`,
+      uri: `https://${API_HOSTNAME}/v2/user?action=getdevice&access_token=${accessToken}`,
       json: true,
     })
   })
@@ -25,46 +28,46 @@ function getDevice(userId) {
 function refreshAccessToken(userId) {
   return getTokens(userId).then(tokens =>
     request({
-      url: `https://account.health.nokia.com/oauth2/token`,
+      url: `https://${AUTH_HOSTNAME}/oauth2/token`,
       method: 'POST',
       form: makeRefreshRequest(tokens.refresh_token),
       json: true,
     }).then(response => {
-      console.log(`Refreshed Nokia Health access token`)
+      console.log(`Refreshed Withings access token`)
       return upsertToken(userId, response)
     })
   )
 }
 
-function redirectToNokiaHealth(req, res) {
-  // TODO: If user already has Nokia Health link this might not be required (unless token is expired?)
-  req.session.nokia_state = `thisshouldprobablybesomethingrandombutnotnecessarilysecret`
-  res.redirect(makeAuthorizeUrl(req.session.nokia_state))
+function redirectToAuth(req, res) {
+  // TODO: If user already has account linked this might not be required (unless token is expired?)
+  req.session.withings_state = `thisshouldprobablybesomethingrandombutnotnecessarilysecret`
+  res.redirect(makeAuthorizeUrl(req.session.withings_state))
 }
 
 function handleCallback(req, res) {
-  if (req.query.state !== req.session.nokia_state) {
-    console.log(`State '${req.query.state}' does not match what was given on redirect (${req.session.nokia_state})`)
+  if (req.query.state !== req.session.withings_state) {
+    console.log(`State '${req.query.state}' does not match what was given on redirect (${req.session.withings_state})`)
     // TODO: Some proper flow for this error case
     return res.send(500, 'Internal server error')
   }
 
-  console.log(`Received code from Nokia Health`)
+  console.log(`Received code from Withings`)
 
   request({
-    url: `https://account.health.nokia.com/oauth2/token`,
+    url: `https://${AUTH_HOSTNAME}/oauth2/token`,
     method: 'POST',
     form: makeTokenRequest(req.query.code),
     json: true,
   }).then(response => {
-    console.log(`Received access token from Nokia Health`)
+    console.log(`Received access token from Withings`)
     upsertToken(req.user.id, response).then(() => res.redirect('/'))
   })
 }
 
 function upsertToken(userId, tokenResponse) {
   const sql = `
-    INSERT INTO nokia_health_link (user_id, access_token, refresh_token, original, changed, created)
+    INSERT INTO withings_link (user_id, access_token, refresh_token, original, changed, created)
     VALUES ($1, $2, $3, $4, current_timestamp, current_timestamp)
     ON CONFLICT (user_id) DO UPDATE SET
       access_token = EXCLUDED.access_token,
@@ -78,10 +81,10 @@ function upsertToken(userId, tokenResponse) {
 
 function makeAuthorizeUrl(state) {
   const responseType = `code`
-  const clientId = process.env.NOKIA_HEALTH_CLIENT_ID
+  const clientId = process.env.WITHINGS_CLIENT_ID
   const scope = `user.info,user.metrics,user.activity`
-  const redirectUri = process.env.NOKIA_HEALTH_CALLBACK_URL
-  return `https://account.health.nokia.com/oauth2_user/authorize2` +
+  const redirectUri = process.env.WITHINGS_CALLBACK_URL
+  return `https://${AUTH_HOSTNAME}/oauth2_user/authorize2` +
     `?response_type=${responseType}` +
     `&client_id=${clientId}` +
     `&state=${state}` +
@@ -92,18 +95,18 @@ function makeAuthorizeUrl(state) {
 function makeTokenRequest(code) {
   return {
     'grant_type': `authorization_code`,
-    'client_id': process.env.NOKIA_HEALTH_CLIENT_ID,
-    'client_secret': process.env.NOKIA_HEALTH_CLIENT_SECRET,
+    'client_id': process.env.WITHINGS_CLIENT_ID,
+    'client_secret': process.env.WITHINGS_CLIENT_SECRET,
     'code': code,
-    'redirect_uri': process.env.NOKIA_HEALTH_CALLBACK_URL,
+    'redirect_uri': process.env.WITHINGS_CALLBACK_URL,
   }
 }
 
 function makeRefreshRequest(refreshToken) {
   return {
     'grant_type': `refresh_token`,
-    'client_id': process.env.NOKIA_HEALTH_CLIENT_ID,
-    'client_secret': process.env.NOKIA_HEALTH_CLIENT_SECRET,
+    'client_id': process.env.WITHINGS_CLIENT_ID,
+    'client_secret': process.env.WITHINGS_CLIENT_SECRET,
     'refresh_token': refreshToken,
   }
 }
@@ -121,7 +124,7 @@ function autoRefreshTokens(func) {
 }
 
 function getTokens(userId) {
-  return db.query(`select access_token, refresh_token from nokia_health_link where user_id = $1`, [userId]).then(head)
+  return db.query(`select access_token, refresh_token from withings_link where user_id = $1`, [userId]).then(head)
 }
 
 function head(xs) {

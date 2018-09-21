@@ -45,7 +45,7 @@ import crypto
 import status
 import emojicommands
 import lossimpsonquotes
-import nokia
+import withings
 import groom
 import shrek
 
@@ -88,7 +88,7 @@ async def main():
     await crypto.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
-                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, nokia,
+                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
                    groom, shrek]:
         commands.update(module.register(client))
 

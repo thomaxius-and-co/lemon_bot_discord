@@ -203,8 +203,8 @@ CREATE TABlE faceit_aliases (
 	created timestamp without time zone DEFAULT current_timestamp NOT NULL
 );
 
--- Nokia Health
-CREATE TABLE nokia_health_link (
+-- Withings
+CREATE TABLE withings_link (
     user_id TEXT PRIMARY KEY REFERENCES discord_user (user_id),
     access_token TEXT NOT NULL,
     refresh_token TEXT NOT NULL,
