@@ -39,7 +39,7 @@ async def cmd_laiva(client, message, query):
         return
 
     delta = laiva - now
-    template = "Time left until laiva: {0} days, {1} hours, {2} minutes, {3} seconds!!"
+    template = "Time left until 'The laiva to end all laivas': {0} days, {1} hours, {2} minutes, {3} seconds!!"
     msg = template.format(*delta_to_tuple(delta))
     await client.send_message(message.channel, msg)
 
