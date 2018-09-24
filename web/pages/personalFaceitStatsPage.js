@@ -1,10 +1,9 @@
 const React = require('react')
-const moment = require('moment')
 const {distinct, copy} = require('../util.js')
 require('moment-timezone')
 const {LineChart} = require('./chart')
 const pageTitle = 'Faceit statistics'
-
+const countryCodes = require ('../countryCodes.js')
 const initialState = {
   faceit: -1
 }
@@ -32,14 +31,13 @@ const renderPage = state => <Page state={state} />
 const faceitDetails = (apiPlayerDetails) => {
   const steamUrl = `https://steamcommunity.com/profiles/${apiPlayerDetails.steam_id_64}`
   const faceitUrl = apiPlayerDetails.faceit_url.replace('{lang}','en')
-
   return (
     <div>
     <p><a href={steamUrl}><img src={"https://orig00.deviantart.net/8fb4/f/2015/192/5/1/steam_logo_by_koolartist69-d90x4u8.png"} height="32" width="42"/></a> {/*I know this is dirty to link images and resize here, 
   but I'm not going to fight with making local images work today*/}
 <a href={faceitUrl}><img src={"https://developers.faceit.com/static/media/logo.6c58ba31.svg"} height="32" width="32"/></a></p>
     <b>Membership type:</b> {apiPlayerDetails.membership_type}<br/>
-    <b>Country:</b> {apiPlayerDetails.country}<br/>
+    <b>Country:</b> {countryCodes[apiPlayerDetails.country.toUpperCase()]}<br/>
     {<b>Player bans:</b> && apiPlayerDetails.bans}
     </div>
   )
