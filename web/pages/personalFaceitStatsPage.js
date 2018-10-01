@@ -52,6 +52,12 @@ const faceitStats = (apiStats) => {
     return total + ` (${average} per match)`
   }
 
+  const totalKrRatio = () => {
+    let total = 0
+    apiStats.segments.forEach((element) => total += parseInt(element.stats["K/R Ratio"]))
+    return (total / (parseInt(apiStats.lifetime['Matches'].replace(',','').replace(' ','')))).toFixed(2) // kudos to the person who decided to put numbers as strings in the api
+  }
+
 
   const getSpecificPerRoundStat = (arg) => {
     let total = 0
@@ -77,13 +83,14 @@ const faceitStats = (apiStats) => {
 
   return (
   <div>
-  <p>Note: Due to a bug in the Faceit api, some of the stats on this page are currently inaccurate.</p>
   <b>Total matches</b>: {apiStats.lifetime['Matches']}<br/>
   <b>Total Wins</b>: {apiStats.lifetime['Wins']}<br/>
   <b>Win Rate</b>: {apiStats.lifetime['Win Rate %'] + '%'}<br/>
   <b>Best map winrate</b>: {getBestMapWinPercentage(apiStats.segments)}<br/>
   <b>Average headshot percentage</b>: {apiStats.lifetime['Average Headshots %']} %<br/>
   <b>Average K/D Ratio</b>: {apiStats.lifetime['Average K/D Ratio']}<br/>
+  <b>Average K/R Ratio</b>: {totalKrRatio()}<br/>
+  <b>Average MVP's per match</b>: {getSpecificPerMatchStat('MVPs')}<br/> 
   <b>Total MVP's</b>: {getSpecificPerRoundStat("MVPs")}<br/>
   <b>Total kills</b>: {getSpecificPerRoundStat("Kills")}<br/> 
   <b>Total deaths</b>: {getSpecificPerRoundStat("Deaths")}<br/> 
@@ -123,13 +130,13 @@ const faceitEloChart = (weeklyElo, rollingAverage) => {
   const data = {
     x: "x",
     columns,
-    xFormat: "%W/%Y",
+    xFormat: "%V/%Y",
   }
   const axis = {
     x: {
       label: "Week",
       type: "timeseries",
-      tick: {format: "%W/%Y"}
+      tick: {format: "%V/%Y"}
     },
     y: {
       label: "Elo",
