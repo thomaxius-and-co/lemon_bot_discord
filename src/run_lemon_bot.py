@@ -48,6 +48,7 @@ import lossimpsonquotes
 import withings
 import groom
 import shrek
+import ence_matches
 
 log = logger.get("BOT")
 
@@ -86,10 +87,11 @@ async def main():
     await db.initialize_schema()
     await awards.main()
     await crypto.main()
+    await ence_matches.initialize()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
                    faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek]:
+                   groom, shrek, ence_matches]:
         commands.update(module.register(client))
 
     try:
