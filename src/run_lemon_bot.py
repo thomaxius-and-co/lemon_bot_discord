@@ -87,7 +87,6 @@ async def main():
     await db.initialize_schema()
     await awards.main()
     await crypto.main()
-    await ence_matches.initialize()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
                    faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
@@ -733,5 +732,4 @@ async def on_ready():
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-
 
