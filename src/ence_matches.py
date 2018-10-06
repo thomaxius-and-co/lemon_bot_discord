@@ -8,23 +8,61 @@ import datetime
 import util
 from time_util import to_helsinki, as_utc
 from time import sleep
-
+import discord
+import database as db
 log = logger.get("ENCE")
 
 MATCHES_DICT = {}
 LAST_CHECKED = None
-FETCH_INTERVAL = 36000
+FETCH_INTERVAL = 18000
 UNDEFINED_MATCHES_COUNT = 0
+LAST_SPAMMED = None
 
-async def do_match_check():
+async def do_match_check(client):
     while True:
         global MATCHES_DICT
-        MATCHES_DICT = {}
         await parse_hltv_matches(await get_hltv_matches())
         await parse_mdl_matches(await get_mdl_matches())
         global LAST_CHECKED
         LAST_CHECKED = datetime.datetime.now()
+        await check_if_ence_day(client)
         await sleep(FETCH_INTERVAL)
+
+async def check_if_ence_day(client):
+    log.info("Checking if match day")
+    matches = MATCHES_DICT.get(datetime.datetime.now().date(), None)
+    if matches and (LAST_SPAMMED.date() != datetime.datetime.today().date()): #If already spammed today
+        await do_matchday_spam(client, matches)
+    else:
+        log.info('No matches today')
+
+
+async def get_all_spam__channels():
+    return await db.fetch("""
+        SELECT channel_id
+        FROM faceit_notification_channel
+    """)
+
+
+async def do_matchday_spam(client, matches):
+    channels_query = await get_all_spam__channels() # Using faceit spam channel for now
+    if not channels_query:
+        log.info('No spam channels have been set')
+        return
+    for row in channels_query:
+        channel = discord.Object(id=row['channel_id'])
+        matches_list = []
+        if len(matches) > 1:
+            msg = "It is match day!\nToday we have %s matches:\n" % len(matches)
+        else:
+            msg = "It is match day! Today we have:\n"
+        for match in matches:
+            matches_list += [[match[0], match[1], match[2], match[3], match[6]]] # Competition, Home team, away team, map, tod
+        log.info(matches_list)
+        util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], sorted(matches_list, key= lambda x: x[4])) + "\n#EZ4ENCE```"))
+    global LAST_SPAMMED
+    LAST_SPAMMED = datetime.datetime.now()
+
 
 async def get_mdl_matches():
     log.info("Fetching MDL matches")
@@ -117,7 +155,7 @@ async def cmd_ence(client, message, arg):
                                                                      , list_of_matches) + ("\n+ %s pending MDL matches" % (UNDEFINED_MATCHES_COUNT)) + "\n#EZ4ENCE```"))
 
 def register(client):
-    util.start_task_thread(do_match_check())
+    util.start_task_thread(do_match_check(client))
     return {
         'ence': cmd_ence,
     }
