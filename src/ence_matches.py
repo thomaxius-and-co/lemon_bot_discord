@@ -1,6 +1,6 @@
 import requests
 import lxml.html as lh
-import pandas as pd
+import pandas
 import cfscrape
 import columnmaker
 import logger
@@ -17,14 +17,9 @@ UNDEFINED_MATCHES = 0
 LAST_CHECKED = None
 
 
-async def main():
-    log.info("Initializing")
-    await get_mdl_matches()
-
-
 async def get_mdl_matches():
     while True:
-        log.info("Fetching ence matches")
+        log.info("Fetching ENCE matches")
         scraper = cfscrape.create_scraper()
         page = scraper.get("https://play.esea.net/teams/82159")
         if page.status_code != 200:
@@ -42,7 +37,7 @@ async def get_mdl_matches():
 
 async def get_hltv_matches():
         while True:
-            log.info("Fetching ence matches")
+            log.info("Fetching ENCE HLTV matches")
             scraper = cfscrape.create_scraper()
             page = scraper.get("https://www.hltv.org/matches?team=4869")
             doc = lh.fromstring(page.content)
@@ -55,13 +50,16 @@ async def get_hltv_matches():
 async def parse_hltv_matches():
     upcoming_matches_list = []
     for row in UPCOMING_HLTV_MATCHES_ELEMENTS:
-        date = to_helsinki(as_utc(datetime.datetime.fromtimestamp(row[0][0][0].values()[2])).strftime("%d/%m/%y %H:%M"))  # table -> tr -> td -> div
+        date = to_helsinki(as_utc(pandas.to_datetime((int(row[0][0][0].values()[2])),unit='ms'))).replace(tzinfo=None)  # table -> tr -> td -> div
+        tod = ('%s:%s' % (date.hour, date.minute))
+        date = datetime.datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S").date()
         home_team = row[0][1].text_content().replace('\n','').strip() # table -> tr -> div -> div>
         away_team = row[0][3].text_content().replace('\n', '').strip()
         competition = row[0][4].text_content().replace('\n', '').strip()
         map = row[0][5].text_content().replace('\n', '').strip()
-        item = (competition, home_team, away_team, map, 'Upcoming', date)
-        log.info(item)
+        if map in ["bo1", "bo2", "bo3", "bo4", "bo5"]:
+            map = "TBD (%s)" % map
+        item = (competition, home_team, away_team, map, 'Upcoming', date, tod)
         upcoming_matches_list.append(item)
     return upcoming_matches_list
 
@@ -82,7 +80,7 @@ async def parse_mdl_matches():
                 date = datetime.datetime.strptime(date, "%b %d, %I:%M%p").replace(year=datetime.datetime.now().year).date()
         else:
             date = 'TBD'
-        item = ('MDL', home_team, away_team, map, status, date)
+        item = ('MDL', home_team, away_team, map, status, date, '-')
         if item not in upcoming_matches_list and (home_team != 'TBD') and (away_team != 'TBD'):
             upcoming_matches_list.append(item)
         if (home_team == 'TBD') and (away_team == 'TBD') and (status != 'Upcoming'): # I think It's pointless to show matches that have no confirmed teams or maps yet.
@@ -93,15 +91,16 @@ async def parse_mdl_matches():
 async def cmd_ence(client, message, arg):
         upcoming_hltv_matches_list = await parse_hltv_matches()
         upcoming_mdl_matches_list, undefined_matches_count = await parse_mdl_matches()
-        full_list_of_matches = sorted(upcoming_hltv_matches_list + upcoming_mdl_matches_list, key=lambda x: x[5])
-        if not full_list_of_matches:
+        full_list_of_matches = sorted(upcoming_hltv_matches_list + upcoming_mdl_matches_list, key=lambda x: x[5]) #todo: Properly compare dates (so that tod is also included)
+        if not upcoming_hltv_matches_list or not upcoming_mdl_matches_list:
             await client.send_message(message.channel, "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg")
         else:
-            await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime("%Y-%m-%d %H:%M")) + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE']
-                                                                     , full_list_of_matches) + ("\n+ %s pending matches" % (undefined_matches_count)) + "\n#EZ4ENCE```"))
+            await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime("%Y-%m-%d %H:%M")) + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
+                                                                     , full_list_of_matches) + ("\n+ %s pending MDL matches" % (undefined_matches_count)) + "\n#EZ4ENCE```"))
 
 def register(client):
-    util.start_task_thread(main())
+    util.start_task_thread(get_hltv_matches())
+    util.start_task_thread(get_mdl_matches())
     return {
         'ence': cmd_ence,
     }
