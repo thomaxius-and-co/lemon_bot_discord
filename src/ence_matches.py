@@ -30,10 +30,12 @@ async def do_match_check(client):
 
 async def check_if_ence_day(client):
     log.info("Checking if match day")
+
+
     matches = MATCHES_DICT.get(datetime.datetime.now().date(), None)
     if matches:
         if LAST_SPAMMED:
-            if (LAST_SPAMMED.date() != datetime.datetime.today().date()): #If already spammed today
+            if (LAST_SPAMMED.date() != datetime.datetime.now().date()): #If already spammed today
                 await do_matchday_spam(client, matches)
         else:
             await do_matchday_spam(client, matches)
