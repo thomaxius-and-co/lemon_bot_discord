@@ -10,6 +10,7 @@ from time_util import to_helsinki, as_utc
 from time import sleep
 import discord
 import database as db
+import copy
 log = logger.get("ENCE")
 
 MATCHES_DICT = {}
@@ -108,7 +109,7 @@ async def parse_hltv_matches(match_elements):
         map = element[0][5].text_content().replace('\n', '').strip()
         if map in ["bo1", "bo2", "bo3", "bo4", "bo5"]:
             map = "TBD (%s)" % map
-        tod = ('%s:%s' % (date.hour, date.minute))
+        tod = ('%s:%s' % (date.hour, (str(date.minute)) if date.minute != 0 else str(date.minute) + "0"))
         item = [competition[:10], home_team, away_team, map, 'Upcoming', date, tod]
         if MATCHES_DICT.get(date.date(), None):
             MATCHES_DICT.get(date.date()).append(item)
@@ -148,17 +149,21 @@ async def parse_mdl_matches(match_elements):
 
 
 async def cmd_ence(client, message, arg):
-        if not LAST_CHECKED:
-            await client.send_message(message.channel, "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
-        else:
-            list_of_matches = [x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y]
-            def convert_date(x):
-              x[5] = x[5].date()
-              return x
+    if not LAST_CHECKED:
+        await client.send_message(message.channel,
+                                  "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
+    else:
+        list_of_matches = copy.deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y])
 
-            list_of_matches = [convert_date(x) for x in list_of_matches]
-            await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime("%Y-%m-%d %H:%M")) + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
-                                                                     , list_of_matches) + ("\n+ %s pending MDL matches" % (UNDEFINED_MATCHES_COUNT)) + "\n#EZ4ENCE```"))
+        def convert_date(x):
+            x[5] = x[5].date()
+            return x
+        list_of_matches = [convert_date(x) for x in list_of_matches]
+        await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
+            "%Y-%m-%d %H:%M")) + columnmaker.columnmaker(
+            ['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
+            , list_of_matches) + ("\n+ %s pending MDL matches" % (UNDEFINED_MATCHES_COUNT)) + "\n#EZ4ENCE```"))
+
 
 def register(client):
     util.start_task_thread(do_match_check(client))
