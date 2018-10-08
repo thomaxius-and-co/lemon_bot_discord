@@ -13,7 +13,7 @@ from asyncio import sleep
 
 log = logger.get("ENCE")
 
-FETCH_INTERVAL = 18000
+FETCH_INTERVAL = 9000
 
 MATCHES_DICT = {}
 LAST_CHECKED = None
@@ -31,12 +31,14 @@ async def do_match_check(client):
         await check_if_ence_day(client)
         await sleep(FETCH_INTERVAL)
 
+
 async def check_if_ence_day(client):
     log.info("Checking if match day")
-    matches = MATCHES_DICT.get(datetime.datetime.now().date(), None)
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
+    matches = MATCHES_DICT.get(now.date(), None)
     if matches:
         if LAST_SPAMMED:
-            if (LAST_SPAMMED.date() != datetime.datetime.now().date()): #If already spammed today
+            if (LAST_SPAMMED.date() != now.date()): #If already spammed today
                 await do_matchday_spam(client, matches)
         else:
             await do_matchday_spam(client, matches)
@@ -57,7 +59,8 @@ async def update_last_spammed_time():
 async def do_matchday_spam(client, matches):
     channels_query = await get_all_spam__channels() # Using faceit spam channel for now
     matches_list = []
-    matches = sorted([x for x in matches if x[5] > to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)], key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
+    matches = sorted([x for x in matches if x[5] > now], key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
     if not matches:
         log.info('All matches are already running, not spamming about them')
         return
@@ -85,7 +88,7 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
     match_time = earliest_match[5]
     match = as_utc(match_time).replace(tzinfo=None)
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
-    delta = match - now - 900
+    delta = max((match - now - datetime.timedelta(seconds=900)), datetime.timedelta(seconds=0))
     log.info('Match spammer task: going to sleep for %s seconds' % delta.seconds)
     await sleep(delta.seconds)
     log.info('Match spammer task: waking up and attempting to spam')

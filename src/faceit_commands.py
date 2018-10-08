@@ -168,6 +168,7 @@ async def latest_match_timestamp(player_id):
     timestamps = flat_map(lambda m: [m.get("started_at"), m.get("finished_at")], matches)
     return max_or(timestamps, None)
 
+
 async def get_user_stats_from_api_by_id(player_id):
     try:
         user = await faceit_api.user_by_id(player_id)
@@ -436,7 +437,7 @@ async def check_faceit_elo(client):
     if not faceit_players:
         return
     old_toplist_dict = await get_server_rankings_per_guild()
-    log.info(f"Fetching stats from FACEIT for {len(faceit_players)} players")
+    log.info("Fetching stats from FACEIT for {len(faceit_players)} players")
     player_ids = list(map(lambda p: p["faceit_guid"], faceit_players))
     api_responses = await fetch_players_batch(player_ids)
     for record in faceit_players:
@@ -509,8 +510,6 @@ async def compare_toplists(client, old_toplist_dict):
 
 
 async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_channel_id):
-    log.info("Checking rank changes")
-    log.info("old toplist %s\nnew toplist %s", old_toplist, new_toplist)
     msg = ""
     for item_at_oldlists_index, item_at_newlists_index in zip(old_toplist,
                                                               new_toplist):  # Compare each item of both lists side to side
