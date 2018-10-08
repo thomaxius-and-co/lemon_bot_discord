@@ -1,4 +1,3 @@
-import requests
 import lxml.html as lh
 import pandas
 import cfscrape
@@ -6,18 +5,21 @@ import columnmaker
 import logger
 import datetime
 import util
-from time_util import to_helsinki, as_utc
-from time import sleep
+from time_util import to_helsinki, as_utc, as_helsinki, to_utc
 import discord
 import database as db
 import copy
+from asyncio import sleep
+
 log = logger.get("ENCE")
+
+FETCH_INTERVAL = 18000
 
 MATCHES_DICT = {}
 LAST_CHECKED = None
-FETCH_INTERVAL = 18000
 UNDEFINED_MATCHES_COUNT = 0
 LAST_SPAMMED = None
+
 
 async def do_match_check(client):
     while True:
@@ -50,25 +52,49 @@ async def get_all_spam__channels():
         FROM faceit_notification_channel
     """)
 
+async def update_last_spammed_time():
+    global LAST_SPAMMED
+    LAST_SPAMMED = datetime.datetime.now()
 
 async def do_matchday_spam(client, matches):
     channels_query = await get_all_spam__channels() # Using faceit spam channel for now
+    matches_list = []
+    matches = sorted(matches, key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
+    if not matches:
+        log.info('All matches are already running, not spamming about them')
+        return
     if not channels_query:
         log.info('No spam channels have been set')
         return
     for row in channels_query:
         channel = discord.Object(id=row['channel_id'])
-        matches_list = []
         if len(matches) > 1:
             msg = "It is match day!\nToday we have %s matches:\n" % len(matches)
         else:
             msg = "It is match day! Today we have:\n"
         for match in matches:
-            matches_list += [[match[0], match[1], match[2], match[3], match[6]]] # Competition, Home team, away team, map, tod
-        log.info(matches_list)
-        util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], sorted(matches_list, key= lambda x: x[4])) + "\n#EZ4ENCE```"))
-    global LAST_SPAMMED
-    LAST_SPAMMED = datetime.datetime.now()
+            item = [match[0], match[1], match[2], match[3], match[6]]
+            if item not in matches_list:
+                matches_list += [item] # Competition, Home team, away team, map, tod
+
+        util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
+    await update_last_spammed_time()
+    if channels_query:
+        await start_match_start_spam_task(client, channels_query, matches[0])
+
+
+async def start_match_start_spam_task(client, channels_query, earliest_match): # todo: maybe make a 'spam function' which can be used by both functions
+    match_time = earliest_match[5]
+    match = as_utc(match_time).replace(tzinfo=None)
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
+    delta = match - now - 900
+    log.info('Match spammer task: going to sleep for %s seconds' % delta.seconds)
+    await sleep(delta.seconds)
+    log.info('Match spammer task: waking up and attempting to spam')
+    for row in channels_query:
+        channel = discord.Object(id=row['channel_id'])
+        util.threadsafe(client, client.send_message(channel, ("The %s %s versus %s match is about to start! (announced starting time: %s) \n#EZENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
+    await update_last_spammed_time()
 
 
 async def get_mdl_matches():
@@ -100,9 +126,13 @@ async def get_hltv_matches():
 
 
 async def parse_hltv_matches(match_elements):
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     for element in match_elements:
         date = to_helsinki(as_utc(pandas.to_datetime((int(element[0][0][0].values()[2])),unit='ms'))).replace(tzinfo=None)  # table -> tr -> td -> div
         date = datetime.datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S")
+        if date < now:
+            log.info('Match already started, not adding it to matches dict')
+            continue
         home_team = element[0][1].text_content().replace('\n','').strip() # table -> tr -> div -> div>
         away_team = element[0][3].text_content().replace('\n', '').strip()
         competition = element[0][4].text_content().replace('\n', '').strip()
@@ -119,6 +149,7 @@ async def parse_hltv_matches(match_elements):
 
 
 async def parse_mdl_matches(match_elements):
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     global UNDEFINED_MATCHES_COUNT
     UNDEFINED_MATCHES_COUNT = 0
     for element in match_elements:
@@ -134,6 +165,10 @@ async def parse_mdl_matches(match_elements):
                 date = datetime.datetime.strptime(date, "%b %d, %I:%M%p").replace(year=datetime.datetime.now().year)
         else:
             date = 'TBD'
+        if date != 'TBD':
+            if date < now:
+                log.info('Match already started, not adding it to matches dict')
+                continue
         tod = '-' # Even though some MDL matches have time of day, I  don't think It's very reliable, considering
         #  they're set for weeks before the match is even confirmed. Instead, We will fetch time of day when it is match day.
         item = ['MDL', home_team, away_team, map, status, date, tod]
