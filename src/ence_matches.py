@@ -33,8 +33,6 @@ async def do_match_check(client):
 
 async def check_if_ence_day(client):
     log.info("Checking if match day")
-
-
     matches = MATCHES_DICT.get(datetime.datetime.now().date(), None)
     if matches:
         if LAST_SPAMMED:
@@ -59,7 +57,7 @@ async def update_last_spammed_time():
 async def do_matchday_spam(client, matches):
     channels_query = await get_all_spam__channels() # Using faceit spam channel for now
     matches_list = []
-    matches = sorted(matches, key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
+    matches = sorted([x for x in matches if x[5] > to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)], key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
     if not matches:
         log.info('All matches are already running, not spamming about them')
         return
