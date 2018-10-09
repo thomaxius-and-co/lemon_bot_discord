@@ -89,7 +89,7 @@ async def do_matchday_spam(client, matches):
 
         util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
     await update_last_spammed_time()
-    if channels_query:
+    if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
 
 
