@@ -8,7 +8,7 @@ import util
 from time_util import to_helsinki, as_utc, as_helsinki, to_utc
 import discord
 import database as db
-import copy
+from copy import deepcopy
 from asyncio import sleep
 
 log = logger.get("ENCE")
@@ -21,11 +21,11 @@ UNDEFINED_MATCHES_COUNT = 0
 LAST_SPAMMED = None
 
 
-async def do_match_check(client):
+async def do_tasks(client):
     while True:
-        global MATCHES_DICT
         await parse_hltv_matches(await get_hltv_matches())
         await parse_mdl_matches(await get_mdl_matches())
+        await remove_played_matches()
         global LAST_CHECKED
         LAST_CHECKED = datetime.datetime.now()
         await check_if_ence_day(client)
@@ -52,6 +52,20 @@ async def get_all_spam__channels():
         FROM faceit_notification_channel
     """)
 
+
+async def remove_played_matches():
+    global MATCHES_DICT
+    log.info('Removing possible played matches')
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
+    new_dict = deepcopy(MATCHES_DICT)
+    for matchday, matches in MATCHES_DICT.items():
+        new_dict[matchday] = ([x for x in matches if x[5] > now]) # x[5] = datetime
+        if not new_dict[matchday]:
+            log.info('Removing matches of day %s' % matchday)
+            new_dict.clear()
+    MATCHES_DICT = new_dict
+
+
 async def update_last_spammed_time():
     global LAST_SPAMMED
     LAST_SPAMMED = datetime.datetime.now()
@@ -59,11 +73,6 @@ async def update_last_spammed_time():
 async def do_matchday_spam(client, matches):
     channels_query = await get_all_spam__channels() # Using faceit spam channel for now
     matches_list = []
-    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
-    matches = sorted([x for x in matches if x[5] > now], key=lambda x: x[5])  # Sort matches according to start time, and keep only matches that are upcoming
-    if not matches:
-        log.info('All matches are already running, not spamming about them')
-        return
     if not channels_query:
         log.info('No spam channels have been set')
         return
@@ -94,8 +103,9 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
     log.info('Match spammer task: waking up and attempting to spam')
     for row in channels_query:
         channel = discord.Object(id=row['channel_id'])
-        util.threadsafe(client, client.send_message(channel, ("The %s %s versus %s match is about to start! (announced starting time: %s) \n#EZENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
+        util.threadsafe(client, client.send_message(channel, ("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
     await update_last_spammed_time()
+    # todo: fire up do_tasks after this function
 
 
 async def get_mdl_matches():
@@ -132,7 +142,7 @@ async def parse_hltv_matches(match_elements):
         date = to_helsinki(as_utc(pandas.to_datetime((int(element[0][0][0].values()[2])),unit='ms'))).replace(tzinfo=None)  # table -> tr -> td -> div
         date = datetime.datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S")
         if date < now:
-            log.info('Match already started, not adding it to matches dict')
+            log.info('Match already started or played, not adding it to matches dict')
             continue
         home_team = element[0][1].text_content().replace('\n','').strip() # table -> tr -> div -> div>
         away_team = element[0][3].text_content().replace('\n', '').strip()
@@ -189,7 +199,7 @@ async def cmd_ence(client, message, arg):
         await client.send_message(message.channel,
                                   "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
     else:
-        list_of_matches = copy.deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y])
+        list_of_matches = deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y])
 
         def convert_date(x):
             x[5] = x[5].date()
@@ -202,7 +212,7 @@ async def cmd_ence(client, message, arg):
 
 
 def register(client):
-    util.start_task_thread(do_match_check(client))
+    util.start_task_thread(do_tasks(client))
     return {
         'ence': cmd_ence,
     }
