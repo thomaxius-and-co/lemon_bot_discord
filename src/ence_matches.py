@@ -23,9 +23,10 @@ LAST_SPAMMED = None
 
 async def do_tasks(client):
     while True:
+        global MATCHES_DICT
+        MATCHES_DICT.clear()
         await parse_hltv_matches(await get_hltv_matches())
         await parse_mdl_matches(await get_mdl_matches())
-        await remove_played_matches()
         global LAST_CHECKED
         LAST_CHECKED = datetime.datetime.now()
         await check_if_ence_day(client)
@@ -51,19 +52,6 @@ async def get_all_spam__channels():
         SELECT channel_id
         FROM faceit_notification_channel
     """)
-
-
-async def remove_played_matches():
-    global MATCHES_DICT
-    log.info('Removing possible played matches')
-    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
-    new_dict = deepcopy(MATCHES_DICT)
-    for matchday, matches in MATCHES_DICT.items():
-        new_dict[matchday] = ([x for x in matches if x[5] > now]) # x[5] = datetime
-        if not new_dict[matchday]:
-            log.info('Removing matches of day %s' % matchday)
-            new_dict.clear()
-    MATCHES_DICT = new_dict
 
 
 async def update_last_spammed_time():
@@ -152,8 +140,9 @@ async def parse_hltv_matches(match_elements):
             map = "TBD (%s)" % map
         tod = ('%s:%s' % (date.hour, (str(date.minute)) if date.minute != 0 else str(date.minute) + "0"))
         item = [competition[:10], home_team, away_team, map, 'Upcoming', date, tod]
-        if MATCHES_DICT.get(date.date(), None):
-            MATCHES_DICT.get(date.date()).append(item)
+        matchday_item = MATCHES_DICT.get(date.date(), None)
+        if matchday_item and item not in matchday_item:
+            matchday_item.append(item)
         else:
             MATCHES_DICT.update({date.date():[item]})
     log.info("HLTV matches parsed.")
@@ -195,6 +184,7 @@ async def parse_mdl_matches(match_elements):
 
 
 async def cmd_ence(client, message, arg):
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     if not LAST_CHECKED:
         await client.send_message(message.channel,
                                   "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
@@ -204,7 +194,8 @@ async def cmd_ence(client, message, arg):
         def convert_date(x):
             x[5] = x[5].date()
             return x
-        list_of_matches = [convert_date(x) for x in list_of_matches]
+        list_of_matches = [convert_date(x) for x in list_of_matches if x[5] > now] #We want to keep only matches that are upcoming, and show only date in date column
+
         await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
             "%Y-%m-%d %H:%M")) + columnmaker.columnmaker(
             ['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
