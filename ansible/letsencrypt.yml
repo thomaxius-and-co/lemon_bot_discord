@@ -34,7 +34,7 @@
 - name: Reload reload nginx config after running certbot
   copy:
     dest: "/etc/systemd/system/certbot.service.d/override.conf"
-    content: >
+    content: |
       [Service]
       ExecStartPost=/bin/systemctl reload nginx
   notify:
