@@ -19,6 +19,34 @@ pokemon = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard
            "Omanyte","Omastar","Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair",
            "Dragonite","Mewtwo","Mew"]
 
+
+
+memes = [
+"11KCaw9IayKXbJ21uvH1qWA0Vc-CQNF45",
+"1tOAAPZqfoYOXxSir3YfGMvh6py5LfvSg",
+"1CcHM4GJie3RN3TIWXPTnETHtUlKQ7we1",
+"14d_nBA50HbwEERee5yc0iH0FvZwY9a3E",
+"1bp6TFdPY-coYbleNlx1C2zOyXuFtFzg7",
+"1rbP_OmusEHxgwIi7WA1qgA8CKvHfnrE7",
+"1Uc-hrexmPEf807G63AUCOMGAzPHebJ77",
+"14-CWGtgUIKraTsMYQV9DEMyVFGho4wCZ",
+"1BUCRPupZ7TXBFXzsEi7JQACpV-Znq6wr",
+"1_rFwWLfkLJLeGXaPHp0Imf0b5K-YvZp7",
+"1vs1L1pmfV-nrBCyxcdwybwFwawiOperp",
+"1Qf2rE9Nf6BYO_i0vviS3ItdGzNYgTyGf",
+"1rppIlxAFpKdAGfahcpLcAg6wIScR0IGx",
+"1y4zOCM31JHk79dxc370y2eVEOlblSYAC",
+"1Wf_3-lzjbYGfiNdyPV8RpE2t23ZaiG2v",
+"1k9q5CQ_FDD4nBdASGby65HponRVeUi4F",
+"1rkQDXDhRDeq9k1DbtFrJPjrfpxtKYivy",
+"1_rot7lgNeO6T9N-GgRM79e2oZS8xTgap",
+"1clKLX3lNJgbwqjHDHO1HyOb1W_PwYrBz",
+"1F0euMeicBz5cEzVXnznf66jb6z2mPiTj",
+"1wxQBLGZbvxQUoeGzWy4EbHUMJl1DNKcQ",
+"1N4eZ3E0I5GpPCUuUy7j82qWJBTyM5U-A",
+"1V5VkexmeOaB9YOiN2ZqDlVOr_R-284Q0",
+"19tFMKLVqyTy7uAYokfc0AxtTLUIPMjjx"]
+
 def register(client):
     return {
         "laiva": cmd_laiva,
@@ -34,6 +62,9 @@ def delta_to_tuple(delta):
     h = floor((m - minutes) / 60)
     hours = h
     return (days, hours, minutes, seconds)
+
+async def get_laiva_meme_of_the_day(day):
+    return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
 
 async def cmd_laiva(client, message, _):
     laiva = to_utc(as_helsinki(datetime(2018, 11, 9, 17, 0)))
@@ -56,8 +87,10 @@ async def cmd_laiva(client, message, _):
     delta = laiva - now
 
     template = "Time left until 'The laiva to end all laivas': {0} days, {1} hours, {2} minutes, {3} seconds!!"
-    if (laiva - timedelta(days=149)) < now:
+    if (laiva - timedelta(days=len(pokemon)-1)) < now:
         template += "\n**Laiva pokemon of the day:** %s" % pokemon[delta.days]
+    if (laiva - timedelta(days=len(memes)-1)) < now:
+        template += "\n**Laiva meme of the day**:\n%s" % await get_laiva_meme_of_the_day(delta.days)
 
     msg = template.format(*delta_to_tuple(delta))
     await client.send_message(message.channel, msg)
