@@ -44,6 +44,8 @@ memes = [
 "1wxQBLGZbvxQUoeGzWy4EbHUMJl1DNKcQ",
 "1N4eZ3E0I5GpPCUuUy7j82qWJBTyM5U-A",
 "1V5VkexmeOaB9YOiN2ZqDlVOr_R-284Q0",
+"12Eo68RvZX3jA4l_XoUO3q-1pHhb4xuxA",
+"12Dlo_gawuRD8bF7Bx63sZPTKy07K2xpG",
 "14d_nBA50HbwEERee5yc0iH0FvZwY9a3E"]
 
 def register(client):

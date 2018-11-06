@@ -20,6 +20,46 @@ LAST_CHECKED = None
 UNDEFINED_MATCHES_COUNT = 0
 LAST_SPAMMED = None
 
+hltv_league_names = {
+    'ESEA MDL Season 29 Europe': 'MDL'
+}
+
+hltv_maps = {
+    'cch': 'de_cache',
+    'mrg': 'de_mirage',
+    'd2': 'de_dust2',
+    'nuke': 'de_nuke',
+    'ovp': 'de_overpass',
+    'inf': 'de_inferno',
+    'trn': 'de_train'
+}
+
+#Hltv names are shortened and some times abbrevations, so we'll use the MDL equivalent
+# todo: fetch teams from both sites instead
+hltv_mdl_team_alias = {
+    'EURONICS': 'Euronics Gaming EU',
+    '3DMAX': '3DMAX_',
+    'OpTic': 'OpTic Gaming',
+    'Kinguin': 'Team Kinguin',
+    'Virtus.pro': 'Virtus pro',
+    'Sprout': 'SproutGG',
+    'Epsilon': 'Epsilon',
+    'Red Reserve': 'Red Reserve',
+    'Fragsters': 'Team Fragsters',
+    'Tricked': 'Tricked Esport',
+    'Flow': 'flow',
+    'Chaos': 'Chaos EC',
+    'expert': 'expert eSport',
+    'Spirit': 'Team Spirit',
+    'Valiance': 'Valiance and Co',
+    'ALTERNATE aTTaX': 'ALTERNATE aTTaX',
+    'PACT': 'PACT',
+    'x6tence Galaxy': 'x6tence Galaxy',
+    'Smoke Criminals': 'Smoke Criminals',
+    'SuperJymy': 'SuperJymy',
+    'Endpoint': 'Team Endpoint',
+    'aAa': 'against All authority'
+}
 
 async def do_tasks(client):
     while True:
@@ -74,11 +114,17 @@ async def do_matchday_spam(client, matches):
             item = [match[0], match[1], match[2], match[3], match[6]]
             if item not in matches_list:
                 matches_list += [item] # Competition, Home team, away team, map, tod
-
         util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
     await update_last_spammed_time()
     if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
+
+async def not_rescheduled(match_item):
+    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
+    matches = MATCHES_DICT.get(now.date(), None)
+    log.info('match_item = %s, matches[0] = %s' % (match_item, matches[0]))
+    return matches[0] != match_item
+
 
 
 async def start_match_start_spam_task(client, channels_query, earliest_match): # todo: maybe make a 'spam function' which can be used by both functions
@@ -89,11 +135,13 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
     log.info('Match spammer task: going to sleep for %s seconds' % delta.seconds)
     await sleep(delta.seconds)
     log.info('Match spammer task: waking up and attempting to spam')
-    for row in channels_query:
-        channel = discord.Object(id=row['channel_id'])
-        util.threadsafe(client, client.send_message(channel, ("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
-    await update_last_spammed_time()
-    # todo: fire up do_tasks after this function
+    if await not_rescheduled(earliest_match):
+        for row in channels_query:
+            channel = discord.Object(id=row['channel_id'])
+            util.threadsafe(client, client.send_message(channel, ("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
+        await update_last_spammed_time()
+        # todo: fire up do_tasks after this function
+        # todo: fix this and spam about new match time if match is rescheduled
 
 
 async def get_mdl_matches():
@@ -139,12 +187,13 @@ async def parse_hltv_matches(match_elements):
         if map in ["bo1", "bo2", "bo3", "bo4", "bo5"]:
             map = "TBD (%s)" % map
         tod = ('%s:%s' % (date.hour, (str(date.minute)) if date.minute != 0 else str(date.minute) + "0"))
-        item = [competition[:10], home_team, away_team, map, 'Upcoming', date, tod]
+        item = [hltv_league_names.get(competition, competition[:10]), hltv_mdl_team_alias.get(home_team, home_team), hltv_mdl_team_alias.get(away_team, away_team), hltv_maps.get(map, map), 'Upcoming', date, tod]
         matchday_item = MATCHES_DICT.get(date.date(), None)
-        if matchday_item and item not in matchday_item:
-            matchday_item.append(item)
-        else:
-            MATCHES_DICT.update({date.date():[item]})
+        if matchday_item:
+            if await not_added(item, matchday_item): # Check if item minus time of day is already added. This can happen if MDL has the same match with a different time added.
+                matchday_item.append(item)
+            else:
+                MATCHES_DICT.update({date.date():[item]})
     log.info("HLTV matches parsed.")
 
 
@@ -175,12 +224,22 @@ async def parse_mdl_matches(match_elements):
         if (home_team == 'TBD') and (away_team == 'TBD') and (status != 'Upcoming'): # I think It's pointless to show matches that have no confirmed teams or maps yet.
             UNDEFINED_MATCHES_COUNT += 1
             continue
-        if MATCHES_DICT.get(date.date(), None):
-            if item not in MATCHES_DICT.get(date.date()):
+        matchday_item = MATCHES_DICT.get(date.date(), None)
+        if matchday_item:
+            if await not_added(item, matchday_item):  # Check if item minus time of day is already added. This can happen if MDL has the same match with a different time added.
                 MATCHES_DICT.get(date.date()).append(item)
         else:
             MATCHES_DICT.update({date.date():[item]})
     log.info("MDL matches parsed.")
+
+async def not_added(comparsion_match, matches):
+    for match in matches:
+        log.info('match: %s, comparsion_match %s' % (matches, comparsion_match))
+        if match[0] == comparsion_match[0] and match[1] == comparsion_match[1] and match[2] == comparsion_match[2] \
+                and match[3] == comparsion_match[3] and match[4] == comparsion_match[4] and match[5].date() == comparsion_match[5].date():
+            return False
+    return True
+
 
 
 async def cmd_ence(client, message, arg):
