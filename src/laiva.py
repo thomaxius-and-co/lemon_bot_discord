@@ -24,8 +24,7 @@ pokemon = ["Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard
 memes = [
 "11KCaw9IayKXbJ21uvH1qWA0Vc-CQNF45",
 "1tOAAPZqfoYOXxSir3YfGMvh6py5LfvSg",
-"1CcHM4GJie3RN3TIWXPTnETHtUlKQ7we1",
-"14d_nBA50HbwEERee5yc0iH0FvZwY9a3E",
+"19tFMKLVqyTy7uAYokfc0AxtTLUIPMjjx",
 "1bp6TFdPY-coYbleNlx1C2zOyXuFtFzg7",
 "1rbP_OmusEHxgwIi7WA1qgA8CKvHfnrE7",
 "1Uc-hrexmPEf807G63AUCOMGAzPHebJ77",
@@ -45,7 +44,7 @@ memes = [
 "1wxQBLGZbvxQUoeGzWy4EbHUMJl1DNKcQ",
 "1N4eZ3E0I5GpPCUuUy7j82qWJBTyM5U-A",
 "1V5VkexmeOaB9YOiN2ZqDlVOr_R-284Q0",
-"19tFMKLVqyTy7uAYokfc0AxtTLUIPMjjx"]
+"14d_nBA50HbwEERee5yc0iH0FvZwY9a3E"]
 
 def register(client):
     return {
