@@ -178,7 +178,7 @@ async def parse_hltv_matches(match_elements):
         date = to_helsinki(as_utc(pandas.to_datetime((int(element[0][0][0].values()[2])),unit='ms'))).replace(tzinfo=None)  # table -> tr -> td -> div
         date = datetime.datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S")
         if date < now:
-            log.info('Match already started or played, not adding it to matches dict')
+            log.info('HLTV Match already started or played, not adding it to matches dict')
             continue
         home_team = element[0][1].text_content().replace('\n','').strip() # table -> tr -> div -> div>
         away_team = element[0][3].text_content().replace('\n', '').strip()
@@ -193,7 +193,9 @@ async def parse_hltv_matches(match_elements):
             if await not_added(item, matchday_item): # Check if item minus time of day is already added. This can happen if MDL has the same match with a different time added.
                 matchday_item.append(item)
             else:
-                MATCHES_DICT.update({date.date():[item]})
+                log.info('HLTV Match is already added')
+        else:
+            MATCHES_DICT.update({date.date():[item]})
     log.info("HLTV matches parsed.")
 
 
@@ -206,7 +208,7 @@ async def parse_mdl_matches(match_elements):
         away_team = element[2].text_content() if element[2].text_content() != '-' and element[2].text_content() else 'TBD'
         map = element[3].text_content() if element[3].text_content() != '-' and element[3].text_content() else 'TBD'
         status = element[4].text_content().replace('Upcoming (0)', 'Upcoming') if element[4].text_content() != '-' and element[4].text_content() else 'Unconfirmed'
-        date = element[len(element)-1].text_content().replace('\n','').replace('\r','').strip() #element lenght varies
+        date = element[len(element)-1].text_content().replace('\n','').replace('\r','').strip() #element length varies
         if date != '-' and date:
             try:
                 date = datetime.datetime.strptime(date, "%b %d %y")
@@ -216,7 +218,7 @@ async def parse_mdl_matches(match_elements):
             date = 'TBD'
         if date != 'TBD':
             if date < now:
-                log.info('Match already started, not adding it to matches dict')
+                log.info('MDL Match already started, not adding it to matches dict')
                 continue
         tod = '-' # Even though some MDL matches have time of day, I  don't think It's very reliable, considering
         #  they're set for weeks before the match is even confirmed. Instead, We will fetch time of day when it is match day.
