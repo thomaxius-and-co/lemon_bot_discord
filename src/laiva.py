@@ -68,8 +68,8 @@ async def get_laiva_meme_of_the_day(day):
     return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
 
 async def cmd_laiva(client, message, _):
-    laiva = to_utc(as_helsinki(datetime(2018, 11, 9, 17, 0)))
-    laivaover = to_utc(as_helsinki(datetime(2018, 11, 11, 10, 30)))
+    laiva = to_utc(as_helsinki(datetime(2019, 6, 14, 17, 0)))
+    laivaover = to_utc(as_helsinki(datetime(2019, 6, 16, 10, 30)))
     now = as_utc(datetime.now())
     now_to_last_laivaover = now - laivaover
 
