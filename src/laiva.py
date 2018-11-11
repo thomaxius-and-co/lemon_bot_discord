@@ -85,6 +85,8 @@ async def cmd_laiva(client, message, _):
 
     if laivaover < now:
         await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
+        return
+
     delta = laiva - now
 
     template = "Time left until 'The laiva to end all laivas': {0} days, {1} hours, {2} minutes, {3} seconds!!"
