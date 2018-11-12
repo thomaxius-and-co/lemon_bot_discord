@@ -68,6 +68,7 @@ async def get_laiva_meme_of_the_day(day):
     return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
 
 async def cmd_laiva(client, message, _):
+    theme = "The laiva to start a new generation of laivas"
     laiva = to_utc(as_helsinki(datetime(2019, 6, 14, 17, 0)))
     laivaover = to_utc(as_helsinki(datetime(2019, 6, 16, 10, 30)))
     now = as_utc(datetime.now())
@@ -87,14 +88,13 @@ async def cmd_laiva(client, message, _):
         await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
         return
 
-    delta = laiva - now
-
-    template = "Time left until 'The laiva to end all laivas': {0} days, {1} hours, {2} minutes, {3} seconds!!"
+    time_left = delta_to_str(laiva - now)
+    msg = f"Time left until '{theme}': {time_left}!!"
     if (laiva - timedelta(days=len(pokemon)-1)) < now:
-        template += "\n**Laiva pokemon of the day:** %s" % pokemon[delta.days]
+        msg += "\n**Laiva pokemon of the day:** %s" % pokemon[delta.days]
     if (laiva - timedelta(days=len(memes)-1)) < now:
-        template += "\n**Laiva meme of the day**:\n%s" % await get_laiva_meme_of_the_day(delta.days)
-
-    msg = template.format(*delta_to_tuple(delta))
+        msg += "\n**Laiva meme of the day**:\n%s" % await get_laiva_meme_of_the_day(delta.days)
     await client.send_message(message.channel, msg)
 
+def delta_to_str(delta):
+    return "{0} days, {1} hours, {2} minutes, {3} seconds".format(*delta_to_tuple(delta))
