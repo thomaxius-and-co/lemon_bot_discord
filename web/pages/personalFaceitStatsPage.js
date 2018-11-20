@@ -71,10 +71,13 @@ const faceitStats = (apiStats) => {
   }
 
   const getBestMapWinPercentage = segments => {
-    const sorted = copy(segments)
+    let sorted = copy(segments)
       .filter(s => Number(s.stats["Wins"]) >= 10)
-      .sort((a, b) => Number(a.stats["Win Rate %"]) - Number(b.stats["Win Rate %"]))
-      .reverse()
+    if (sorted.indexOf(0) < 0) {
+      return "Not enough matches played to display accurate data."
+    }
+    sorted.sort((a, b) => Number(a.stats["Win Rate %"]) - Number(b.stats["Win Rate %"]))
+    .reverse()
     let mapWinPercentage = Number(sorted[0].stats["Win Rate %"])
     let mapNames = sorted.filter(_ => Number(_.stats["Win Rate %"]) === mapWinPercentage).map(_ => _.label)
     return mapWinPercentage + "% " + mapNames.join(', ')
@@ -86,7 +89,7 @@ const faceitStats = (apiStats) => {
   <b>Total matches</b>: {apiStats.lifetime['Matches']}<br/>
   <b>Total Wins</b>: {apiStats.lifetime['Wins']}<br/>
   <b>Win Rate</b>: {apiStats.lifetime['Win Rate %'] + '%'}<br/>
-  <b>Best map winrate</b>: {getBestMapWinPercentage(apiStats.segments)}<br/>
+  <b>Best map winrate (over 10 matches played)</b>: {getBestMapWinPercentage(apiStats.segments)}<br/>
   <b>Average headshot percentage</b>: {apiStats.lifetime['Average Headshots %']} %<br/>
   <b>Average K/D Ratio</b>: {apiStats.lifetime['Average K/D Ratio']}<br/>
   <b>Average K/R Ratio</b>: {totalKrRatio()}<br/>
