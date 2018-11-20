@@ -73,8 +73,8 @@ const faceitStats = (apiStats) => {
   const getBestMapWinPercentage = segments => {
     let sorted = copy(segments)
       .filter(s => Number(s.stats["Wins"]) >= 10)
-    if (sorted.indexOf(0) < 0) {
-      return "Not enough matches played to display accurate data."
+    if (sorted === undefined || sorted.length == 0) {
+    return "-"
     }
     sorted.sort((a, b) => Number(a.stats["Win Rate %"]) - Number(b.stats["Win Rate %"]))
     .reverse()
