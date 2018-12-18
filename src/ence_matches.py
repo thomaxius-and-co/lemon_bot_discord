@@ -154,7 +154,10 @@ async def get_mdl_matches():
     doc = lh.fromstring(page.content)
     tr_elements = doc.xpath('//tr')  # Get table elements
     #Fetch only matches that have map as Pending veto or  result as 'Upcoming (0)'
-    upcoming_mdl_matches_elements = [element for element in tr_elements[1:] if (element[4].text_content() == 'Upcoming (0)') or (element[3].text_content() == 'Pending Veto')]
+    if len(tr_elements) < 5:
+        log.info("No MDL matches to fetch.")
+        return
+    upcoming_mdl_matches_elements = [element for element in tr_elements[1:] if element[4] and (element[4].text_content() == 'Upcoming (0)') or (element[3] and element[3].text_content() == 'Pending Veto')]
     log.info("Fetched %s MDL matches." % len(upcoming_mdl_matches_elements))
     return upcoming_mdl_matches_elements
 
