@@ -92,10 +92,10 @@ class Page extends React.Component {
       <br/>
       <br/>
       <div className="row">
-        <h2>Current leaderboard</h2>
-        <i>Press refresh to refresh the table</i>
+        <h2>Current leaderboard </h2>
+        <i>Need 20 games to qualify.</i>
       </div>
-      {<input type="button" clasName="whosaiditChoiceButtonBlue" value="Refresh" onClick={()=> this.updateTable()} />}
+      {<input type="button" className="whosaiditButtonSmall" value="Refresh" onClick={()=> this.updateTable()} />}
       {topWhosaiditTable(this.state.topWhosaidit)}	
       {<input type="button" disabled={(this.state.playing || this.state.disabled || this.state.loading) && "true"} id="gameStartButton" value="New game" className="whosaiditChoiceButtonBlue" onClick={this.startGame}></input>}
       {this.state.loading && <div>loading..</div>}

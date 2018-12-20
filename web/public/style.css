@@ -207,7 +207,7 @@ tbody tr:hover {
 }
 
 .whosaiditChoiceButtonBlue {
-  background-color: #7289da; /* Green */
+  background-color: #7289da;
   border: 2px solid #FFFFFF; 
   color: white;
   padding: 15px 32px;
@@ -218,7 +218,7 @@ tbody tr:hover {
 }
 
 .whosaiditChoiceButtonBlack {
-  background-color: #e9830e; /* Green */
+  background-color: #e9830e;
   border: 2px solid #FFFFFF; 
   color: white;
   padding: 15px 32px;
@@ -228,10 +228,11 @@ tbody tr:hover {
   font-size: 16px;
 }
 
-.whosaiditChoiceButtonLightBlue {
-  background-color: #7289da; /* Green */
-  color: red;
-  padding: 5px 10px;
+.whosaiditButtonSmall {
+  background-color: #7289da;
+  border: 2px solid #FFFFFF; 
+  color: white;
+  padding: 5px 12px;
   text-align: center;
   text-decoration: none;
   display: inline-block;

@@ -37,7 +37,6 @@ const requireAdmin = (req, res, next) => {
 }
 
 const requirePlayingClearance = (req, res, next) => {
-  console.log(ALLOWED_WHOSAIDIT_USERIDS)
   if (!req.isAuthenticated()) {
     console.log("requirePlayingClearance: no auth")
     return res.redirect("/login")
