@@ -11,7 +11,8 @@ const redisOptions = {
 }
 
 const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || "").split(",")
-const ALLOWED_WHOSAIDIT_USERIDS = (process.env.ALLOWED_WHOSAIDIT_USERIDS || "").split(",")
+const ALLOWED_WHOSAIDIT_USERIDS = (process.env.ALLOWED_WHOSAIDIT_USERIDS || process.env.ADMIN_USER_IDS + ",210182155928731649,141234778564198401,141794093133987840,236602023225720832,141649488069656576,138256165640339457,141816757483470848,155798687103057921,140917453302661121,252237804803719168,66152978838466560,141950807363813377").split(",")
+
 const requireLogin = (req, res, next) => {
   if (!req.isAuthenticated()) {
     console.log("requireLogin: no auth")
@@ -36,9 +37,10 @@ const requireAdmin = (req, res, next) => {
 }
 
 const requirePlayingClearance = (req, res, next) => {
+  console.log(ALLOWED_WHOSAIDIT_USERIDS)
   if (!req.isAuthenticated()) {
     console.log("requirePlayingClearance: no auth")
-    return res.redirect("/whosaidit")
+    return res.redirect("/login")
   }
 
   if (!ALLOWED_WHOSAIDIT_USERIDS.includes(req.user.id)) {

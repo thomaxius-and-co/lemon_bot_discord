@@ -2,6 +2,7 @@ const React = require("react")
 
 const Login = ({user}) =>
   <ul className="login">
+    <li><a href="/whosaidit">Whosaidit</a></li>
     {user && <li><a href="/admin">Admin</a></li>}
     {user ? <li><a href="/logout">Logout</a></li>
           : <li><a href="/login">Login</a></li>}
