@@ -346,6 +346,106 @@ async function getRollingAverageElo(player_guid) {
   return elos
 }
 
+async function getAvailableWhosaiditUsers(guildId) {
+  const playerIdsAndNames = await db.query(`
+      SELECT
+          user_id,
+          coalesce(name, m->'author'->>'username') AS name
+      FROM 
+          message 
+      JOIN 
+          discord_user USING (user_id)
+      WHERE
+          guild_id = $1 
+          AND NOT bot
+          AND length(content) > 12 
+          AND content NOT LIKE '!%%' 
+          AND content NOT LIKE '%wwww%'
+          AND content NOT LIKE '%http%' 
+          AND content NOT LIKE '%.com%' 
+          AND content NOT LIKE '%.fi%'
+          AND content ~* '^[A-ZÅÄÖ]'
+          AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
+      GROUP BY 
+          user_id, coalesce(name, m->'author'->>'username')
+      ORDER BY
+          random()
+      LIMIT 
+          5
+  `, guildId)
+  return playerIdsAndNames
+}
+
+async function saveLegendaryQuote(messageid, userid) {
+  return await db.query(`
+    INSERT INTO
+        legendary_quotes
+        (message_id, added_by)
+    VALUES 
+        ($1, $2)
+    `, [String(messageid), String(userid)]).then(() => {
+      console.log(`User ${userid} added a legendary quote ${messageid} into the database`) 
+      return true
+    }).catch((error) => {
+      console.log(error.error)
+      return false
+    })
+}
+
+async function getQuoteForWhosaidit(guildid, userids) {
+  userids = userids.map((userid) => (userid != userids[userids.length - 1]) ? `user_id = '${userid}' OR` : `user_id = '${userid}'`).join(' ') // Add OR after userid, unless userid is last element in the list
+  const quotes = await db.query(`
+  SELECT
+      content,
+      coalesce(name, m->'author'->>'username') as username,
+      user_id,
+      m->'mentions',
+      message_id,
+      ts
+  FROM 
+      message 
+  JOIN 
+      discord_user USING (user_id)
+  WHERE
+  (${userids})
+      AND guild_id = ${guildid}
+      AND length(content) > 12
+      AND length(content) < 1000 
+      AND content NOT LIKE '!%%' 
+      AND content NOT LIKE '%wwww%'
+      AND content NOT LIKE '%http%' 
+      AND content NOT LIKE '%.com%' 
+      AND content NOT LIKE '%.fi%'
+      AND content ~* '^[A-ZÅÄÖ]'
+      AND NOT bot 
+  ORDER BY 
+      random()
+  LIMIT 
+      15
+      `) 
+
+  return quotes
+}
+
+async function getUserNamesAndIds() {
+  return await db.query(`
+  SELECT
+        user_id, name
+  FROM
+        discord_user
+  `)
+}
+
+async function saveWhosaiditHistory(userid, message_id, sanitizedquestion, correctname, answer) {
+    correct = correctname == answer
+    return await db.query(`
+        INSERT INTO whosaidit_stats_history
+        (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
+        VALUES ($1, $2, $3, $4, $5, $6, now(), date_part('week', localtimestamp))
+    `, [userid, message_id, sanitizedquestion, correctname, correct ? 'correct' : 'wrong', correct ? 1 : 0]).then(() => console.log(`Saved whosaidit game result for ${userid}`))
+    // Originally this was made using the 'wrong' and 'correct' strings, which is wrong and was later fixed to be 0 for wrong and 1 for correct. Here we add both cause I'm lazy to implement the new thing now.
+}
+
 async function getPlayerNames(playerIds) {
   const rows = await db.query(`SELECT faceit_guid, faceit_nickname FROM faceit_player WHERE faceit_guid = ANY ($1)`, [playerIds])
   const pairs = rows.map(r => [r.faceit_guid, r.faceit_nickname])
@@ -387,6 +487,11 @@ module.exports = {
   faceitTopTen,
   getLatestFaceitEntry,
   getPersonalWeeklyElo,
-  getRollingAverageElo
+  getRollingAverageElo,
+  getAvailableWhosaiditUsers,
+  getQuoteForWhosaidit,
+  saveWhosaiditHistory,
+  getUserNamesAndIds,
+  saveLegendaryQuote
 }
 

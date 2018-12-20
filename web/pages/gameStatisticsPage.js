@@ -162,4 +162,5 @@ module.exports = {
   pageTitle,
   initialState,
   renderPage,
+  topWhosaiditTable
 }
