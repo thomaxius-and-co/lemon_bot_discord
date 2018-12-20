@@ -407,8 +407,8 @@ async function getQuoteForWhosaidit(guildid, userids) {
   JOIN 
       discord_user USING (user_id)
   WHERE
-  (${userids})
-      AND guild_id = ${guildid}
+      (${userids})
+      AND guild_id = '${guildid}'
       AND length(content) > 12
       AND length(content) < 1000 
       AND content NOT LIKE '!%%' 
