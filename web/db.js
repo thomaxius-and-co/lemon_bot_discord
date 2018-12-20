@@ -356,7 +356,7 @@ async function getAvailableWhosaiditUsers(guildId) {
       JOIN 
           discord_user USING (user_id)
       WHERE
-          guild_id = $1 
+          guild_id = $1
           AND NOT bot
           AND length(content) > 12 
           AND content NOT LIKE '!%%' 
@@ -367,7 +367,9 @@ async function getAvailableWhosaiditUsers(guildId) {
           AND content ~* '^[A-ZÅÄÖ]'
           AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
       GROUP BY 
-          user_id, coalesce(name, m->'author'->>'username')
+          coalesce(name, m->'author'->>'username'), user_id
+      HAVING 
+          count(*) >= 500
       ORDER BY
           random()
       LIMIT 
