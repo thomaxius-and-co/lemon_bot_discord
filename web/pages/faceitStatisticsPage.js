@@ -86,7 +86,7 @@ class TopFaceitTable extends React.Component {
       {topFaceit.map((x, i) =>
         <tr key={x.name}>
           <td className="rank">#{i+1}</td>
-          <td><a href={"/personalFaceitStatsPage?faceit_guid=" + x.faceit_guid}>{x.name}</a></td>
+          <td><a href={"/personalfaceitstats?faceit_guid=" + x.faceit_guid}>{x.name}</a></td>
           <td>{x.current_ranking}</td>
           <td>{x.current_elo}</td>
           <td>{x.best_score}</td>         

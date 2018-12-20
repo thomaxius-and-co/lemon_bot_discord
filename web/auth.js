@@ -11,7 +11,7 @@ const redisOptions = {
 }
 
 const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || "").split(",")
-
+const ALLOWED_WHOSAIDIT_USERIDS = (process.env.ALLOWED_WHOSAIDIT_USERIDS || "").split(",")
 const requireLogin = (req, res, next) => {
   if (!req.isAuthenticated()) {
     console.log("requireLogin: no auth")
@@ -28,6 +28,21 @@ const requireAdmin = (req, res, next) => {
 
   if (!ADMIN_USER_IDS.includes(req.user.id)) {
     console.log("requireAdmin: no admin")
+    // TODO: Error page
+    return res.sendStatus(403)
+  }
+
+  return next()
+}
+
+const requirePlayingClearance = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    console.log("requirePlayingClearance: no auth")
+    return res.redirect("/whosaidit")
+  }
+
+  if (!ALLOWED_WHOSAIDIT_USERIDS.includes(req.user.id)) {
+    console.log("requirePlayingClearance: Userid is not allowed to play.")
     // TODO: Error page
     return res.sendStatus(403)
   }
@@ -71,4 +86,4 @@ const init = app => {
   })
 }
 
-module.exports = {init, requireAdmin, requireLogin}
+module.exports = {init, requireAdmin, requireLogin, requirePlayingClearance}

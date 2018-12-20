@@ -15,8 +15,8 @@ const Header = ({user}) =>
 	  <li className="dropdown">
 			<a href="javascript:void(0)" className="dropbtn">Statistics menu</a>
 			<div className="dropdown-content">
-        <a href="/gameStatisticsPage">Game statistics</a>
-        <a href="/faceitStatisticsPage">Faceit statistics</a>
+        <a href="/gamestatistics">Game statistics</a>
+        <a href="/faceitstatistics">Faceit statistics</a>
 			</div>
 		</li>
       </ul>

@@ -3,16 +3,24 @@ const {db} = require('./db')
 
 const API_HOSTNAME = `wbsapi.withings.net`
 const AUTH_HOSTNAME = `account.withings.com`
+const enabled = (!!process.env.WITHINGS_CLIENT_SECRET && !!process.env.WITHINGS_CLIENT_ID)
 
 function setup(app) {
-  app.get(`/auth/withings`, redirectToAuth)
-  app.get(`/auth/withings/callback`, handleCallback)
+  if (enabled) {
+    app.get(`/auth/withings`, redirectToAuth)
+    app.get(`/auth/withings/callback`, handleCallback)
+  }
+  else {
+    console.log('User has not set up withings client id and\or token')
+    return undefined
+  }
 }
 
 function getDevice(userId) {
   return getTokens(userId).then(tokens => {
     if (!tokens) {
       // No access token available for the user
+      console.log("No tokens")
       return undefined
     }
 
@@ -112,15 +120,17 @@ function makeRefreshRequest(refreshToken) {
 }
 
 function autoRefreshTokens(func) {
-  return function(userId, ...args) {
-    return func(userId, ...args).then(json => {
-      if (json.status === 401) {
-        console.log(`User access_token might be expired. Refresh the access token and try again.`)
-        return refreshAccessToken(userId).then(() => func(userId, ...args))
-      }
-      return json
-    })
+  if (enabled) {
+    return function(userId, ...args) {
+      return func(userId, ...args).then(json => {
+        if (json.status === 401) {
+          console.log(`User access_token might be expired. Refresh the access token and try again.`)
+          return refreshAccessToken(userId).then(() => func(userId, ...args))
+        }
+        return json
+      })
   }
+}
 }
 
 function getTokens(userId) {
@@ -134,4 +144,5 @@ function head(xs) {
 module.exports = {
   setup,
   getDevice: autoRefreshTokens(getDevice),
+  enabled
 }

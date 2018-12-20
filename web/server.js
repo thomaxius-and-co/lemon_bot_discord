@@ -3,21 +3,24 @@ const crypto = require('crypto')
 const path = require('path')
 const express = require('express')
 const ReactDOMServer = require('react-dom/server')
-
 const db = require('./db')
 const auth = require("./auth")
 const withings = require("./withings")
-
+const bodyParser = require('body-parser')
 const basePage = require('./pages/basePage')
 const statisticsPage = require('./pages/statisticsPage')
 const adminPage = require('./pages/adminPage')
 const gameStatisticsPage = require('./pages/gameStatisticsPage')
 const faceitStatisticsPage = require('./pages/faceitStatisticsPage')
 const personalFaceitStatsPage = require('./pages/personalFaceitStatsPage')
+const whosaiditPage = require('./pages/whosaiditPage')
+const whosaidit = require('./whosaidit')
 const faceit_api = require('./faceit_api')
 const app = express()
 auth.init(app)
-withings.setup(app)
+if (withings.enabled) {
+  withings.setup(app)
+}
 
 const checksumPromise = filePath => new Promise((resolve, reject) => {
   require('fs').readFile(filePath, (error, fileContent) => {
@@ -52,8 +55,7 @@ const buildInitialState = req => {
     })
   case '/':
     const messageCountByUser = req.user ? db.findMessageCountByUser(req.user.id) : Promise.resolve(-1)
-    const withingsDevices = !req.user ? Promise.resolve(undefined) :
-      withings.getDevice(req.user.id)
+    const withingsDevices = req.user && withings.enabled ? withings.getDevice(req.user.id) : Promise.resolve(undefined)
     return Promise.join(
       messageCountByUser,
       db.findUserMessageCount(),
@@ -85,21 +87,21 @@ const buildInitialState = req => {
         withingsDevices,
       })
 	  ) 
-  case '/gameStatisticsPage':
+  case '/gamestatistics':
     return Promise.join(
       db.topBlackjack(), db.topSlots(), db.topWhosaidit(), db.whosaiditWeeklyWinners(),
       (topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners) => ({
         topBlackjack, topSlots, topWhosaidit, whosaiditWeeklyWinners
       })
 	  )
-  case '/faceitStatisticsPage':
+  case '/faceitstatistics':
   return Promise.join(
     db.faceitTopTen(), db.getLatestFaceitEntry(), db.getEloForPast30Days(), 
     (topFaceit, latestFaceitEntry, eloForPast30Days ) => ({
       topFaceit, latestFaceitEntry, eloForPast30Days
     })
   )
-  case '/personalFaceitStatsPage':
+  case '/personalfaceitstats':
     if (isValidGetParameter(req.query.faceit_guid)) {
       return Promise.join(
         db.getPersonalWeeklyElo(req.query.faceit_guid), db.getRollingAverageElo(req.query.faceit_guid), db.getLatestFaceitEntry(), faceit_api.getStats(req.query.faceit_guid),  faceit_api.getPlayerDetails(req.query.faceit_guid),
@@ -107,8 +109,15 @@ const buildInitialState = req => {
           personalWeeklyElo, rollingAverageElo, latestFaceitEntry, stats, playerDetails
         })
       )
-    }
-      return Promise.resolve({}) 
+  }
+  case '/whosaidit':
+  return Promise.join(
+    db.topWhosaidit(),
+    (topWhosaidit) => ({
+      topWhosaidit,
+      user: req.user,
+    })
+  )
   default:
     return Promise.resolve({})
   }
@@ -124,12 +133,14 @@ renderApp = async (req, res, next) => {
     page = adminPage
   } else if (path === '/') {
     page = statisticsPage
-  } else if (path === '/gameStatisticsPage') {
+  } else if (path === '/gamestatistics') {
     page = gameStatisticsPage
-  } else if (path === '/faceitStatisticsPage') {
+  } else if (path === '/faceitstatistics') {
     page = faceitStatisticsPage
-  } else if (path === '/personalFaceitStatsPage') {
+  } else if (path === '/personalfaceitstats') {
     page = personalFaceitStatsPage
+  } else if (path === '/whosaidit') {
+    page = whosaiditPage
   }
   if (page) {
     Promise.join(
@@ -149,11 +160,31 @@ renderApp = async (req, res, next) => {
   }
 }
 
+getATableForThisMan = (req, res, next) => {
+  Promise.join(
+    db.topWhosaidit(),
+    (topWhosaidit) => ({
+      topWhosaidit})).then((result) => res.send({table:result.topWhosaidit}))
+
+}
+
+
+
+
+
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
 app.get("/admin", auth.requireAdmin, renderApp)
 app.get("/", renderApp)
-app.get("/gameStatisticsPage", renderApp)
-app.get("/faceitStatisticsPage", renderApp)
-app.get("/personalFaceitStatsPage", renderApp)
+app.get("/gamestatistics", renderApp)
+app.get("/faceitstatistics", renderApp)
+app.get("/personalfaceitstats", renderApp)
+app.get("/whosaidit", auth.requirePlayingClearance, renderApp)
+app.post("/whosaidit", whosaidit.handleWhosaidit)
+app.post("/answerCheck", whosaidit.checkAnswer)
+app.post("/addResult", whosaidit.addResult)
+app.post("/getTable", getATableForThisMan)
+app.post("/addLegendaryQuote", whosaidit.addLegendaryQuote)
 
 const bundleJsFilePath = path.resolve(`${__dirname}/public/bundle.js`)
 app.get('/bundle.js', serveStaticResource(bundleJsFilePath))
