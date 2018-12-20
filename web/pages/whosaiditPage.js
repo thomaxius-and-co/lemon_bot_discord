@@ -82,9 +82,6 @@ class Page extends React.Component {
   }
 
   render() {
-    if (this.state.loading) {
-      return(<div>loading..</div>)
-    }
     return(
       <div>
       <br/>
@@ -100,8 +97,9 @@ class Page extends React.Component {
       </div>
       {<input type="button" clasName="whosaiditChoiceButtonBlue" value="Refresh" onClick={()=> this.updateTable()} />}
       {topWhosaiditTable(this.state.topWhosaidit)}	
-      {<input type="button" disabled={(this.state.playing || this.state.disabled) && "true"} id="gameStartButton" value="New game" className="whosaiditChoiceButtonBlue" onClick={this.startGame}></input>}
-      {!this.state.error && this.state.quote ? <GameContent setPlaying={this.setPlaying} setDisabled={this.setDisabled} state={this.state}/> : <p>{this.state.error}</p> }
+      {<input type="button" disabled={(this.state.playing || this.state.disabled || this.state.loading) && "true"} id="gameStartButton" value="New game" className="whosaiditChoiceButtonBlue" onClick={this.startGame}></input>}
+      {this.state.loading && <div>loading..</div>}
+      {!this.state.error && !this.state.loading && this.state.quote ? <GameContent setPlaying={this.setPlaying} setDisabled={this.setDisabled} state={this.state}/> : <p>{this.state.error}</p> }
     
       </div>)
   }
@@ -213,7 +211,6 @@ class GameContent extends React.Component {
     if (this.state.loading) {
       return(<div>loading..</div>)
     }
-
     return(
       <div>
       <p><b>Who said the following: </b></p>
