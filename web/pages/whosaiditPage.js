@@ -55,7 +55,12 @@ class Page extends React.Component {
 
   startGame() {
     this.setState({loading: true})
-    axios.post("/whosaidit").then(response => {
+    axios.post("/whosaidit", 
+    {
+      params: {
+        playerUserid: this.state.user.id
+      }
+    }).then(response => {
       this.setState({
         loading: false,
         playing: true,
@@ -124,7 +129,8 @@ class GameContent extends React.Component {
     axios.post("/answerCheck", 
     {
       params: {
-      answer: answerUserid
+      answer: answerUserid,
+      playerUserid: this.state.user.id
     }
   }).then(response => {
     this.setState({
@@ -195,7 +201,7 @@ class GameContent extends React.Component {
     axios.post("/addResult", 
     {
       params: {
-        userid: this.state.user.id,
+        playerUserid: this.state.user.id, 
         messageid: this.state.quote.message_id,
         quote: this.state.quote.content,
         quoteAuthor: this.state.quote.username,

@@ -1,10 +1,10 @@
 
 const db = require("./db")
 
-let correctQuote = null
+let OnGoingGameDict = {}
 
 checkAnswer = (req, res, next) => {
-  if (req.body.params.answer ==  this.correctQuote.user_id) {
+  if (req.body.params.answer ==  OnGoingGameDict[req.body.params.playerUserid].user_id) {
     res.send({
       correct: true
     })
@@ -14,6 +14,7 @@ checkAnswer = (req, res, next) => {
       correct: false
     })
   }
+  delete OnGoingGameDict[req.body.params.playerUserid]
 }
 
 
@@ -30,7 +31,7 @@ fixMentions = async (quote) => {
 
   sanitizeQuote = async (quote) => fixMentions(removeEmojis(quote))
 
-function shuffle(array) { // Stolen from SO
+shuffle = (array) => { // Stolen from SO
   let counter = array.length
 
   while (counter > 0) {
@@ -46,7 +47,7 @@ function shuffle(array) { // Stolen from SO
   return array
 
 }
-function invalidQuote(quote) {
+invalidQuote = (quote) => {
     function is_custom_emoji(quote) {
         return quote.startsWith("<:") && quote.endsWith(">")
     }
@@ -75,11 +76,12 @@ check_quotes = async (quotes) => {
 }
 
 addResult = async (req, res, next) => {
-  await db.saveWhosaiditHistory(req.body.params.userid, req.body.params.messageid, req.body.params.quote, req.body.params.quoteAuthor, req.body.params.userGuess).then(() => {
+  await db.saveWhosaiditHistory(req.body.params.playerUserid, req.body.params.messageid, req.body.params.quote, req.body.params.quoteAuthor, req.body.params.userGuess).then(() => {
     res.send({
       success: true
     })
   })
+  delete OnGoingGameDict[req.body.params.playerUserid]
 }
 
 addLegendaryQuote = async (req, res, next) => {
@@ -114,7 +116,8 @@ handleWhosaidit = async (req, res, next) => {
           })
           return
         }
-        this.correctQuote = validQuote
+        
+        OnGoingGameDict[req.body.params.playerUserid] = validQuote
         res.send({
           quote: validQuote,
           availableWhoSaiditUsers: shuffle(availableUsersResult)
