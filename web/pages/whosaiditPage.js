@@ -1,7 +1,7 @@
 const React = require("react")
 const moment = require("moment-timezone")
 const axios = require("axios")
-const pageTitle = "Faceit statistics"
+const pageTitle = "Whosaidit game"
 const initialState = {
   playing: false,
   availableWhoSaiditUsers: null,
