@@ -458,7 +458,7 @@ async def get_match_info_string(player_guid, from_timestamp):
         i += 1
         if i == 10: # Only fetch a max of 10 matches
             break
-    return "*" + match_info_string + "*"
+    return match_info_string
 
 
 async def check_faceit_elo(client):
@@ -635,22 +635,22 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
 
     if skill_before < current_skill:
         util.threadsafe(client, client.send_message(channel,
-                                                    '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
+                                                    '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n*%s*' % (
                                                     faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                     skill_before, current_skill, current_elo, match_info_string)))
         return
     elif skill_before > current_skill:
         util.threadsafe(client, client.send_message(channel,
-                                                    '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
+                                                    '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n*%s*' % (
                                                     faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                     skill_before, current_skill, current_elo, match_info_string)))
         return
     elif current_elo > elo_before:
-        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)\n%s' % (
+        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)\n*%s*' % (
         faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
         return
     elif elo_before > current_elo:
-        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)\n%s' % (
+        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)\n*%s*' % (
         faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
         return
 
