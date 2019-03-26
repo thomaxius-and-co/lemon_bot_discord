@@ -11,13 +11,16 @@ log = logger.get("FACEIT_API")
 FACEIT_API_KEY = os.environ.get("FACEIT_API_KEY", None)
 AUTH_HEADER = {"Authorization": "Bearer {0}".format(FACEIT_API_KEY)}
 
-class UserNotFound(Exception):
+
+class NotFound(Exception):
     pass
+
 
 class UnknownError(Exception):
     def __init__(self, response):
         super().__init__("Unknown faceit error: HTTP Status {0}".format(response.status))
         self.response = response
+
 
 async def player_history(player_id, offset=0, limit=20):
     query = {
@@ -30,9 +33,10 @@ async def player_history(player_id, offset=0, limit=20):
     if response.status == 200:
         return json
     elif response.status == 404:
-        raise UserNotFound("User not found (player_id: {0})".format(player_id))
+        raise NotFound("User not found (player_id: {0})".format(player_id))
     else:
         raise UnknownError(response)
+
 
 async def user(nickname):
     response = await _call_api("/players", query={"nickname": nickname})
@@ -40,9 +44,10 @@ async def user(nickname):
     if response.status == 200:
         return json
     elif response.status == 404:
-        raise UserNotFound("User not found (nickname: {0})".format(nickname))
+        raise NotFound("User not found (nickname: {0})".format(nickname))
     else:
         raise UnknownError(response)
+
 
 async def user_by_id(player_id):
     response = await _call_api("/players/{0}".format(player_id))
@@ -50,9 +55,10 @@ async def user_by_id(player_id):
     if response.status == 200:
         return json
     elif response.status == 404:
-        raise UserNotFound("User not found (player_id: {0})".format(player_id))
+        raise NotFound("User not found (player_id: {0})".format(player_id))
     else:
         raise UnknownError(response)
+
 
 async def ranking(player_id, region="EU", game_id="csgo"):
     response = await _call_api("/rankings/games/{0}/regions/{1}/players/{2}".format(game_id, region, player_id))
@@ -60,9 +66,36 @@ async def ranking(player_id, region="EU", game_id="csgo"):
     if response.status == 200:
         return json.get("position", None)
     elif response.status == 404:
-        raise UserNotFound("User not found (player_id: {0})".format(player_id))
+        raise NotFound("User not found (player_id: {0})".format(player_id))
     else:
         raise UnknownError(response)
+
+
+async def match_info(match_id):
+    response = await _call_api("""/matches/{0}/stats""".format(match_id))
+    json = await response.json()
+    if response.status == 200:
+        return json.get("rounds", None)
+    elif response.status == 404:
+        raise NotFound("Match not found (match id: {0})".format(match_id))
+    else:
+        raise UnknownError(response)
+
+
+async def matches(player_id, from_timestamp=0, to_timestamp=None, limit=100):
+    if to_timestamp:
+        to_timestamp_param = "&to={0}".format(to_timestamp)
+    else:
+        to_timestamp_param = ""
+    response = await _call_api("""/players/{0}/history?game=csgo&from={1}{2}&offset=0&limit={3}""".format(player_id, from_timestamp, to_timestamp_param, limit))
+    json = await response.json()
+    if response.status == 200:
+        return json.get("items", None)
+    elif response.status == 404:
+        raise NotFound("No matches found for player_id {0}".format(player_id))
+    else:
+        raise UnknownError(response)
+
 
 @retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
 async def _call_api(path, query=None):
