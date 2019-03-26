@@ -488,7 +488,7 @@ async def check_faceit_elo(client):
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
                                                  player_stats['faceit_skill'], (
-                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_info_string(player_guid, to_utc(player_stats['changed']).timestamp()-7200))
+                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_info_string(player_guid, to_utc(player_stats['changed']).timestamp()))
         else:
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
