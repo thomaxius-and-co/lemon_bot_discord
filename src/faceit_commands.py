@@ -453,7 +453,7 @@ async def get_score_string(match):
     first_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("First Half Score"), match_info[0].get("teams")[1].get("team_stats").get("First Half Score"))
     second_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("Second Half Score"), match_info[0].get("teams")[1].get("team_stats").get("Second Half Score"))
     total_rounds = int(match_info[0].get("round_stats").get("Rounds"))
-    if total_rounds >= 30:
+    if total_rounds > 30:
         overtime_score = "%s-%s" % (
         match_info[0].get("teams")[0].get("team_stats").get("Overtime score"), match_info[0].get("teams")[1].get("team_stats").get("Overtime score"))
     if overtime_score:
