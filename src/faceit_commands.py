@@ -454,11 +454,11 @@ async def get_match_info_string(player_guid, from_timestamp):
         finished_at = match.get("finished_at")
         match_info = await get_match_info(match.get("match_id"))
         score = match_info[0].get("round_stats").get("Score")
-        match_info_string += "*%s score %s, match length %s\n*" % (("Match %s " % i) if len(matches) > 1 else "Match", score.replace(' / ', '-'), await get_length_string(finished_at - started_at))
+        match_info_string += "%s score %s, match length %s\n" % (("Match %s " % i) if len(matches) > 1 else "Match", score.replace(' / ', '-'), await get_length_string(finished_at - started_at))
         i += 1
         if i == 10: # Only fetch a max of 10 matches
             break
-    return match_info_string
+    return "*" + match_info_string + "*"
 
 
 async def check_faceit_elo(client):
