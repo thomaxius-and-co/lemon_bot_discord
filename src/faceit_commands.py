@@ -445,20 +445,42 @@ async def get_length_string(seconds):
     return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
 
+async def get_score_string(match):
+    overtime_score = None
+
+    match_info = await get_match_info(match.get("match_id"))
+    score = match_info[0].get("round_stats").get("Score").replace(' / ', '-')
+    first_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("First Half Score"), match_info[0].get("teams")[1].get("team_stats").get("First Half Score"))
+    second_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("Second Half Score"), match_info[0].get("teams")[1].get("team_stats").get("Second Half Score"))
+    total_rounds = int(match_info[0].get("round_stats").get("Rounds"))
+    if total_rounds >= 30:
+        overtime_score = "%s-%s" % (
+        match_info[0].get("teams")[0].get("team_stats").get("Overtime score"), match_info[0].get("teams")[1].get("team_stats").get("Overtime score"))
+    if overtime_score:
+        score_string = ("score %s (%s, %s, %s)" % (score, first_half_score, second_half_score, overtime_score))
+    else:
+        score_string = ("score %s (%s, %s)" % (score, first_half_score, second_half_score))
+    return score_string
+
+
+async def get_match_length_string(match):
+    started_at = match.get("started_at")
+    finished_at = match.get("finished_at")
+    return await get_length_string(finished_at - started_at)
+
+
 async def get_match_info_string(player_guid, from_timestamp):
     matches = await get_matches(player_guid, int(from_timestamp))
     i = 1
     match_info_string = ""
     for match in matches:
-        started_at = match.get("started_at")
-        finished_at = match.get("finished_at")
-        match_info = await get_match_info(match.get("match_id"))
-        score = match_info[0].get("round_stats").get("Score")
-        match_info_string += "%s score %s, match length %s\n" % (("Match %s " % i) if len(matches) > 1 else "Match", score.replace(' / ', '-'), await get_length_string(finished_at - started_at))
+        score_string = await get_score_string(match)
+        match_length_string = await get_match_length_string(match)
+        match_info_string += "%s %s %s\n" % (("Match %s" % i) if len(matches) > 1 else "Match", score_string, match_length_string)
         i += 1
-        if i == 10: # Only fetch a max of 10 matches
+        if i > 10: # Only fetch a max of 10 matches
             break
-    return match_info_string
+    return "*" + match_info_string.rstrip("\n") + "*"
 
 
 async def check_faceit_elo(client):
@@ -635,22 +657,22 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
 
     if skill_before < current_skill:
         util.threadsafe(client, client.send_message(channel,
-                                                    '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n*%s*' % (
+                                                    '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
                                                     faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                     skill_before, current_skill, current_elo, match_info_string)))
         return
     elif skill_before > current_skill:
         util.threadsafe(client, client.send_message(channel,
-                                                    '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n*%s*' % (
+                                                    '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
                                                     faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                     skill_before, current_skill, current_elo, match_info_string)))
         return
     elif current_elo > elo_before:
-        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)\n*%s*' % (
+        util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)\n%s' % (
         faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
         return
     elif elo_before > current_elo:
-        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)\n*%s*' % (
+        util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)\n%s' % (
         faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
         return
 
