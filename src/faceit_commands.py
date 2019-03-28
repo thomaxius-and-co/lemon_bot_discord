@@ -519,8 +519,9 @@ async def get_match_info_string(player_guid, from_timestamp):
         if i > 10: # Only fetch a max of 10 matches
             break
     if not match_info_string:
-        return None
-    return "*" + match_info_string.rstrip("\n") + "*"
+        return match_info_string
+    else:
+        return "*" + match_info_string.rstrip("\n") + "*"
 
 
 
