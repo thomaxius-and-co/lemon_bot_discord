@@ -44,6 +44,8 @@ async def get_player_aliases_string(faceit_guid, faceit_nickname):
     else:
         return '-'
 
+
+
 async def get_alias_duration_string(alias_add_date, until_date):
     if alias_add_date == until_date:
         return (" *(%s)*" % until_date)
@@ -337,6 +339,7 @@ async def cmd_list_faceit_users(client, message, _):
         await client.send_message(message.channel, msg)
 
 
+
 async def delete_faceit_user_from_database_with_row_id(guild_id, row_id):
     await db.execute("""
         DELETE FROM faceit_guild_ranking
@@ -432,36 +435,67 @@ async def elo_notifier_task(client):
 
 
 async def get_matches(player_guid, from_timestamp, to_timestamp=None):
-    return await faceit_api.matches(player_guid, from_timestamp, to_timestamp)
-
+    try:
+        return await faceit_api.matches(player_guid, from_timestamp, to_timestamp)
+    except NotFound as e:
+        log.error(e)
+        return None
 
 async def get_match_info(match_id):
-    return await faceit_api.match_info(match_id)
-
+    try:
+        return await faceit_api.match_info(match_id)
+    except NotFound as e:
+        log.error(e)
+        return None
 
 async def get_length_string(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
-    return '{:d}:{:02d}:{:02d}'.format(h, m, s)
+    return '**Match length**: {:d}:{:02d}:{:02d}'.format(h, m, s)
 
 
 async def get_score_string(match):
     overtime_score = None
-
-    match_info = await get_match_info(match.get("match_id"))
-    score = match_info[0].get("round_stats").get("Score").replace(' / ', '-')
-    first_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("First Half Score"), match_info[0].get("teams")[1].get("team_stats").get("First Half Score"))
-    second_half_score = "%s-%s" % (match_info[0].get("teams")[0].get("team_stats").get("Second Half Score"), match_info[0].get("teams")[1].get("team_stats").get("Second Half Score"))
-    total_rounds = int(match_info[0].get("round_stats").get("Rounds"))
-    if total_rounds > 30:
+    score = match[0].get("round_stats").get("Score").replace(' / ', '-')
+    first_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("First Half Score"), match[0].get("teams")[1].get("team_stats").get("First Half Score"))
+    second_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("Second Half Score"), match[0].get("teams")[1].get("team_stats").get("Second Half Score"))
+    total_rounds = int(match[0].get("round_stats").get("Rounds"))
+    if total_rounds >= 30:
         overtime_score = "%s-%s" % (
-        match_info[0].get("teams")[0].get("team_stats").get("Overtime score"), match_info[0].get("teams")[1].get("team_stats").get("Overtime score"))
+            match[0].get("teams")[0].get("team_stats").get("Overtime score"), match[0].get("teams")[1].get("team_stats").get("Overtime score"))
     if overtime_score:
-        score_string = ("score %s (%s, %s, %s)" % (score, first_half_score, second_half_score, overtime_score))
+        score_string = ("**score**: %s (%s, %s, %s)" % (score, first_half_score, second_half_score, overtime_score))
     else:
-        score_string = ("score %s (%s, %s)" % (score, first_half_score, second_half_score))
+        score_string = ("**score**: %s (%s, %s)" % (score, first_half_score, second_half_score))
     return score_string
 
+
+
+
+async def get_info_strings(match, player_guid):
+    try:
+        match_details = await get_match_info(match.get("match_id"))
+        if not match_details:
+            return None
+        score_string = await get_score_string(match_details)
+        player_stats_string = await get_player_stats(match_details, player_guid)
+        return score_string, player_stats_string
+    except NotFound as e:
+        log.error(e, 'Ghost match')
+        return None
+
+
+
+async def get_player_rank_in_team(players_list, player_dict):
+    return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
+
+
+async def get_player_stats(match, player_guid):
+    teams = match[0].get("teams")
+    for team in teams:
+        for player in team.get("players"):
+            if player.get('player_id') == player_guid:
+                return ("**Player stats:** #%s %s-%s-%s (%s kdr)" % (await get_player_rank_in_team(team.get("players"), player), player.get("player_stats").get("Kills"), player.get("player_stats").get("Assists"), player.get("player_stats").get("Deaths"), player.get("player_stats").get("K/D Ratio")))
 
 async def get_match_length_string(match):
     started_at = match.get("started_at")
@@ -471,16 +505,23 @@ async def get_match_length_string(match):
 
 async def get_match_info_string(player_guid, from_timestamp):
     matches = await get_matches(player_guid, int(from_timestamp))
+    if not matches:
+        return None
     i = 1
     match_info_string = ""
     for match in matches:
-        score_string = await get_score_string(match)
+        score, stats = await get_info_strings(match, player_guid)
+        if not score or not stats:
+            continue
         match_length_string = await get_match_length_string(match)
-        match_info_string += "%s %s %s\n" % (("Match %s" % i) if len(matches) > 1 else "Match", score_string, match_length_string)
+        match_info_string += "%s %s %s %s\n" % (("**Match %s**" % i) if len(matches) > 1 else "**Match**", score, stats, match_length_string)
         i += 1
         if i > 10: # Only fetch a max of 10 matches
             break
+    if not match_info_string:
+        return None
     return "*" + match_info_string.rstrip("\n") + "*"
+
 
 
 async def check_faceit_elo(client):
@@ -510,7 +551,7 @@ async def check_faceit_elo(client):
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
                                                  player_stats['faceit_skill'], (
-                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_info_string(player_guid, to_utc(player_stats['changed']).timestamp()))
+                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_info_string(player_guid, to_utc(player_stats['changed']).timestamp()-7200))
         else:
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
