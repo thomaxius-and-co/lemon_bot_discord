@@ -11,8 +11,8 @@ def register(client):
 
 async def cmd_laiva(client, message, _):
     theme = "The laiva to start a new generation of laivas"
-    laiva = to_utc(as_helsinki(datetime(2019, 6, 14, 17, 0)))
-    laivaover = to_utc(as_helsinki(datetime(2019, 6, 16, 10, 30)))
+    laiva = to_utc(as_helsinki(datetime(2019, 6, 7, 17, 0)))
+    laivaover = to_utc(as_helsinki(datetime(2019, 6, 9, 10, 30)))
 
     now = as_utc(datetime.now())
 
