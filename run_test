@@ -8,7 +8,7 @@ function run_test {
   pushd "$ROOT"
   pip install -r "$ROOT/test-requirements.txt"
   source "$ROOT/secrets"
-  python -m pytest
+  ptw
   popd
 }
 

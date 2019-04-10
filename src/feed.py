@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import time
 import discord
@@ -113,7 +114,7 @@ async def task(client):
 
 async def cmd_feed(client, message, arg):
     if arg is None:
-        await client.add_reaction(message, emoji.CROSS_MARK)
+        await respond(client, message, emoji.CROSS_MARK)
         return
 
     subcommands = {
@@ -125,7 +126,7 @@ async def cmd_feed(client, message, arg):
     cmd, arg = command.parse(arg, prefix="")
     handler = subcommands.get(cmd, None)
     if handler is None:
-        await client.add_reaction(message, emoji.CROSS_MARK)
+        await respond(client, message, emoji.CROSS_MARK)
         return
     await handler(client, message, arg)
 
@@ -141,18 +142,25 @@ async def cmd_feed_add(client, message, url):
     await db.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
 
     log.info("Added feed '{0}'".format(url))
-    await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
+    await respond(client, message, emoji.WHITE_HEAVY_CHECK_MARK)
 
 
 async def cmd_feed_remove(client, message, url):
     if url is None:
-        await client.add_reaction(message, emoji.CROSS_MARK)
+        await respond(client, message, emoji.CROSS_MARK)
         return
 
     await db.execute("DELETE FROM feed WHERE url = $1", url)
 
     log.info("Removed feed '{0}'".format(url))
-    await client.add_reaction(message, emoji.WHITE_HEAVY_CHECK_MARK)
+    await respond(client, message, emoji.WHITE_HEAVY_CHECK_MARK)
+
+async def respond(client, message, reaction):
+    try:
+        await client.add_reaction(message, reaction)
+    except discord.errors.Forbidden:
+        with suppress(discord.errors.Forbidden):
+            await client.send_message(message.channel, reaction)
 
 def register(client):
     log.info("Registering")

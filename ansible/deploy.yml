@@ -78,7 +78,7 @@
       aws_metric_filter:
         filterName: "{{ item }}-errors-logged-filter"
         logGroupName: "{{ item }}"
-        filterPattern: "[date, time, level = ERROR, ...]"
+        filterPattern: "[date, time, level = ERROR, module, message]"
         metricNamespace: "General"
         metricName: "{{ item }}-errors-logged"
         metricValue: "1"
