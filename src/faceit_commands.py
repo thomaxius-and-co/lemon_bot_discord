@@ -476,13 +476,13 @@ async def get_info_strings(match, player_guid):
     try:
         match_details = await get_match_info(match.get("match_id"))
         if not match_details:
-            return None
+            return None, None
         score_string = await get_score_string(match_details)
         player_stats_string = await get_player_stats(match_details, player_guid)
         return score_string, player_stats_string
     except NotFound as e:
         log.error(e, 'Ghost match')
-        return None
+        return None, None
 
 
 
