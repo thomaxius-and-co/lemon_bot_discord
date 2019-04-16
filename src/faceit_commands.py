@@ -434,16 +434,25 @@ async def elo_notifier_task(client):
             await util.log_exception(log)
 
 
-async def get_matches(player_guid, from_timestamp, to_timestamp=None):
+async def get_match_stats(match_id):
     try:
-        return await faceit_api.matches(player_guid, from_timestamp, to_timestamp)
+        return await faceit_api.match(match_id)
     except NotFound as e:
         log.error(e)
         return None
 
+
+async def get_matches(player_guid, from_timestamp, to_timestamp=None):
+    try:
+        return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
+    except NotFound as e:
+        log.error(e)
+        return None
+
+
 async def get_match_info(match_id):
     try:
-        return await faceit_api.match_info(match_id)
+        return await faceit_api.match_stats(match_id)
     except NotFound as e:
         log.error(e)
         return None
@@ -513,7 +522,8 @@ async def get_match_info_string(player_guid, from_timestamp):
         score, stats = await get_info_strings(match, player_guid)
         if not score or not stats:
             continue
-        match_length_string = await get_match_length_string(match)
+        match_details = await get_match_stats(match.get("match_id"))
+        match_length_string = await get_match_length_string(match_details)
         match_info_string += "%s %s %s %s\n" % (("**Match %s**" % i) if len(matches) > 1 else "**Match**", score, stats, match_length_string)
         i += 1
         if i > 10: # Only fetch a max of 10 matches
@@ -522,7 +532,6 @@ async def get_match_info_string(player_guid, from_timestamp):
         return match_info_string
     else:
         return "*" + match_info_string.rstrip("\n") + "*"
-
 
 
 async def check_faceit_elo(client):

@@ -71,7 +71,7 @@ async def ranking(player_id, region="EU", game_id="csgo"):
         raise UnknownError(response)
 
 
-async def match_info(match_id):
+async def match_stats(match_id):
     response = await _call_api("""/matches/{0}/stats""".format(match_id))
     json = await response.json()
     if response.status == 200:
@@ -82,7 +82,7 @@ async def match_info(match_id):
         raise UnknownError(response)
 
 
-async def matches(player_id, from_timestamp=0, to_timestamp=None, limit=100):
+async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, limit=100):
     if to_timestamp:
         to_timestamp_param = "&to={0}".format(to_timestamp)
     else:
@@ -93,6 +93,17 @@ async def matches(player_id, from_timestamp=0, to_timestamp=None, limit=100):
         return json.get("items", None)
     elif response.status == 404:
         raise NotFound("No matches found for player_id {0}".format(player_id))
+    else:
+        raise UnknownError(response)
+
+
+async def match(matchid):
+    response = await _call_api("""/matches/{0}""".format(matchid))
+    json = await response.json()
+    if response.status == 200:
+        return json
+    elif response.status == 404:
+        raise NotFound("Match {0} not found.".format(matchid))
     else:
         raise UnknownError(response)
 
