@@ -31,6 +31,23 @@
             "logs:PutLogEvents"
           ],
           "Resource": "arn:aws:logs:*:*:*"
+        }, {
+          "Effect": "Allow",
+          "Action": [
+            "secretsmanager:DescribeSecret"
+          ],
+          "Resource": "{{ discord_alarm_webhook_secret_arn }}"
+        }, {
+          "Effect": "Allow",
+          "Action": [
+            "secretsmanager:GetSecretValue"
+          ],
+          "Resource": "{{ discord_alarm_webhook_secret_arn }}",
+          "Condition": {
+            "ForAnyValue:StringEquals": {
+              "secretsmanager:VersionStage": "AWSCURRENT"
+            }
+          }
         }]
       }
 
