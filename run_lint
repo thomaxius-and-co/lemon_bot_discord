@@ -5,7 +5,7 @@ set -e
 source "$(dirname "${BASH_SOURCE[0]}")"/scripts/common
 
 function run_lint {
-  pip install --progress-bar off pylint==1.8.1
+  pip install pylint==1.8.1
   pushd "$ROOT/src"
   python -m pylint --rcfile "$ROOT/.pylintrc" *
   #python -m pylint "$ROOT/src/"*.py || true

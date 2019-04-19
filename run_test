@@ -6,7 +6,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/scripts/common
 
 function run_test {
   pushd "$ROOT"
-  pip install --progress-bar off -r "$ROOT/test-requirements.txt"
+  pip install -r "$ROOT/test-requirements.txt"
   source "$ROOT/secrets"
   ptw
   popd
