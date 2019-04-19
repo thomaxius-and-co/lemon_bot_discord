@@ -26,6 +26,11 @@ def main():
 
     func = get_function(client, module.params["name"])
     zip_file = build_lambda(module.params["path"])
+
+    lambda_environment = None
+    if module.params.has("env"):
+        lambda_environment = {"Variables": module.params["env"]}
+
     if func is None:
         func = client.create_function(
             FunctionName=module.params["name"],
@@ -35,7 +40,7 @@ def main():
             Code={"ZipFile": zip_file},
             Timeout=15,
             MemorySize=128,
-            Environment={"Variables": module.params.get("env", {})},
+            Environment=lambda_environment,
             Publish=False
         )
 
@@ -48,7 +53,7 @@ def main():
             FunctionName=module.params["name"],
             Role=module.params["role"],
             Handler=module.params["handler"],
-            Environment={"Variables": module.params.get("env", {})}
+            Environment=lambda_environment
         )
         client.update_function_code(
             FunctionName=module.params["name"],
