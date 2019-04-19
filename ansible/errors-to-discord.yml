@@ -71,5 +71,5 @@
   aws_cloudwatch_logs_subscription_filter:
     logGroupName: "{{ prefix }}-bot"
     filterName: "{{ prefix }}-bot-errors-subscription-filter"
-    filterPattern: "[date, time, level=ERROR, ...]"
+    filterPattern: "[date, time, level=ERROR, module, message]"
     destinationArn: "{{ errors_to_discord_lambda_out.Configuration.FunctionArn }}"
