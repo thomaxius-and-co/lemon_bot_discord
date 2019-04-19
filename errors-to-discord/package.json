@@ -1,5 +1,5 @@
 {
-  "name": "errors-to-discord"
+  "name": "errors-to-discord",
   "dependencies": {
     "aws-sdk": "2.441.0"
   }
