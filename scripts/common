@@ -44,7 +44,7 @@ function check_dependencies {
 
   if ! type virtualenv &> /dev/null; then
     echo "+ Installing virtualenv"
-    pip install virtualenv > /dev/null
+    pip install --progress-bar off virtualenv > /dev/null
   fi
 }
 
@@ -69,7 +69,7 @@ function init_virtualenv {
     source "$ROOT/.venv/bin/activate"
   fi
 
-  pip install -r "$ROOT/src/requirements.txt"
+  pip install --progress-bar off -r "$ROOT/src/requirements.txt"
 }
 
 function syntax_check {
