@@ -13,7 +13,7 @@ apt-get -q install -y \
   python3.6 python3.6-dev \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
-pip install --progress-bar off -r ansible/requirements.txt
+pip install -r ansible/requirements.txt
 
 DATABASE_HOST="localhost" \
 DATABASE_PORT="5432" \
