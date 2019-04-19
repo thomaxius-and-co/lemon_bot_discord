@@ -13,7 +13,6 @@ apt-get -q install -y \
   python3.6 python3.6-dev \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
-pip install --upgrade pip
 pip install --progress-bar off -r ansible/requirements.txt
 
 DATABASE_HOST="localhost" \
