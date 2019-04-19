@@ -3,11 +3,14 @@ const https = require("https")
 const zlib = require("zlib")
 const splitMessage = require("./split.js")
 
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
+const AWS = require("aws-sdk")
+AWS.config.update({ region: "eu-west-1" })
+const SecretsManager = new AWS.SecretsManager({ apiVersion: "2017-10-17" })
 
 const MAX_MESSAGE_LENGTH = 2000 - "``````".length
 
 exports.handler = async function(event, context) {
+  const DISCORD_WEBHOOK_URL = await fetchSecretWebhookUrl()
   console.log("Handling event:", JSON.stringify(event, null, 2))
   const payload = await gunzipObj(event.awslogs.data)
   console.log("Payload:", JSON.stringify(payload, null, 2))
@@ -70,4 +73,12 @@ function post(url, data) {
     req.write(JSON.stringify(data))
     req.end()
   })
+}
+
+async function fetchSecretWebhookUrl() {
+  const response = await SecretsManager.getSecretValue({
+    SecretId: "discord-alarm-webhook",
+    VersionStage: "AWSCURRENT",
+  }).promise()
+  return response.data.SecretString
 }

@@ -58,8 +58,6 @@
     role: "{{ errors_to_discord_lambda_role_out.iam_role.arn }}"
     handler: "errors-to-discord.handler"
     runtime: "nodejs8.10"
-    env:
-      DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
   register: errors_to_discord_lambda_out
 
 # TODO: Write this into proper module
