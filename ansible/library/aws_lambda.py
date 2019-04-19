@@ -16,7 +16,7 @@ def main():
             "handler": {"type": "str", "required": True},
             "runtime": {"type": "str", "required": True, "choices": ["nodejs6.10", "nodejs8.10"]},
             "role": {"type": "str", "required": True},
-            "env": {"type": "dict", "required": True},
+            "env": {"type": "dict"},
         }
     )
 
@@ -35,7 +35,7 @@ def main():
             Code={"ZipFile": zip_file},
             Timeout=15,
             MemorySize=128,
-            Environment={"Variables": module.params["env"]},
+            Environment={"Variables": module.params.get("env", {})},
             Publish=False
         )
 
@@ -48,7 +48,7 @@ def main():
             FunctionName=module.params["name"],
             Role=module.params["role"],
             Handler=module.params["handler"],
-            Environment={"Variables": module.params["env"]}
+            Environment={"Variables": module.params.get("env", {})}
         )
         client.update_function_code(
             FunctionName=module.params["name"],
