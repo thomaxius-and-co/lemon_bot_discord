@@ -27,9 +27,7 @@ def main():
     func = get_function(client, module.params["name"])
     zip_file = build_lambda(module.params["path"])
 
-    lambda_environment = None
-    if module.params["env"] is not None:
-        lambda_environment = {"Variables": module.params["env"]}
+    lambda_environment = {"Variables": module.params["env"] or {}}
 
     if func is None:
         func = client.create_function(
