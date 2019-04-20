@@ -28,7 +28,7 @@ def main():
     zip_file = build_lambda(module.params["path"])
 
     lambda_environment = None
-    if "env" in module.params:
+    if module.params["env"] is not None:
         lambda_environment = {"Variables": module.params["env"]}
 
     if func is None:
