@@ -80,5 +80,5 @@ async function fetchSecretWebhookUrl() {
     SecretId: "discord-alarm-webhook",
     VersionStage: "AWSCURRENT",
   }).promise()
-  return response.data.SecretString
+  return response.SecretString
 }
