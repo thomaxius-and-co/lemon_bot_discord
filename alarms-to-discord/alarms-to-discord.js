@@ -1,9 +1,12 @@
 const parseUrl = require("url").parse
 const https = require("https")
 
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
+const AWS = require("aws-sdk")
+AWS.config.update({ region: "eu-west-1" })
+const SecretsManager = new AWS.SecretsManager({ apiVersion: "2017-10-17" })
 
 exports.handler = async function(event) {
+  const DISCORD_WEBHOOK_URL = await fetchSecretWebhookUrl()
   console.log("Handling event", JSON.stringify(event, null, 2))
   const messages = event.Records.map(_ => JSON.parse(_.Sns.Message))
 
@@ -40,4 +43,12 @@ function post(url, data) {
     req.write(JSON.stringify(data))
     req.end()
   })
+}
+
+async function fetchSecretWebhookUrl() {
+  const response = await SecretsManager.getSecretValue({
+    SecretId: "discord-alarm-webhook",
+    VersionStage: "AWSCURRENT",
+  }).promise()
+  return response.SecretString
 }

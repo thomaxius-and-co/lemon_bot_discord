@@ -31,6 +31,23 @@
             "logs:PutLogEvents"
           ],
           "Resource": "arn:aws:logs:*:*:*"
+        }, {
+          "Effect": "Allow",
+          "Action": [
+            "secretsmanager:DescribeSecret"
+          ],
+          "Resource": "{{ discord_alarm_webhook_secret_arn }}"
+        }, {
+          "Effect": "Allow",
+          "Action": [
+            "secretsmanager:GetSecretValue"
+          ],
+          "Resource": "{{ discord_alarm_webhook_secret_arn }}",
+          "Condition": {
+            "ForAnyValue:StringEquals": {
+              "secretsmanager:VersionStage": "AWSCURRENT"
+            }
+          }
         }]
       }
 
@@ -41,8 +58,6 @@
     role: "{{ errors_to_discord_lambda_role_out.iam_role.arn }}"
     handler: "errors-to-discord.handler"
     runtime: "nodejs8.10"
-    env:
-      DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
   register: errors_to_discord_lambda_out
 
 # TODO: Write this into proper module
@@ -54,5 +69,5 @@
   aws_cloudwatch_logs_subscription_filter:
     logGroupName: "{{ prefix }}-bot"
     filterName: "{{ prefix }}-bot-errors-subscription-filter"
-    filterPattern: "[date, time, level=ERROR, ...]"
+    filterPattern: "[date, time, level=ERROR, module, message]"
     destinationArn: "{{ errors_to_discord_lambda_out.Configuration.FunctionArn }}"

@@ -3,17 +3,17 @@
 set -o errexit
 
 # For add-apt-repository
-apt-get update
-apt-get install -y software-properties-common
+apt-get -q update
+apt-get -q install -y software-properties-common
 
 add-apt-repository -y ppa:deadsnakes/ppa
-apt-get update
+apt-get -q update
 
-apt-get install -y \
+apt-get -q install -y \
   python3.6 python3.6-dev \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
-pip install -r ansible/requirements.txt
+pip install -r ansible/requirements.txt > /dev/null
 
 DATABASE_HOST="localhost" \
 DATABASE_PORT="5432" \

@@ -20,6 +20,44 @@
         assume_role_policy_document: "{{ lookup('template', 'alarms-to-discord-lambda-assume-role-policy.json') }}"
       register: lambda_role_out
 
+    - name: Give the Lambda permissions to write logs and read Discord webhook
+      iam_policy:
+        state: present
+        iam_type: role
+        iam_name: "{{ prefix }}-alarms-to-discord-lambda-role"
+        policy_name: "{{ prefix }}-alarms-to-discord-lambda-role-policy"
+        skip_duplicates: no
+        policy_json: >
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:*:*:*"
+            }, {
+              "Effect": "Allow",
+              "Action": [
+                "secretsmanager:DescribeSecret"
+              ],
+              "Resource": "{{ discord_alarm_webhook_secret_arn }}"
+            }, {
+              "Effect": "Allow",
+              "Action": [
+                "secretsmanager:GetSecretValue"
+              ],
+              "Resource": "{{ discord_alarm_webhook_secret_arn }}",
+              "Condition": {
+                "ForAnyValue:StringEquals": {
+                  "secretsmanager:VersionStage": "AWSCURRENT"
+                }
+              }
+            }]
+          }
+
     - name: Create alarms to Discord lambda
       aws_lambda:
         name: "{{ prefix }}-alarms-to-discord-lambda"
@@ -27,8 +65,6 @@
         role: "{{ lambda_role_out.iam_role.arn }}"
         handler: "alarms-to-discord.handler"
         runtime: "nodejs8.10"
-        env:
-          DISCORD_WEBHOOK_URL: "{{ secrets.error_channel_webhook }}"
       register: lambda_out
 
     - include: errors-to-discord.yml

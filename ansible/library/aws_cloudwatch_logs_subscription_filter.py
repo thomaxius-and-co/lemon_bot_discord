@@ -48,7 +48,7 @@ def main():
         logGroupName=log_group_name,
         filterName=filter_name,
         filterPattern=filter_pattern,
-        destionationArn=destination_arn
+        destinationArn=destination_arn
       )
       module.exit_json(changed=True, result=new_state)
     else:
