@@ -178,7 +178,7 @@ async def get_user_stats_from_api_by_id(player_id):
         player_id = user.get("player_id")
         last_activity = await latest_match_timestamp(player_id)
     except NotFound as e:
-        log.error(str(e))
+        log.warning(str(e))
         return None, None, None, None, None
     except UnknownError as e:
         log.error("Unknown error: {0}".format(str(e)))
@@ -198,7 +198,7 @@ async def get_user_stats_from_api_by_nickname(client, message, faceit_nickname):
         player_id = user.get("player_id")
         last_activity = await latest_match_timestamp(player_id)
     except NotFound as e:
-        log.error(str(e))
+        log.warning(str(e))
         if client and message:
             await client.send_message(message.channel, str(e))
         return None, None, None, None, None, None
@@ -438,7 +438,7 @@ async def get_match_stats(match_id):
     try:
         return await faceit_api.match(match_id)
     except NotFound as e:
-        log.error(e)
+        log.warning(e)
         return None
 
 
@@ -446,7 +446,7 @@ async def get_matches(player_guid, from_timestamp, to_timestamp=None):
     try:
         return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
     except NotFound as e:
-        log.error(e)
+        log.warning(e)
         return None
 
 
@@ -454,7 +454,7 @@ async def get_match_info(match_id):
     try:
         return await faceit_api.match_stats(match_id)
     except NotFound as e:
-        log.error(e)
+        log.warning(e)
         return None
 
 async def get_length_string(seconds):
@@ -490,7 +490,7 @@ async def get_info_strings(match, player_guid):
         player_stats_string = await get_player_stats(match_details, player_guid)
         return score_string, player_stats_string
     except NotFound as e:
-        log.error(e, 'Ghost match')
+        log.warning(e, 'Ghost match')
         return None, None
 
 
