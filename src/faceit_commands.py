@@ -543,6 +543,9 @@ async def check_faceit_elo(client):
         player_database_nick = record['faceit_nickname']
         player_stats = await get_faceit_stats_of_player(player_guid)
         if player_stats:
+            if api_responses[player_guid] is None:
+                log.warning(f"Failed to fetch stats for player {player_guid}, skipping")
+                continue
             current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
             await do_nick_change_check(player_guid, csgo_name, player_database_nick)
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
@@ -567,9 +570,16 @@ async def check_faceit_elo(client):
 
 
 async def fetch_players_batch(player_ids):
-    responses = await pmap(get_user_stats_from_api_by_id, player_ids)
+    responses = await pmap(suppress_exceptions_async(get_user_stats_from_api_by_id), player_ids)
     return dict(zip(player_ids, responses))
 
+def suppress_exceptions_async(func):
+    async def supressed_func(*args, **kwargs):
+        try:
+            return await func(*args, *kwargs)
+        except:
+            return None
+    return supressed_func
 
 async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
