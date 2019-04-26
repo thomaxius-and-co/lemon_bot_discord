@@ -5,6 +5,7 @@ import logger
 import inspect
 import database as db
 import discord
+import traceback
 import faceit_api
 from faceit_api import NotFound, UnknownError
 import columnmaker
@@ -429,9 +430,10 @@ async def elo_notifier_task(client):
         await asyncio.sleep(fetch_interval)
         try:
             await check_faceit_elo(client)
-        except Exception as e:
-            log.error("Failed to check faceit stats: ")
-            await util.log_exception(log)
+        except NotFound:
+            log.warning("Failed to check faceit stats:\n" + traceback.format_exc())
+        except Exception:
+            await util.log_exception(log, "Failed to check faceit stats:")
 
 
 async def get_match_stats(match_id):
