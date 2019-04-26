@@ -174,16 +174,9 @@ async def latest_match_timestamp(player_id):
 
 
 async def get_user_stats_from_api_by_id(player_id):
-    try:
-        user = await faceit_api.user_by_id(player_id)
-        player_id = user.get("player_id")
-        last_activity = await latest_match_timestamp(player_id)
-    except NotFound as e:
-        log.warning(str(e))
-        return None, None, None, None, None
-    except UnknownError as e:
-        log.error("Unknown error: {0}".format(str(e)))
-        return None, None, None, None, None
+    user = await faceit_api.user_by_id(player_id)
+    player_id = user.get("player_id")
+    last_activity = await latest_match_timestamp(player_id)
 
     csgo = user.get("games", {}).get("csgo", {})
     nickname = user.get("nickname", None) # Is this even needed
