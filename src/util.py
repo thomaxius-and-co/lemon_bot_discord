@@ -9,7 +9,6 @@ import logger
 
 log = logger.get("UTIL")
 
-async def log_exception(error_log):
 async def log_exception(error_log, msg=None):
     err_str = traceback.format_exc()
     if msg is not None:
