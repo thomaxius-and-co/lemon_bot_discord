@@ -465,6 +465,7 @@ async def get_length_string(seconds):
 
 async def get_score_string(match):
     overtime_score = None
+    map = match[0].get("round_stats").get("Map")
     score = match[0].get("round_stats").get("Score").replace(' / ', '-')
     first_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("First Half Score"), match[0].get("teams")[1].get("team_stats").get("First Half Score"))
     second_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("Second Half Score"), match[0].get("teams")[1].get("team_stats").get("Second Half Score"))
@@ -473,9 +474,9 @@ async def get_score_string(match):
         overtime_score = "%s-%s" % (
             match[0].get("teams")[0].get("team_stats").get("Overtime score"), match[0].get("teams")[1].get("team_stats").get("Overtime score"))
     if overtime_score:
-        score_string = ("**score**: %s (%s, %s, %s)" % (score, first_half_score, second_half_score, overtime_score))
+        score_string = ("**Map**: %s **score**: %s (%s, %s, %s)" % (map, score, first_half_score, second_half_score, overtime_score))
     else:
-        score_string = ("**score**: %s (%s, %s)" % (score, first_half_score, second_half_score))
+        score_string = ("**Map**: %s **score**: %s (%s, %s)" % (map, score, first_half_score, second_half_score))
     return score_string
 
 
