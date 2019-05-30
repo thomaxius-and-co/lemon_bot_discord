@@ -9,8 +9,10 @@ import logger
 
 log = logger.get("UTIL")
 
-async def log_exception(error_log):
+async def log_exception(error_log, msg=None):
     err_str = traceback.format_exc()
+    if msg is not None:
+        err_str = msg + "\n" + err_str
     error_log.error(err_str)
 
     # If the error is 'Event loop is closed' we crash the bot and let it restart
