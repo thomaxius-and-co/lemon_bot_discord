@@ -5,7 +5,6 @@ import logger
 import inspect
 import database as db
 import discord
-import traceback
 import faceit_api
 from faceit_api import NotFound, UnknownError
 import columnmaker
@@ -174,9 +173,16 @@ async def latest_match_timestamp(player_id):
 
 
 async def get_user_stats_from_api_by_id(player_id):
-    user = await faceit_api.user_by_id(player_id)
-    player_id = user.get("player_id")
-    last_activity = await latest_match_timestamp(player_id)
+    try:
+        user = await faceit_api.user_by_id(player_id)
+        player_id = user.get("player_id")
+        last_activity = await latest_match_timestamp(player_id)
+    except NotFound as e:
+        log.error(str(e))
+        return None, None, None, None, None
+    except UnknownError as e:
+        log.error("Unknown error: {0}".format(str(e)))
+        return None, None, None, None, None
 
     csgo = user.get("games", {}).get("csgo", {})
     nickname = user.get("nickname", None) # Is this even needed
@@ -192,7 +198,7 @@ async def get_user_stats_from_api_by_nickname(client, message, faceit_nickname):
         player_id = user.get("player_id")
         last_activity = await latest_match_timestamp(player_id)
     except NotFound as e:
-        log.warning(str(e))
+        log.error(str(e))
         if client and message:
             await client.send_message(message.channel, str(e))
         return None, None, None, None, None, None
@@ -423,17 +429,16 @@ async def elo_notifier_task(client):
         await asyncio.sleep(fetch_interval)
         try:
             await check_faceit_elo(client)
-        except NotFound:
-            log.warning("Failed to check faceit stats:\n" + traceback.format_exc())
-        except Exception:
-            await util.log_exception(log, "Failed to check faceit stats:")
+        except Exception as e:
+            log.error("Failed to check faceit stats: ")
+            await util.log_exception(log)
 
 
 async def get_match_stats(match_id):
     try:
         return await faceit_api.match(match_id)
     except NotFound as e:
-        log.warning(e)
+        log.error(e)
         return None
 
 
@@ -441,7 +446,7 @@ async def get_matches(player_guid, from_timestamp, to_timestamp=None):
     try:
         return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
     except NotFound as e:
-        log.warning(e)
+        log.error(e)
         return None
 
 
@@ -449,7 +454,7 @@ async def get_match_info(match_id):
     try:
         return await faceit_api.match_stats(match_id)
     except NotFound as e:
-        log.warning(e)
+        log.error(e)
         return None
 
 async def get_length_string(seconds):
@@ -460,6 +465,7 @@ async def get_length_string(seconds):
 
 async def get_score_string(match):
     overtime_score = None
+    log.info(match)
     map = match[0].get("round_stats").get("Map")
     score = match[0].get("round_stats").get("Score").replace(' / ', '-')
     first_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("First Half Score"), match[0].get("teams")[1].get("team_stats").get("First Half Score"))
@@ -486,7 +492,7 @@ async def get_info_strings(match, player_guid):
         player_stats_string = await get_player_stats(match_details, player_guid)
         return score_string, player_stats_string
     except NotFound as e:
-        log.warning(e, 'Ghost match')
+        log.error(e, 'Ghost match')
         return None, None
 
 
@@ -494,13 +500,32 @@ async def get_info_strings(match, player_guid):
 async def get_player_rank_in_team(players_list, player_dict):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
 
+async def get_player_highlight(player):
+    player_stats = player.get("player_stats")
+    penta_kills, quadro_kills, triple_kills = int(player_stats.get("Penta Kills", 0)), int(player_stats.get("Quadro Kills", 0)),\
+                                              int(player_stats.get("Triple Kills", 0))
+    nickname = player.get("nickname")
+    if penta_kills > 0:
+        return "\n**Highlight of the match**: **%s** had **%s** penta kill(s)!" % (nickname, penta_kills)
+    elif quadro_kills > 1:
+        return "\n**Highlight of the match**: **%s** had **%s** quadro kills!" % (nickname, quadro_kills)
+    elif triple_kills > 5:
+        return "\n**Highlight of the match**: **%s** had **%s** triple kills!" % (nickname, triple_kills)
+    else:
+        return ""
 
 async def get_player_stats(match, player_guid):
     teams = match[0].get("teams")
     for team in teams:
         for player in team.get("players"):
             if player.get('player_id') == player_guid:
-                return ("**Player stats:** #%s %s-%s-%s (%s kdr)" % (await get_player_rank_in_team(team.get("players"), player), player.get("player_stats").get("Kills"), player.get("player_stats").get("Assists"), player.get("player_stats").get("Deaths"), player.get("player_stats").get("K/D Ratio")))
+                kills = player.get("player_stats").get("Kills")
+                player_rank = await get_player_rank_in_team(team.get("players"), player)
+                assists = player.get("player_stats").get("Assists")
+                deaths = player.get("player_stats").get("Deaths")
+                kdr = player.get("player_stats").get("K/D Ratio")
+                highlight_string = await get_player_highlight(player)
+                return ("**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kdr, highlight_string))
 
 async def get_match_length_string(match):
     started_at = match.get("started_at")
@@ -544,9 +569,6 @@ async def check_faceit_elo(client):
         player_database_nick = record['faceit_nickname']
         player_stats = await get_faceit_stats_of_player(player_guid)
         if player_stats:
-            if api_responses[player_guid] is None:
-                log.warning(f"Failed to fetch stats for player {player_guid}, skipping")
-                continue
             current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
             await do_nick_change_check(player_guid, csgo_name, player_database_nick)
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
@@ -571,16 +593,9 @@ async def check_faceit_elo(client):
 
 
 async def fetch_players_batch(player_ids):
-    responses = await pmap(suppress_exceptions_async(get_user_stats_from_api_by_id), player_ids)
+    responses = await pmap(get_user_stats_from_api_by_id, player_ids)
     return dict(zip(player_ids, responses))
 
-def suppress_exceptions_async(func):
-    async def supressed_func(*args, **kwargs):
-        try:
-            return await func(*args, *kwargs)
-        except:
-            return None
-    return supressed_func
 
 async def do_nick_change_check(guid, api_player_name, database_player_name):
     log.info("Checking nickname changes for user %s %s" % (guid, database_player_name))
