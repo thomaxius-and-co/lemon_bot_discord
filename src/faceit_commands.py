@@ -465,7 +465,6 @@ async def get_length_string(seconds):
 
 async def get_score_string(match):
     overtime_score = None
-    log.info(match)
     map = match[0].get("round_stats").get("Map")
     score = match[0].get("round_stats").get("Score").replace(' / ', '-')
     first_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("First Half Score"), match[0].get("teams")[1].get("team_stats").get("First Half Score"))
@@ -500,19 +499,21 @@ async def get_info_strings(match, player_guid):
 async def get_player_rank_in_team(players_list, player_dict):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
 
+
 async def get_player_highlight(player):
     player_stats = player.get("player_stats")
     penta_kills, quadro_kills, triple_kills = int(player_stats.get("Penta Kills", 0)), int(player_stats.get("Quadro Kills", 0)),\
                                               int(player_stats.get("Triple Kills", 0))
     nickname = player.get("nickname")
     if penta_kills > 0:
-        return "\n**Highlight of the match**: **%s** had **%s** penta kill(s)!" % (nickname, penta_kills)
+        return "**Highlight of the match**: **%s** had **%s** penta kill(s)!" % (nickname, penta_kills)
     elif quadro_kills > 1:
-        return "\n**Highlight of the match**: **%s** had **%s** quadro kills!" % (nickname, quadro_kills)
+        return "**Highlight of the match**: **%s** had **%s** quadro kills!" % (nickname, quadro_kills)
     elif triple_kills > 5:
-        return "\n**Highlight of the match**: **%s** had **%s** triple kills!" % (nickname, triple_kills)
+        return "**Highlight of the match**: **%s** had **%s** triple kills!" % (nickname, triple_kills)
     else:
         return ""
+
 
 async def get_player_stats(match, player_guid):
     teams = match[0].get("teams")
@@ -525,7 +526,8 @@ async def get_player_stats(match, player_guid):
                 deaths = player.get("player_stats").get("Deaths")
                 kdr = player.get("player_stats").get("K/D Ratio")
                 highlight_string = await get_player_highlight(player)
-                return ("**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kdr, highlight_string))
+                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kdr, ("\n" + highlight_string if highlight_string else ''))
+
 
 async def get_match_length_string(match):
     started_at = match.get("started_at")
