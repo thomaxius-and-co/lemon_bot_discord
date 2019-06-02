@@ -532,11 +532,11 @@ async def get_player_highlight(player):
                                               int(player_stats.get("Triple Kills", 0))
     nickname = player.get("nickname")
     base_string = "**Highlight of the match**: **%s** " % nickname
-    if penta_kills > 0:
+    if penta_kills >= 1:
         return base_string + "had **%s** penta kill(s)!" % penta_kills
-    elif quadro_kills > 1:
+    elif quadro_kills >= 1:
         return base_string + "had **%s** quadro kills!" % quadro_kills
-    elif triple_kills > 5:
+    elif triple_kills >= 5:
         return base_string + "had **%s** triple kills!" % triple_kills
     rand_highlight = await random_highlight(player_stats)
     if rand_highlight:
@@ -557,7 +557,7 @@ async def get_player_stats(match, player_guid):
                 kdr = player.get("player_stats").get("K/D Ratio")
                 highlight_string = await get_player_highlight(player)
                 return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kdr, ("\n" + highlight_string if highlight_string else ''))
-    return None
+    return ""
 
 
 
