@@ -944,18 +944,7 @@ def flat_map(func, xs):
 def max_or(xs, fallback):
     return max(xs) if len(xs) > 0 else fallback
 
-
-    # random_highlights = {
-    #     'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
-    #     'MANY_KILLS_AND_LOSE' : {'condition':((kills >= 30) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
-    #     'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had %s headshost percentage" % (nickname, headshots_perc)},
-    #     'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.7) and (mvps == 0), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
-    #     'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
-    #     'DIED_EVERY_ROUND': {'condition': (kills == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
-    #     'LONG_MATCH': {'condition': ((match_length / rounds) > 110), 'description':("Rounds had an average length of '{0:.3g}' minutes.").format((match_length / 60) / rounds)}
-    # }
-
-#nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length
+# todo: replace with named arguments
 def tests():
     loop = asyncio.get_event_loop()
     tests = {
