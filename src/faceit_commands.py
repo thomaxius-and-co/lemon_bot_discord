@@ -11,6 +11,7 @@ import columnmaker
 from time_util import as_helsinki, to_utc, as_utc, to_helsinki
 from datetime import datetime, timedelta
 from util import pmap
+import random
 
 NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
@@ -499,18 +500,47 @@ async def get_info_strings(match, player_guid):
 async def get_player_rank_in_team(players_list, player_dict):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
 
+async def random_highlight(player_stats):
+    assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result = int(player_stats.get("Assists")), \
+                                                                                          int(player_stats.get("Deaths")),  \
+                                                                                          int(player_stats.get("Headshot")),  \
+                                                                                          int(player_stats.get("Headshots %")), \
+                                                                                          float(player_stats.get("K/D Ratio")), \
+                                                                                          float(player_stats.get("K/R Ratio")), \
+                                                                                          int(player_stats.get("Kills")), \
+                                                                                          int(player_stats.get("MVPs")),\
+                                                                                          int(player_stats.get("Result")),
+
+    highlights = {
+        'ASSIST_KING': {'condition':(assists > kills), 'description': "had more assists than kills"},
+        'MANY_KILLS_AND_LOSE' : {'condition':((kills > 30) and (result == 0)), 'description': "had %s kills and still lost the match" % kills},
+        'HEADSHOTS_KING': {'condition':(headshots_perc > 80), 'description':"had %s headshosts percent" % headshots_perc},
+        'MANY_KILLS_NO_MVPS': {'condition':(kills > 30) and (mvps == 0), 'description':"had 0 mvps but %s kills" % kills},
+        'BAD_STATS_STILL_WIN': {'condition':(kills < 5) and (result == 1), 'description':"won the match even though he was %s-%s-%s" % (kills, assists, deaths)},
+    }
+
+    occured_highlights = [x for x in highlights if highlights.get(x).get('condition') == True]
+    if not occured_highlights:
+        return None
+    else:
+        chosen_highlight = highlights.get(random.choice(occured_highlights)).get("description")
+        return chosen_highlight
 
 async def get_player_highlight(player):
     player_stats = player.get("player_stats")
     penta_kills, quadro_kills, triple_kills = int(player_stats.get("Penta Kills", 0)), int(player_stats.get("Quadro Kills", 0)),\
                                               int(player_stats.get("Triple Kills", 0))
     nickname = player.get("nickname")
+    base_string = "**Highlight of the match**: **%s** " % nickname
     if penta_kills > 0:
-        return "**Highlight of the match**: **%s** had **%s** penta kill(s)!" % (nickname, penta_kills)
+        return base_string + "had **%s** penta kill(s)!" % penta_kills
     elif quadro_kills > 1:
-        return "**Highlight of the match**: **%s** had **%s** quadro kills!" % (nickname, quadro_kills)
+        return base_string + "had **%s** quadro kills!" % quadro_kills
     elif triple_kills > 5:
-        return "**Highlight of the match**: **%s** had **%s** triple kills!" % (nickname, triple_kills)
+        return base_string + "had **%s** triple kills!" % triple_kills
+    rand_highlight = await random_highlight(player_stats)
+    if rand_highlight:
+        return base_string + rand_highlight
     else:
         return ""
 
@@ -527,6 +557,9 @@ async def get_player_stats(match, player_guid):
                 kdr = player.get("player_stats").get("K/D Ratio")
                 highlight_string = await get_player_highlight(player)
                 return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kdr, ("\n" + highlight_string if highlight_string else ''))
+    return None
+
+
 
 
 async def get_match_length_string(match):
@@ -555,7 +588,6 @@ async def get_match_info_string(player_guid, from_timestamp):
         return match_info_string
     else:
         return "*" + match_info_string.rstrip("\n") + "*"
-
 
 async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
