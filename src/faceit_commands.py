@@ -513,10 +513,10 @@ async def random_highlight(player_stats):
 
     highlights = {
         'ASSIST_KING': {'condition':(assists > kills), 'description': "had more assists than kills"},
-        'MANY_KILLS_AND_LOSE' : {'condition':((kills > 30) and (result == 0)), 'description': "had %s kills and still lost the match" % kills},
-        'HEADSHOTS_KING': {'condition':(headshots_perc > 80), 'description':"had %s headshosts percent" % headshots_perc},
-        'MANY_KILLS_NO_MVPS': {'condition':(kills > 30) and (mvps == 0), 'description':"had 0 mvps but %s kills" % kills},
-        'BAD_STATS_STILL_WIN': {'condition':(kills < 5) and (result == 1), 'description':"won the match even though he was %s-%s-%s" % (kills, assists, deaths)},
+        'MANY_KILLS_AND_LOSE' : {'condition':((kills >= 30) and (result == 0)), 'description': "had %s kills and still lost the match" % kills},
+        'HEADSHOTS_KING': {'condition':(headshots_perc >= 80), 'description':"had %s headshost percentage" % headshots_perc},
+        'MANY_KILLS_NO_MVPS': {'condition':(kills >= 30) and (mvps == 0), 'description':"had 0 mvps but %s kills" % kills},
+        'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':"won the match even though he was %s-%s-%s" % (kills, assists, deaths)},
     }
 
     occured_highlights = [x for x in highlights if highlights.get(x).get('condition') == True]
