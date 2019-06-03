@@ -517,7 +517,7 @@ async def get_player_highlight(nickname, assists, deaths, headshots, headshots_p
         'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.7) and (mvps == 0), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
         'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
         'DIED_EVERY_ROUND': {'condition': (deaths == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
-        'LONG_MATCH': {'condition': ((match_length / rounds) > 110), 'description':"Rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
+        'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
     }
 
     for x in kill_highlights:
@@ -525,7 +525,6 @@ async def get_player_highlight(nickname, assists, deaths, headshots, headshots_p
         if condition:
             highlight_string += base_string + kill_highlights.get(x).get("description")
             break
-
     occured_highlights = [x for x in random_highlights if random_highlights.get(x).get('condition')]
     if not occured_highlights and not highlight_string:
         return ""
@@ -536,17 +535,18 @@ async def get_player_highlight(nickname, assists, deaths, headshots, headshots_p
         else:
             return base_string + chosen_highlight
 
-
+4
 async def get_player_stats(match, match_details, player_guid):
     teams = match_details[0].get("teams")
     for team in teams:
         for player in team.get("players"):
             if player.get('player_id') == player_guid:
-                rounds = match_details[0].get("round_stats").get("Rounds")
-                match_length = match.get("finished_at") - match.get("started_at")
+                rounds = int(match_details[0].get("round_stats").get("Rounds"))
+                match_length =  int(match.get("finished_at")) - int(match.get("started_at"))
+                match_length = match_length / int(match_details[0].get("best_of")) # Best of 3 matches are count as one match length..
                 player_stats = player.get("player_stats")
                 player_rank = await get_player_rank_in_team(team.get("players"), player)
-                nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, penta_kills, quadro_kills, triple_kills, result = player_stats.get("Nickname"), int(
+                nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, penta_kills, quadro_kills, triple_kills, result = player.get("nickname"), int(
                     player_stats.get("Assists")), \
                                                                                                                                                int(
                                                                                                                                                    player_stats.get(
@@ -582,7 +582,7 @@ async def get_player_stats(match, match_details, player_guid):
                                                                                                                                                    player_stats.get(
                                                                                                                                                        "Result")),
                 highlight_string = await get_player_highlight(nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length)
-                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kills, ("\n" + highlight_string if highlight_string else ''))
+                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kd_ratio, ("\n" + highlight_string if highlight_string else ''))
     return ""
 
 
@@ -944,7 +944,18 @@ def flat_map(func, xs):
 def max_or(xs, fallback):
     return max(xs) if len(xs) > 0 else fallback
 
-# todo: replace with named arguments
+
+    # random_highlights = {
+    #     'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
+    #     'MANY_KILLS_AND_LOSE' : {'condition':((kills >= 30) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
+    #     'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had %s headshost percentage" % (nickname, headshots_perc)},
+    #     'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.7) and (mvps == 0), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
+    #     'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
+    #     'DIED_EVERY_ROUND': {'condition': (kills == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
+    #     'LONG_MATCH': {'condition': ((match_length / rounds) > 110), 'description':("rounds had an average length of '{0:.3g}' minutes.").format((match_length / 60) / rounds)}
+    # }
+
+#nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length
 def tests():
     loop = asyncio.get_event_loop()
     tests = {
@@ -954,7 +965,7 @@ def tests():
         "MANY_KILLS_NO_MVPS": {"args": ["rce", 0, 0, 0, 0, 0, 0.8, 20, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had 0 mvps but 20 kills (0.8 per round)"},
         "BAD_STATS_STILL_WIN": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** won the match even though he was 0-0-0"},
         "DIED_EVERY_ROUND": {"args": ["rce", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** died every round (23 times)"},
-        "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],"expected_result": "**Match highlight(s)**:Rounds had an average length of **1.94** minutes"},
+        "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],"expected_result": "**Match highlight(s)**:rounds had an average length of **1.94** minutes"},
         "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 0, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills and still lost the match"},
     }
     for test_name in tests:
@@ -964,3 +975,6 @@ def tests():
             log.error("Test %s failed! Expected result was %s but got: %s" % (test_name, test_expected_result, result))
         else:
             log.info("Test OK. Result: %s" % result)
+
+
+
