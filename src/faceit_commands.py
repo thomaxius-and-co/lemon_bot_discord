@@ -511,8 +511,8 @@ async def get_player_highlight(nickname="", assists=None, deaths=None, headshots
     }
     random_highlights = {
         'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
-        'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
-        'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage" % (nickname, headshots_perc)},
+        'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills (%s per round) and still lost the match" % (nickname, kills, kr_ratio)},
+        'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage (%s out of %s kills)" % (nickname, headshots_perc, headshots, kills)},
         'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.8) and (mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
         'BAD_STATS_STILL_WIN': {'condition':(kd_ratio <= 0.7) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
         'DIED_EVERY_ROUND': {'condition': (deaths == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
@@ -961,13 +961,13 @@ def tests():
     loop = asyncio.get_event_loop()
     tests = {
         "ASSISTS_KING" : {"args": ["rce", 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had more assists (10) than kills (0)"},
-        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 10, 10, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had 10 kills and still lost the match"},
-        "HEADSHOTS_KING": {"args": ["rce", 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had **66** headshot percentage"},
+        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 10, 10, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had 10 kills (1 per round) and still lost the match"},
+        "HEADSHOTS_KING": {"args": ["rce", 0, 0, 10, 66, 0, 0, 10, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had **66** headshot percentage (10 out of 10 kills)"},
         "MANY_KILLS_NO_MVPS": {"args": ["rce", 0, 0, 0, 0, 0, 0.8, 20, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had 0 mvps but 20 kills (0.8 per round)"},
         "BAD_STATS_STILL_WIN": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** won the match even though he was 0-0-0"},
         "DIED_EVERY_ROUND": {"args": ["rce", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** died every round (23 times)"},
         "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],"expected_result": "**Match highlight(s)**:rounds had an average length of **1.94** minutes"},
-        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills and still lost the match"},
+        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills (1 per round) and still lost the match"},
     }
     for test_name in tests:
         test_args, test_expected_result = tests.get(test_name).get("args"), tests.get(test_name).get("expected_result")
@@ -976,6 +976,3 @@ def tests():
             log.error("Test %s failed! Expected result was %s but got: %s" % (test_name, test_expected_result, result))
         else:
             log.info("Test OK. Result: %s" % result)
-
-
-
