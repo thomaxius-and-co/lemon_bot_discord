@@ -501,7 +501,7 @@ async def get_player_rank_in_team(players_list, player_dict):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
 
 
-async def get_player_highlight(nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length):
+async def get_player_highlight(nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None):
     base_string = "**Match highlight(s)**:"
     highlight_string = ""
     kill_highlights = {
@@ -509,13 +509,12 @@ async def get_player_highlight(nickname, assists, deaths, headshots, headshots_p
         'QUADRO_KILLS': {'condition':(quadro_kills >= 1), 'description': "**%s** had **%s** quadro kill(s)" % (nickname, quadro_kills)},
         'TRIPLE_KILLS': {'condition': (triple_kills >= 5), 'description': "**%s** had **%s** triple kill(s)" % (nickname, triple_kills)}
     }
-
     random_highlights = {
         'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
-        'MANY_KILLS_AND_LOSE' : {'condition':((kills >= 30) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
+        'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
         'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage" % (nickname, headshots_perc)},
-        'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.7) and (mvps == 0), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
-        'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
+        'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.8) and (mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
+        'BAD_STATS_STILL_WIN': {'condition':(kd_ratio <= 0.7) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
         'DIED_EVERY_ROUND': {'condition': (deaths == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
         'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
     }
@@ -528,6 +527,8 @@ async def get_player_highlight(nickname, assists, deaths, headshots, headshots_p
     occured_highlights = [x for x in random_highlights if random_highlights.get(x).get('condition')]
     if not occured_highlights and not highlight_string:
         return ""
+    if highlight_string and not occured_highlights:
+        return highlight_string
     else:
         chosen_highlight = random_highlights.get(random.choice(occured_highlights)).get("description")
         if highlight_string:
@@ -947,26 +948,26 @@ def max_or(xs, fallback):
 
     # random_highlights = {
     #     'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
-    #     'MANY_KILLS_AND_LOSE' : {'condition':((kills >= 30) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
-    #     'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had %s headshost percentage" % (nickname, headshots_perc)},
-    #     'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.7) and (mvps == 0), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
-    #     'BAD_STATS_STILL_WIN': {'condition':(kills <= 5) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
-    #     'DIED_EVERY_ROUND': {'condition': (kills == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
-    #     'LONG_MATCH': {'condition': ((match_length / rounds) > 110), 'description':("rounds had an average length of '{0:.3g}' minutes.").format((match_length / 60) / rounds)}
+    #     'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
+    #     'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage" % (nickname, headshots_perc)},
+    #     'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.8) and (mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
+    #     'BAD_STATS_STILL_WIN': {'condition':(kd_ratio <= 0.7) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
+    #     'DIED_EVERY_ROUND': {'condition': (deaths == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
+    #     'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
     # }
 
-#nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length
+#nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None
 def tests():
     loop = asyncio.get_event_loop()
     tests = {
         "ASSISTS_KING" : {"args": ["rce", 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had more assists (10) than kills (0)"},
-        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had 31 kills and still lost the match"},
+        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 10, 10, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had 10 kills and still lost the match"},
         "HEADSHOTS_KING": {"args": ["rce", 0, 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had **66** headshot percentage"},
         "MANY_KILLS_NO_MVPS": {"args": ["rce", 0, 0, 0, 0, 0, 0.8, 20, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had 0 mvps but 20 kills (0.8 per round)"},
         "BAD_STATS_STILL_WIN": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** won the match even though he was 0-0-0"},
         "DIED_EVERY_ROUND": {"args": ["rce", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** died every round (23 times)"},
         "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],"expected_result": "**Match highlight(s)**:rounds had an average length of **1.94** minutes"},
-        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 0, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills and still lost the match"},
+        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills and still lost the match"},
     }
     for test_name in tests:
         test_args, test_expected_result = tests.get(test_name).get("args"), tests.get(test_name).get("expected_result")
