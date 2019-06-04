@@ -9,6 +9,7 @@ ALLOWED_CHANNELS = ['359308335184609281', '141649840923869184', '244452088279465
 def register(client):
     return {
         "laiva": cmd_laiva,
+        "fireball": cmd_laiva,
         "laivalle": cmd_laiva,
     }
 memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
