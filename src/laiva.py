@@ -184,6 +184,7 @@ def mk_cmd_laiva(templates):
             days_to_go = (laiva - now).days
             msg += "\n" + templates["meme_text"](days_to_go)
         await client.send_message(message.channel, msg)
+    return cmd_laiva
 
 def delta_to_str(delta):
     return "{0} days, {1} hours, {2} minutes, {3} seconds".format(*delta_to_tuple(delta))
