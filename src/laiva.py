@@ -102,8 +102,8 @@ memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
 "1a2CCCduhyxLSK5-DH5bFlRtW1eIaE3c7",
 "1uoSgEYH-ynl74y3Szccyp0Gf8ZOOw00k"]
 
-def image_url_from_id(day):
-    return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
+def image_url_from_id(image_id):
+    return "https://drive.google.com/file/d/" + image_id + "/view?usp=sharing"
 
 def parse_image_id(url):
     return url[len("https://drive.google.com/open?id="):]
