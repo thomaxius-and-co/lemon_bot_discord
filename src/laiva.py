@@ -102,19 +102,21 @@ memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
 "1a2CCCduhyxLSK5-DH5bFlRtW1eIaE3c7",
 "1uoSgEYH-ynl74y3Szccyp0Gf8ZOOw00k"]
 
-def get_laiva_meme_of_the_day(day):
+def image_url_from_id(day):
     return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
 
+def parse_image_id(url):
+    return url[len("https://drive.google.com/open?id="):]
 
 TEMPLATES_LAIVA = {
     "theme": "The laiva to start a new generation of laivas",
     "happening": "Laiva is currently happening!!",
     "ended": lambda time_ago: f"**Last laiva ended:** {time_ago} ago, **next laiva:** TBA.",
-    "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + get_laiva_meme_of_the_day(days_to_go),
+    "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
     "over": "Laiva is already over, but paha olo remains.",
 }
 
-memes_fireball = [
+memes_fireball = list(map(parse_image_id, [
     "https://drive.google.com/open?id=1YFOCivVS2augQPEXVaUZ78xXWTP42N1O",
     "https://drive.google.com/open?id=16MKH_9bAygxq4B9Cwxaku7VZGcMQfg_J",
     "https://drive.google.com/open?id=1mmNwuuSORe3C0WtbW2mjPSde2jjTudlD",
@@ -142,13 +144,13 @@ memes_fireball = [
     "https://drive.google.com/open?id=1MPCMqivtfrU7fAKBaXGY5rK_n0Y_6g-A",
     "https://drive.google.com/open?id=1iI6ZQuhGFWjXQqyO7xHoXxah3cqxcF5a",
     "https://drive.google.com/open?id=1vhYFcrSuG7AUZzssq3xoHIStDYeTjY6u",
-]
+]))
 
 TEMPLATES_FIREBALL = {
     "theme": "The Fireball to start a new generation of Fireballs",
     "happening": "Fireball is currently happening!!",
     "ended": lambda time_ago: f"**Last Fireball ended:** {time_ago} ago, **next fireball:** TBA.",
-    "meme_text": lambda days_to_go: "**Fireball meme of the day**:\n" + random.choice(memes_fireball),
+    "meme_text": lambda days_to_go: "**Fireball meme of the moment**:\n" + image_url_from_id(random.choice(memes_fireball)),
     "over": "Fireball is already over, but ihan vitun jäätävä jano remains.",
 }
 
