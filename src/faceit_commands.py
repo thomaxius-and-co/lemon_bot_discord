@@ -435,7 +435,7 @@ async def elo_notifier_task(client):
             await util.log_exception(log)
 
 
-async def get_match_stats(match_id):
+async def get_match_details(match_id):
     try:
         return await faceit_api.match(match_id)
     except NotFound as e:
@@ -451,7 +451,7 @@ async def get_matches(player_guid, from_timestamp, to_timestamp=None):
         return None
 
 
-async def get_match_info(match_id):
+async def get_match_stats(match_id):
     try:
         return await faceit_api.match_stats(match_id)
     except NotFound as e:
@@ -464,16 +464,16 @@ async def get_length_string(seconds):
     return '**Match length**: {:d}:{:02d}:{:02d}'.format(h, m, s)
 
 
-async def get_score_string(match):
+async def get_score_string(match_stats):
     overtime_score = None
-    map = match[0].get("round_stats").get("Map")
-    score = match[0].get("round_stats").get("Score").replace(' / ', '-')
-    first_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("First Half Score"), match[0].get("teams")[1].get("team_stats").get("First Half Score"))
-    second_half_score = "%s-%s" % (match[0].get("teams")[0].get("team_stats").get("Second Half Score"), match[0].get("teams")[1].get("team_stats").get("Second Half Score"))
-    total_rounds = int(match[0].get("round_stats").get("Rounds"))
+    map = match_stats[0].get("round_stats").get("Map")
+    score = match_stats[0].get("round_stats").get("Score").replace(' / ', '-')
+    first_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("First Half Score"), match_stats[0].get("teams")[1].get("team_stats").get("First Half Score"))
+    second_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("Second Half Score"), match_stats[0].get("teams")[1].get("team_stats").get("Second Half Score"))
+    total_rounds = int(match_stats[0].get("round_stats").get("Rounds"))
     if total_rounds > 30:
         overtime_score = "%s-%s" % (
-            match[0].get("teams")[0].get("team_stats").get("Overtime score"), match[0].get("teams")[1].get("team_stats").get("Overtime score"))
+            match_stats[0].get("teams")[0].get("team_stats").get("Overtime score"), match_stats[0].get("teams")[1].get("team_stats").get("Overtime score"))
     if overtime_score:
         score_string = ("**Map**: %s **score**: %s (%s, %s, %s)" % (map, score, first_half_score, second_half_score, overtime_score))
     else:
@@ -483,40 +483,58 @@ async def get_score_string(match):
 
 
 
-async def get_info_strings(match, player_guid):
+async def get_info_strings(match_details, player_guid):
     try:
-        match_details = await get_match_info(match.get("match_id"))
-        if not match_details:
+        match_stats = await get_match_stats(match_details.get("match_id"))
+        if not match_stats:
             return None, None
-        score_string = await get_score_string(match_details)
-        player_stats_string = await get_player_stats(match, match_details, player_guid)
+        score_string = await get_score_string(match_stats)
+        player_stats_string = await get_player_strings(match_stats, match_details, player_guid)
         return score_string, player_stats_string
     except NotFound as e:
         log.error(e, 'Ghost match')
         return None, None
 
 
+# async def get_player_rank_in_team(players, chosen_player):
+#     for player in players:
+#         if player.get("player_id") == chosen_player.get("player_id"):
+#             chosen_player = player
+#
+#     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
 
-async def get_player_rank_in_team(players_list, player_dict):
-    return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
+async def players_sorted_by_kills(players_list):
+    return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
 
+async def is_topfragger_but_lowest_level(player, players):
+    players = sorted(players, reverse=True, key=lambda x: int(x.get("csgo_skill_level")))
+    return (player.rank == 1) and (players[-1].get("guid") == player.guid)
 
-async def get_player_highlight(nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None):
+async def is_bottomfragger_but_highest_level(player, players):
+    players = sorted(players, reverse=True, key=lambda x: int(x.get("csgo_skill_level")))
+    return (player.rank == 5) and (players[0].get("guid") == player.guid)
+
+async def get_highlights(player, match_stats, match_details, team_players):
+    match_length = int(match_details.get("finished_at")) - int(match_details.get("started_at"))
+    match_length = match_length / int(match_stats[0].get("best_of"))  # Best of 3 matches are count as one match length..
+    rounds = int(match_stats[0].get("round_stats").get("Rounds"))
     base_string = "**Match highlight(s)**:"
     highlight_string = ""
     kill_highlights = {
-        'PENTA_KILLS': {'condition':(penta_kills >= 1), 'description': "**%s** had **%s** penta kill(s)" % (nickname, penta_kills)},
-        'QUADRO_KILLS': {'condition':(quadro_kills >= 1), 'description': "**%s** had **%s** quadro kill(s)" % (nickname, quadro_kills)},
-        'TRIPLE_KILLS': {'condition': (triple_kills >= 5), 'description': "**%s** had **%s** triple kill(s)" % (nickname, triple_kills)}
+        'PENTA_KILLS': {'condition':(player.penta_kills >= 1), 'description': "**%s** had **%s** penta kill(s)" % (player.nickname, player.penta_kills)},
+        'QUADRO_KILLS': {'condition':(player.quadro_kills >= 1), 'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills)},
+        'TRIPLE_KILLS': {'condition': (player.triple_kills >= 5), 'description': "**%s** had **%s** triple kill(s)" % (player.nickname, player.triple_kills)}
     }
     random_highlights = {
-        'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
-        'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills (%s per round) and still lost the match" % (nickname, kills, kr_ratio)},
-        'HEADSHOTS_KING': {'condition':(headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage (%s out of %s kills)" % (nickname, headshots_perc, headshots, kills)},
-        'MANY_KILLS_NO_MVPS': {'condition':(kr_ratio >= 0.8) and (mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (nickname, kills, kr_ratio)},
-        'BAD_STATS_STILL_WIN': {'condition':(kd_ratio <= 0.7) and (result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (nickname, kills, assists, deaths)},
-        'DIED_EVERY_ROUND': {'condition': (deaths == rounds), 'description':" **%s** died every round (%s times)" % (nickname, deaths)},
-        'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
+        'ASSIST_KING': {'condition':(player.assists > player.kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (player.nickname, player.assists, player.kills)},
+        'MANY_KILLS_AND_LOSE' : {'condition':((player.kr_ratio >= 0.9) or (player.kd_ratio > 1.5) and (player.result == 0)), 'description': " **%s** had %s kills (%s per round) and still lost the match" % (player.nickname, player.kills, player.kr_ratio)},
+        'HEADSHOTS_KING': {'condition':(player.headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage (%s out of %s kills)" % (player.nickname, player.headshots_perc, player.headshots, player.kills)},
+        'MANY_KILLS_NO_MVPS': {'condition':(player.kr_ratio >= 0.8) and (player.mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (player.nickname, player.kills, player.kr_ratio)},
+        'BAD_STATS_STILL_WIN': {'condition':(player.kd_ratio <= 0.7) and (player.result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (player.nickname, player.kills, player.assists, player.deaths)},
+        'DIED_EVERY_ROUND': {'condition': (player.deaths == rounds), 'description':" **%s** died every round (%s times)" % (player.nickname, player.deaths)},
+        'TOP_FRAGGER_LOWEST_RANK': {'condition': await is_topfragger_but_lowest_level(player, team_players),'description': "**%s** was the topfragger even though he was the lowest level in the team" % player.nickname},
+        'BOTTOM_FRAGGER_LOWEST_RANK': {'condition': await is_topfragger_but_lowest_level(player, team_players),'description': "**%s** was the bottomfragger even though he was the highest level in the team" % player.nickname},
+        'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)},
     }
 
     for x in kill_highlights:
@@ -532,58 +550,33 @@ async def get_player_highlight(nickname="", assists=None, deaths=None, headshots
     else:
         chosen_highlight = random_highlights.get(random.choice(occured_highlights)).get("description")
         if highlight_string:
-            return highlight_string + " and " + chosen_highlight.replace("**" + nickname + "**", "they")
+            return highlight_string + " and " + chosen_highlight.replace("**" + player.nickname + "**", "")
         else:
             return base_string + chosen_highlight
 
-4
-async def get_player_stats(match, match_details, player_guid):
-    teams = match_details[0].get("teams")
+async def merge_stats_and_details(dict1, dict2):
+    merged = []
+    for x in dict1:
+        for y in dict2:
+            if x.get("guid") == y.get("player_id"):
+                merged.append({**x, **y})
+    return sorted(merged, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
+
+
+async def get_player_strings(match_stats, match_details, player_guid):
+    teams = match_stats[0].get("teams")
     for team in teams:
         for player in team.get("players"):
             if player.get('player_id') == player_guid:
-                rounds = int(match_details[0].get("round_stats").get("Rounds"))
-                match_length =  int(match.get("finished_at")) - int(match.get("started_at"))
-                match_length = match_length / int(match_details[0].get("best_of")) # Best of 3 matches are count as one match length..
-                player_stats = player.get("player_stats")
-                player_rank = await get_player_rank_in_team(team.get("players"), player)
-                nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, penta_kills, quadro_kills, triple_kills, result = player.get("nickname"), int(
-                    player_stats.get("Assists")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Deaths")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Headshot")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Headshots %")), \
-                                                                                                                                               float(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "K/D Ratio")), \
-                                                                                                                                               float(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "K/R Ratio")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Kills")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "MVPs")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Penta Kills")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Quadro Kills")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Triple Kills")), \
-                                                                                                                                               int(
-                                                                                                                                                   player_stats.get(
-                                                                                                                                                       "Result")),
-                highlight_string = await get_player_highlight(nickname, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, kills, mvps, result, penta_kills, quadro_kills, triple_kills, rounds, match_length)
-                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player_rank, kills, assists, deaths, kd_ratio, ("\n" + highlight_string if highlight_string else ''))
+                #todo will fix
+                team_player_details = match_details.get("teams").get("faction1").get("roster_v1") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster_v1")
+                team_player_stats = team.get("players")
+                players_sorted_by_rank = await players_sorted_by_kills(team_player_stats)
+                player_rank = players_sorted_by_rank.index(player)+1
+                players = await merge_stats_and_details(team_player_details, players_sorted_by_rank)
+                player = create_player_obj(player_rank, player)
+                highlight_string = await get_highlights(player, match_stats, match_details, players)
+                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
     return ""
 
 
@@ -595,17 +588,19 @@ async def get_match_length_string(match):
     return await get_length_string(finished_at - started_at)
 
 
-async def get_match_info_string(player_guid, from_timestamp):
+async def get_match_stats_string(player_guid, from_timestamp):
     matches = await get_matches(player_guid, int(from_timestamp))
     if not matches:
         return None
     i = 1
     match_info_string = ""
     for match in matches:
-        score, stats = await get_info_strings(match, player_guid)
+        match_details = await get_match_details(match.get("match_id"))
+        if not match_details:
+            continue
+        score, stats = await get_info_strings(match_details, player_guid)
         if not score or not stats:
             continue
-        match_details = await get_match_stats(match.get("match_id"))
         match_length_string = await get_match_length_string(match_details)
         match_info_string += "%s %s %s %s\n" % (("**Match %s**" % i) if len(matches) > 1 else "**Match**", score, stats, match_length_string)
         i += 1
@@ -643,7 +638,7 @@ async def check_faceit_elo(client):
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
                                                  player_stats['faceit_skill'], (
-                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_info_string(player_guid, to_utc(player_stats['changed']).timestamp()))
+                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_stats_string(player_guid, to_utc(player_stats['changed']).timestamp()))
         else:
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
@@ -956,6 +951,11 @@ def max_or(xs, fallback):
     #     'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)}
     # }
 
+
+
+
+
+
 #nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None
 def tests():
     loop = asyncio.get_event_loop()
@@ -971,8 +971,117 @@ def tests():
     }
     for test_name in tests:
         test_args, test_expected_result = tests.get(test_name).get("args"), tests.get(test_name).get("expected_result")
-        result = loop.run_until_complete(get_player_highlight(*test_args))
+        result = loop.run_until_complete(get_highlights(*test_args))
         if result != test_expected_result:
             log.error("Test %s failed! Expected result was %s but got: %s" % (test_name, test_expected_result, result))
         else:
             log.info("Test OK. Result: %s" % result)
+
+def create_player_obj(player_rank, player_dict):
+    return PlayerStats\
+    (
+        player_dict.get("nickname"),
+        player_dict.get("player_id"),
+        player_rank,
+        player_dict.get("csgo_skill_level"),
+        int(player_dict.get("player_stats").get("Kills")),
+        int(player_dict.get("player_stats").get("Assists")),
+        int(player_dict.get("player_stats").get("Deaths")),
+        int(player_dict.get("player_stats").get("Headshot")),
+        int(player_dict.get("player_stats").get( "Headshots %")),
+        float(player_dict.get("player_stats").get("K/D Ratio")),
+        float(player_dict.get("player_stats").get("K/R Ratio")),
+        int(player_dict.get("player_stats").get("MVPs")),
+        int(player_dict.get("player_stats").get("Penta Kills")),
+        int(player_dict.get("player_stats").get("Quadro Kills")),
+        int(player_dict.get("player_stats").get("Triple Kills")),
+        int(player_dict.get("player_stats").get("Result"))
+    )
+
+
+async def create_match_obj(match_details, match_stats):
+    return Match (
+        int(match_details.get("match_id")),
+        int(match_stats.get("game_id")),
+        int(match_stats.get("game_mode")),
+        int(match_stats.get("match_round")),
+        int(match_stats.get("played")),
+        int(match_details.get("competition_type")),
+        int(match_details.get("competition_name")),
+        int(match_details.get("teams")),
+        int(match_stats.get("teams")),
+        int(match_stats.get("round_stats")),
+        int(match_details.get("started_at")),
+        int(match_details.get("finished_at")),
+        int(match_details.get("finished_at")) - int(match_details.get("finished_at")) / int(match_stats.get("round_stats").get("Rounds"))
+    )
+
+class PlayerStats:
+    nickname = None
+    guid = None
+    rank = None
+    faceit_level = None
+    kills = None
+    assists = None
+    deaths = None
+    headshots = None
+    headshots_perc = None
+    kd_ratio = None
+    kr_ratio = None
+    mvps = None
+    result = None
+    penta_kills = None
+    quadro_kills = None
+    triple_kills = None
+    result = None
+
+    def __init__(self, nickname, guid, rank, faceit_level, kills, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, mvps, penta_kills, quadro_kills, triple_kills, result):
+        self.nickname = nickname
+        self.guid = guid
+        self.rank = rank
+        self.faceit_level = faceit_level
+        self.kills = kills
+        self.assists = assists
+        self.deaths = deaths
+        self.headshots = headshots
+        self.headshots_perc = headshots_perc
+        self.kd_ratio = kd_ratio
+        self.kr_ratio = kr_ratio
+        self.mvps = mvps
+        self.result = result
+        self.penta_kills = penta_kills
+        self.quadro_kills = quadro_kills
+        self.triple_kills = triple_kills
+        self.result = result
+
+class Match:
+    match_id = None
+    game_id = None
+    game_mode = None
+    match_round = None
+    played = None
+    competition_type = None
+    competition_name = None
+    best_of = None
+    round_stats = {}
+    teams_1 = {}
+    teams_2 = {}
+    team_stats_sorted_by_rank = {}
+    started_at = None
+    finished_at = None
+    map_average_length = None
+
+    def __init__(self, match_id, game_id, game_mode, match_round, played, competition_type, competition_name, teams_1, teams_2, round_stats, started_at, finished_at, map_average_length):
+        self.match_id = match_id
+        self.game_id = game_id
+        self.game_mode = game_mode
+        self.match_round = match_round
+        self.played = played
+        self.competition_type = competition_type
+        self.competition_name = competition_name
+        self.teams_1 = teams_1
+        self.teams_2 = teams_2
+        self.round_stats = round_stats
+        self.started_at = started_at
+        self.finished_at = finished_at
+        self.map_average_length = map_average_length
