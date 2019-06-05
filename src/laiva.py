@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from math import floor
+import random
 
 from time_util import as_helsinki, as_utc, to_utc
 
@@ -8,8 +9,9 @@ ALLOWED_CHANNELS = ['359308335184609281', '141649840923869184', '244452088279465
 
 def register(client):
     return {
-        "laiva": cmd_laiva,
-        "laivalle": cmd_laiva,
+        "laiva": mk_cmd_laiva(TEMPLATES_LAIVA),
+        "fireball": mk_cmd_laiva(TEMPLATES_FIREBALL),
+        "laivalle": mk_cmd_laiva(TEMPLATES_LAIVA),
     }
 memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
 "1UuKzL4fG4CZ8u4andG68oVuBUrXA90YQ",
@@ -100,40 +102,91 @@ memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
 "1a2CCCduhyxLSK5-DH5bFlRtW1eIaE3c7",
 "1uoSgEYH-ynl74y3Szccyp0Gf8ZOOw00k"]
 
-async def get_laiva_meme_of_the_day(day):
-    return "https://drive.google.com/file/d/" + memes[day] + "/view?usp=sharing"
+def image_url_from_id(image_id):
+    return "https://drive.google.com/file/d/" + image_id + "/view?usp=sharing"
 
-async def cmd_laiva(client, message, _):
+def parse_image_id(url):
+    return url[len("https://drive.google.com/open?id="):]
 
-    if message.channel.id not in ALLOWED_CHANNELS:
-        await client.send_message(message.channel, "You cannot use this command here.")
-        return
+TEMPLATES_LAIVA = {
+    "theme": "The laiva to start a new generation of laivas",
+    "happening": "Laiva is currently happening!!",
+    "ended": lambda time_ago: f"**Last laiva ended:** {time_ago} ago, **next laiva:** TBA.",
+    "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
+    "over": "Laiva is already over, but paha olo remains.",
+}
 
-    theme = "The laiva to start a new generation of laivas"
-    laiva = to_utc(as_helsinki(datetime(2019, 6, 7, 17, 0)))
-    laivaover = to_utc(as_helsinki(datetime(2019, 6, 9, 10, 30)))
+memes_fireball = list(map(parse_image_id, [
+    "https://drive.google.com/open?id=1YFOCivVS2augQPEXVaUZ78xXWTP42N1O",
+    "https://drive.google.com/open?id=16MKH_9bAygxq4B9Cwxaku7VZGcMQfg_J",
+    "https://drive.google.com/open?id=1mmNwuuSORe3C0WtbW2mjPSde2jjTudlD",
+    "https://drive.google.com/open?id=1bNkyxJmHWUEuqjal4MF8uo3AYBHv6j87",
+    "https://drive.google.com/open?id=1plUsqJ-w66GB68BMvAZ9d5tQUp6WkZvc",
+    "https://drive.google.com/open?id=1HZAqwjMzU855zvt8TiHAzDR8W33A3Vv0",
+    "https://drive.google.com/open?id=1YIXCRkl6mEV-SGkcL0fIkB0Neyavw319",
+    "https://drive.google.com/open?id=1odNoBRhihWLGb5lej2aTvSZ2RoyWAy9g",
+    "https://drive.google.com/open?id=1cbcLBrQKzYMySnyvuWVq-sQXU-13o-dM",
+    "https://drive.google.com/open?id=1LwTjzWUtf_-imyZUQR6IgmLQ4W4DPDuA",
+    "https://drive.google.com/open?id=1vxg7LYowk8WLJO_Qo8ryQf4B-_bW_fBx",
+    "https://drive.google.com/open?id=1ieRzuIZGGef5sk2cGsJ7uBZwcZVnU_PU",
+    "https://drive.google.com/open?id=1U1p7hk5wejVfAOlPOVHvm-QebjtVJFSF",
+    "https://drive.google.com/open?id=17QPKumCoYEwI6FgxQD-0UavnutJYU2Ae",
+    "https://drive.google.com/open?id=1GPTItHjmzNJGRCy5ASMqUNnt7eZxTDlh",
+    "https://drive.google.com/open?id=18Zo8e2X8yZf07k6vkqVgd2wN8ASrO62C",
+    "https://drive.google.com/open?id=1BwCZeTyFyqeuyIXIcQiBZGXyx6bEiS0g",
+    "https://drive.google.com/open?id=1fZSQ5wZO_iv7hKobuEhbeEHfeBCOcVXv",
+    "https://drive.google.com/open?id=1o5loWP806th8D9g3EvrL5G46SL1an8hH",
+    "https://drive.google.com/open?id=1sFCykCOrUW_gclFrS_MoFgh8vEcViOql",
+    "https://drive.google.com/open?id=1jSGPDt3y65pmGpMbzms5Y2kl5CvKNCKt",
+    "https://drive.google.com/open?id=1N7_67JS9fJSPir9k-yacFzmDFx6bfggl",
+    "https://drive.google.com/open?id=1qCzzg6gz5usmURuopCYfftT69FoUsFmt",
+    "https://drive.google.com/open?id=1ace8yrOWMXN6HtqTtagt6jS8JtmMgn6S",
+    "https://drive.google.com/open?id=1MPCMqivtfrU7fAKBaXGY5rK_n0Y_6g-A",
+    "https://drive.google.com/open?id=1iI6ZQuhGFWjXQqyO7xHoXxah3cqxcF5a",
+    "https://drive.google.com/open?id=1vhYFcrSuG7AUZzssq3xoHIStDYeTjY6u",
+]))
 
-    now = as_utc(datetime.now())
+TEMPLATES_FIREBALL = {
+    "theme": "The Fireball to start a new generation of Fireballs",
+    "happening": "Fireball is currently happening!!",
+    "ended": lambda time_ago: f"**Last Fireball ended:** {time_ago} ago, **next fireball:** TBA.",
+    "meme_text": lambda days_to_go: "**Fireball meme of the moment**:\n" + image_url_from_id(random.choice(memes_fireball)),
+    "over": "Fireball is already over, but ihan vitun jäätävä jano remains.",
+}
+
+def mk_cmd_laiva(templates):
+    async def cmd_laiva(client, message, _):
+        if message.channel.id not in ALLOWED_CHANNELS:
+            await client.send_message(message.channel, "You cannot use this command here.")
+            return
+
+        theme = templates["theme"]
+        laiva = to_utc(as_helsinki(datetime(2019, 6, 7, 17, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2019, 6, 9, 10, 30)))
+
+        now = as_utc(datetime.now())
 
 
-    if (laiva < now) and (laivaover > now):
-        await client.send_message(message.channel, "Laiva is currently happening!!")
-        return
+        if (laiva < now) and (laivaover > now):
+            await client.send_message(message.channel, templates["happening"])
+            return
 
-    if ((laivaover + timedelta(days=1)) < now) and laiva < now:
-        time_ago = delta_to_str(now - laivaover)
-        await client.send_message(message.channel, f"**Last laiva ended:** {time_ago} ago, **next laiva:** TBA.")
-        return
+        if ((laivaover + timedelta(days=1)) < now) and laiva < now:
+            time_ago = delta_to_str(now - laivaover)
+            await client.send_message(message.channel, templates["ended"](time_ago))
+            return
 
-    if laivaover < now:
-        await client.send_message(message.channel, "Laiva is already over, but paha olo remains.")
-        return
+        if laivaover < now:
+            await client.send_message(message.channel, templates["over"])
+            return
 
-    time_left = delta_to_str(laiva - now)
-    msg = f"Time left until '{theme}': {time_left}!!"
-    if (laiva - timedelta(days=len(memes)-1)) < now:
-        msg += "\n**Laiva meme of the day**:\n%s" % await get_laiva_meme_of_the_day((laiva - now).days)
-    await client.send_message(message.channel, msg)
+        time_left = delta_to_str(laiva - now)
+        msg = f"Time left until '{theme}': {time_left}!!"
+        if (laiva - timedelta(days=len(memes)-1)) < now:
+            days_to_go = (laiva - now).days
+            msg += "\n" + templates["meme_text"](days_to_go)
+        await client.send_message(message.channel, msg)
+    return cmd_laiva
 
 def delta_to_str(delta):
     return "{0} days, {1} hours, {2} minutes, {3} seconds".format(*delta_to_tuple(delta))
