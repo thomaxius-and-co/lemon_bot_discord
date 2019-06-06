@@ -562,14 +562,18 @@ async def merge_stats_and_details(dict1, dict2):
                 merged.append({**x, **y})
     return sorted(merged, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
 
-
 async def get_player_strings(match_stats, match_details, player_guid):
     teams = match_stats[0].get("teams")
     for team in teams:
         for player in team.get("players"):
             if player.get('player_id') == player_guid:
                 #todo will fix
-                team_player_details = match_details.get("teams").get("faction1").get("roster_v1") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster_v1")
+                if match_details.get("teams").get("faction1").get("roster_v1"):
+                    team_player_details = match_details.get("teams").get("faction1").get("roster_v1") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster_v1")
+                elif match_details.get("teams").get("faction1").get("roster"):
+                    team_player_details = match_details.get("teams").get("faction1").get("roster") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster")
+                else:
+                    break
                 team_player_stats = team.get("players")
                 players_sorted_by_rank = await players_sorted_by_kills(team_player_stats)
                 player_rank = players_sorted_by_rank.index(player)+1
