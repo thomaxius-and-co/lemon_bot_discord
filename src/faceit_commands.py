@@ -700,6 +700,8 @@ async def get_player_strings(match_stats, match_details, player_guid):
 
                 player_team = await merge_stats_and_details(player_team_details, player_team_stats)
                 enemy_team = await merge_stats_and_details(enemy_team_details, enemy_team_stats)
+                if not player_team or not enemy_team:
+                    return ""
 
                 player = [player_obj for player_obj in player_team if player_obj.guid == player.get("player_id")][0]
 
