@@ -17,17 +17,23 @@ NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
 log = logger.get("FACEIT")
 
+
 async def cmd_faceit_stats(client, message, faceit_nickname):
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname to search for.")
         return
-    csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api_by_nickname(client, message, faceit_nickname)
+    csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url = await get_user_stats_from_api_by_nickname(
+        client, message, faceit_nickname)
     log.info("%s, %s, %s, %s, %s, %s)" % (csgo_elo, skill_level, csgo_name, ranking_eu, last_played, faceit_url))
-    aliases_string = "\n**Previous nicknames**: %s" % await get_player_aliases_string(await get_faceit_guid(faceit_nickname), faceit_nickname)
+    aliases_string = "\n**Previous nicknames**: %s" % await get_player_aliases_string(
+        await get_faceit_guid(faceit_nickname), faceit_nickname)
     if csgo_name:
         msg = "Faceit stats for player nicknamed **%s**:\n**Name**: %s\n**EU ranking**: %s\n**CS:GO Elo**: %s\n**Skill level**: %s\n**Last played**: %s%s\n**Faceit url**: %s" % (
-                                  faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level, to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M") if last_played else '-', aliases_string, faceit_url)
+            faceit_nickname, csgo_name, ranking_eu, csgo_elo, skill_level,
+            to_utc(as_helsinki(datetime.fromtimestamp(last_played))).strftime("%d/%m/%y %H:%M") if last_played else '-',
+            aliases_string, faceit_url)
         await client.send_message(message.channel, msg[:2000])
+
 
 async def get_player_aliases_string(faceit_guid, faceit_nickname):
     aliases_query_result = await get_player_aliases(faceit_guid)
@@ -41,10 +47,9 @@ async def get_player_aliases_string(faceit_guid, faceit_nickname):
             if alias != faceit_nickname:
                 alias_string += alias + date_string + ', '
             alias_add_date = record['created'].date()
-        return alias_string[::-1].replace(",","",1)[::-1]
+        return alias_string[::-1].replace(",", "", 1)[::-1]
     else:
         return '-'
-
 
 
 async def get_alias_duration_string(alias_add_date, until_date):
@@ -53,8 +58,9 @@ async def get_alias_duration_string(alias_add_date, until_date):
     else:
         return (" *(%s-%s)*" % (alias_add_date, until_date))
 
+
 async def get_player_add_date(faceit_guid):
-    query_result  = await db.fetchval("""        
+    query_result = await db.fetchval("""        
         SELECT
             min(changed)
         FROM
@@ -63,6 +69,7 @@ async def get_player_add_date(faceit_guid):
             faceit_guid = $1
             """, faceit_guid)
     return query_result.date()
+
 
 async def get_player_aliases(faceit_guid):
     return await db.fetch("""        
@@ -74,6 +81,7 @@ async def get_player_aliases(faceit_guid):
             faceit_guid = $1 AND faceit_nickname not in (SELECT faceit_nickname FROM faceit_player)
         ORDER BY
             created DESC""", faceit_guid)
+
 
 async def cmd_faceit_commands(client, message, arg):
     infomessage = "Available faceit commands: " \
@@ -132,18 +140,19 @@ async def cmd_show_aliases(client, message, faceit_nickname):
     guild_players = await get_players_in_guild(message.server.id)
     for record in guild_players:
         if faceit_nickname == record['faceit_nickname']:
-                player_guid = await get_faceit_guid(faceit_nickname)
-                if player_guid:
-                    aliases_query_result = await get_player_aliases(player_guid)
-                    if aliases_query_result: #This is a bit lazy
-                        alias_string = await get_player_aliases_string(player_guid, faceit_nickname)
-                        msg = "**%s** has the following aliases: %s" % (faceit_nickname, alias_string)
-                        await client.send_message(message.channel, msg[:2000]) #todo: replace this with some sort of 'long message splitter'
-                        return
-                    else:
-                        await client.send_message(message.channel, "**%s** has no aliases." % (
+            player_guid = await get_faceit_guid(faceit_nickname)
+            if player_guid:
+                aliases_query_result = await get_player_aliases(player_guid)
+                if aliases_query_result:  # This is a bit lazy
+                    alias_string = await get_player_aliases_string(player_guid, faceit_nickname)
+                    msg = "**%s** has the following aliases: %s" % (faceit_nickname, alias_string)
+                    await client.send_message(message.channel, msg[
+                                                               :2000])  # todo: replace this with some sort of 'long message splitter'
+                    return
+                else:
+                    await client.send_message(message.channel, "**%s** has no aliases." % (
                         faceit_nickname))
-                        return
+                    return
     await client.send_message(message.channel, "No such player in the server, use !faceit listusers.")
 
 
@@ -186,7 +195,7 @@ async def get_user_stats_from_api_by_id(player_id):
         return None, None, None, None, None
 
     csgo = user.get("games", {}).get("csgo", {})
-    nickname = user.get("nickname", None) # Is this even needed
+    nickname = user.get("nickname", None)  # Is this even needed
     skill_level = csgo.get("skill_level", None)
     csgo_elo = csgo.get("faceit_elo", None)
     ranking = await faceit_api.ranking(player_id) if csgo_elo else None
@@ -210,7 +219,7 @@ async def get_user_stats_from_api_by_nickname(client, message, faceit_nickname):
         return None, None, None, None, None, None
 
     csgo = user.get("games", {}).get("csgo", {})
-    nickname = user.get("nickname", None) # Is this even needed
+    nickname = user.get("nickname", None)  # Is this even needed
     skill_level = csgo.get("skill_level", None)
     csgo_elo = csgo.get("faceit_elo", None)
     faceit_url = user.get("faceit_url", None)
@@ -246,7 +255,8 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
                 await add_nickname(faceit_guid, csgo_name)
             else:
                 log.info("Not adding a nickname for user since he already has one")
-                await(do_nick_change_check(faceit_guid, csgo_name, await get_player_current_database_nickname(faceit_guid)))
+                await(do_nick_change_check(faceit_guid, csgo_name,
+                                           await get_player_current_database_nickname(faceit_guid)))
             await insert_data_to_player_stats_table(faceit_guid, current_elo, skill_level, ranking)
 
     except NotFound as e:
@@ -264,14 +274,18 @@ async def assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
     await db.execute("INSERT INTO faceit_guild_ranking (guild_id, faceit_guid) VALUES ($1, $2)", guild_id, faceit_guid)
     return True
 
+
 async def add_faceit_user_into_database(faceit_nickname, faceit_guid):
-    await db.execute("INSERT INTO faceit_player (faceit_nickname, faceit_guid) VALUES ($1, $2) ON CONFLICT DO NOTHING", faceit_nickname, faceit_guid)
+    await db.execute("INSERT INTO faceit_player (faceit_nickname, faceit_guid) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                     faceit_nickname, faceit_guid)
+
 
 async def update_faceit_channel(guild_id, channel_id):
     await db.execute("""
         INSERT INTO faceit_notification_channel (guild_id, channel_id) VALUES ($1, $2)
         ON CONFLICT (guild_id) DO UPDATE SET channel_id = EXCLUDED.channel_id
     """, guild_id, channel_id)
+
 
 async def get_channel_id(client, user_channel_name):
     channels = client.get_all_channels()
@@ -322,7 +336,8 @@ async def cmd_del_faceit_user(client, message, arg):
                 await client.send_message(message.channel,
                                           "Faceit user %s succesfully deleted." % entry['faceit_nickname'])
                 return
-        await client.send_message(message.channel, "No such user in list. Use !faceit listusers to display a list of ID's.")
+        await client.send_message(message.channel,
+                                  "No such user in list. Use !faceit listusers to display a list of ID's.")
         return
 
 
@@ -338,7 +353,6 @@ async def cmd_list_faceit_users(client, message, _):
             faceit_id = row['id']
             msg += str(faceit_id) + '. ' + faceit_player + '\n'
         await client.send_message(message.channel, msg)
-
 
 
 async def delete_faceit_user_from_database_with_row_id(guild_id, row_id):
@@ -373,6 +387,7 @@ async def get_faceit_stats_of_player(guid):
             1
         """, guid)
 
+
 async def get_player_current_database_nickname(guid):
     return await db.fetchval("""
         SELECT
@@ -384,6 +399,7 @@ async def get_player_current_database_nickname(guid):
         LIMIT
             1
         """, guid)
+
 
 async def get_toplist_per_guild_from_db():
     return await db.fetch("""
@@ -458,6 +474,7 @@ async def get_match_stats(match_id):
         log.error(e)
         return None
 
+
 async def get_length_string(seconds):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
@@ -468,19 +485,21 @@ async def get_score_string(match_stats):
     overtime_score = None
     map = match_stats[0].get("round_stats").get("Map")
     score = match_stats[0].get("round_stats").get("Score").replace(' / ', '-')
-    first_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("First Half Score"), match_stats[0].get("teams")[1].get("team_stats").get("First Half Score"))
-    second_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("Second Half Score"), match_stats[0].get("teams")[1].get("team_stats").get("Second Half Score"))
+    first_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("First Half Score"),
+                                  match_stats[0].get("teams")[1].get("team_stats").get("First Half Score"))
+    second_half_score = "%s-%s" % (match_stats[0].get("teams")[0].get("team_stats").get("Second Half Score"),
+                                   match_stats[0].get("teams")[1].get("team_stats").get("Second Half Score"))
     total_rounds = int(match_stats[0].get("round_stats").get("Rounds"))
     if total_rounds > 30:
         overtime_score = "%s-%s" % (
-            match_stats[0].get("teams")[0].get("team_stats").get("Overtime score"), match_stats[0].get("teams")[1].get("team_stats").get("Overtime score"))
+            match_stats[0].get("teams")[0].get("team_stats").get("Overtime score"),
+            match_stats[0].get("teams")[1].get("team_stats").get("Overtime score"))
     if overtime_score:
-        score_string = ("**Map**: %s **score**: %s (%s, %s, %s)" % (map, score, first_half_score, second_half_score, overtime_score))
+        score_string = ("**Map**: %s **score**: %s (%s, %s, %s)" % (
+        map, score, first_half_score, second_half_score, overtime_score))
     else:
         score_string = ("**Map**: %s **score**: %s (%s, %s)" % (map, score, first_half_score, second_half_score))
     return score_string
-
-
 
 
 async def get_info_strings(match_details, player_guid):
@@ -506,35 +525,122 @@ async def get_info_strings(match_details, player_guid):
 async def players_sorted_by_kills(players_list):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
 
-async def is_topfragger_but_lowest_level(player, players):
-    players = sorted(players, reverse=True, key=lambda x: int(x.get("csgo_skill_level")))
-    return (player.rank == 1) and (players[-1].get("guid") == player.guid)
 
-async def is_bottomfragger_but_highest_level(player, players):
-    players = sorted(players, reverse=True, key=lambda x: int(x.get("csgo_skill_level")))
-    return (player.rank == 5) and (players[0].get("guid") == player.guid)
+async def get_team_details(team):
+    if team.get("faction1").get("roster_v1"):
+        return team.get("faction1").get("roster_v1") if team.get("faction1").get("faction_id") == team.get("team_id") else team.get("faction2").get("roster_v1")
+    elif team.get("faction1").get("roster"):
+        return team.get("faction1").get("roster_v1") if team.get("faction1").get("faction_id") == team.get("team_id") else team.get("faction2").get("roster_v1")
 
-async def get_highlights(player, match_stats, match_details, team_players):
+
+async def is_team_topfragger_but_lowest_level(player, player_team):
+    players = sorted(player_team, reverse=True, key=lambda x: x.faceit_level)
+    return (player.rank == 1) and (players[-1].guid == player.guid)
+
+
+async def is_team_bottomfragger_but_highest_level(player, player_team):
+    players = sorted(player_team, reverse=True, key=lambda x: int(x.faceit_level))
+    return (player.rank == 5) and (players[0].guid == player.guid)
+
+
+async def is_match_topfragger_but_lowest_level(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
+    match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    return (match_players_by_level[-1].guid == player.guid) and (match_players_by_kills[0].guid == player.guid)
+
+
+async def is_match_bottomfragger_but_highest_level(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
+    match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    return (match_players_by_level[0].guid == player.guid) and (match_players_by_kills[-1].guid == player.guid)
+
+
+async def is_match_topfragger(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    return match_players_by_kills[0].guid == player.guid
+
+
+async def is_match_bottomfragger(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    return match_players_by_kills[-1].guid == player.guid
+
+
+async def is_match_top_assister(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_assists = sorted(match_players, reverse=True, key=lambda x: x.assists)
+    return match_players_by_assists[0].guid == player.guid
+
+
+async def get_team_total_kills(team):
+    return sum([player.kills for player in team])
+
+
+async def get_highlights(player, match_stats, match_details, player_team, enemy_team):
     match_length = int(match_details.get("finished_at")) - int(match_details.get("started_at"))
-    match_length = match_length / int(match_stats[0].get("best_of"))  # Best of 3 matches are count as one match length..
+    match_length = match_length / int(
+        match_stats[0].get("best_of"))  # Best of 3 matches are count as one match length..
     rounds = int(match_stats[0].get("round_stats").get("Rounds"))
+    player_team_total_kills = await get_team_total_kills(player_team)
+    enemy_team_total_kills = await get_team_total_kills(enemy_team)
+    match_total_kills = player_team_total_kills + enemy_team_total_kills
+
     base_string = "**Match highlight(s)**:"
     highlight_string = ""
     kill_highlights = {
-        'PENTA_KILLS': {'condition':(player.penta_kills >= 1), 'description': "**%s** had **%s** penta kill(s)" % (player.nickname, player.penta_kills)},
-        'QUADRO_KILLS': {'condition':(player.quadro_kills >= 1), 'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills)},
-        'TRIPLE_KILLS': {'condition': (player.triple_kills >= 5), 'description': "**%s** had **%s** triple kill(s)" % (player.nickname, player.triple_kills)}
+        'PENTA_KILLS': {'condition': (player.penta_kills >= 1),
+                        'description': "**%s** had **%s** penta kill(s)" % (player.nickname, player.penta_kills)},
+        'QUADRO_KILLS': {'condition': (player.quadro_kills >= 1),
+                         'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills)},
+        'TRIPLE_KILLS': {'condition': (player.triple_kills >= 5),
+                         'description': "**%s** had **%s** triple kill(s)" % (player.nickname, player.triple_kills)}
     }
     random_highlights = {
-        'ASSIST_KING': {'condition':(player.assists > player.kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (player.nickname, player.assists, player.kills)},
-        'MANY_KILLS_AND_LOSE' : {'condition':((player.kr_ratio >= 0.9) or (player.kd_ratio > 1.5) and (player.result == 0)), 'description': " **%s** had %s kills (%s per round) and still lost the match" % (player.nickname, player.kills, player.kr_ratio)},
-        'HEADSHOTS_KING': {'condition':(player.headshots_perc >= 65), 'description':" **%s** had **%s** headshot percentage (%s out of %s kills)" % (player.nickname, player.headshots_perc, player.headshots, player.kills)},
-        'MANY_KILLS_NO_MVPS': {'condition':(player.kr_ratio >= 0.8) and (player.mvps  <= 3), 'description':" **%s** had 0 mvps but %s kills (%s per round)" % (player.nickname, player.kills, player.kr_ratio)},
-        'BAD_STATS_STILL_WIN': {'condition':(player.kd_ratio <= 0.5) and (player.result == 1), 'description':" **%s** won the match even though he was %s-%s-%s" % (player.nickname, player.kills, player.assists, player.deaths)},
-        'DIED_EVERY_ROUND': {'condition': (player.deaths == rounds), 'description':" **%s** died every round (%s times)" % (player.nickname, player.deaths)},
-        'TOP_FRAGGER_LOWEST_RANK': {'condition': await is_topfragger_but_lowest_level(player, team_players),'description': "**%s** was the topfragger even though he was the lowest level in the team" % player.nickname},
-        'BOTTOM_FRAGGER_LOWEST_RANK': {'condition': await is_topfragger_but_lowest_level(player, team_players),'description': "**%s** was the bottomfragger even though he was the highest level in the team" % player.nickname},
-        'LONG_MATCH': {'condition': ((match_length / rounds) > 115), 'description':"rounds had an average length of **{0:.3g}** minutes".format((match_length / 60) / rounds)},
+        'ASSIST_KING': {'condition': (player.assists > player.kills),
+                        'description': " **%s** had more assists (%s) than kills (%s)" % (
+                        player.nickname, player.assists, player.kills)},
+        'MANY_KILLS_AND_LOSE': {
+            'condition': ((player.kr_ratio >= 0.9) or (player.kd_ratio >= 1.4)) and (player.result == 0) and (rounds > 25),
+            'description': " **%s** had %s kills (%s kdr/%s kpr) and still lost the match" % (
+            player.nickname, player.kills, player.kd_ratio, player.kr_ratio)},
+        'HEADSHOTS_KING': {'condition': (player.headshots_perc >= 65),
+                           'description': " **%s** had **%s** headshot percentage (%s out of %s kills)" % (
+                           player.nickname, player.headshots_perc, player.headshots, player.kills)},
+        'MANY_KILLS_NO_MVPS': {'condition': ((player.kr_ratio >= 0.8) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 3),
+                               'description': " **%s** had 0 mvps but %s kills (%s per round)" % (
+                               player.nickname, player.kills, player.kr_ratio)},
+        'BAD_STATS_STILL_WIN': {'condition': (player.kd_ratio <= 0.6) and (player.result == 1),
+                                'description': " **%s** won the match even though he was %s-%s-%s" % (
+                                player.nickname, player.kills, player.assists, player.deaths)},
+        'DIED_EVERY_ROUND': {'condition': (player.deaths == rounds),
+                             'description': " **%s** died every round (%s times)" % (player.nickname, player.deaths)},
+        'TOP_FRAGGER_LOWEST_LEVEL_IN_TEAM': {'condition': await is_team_topfragger_but_lowest_level(player, player_team),
+                                    'description': "**%s** was the top fragger even though he was the lowest level in the team" % player.nickname},
+        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_TEAM': {'condition': await is_team_bottomfragger_but_highest_level(player, player_team),
+                                       'description': "**%s** was the bottom fragger even though he was the highest level in the team" % player.nickname},
+        'TOP_FRAGGER_LOWEST_LEVEL_IN_MATCH': {'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
+                                    'description': "**%s** was the top fragger even though he was the lowest level (%s) in the match" % (player.faceit_level, player.nickname)},
+        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_MATCH': {'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
+                                       'description': "**%s** was the bottom fragger even though he was the highest level (%s) in the match" % (player.faceit_level, player.nickname)},
+        'MATCH_TOP_FRAGGER': {'condition': await is_match_topfragger(player, player_team, enemy_team),
+                                                  'description': "**%s** was the top fragger of the match" % player.nickname},
+        'MATCH_BOTTOM_FRAGGER': {'condition': await is_match_bottomfragger(player, player_team, enemy_team),
+                                 'description': "**%s** was the bottom fragger of the match" % player.nickname},
+        'MATCH_KILLED_BIG_AMOUNT': {'condition': ((player.kills / match_total_kills) * 100) >= 14,
+                                 'description': "**{0}** had **{1:.3g}**% of the match total kills ({2})".format(player.nickname, ((player.kills / match_total_kills) * 100), match_total_kills)},
+        'TEAM_KILLED_BIG_AMOUNT': {'condition': ((player.kills / player_team_total_kills) * 100) >= 25,
+                                    'description': "**{0}** had **{1:.3g}**% of his teams total kills ({2})".format(player.nickname, ((player.kills / player_team_total_kills) * 100), player_team_total_kills)},
+        'ENEMY_TEAM_KILLED_BIG_AMOUNT': {'condition': ((player.kills / enemy_team_total_kills) * 100) >= 25,
+                                   'description': "**{0}** had **{1:.3g}**% of enemy teams total kills ({2})".format(player.nickname, ((player.kills / enemy_team_total_kills) * 100),
+                                                                                                                     enemy_team_total_kills)},
+        'MATCH_TOP_ASSISTER': {'condition': await is_match_top_assister(player, player_team, enemy_team),
+                                         'description': "**%s** had the most assists (%s) in the match." % (player.nickname, player.assists)},
+        'LONG_MATCH': {'condition': ((match_length / rounds) > 115),
+                       'description': "rounds had an average length of **{0:.3g}** minutes".format(
+                           (match_length / 60) / rounds)},
     }
 
     for x in kill_highlights:
@@ -554,36 +660,52 @@ async def get_highlights(player, match_stats, match_details, team_players):
         else:
             return base_string + chosen_highlight
 
-async def merge_stats_and_details(dict1, dict2):
+    # Creates an object of every player and returns team's players sorted by kills (old api)
+async def merge_stats_and_details_old_api(team_player_details, team_player_stats):
     merged = []
-    for x in dict1:
-        for y in dict2:
+    for x in team_player_details.get("roster_v1"):
+        for y in team_player_stats:
             if x.get("guid") == y.get("player_id"):
-                merged.append({**x, **y})
-    return sorted(merged, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
+                player = create_player_obj_old_api(team_player_stats.index(y)+1, {**x, **y})
+                merged.append(player)
+    return sorted(merged, key=lambda x: x.rank)
+
+
+# Creates an object of every player and returns team's players sorted by kills
+async def merge_stats_and_details(team_player_details, team_player_stats):
+    team_player_stats = sorted(team_player_stats, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
+    if team_player_details.get("roster_v1"):
+        return await merge_stats_and_details_old_api(team_player_details, team_player_stats)
+    if team_player_details.get("roster"):
+        merged = []
+        for x in team_player_details.get("roster"):
+            for y in team_player_stats:
+                if x.get("player_id") == y.get("player_id"):
+                    merged.append(create_player_obj(team_player_stats.index(y)+1, {**x, **y}))
+        return sorted(merged, key=lambda x: x.rank)
+
 
 async def get_player_strings(match_stats, match_details, player_guid):
     teams = match_stats[0].get("teams")
     for team in teams:
         for player in team.get("players"):
             if player.get('player_id') == player_guid:
-                #todo will fix
-                if match_details.get("teams").get("faction1").get("roster_v1"):
-                    team_player_details = match_details.get("teams").get("faction1").get("roster_v1") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster_v1")
-                elif match_details.get("teams").get("faction1").get("roster"):
-                    team_player_details = match_details.get("teams").get("faction1").get("roster") if match_details.get("teams").get("faction1").get("faction_id") == team.get("team_id") else match_details.get("teams").get("faction2").get("roster")
-                else:
-                    break
-                team_player_stats = team.get("players")
-                players_sorted_by_rank = await players_sorted_by_kills(team_player_stats)
-                player_rank = players_sorted_by_rank.index(player)+1
-                players = await merge_stats_and_details(team_player_details, players_sorted_by_rank)
-                player = create_player_obj(player_rank, player)
-                highlight_string = await get_highlights(player, match_stats, match_details, players)
-                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
+                player_team = teams.pop(teams.index(team))
+                enemy_team = teams[0]
+
+                player_team_details = match_details.get("teams").get("faction1") if match_details.get("teams").get("faction1").get("faction_id") == player_team.get("team_id") else match_details.get("teams").get("faction2")
+                enemy_team_details = match_details.get("teams").get("faction1") if match_details.get("teams").get("faction1").get("faction_id") == enemy_team.get("team_id") else match_details.get("teams").get("faction2")
+                player_team_stats = player_team.get("players")
+                enemy_team_stats = enemy_team.get("players")
+
+                player_team = await merge_stats_and_details(player_team_details, player_team_stats)
+                enemy_team = await merge_stats_and_details(enemy_team_details, enemy_team_stats)
+
+                player = [player_obj for player_obj in player_team if player_obj.guid == player.get("player_id")][0]
+
+                highlight_string = await get_highlights(player, match_stats, match_details, player_team, enemy_team)
+                return "**Player stats:** #%s %s-%s-%s (%s kdr) %s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
     return ""
-
-
 
 
 async def get_match_length_string(match):
@@ -606,14 +728,16 @@ async def get_match_stats_string(player_guid, from_timestamp):
         if not score or not stats:
             continue
         match_length_string = await get_match_length_string(match_details)
-        match_info_string += "%s %s %s %s\n" % (("**Match %s**" % i) if len(matches) > 1 else "**Match**", score, stats, match_length_string)
+        match_info_string += "%s %s %s %s\n" % (
+        ("**Match %s**" % i) if len(matches) > 1 else "**Match**", score, stats, match_length_string)
         i += 1
-        if i > 10: # Only fetch a max of 10 matches
+        if i > 10:  # Only fetch a max of 10 matches
             break
     if not match_info_string:
         return match_info_string
     else:
         return "*" + match_info_string.rstrip("\n") + "*"
+
 
 async def check_faceit_elo(client):
     log.info('Faceit stats checking started')
@@ -642,7 +766,9 @@ async def check_faceit_elo(client):
                     await spam_about_elo_changes(client, record['faceit_nickname'], channel_id,
                                                  current_elo, player_stats['faceit_elo'], skill_level,
                                                  player_stats['faceit_skill'], (
-                                                     ' "' + custom_nickname + '"' if custom_nickname else ''), await get_match_stats_string(player_guid, to_utc(player_stats['changed']).timestamp()))
+                                                     ' "' + custom_nickname + '"' if custom_nickname else ''),
+                                                 await get_match_stats_string(player_guid, to_utc(
+                                                     player_stats['changed']).timestamp()))
         else:
             current_elo, skill_level, csgo_name, ranking, last_played = await get_user_stats_from_api_by_id(player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
@@ -669,14 +795,17 @@ async def do_nick_change_check(guid, api_player_name, database_player_name):
 
 async def update_nickname(faceit_guid, api_player_name):
     async with db.transaction() as tx:
-        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
-        await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name, faceit_guid)
+        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid,
+                         api_player_name)
+        await tx.execute("UPDATE faceit_player SET faceit_nickname = $1 WHERE faceit_guid = $2", api_player_name,
+                         faceit_guid)
     log.info("Updated nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
 async def add_nickname(faceit_guid, api_player_name):
     async with db.transaction() as tx:
-        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid, api_player_name)
+        await tx.execute("INSERT INTO faceit_aliases (faceit_guid, faceit_nickname) VALUES ($1, $2)", faceit_guid,
+                         api_player_name)
     log.info("Added new nickname %s for user %s" % (api_player_name, faceit_guid))
 
 
@@ -720,10 +849,10 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
                 player_name = player_new_rank_item[0][0]
                 if (old_rank > new_rank) and (new_elo > old_elo):
                     msg += "**%s** rose in server ranking! old rank **#%s**, new rank **#%s**\n" % (
-                    player_name, old_rank, new_rank)
+                        player_name, old_rank, new_rank)
                 elif (old_rank < new_rank) and (old_elo > new_elo):
                     msg += "**%s** fell in server ranking! old rank **#%s**, new rank **#%s**\n" % (
-                    player_name, old_rank, new_rank)
+                        player_name, old_rank, new_rank)
     if msg:
         log.info('Attempting to spam channel %s with the following message: %s', spam_channel_id, msg)
         channel = discord.Object(id=spam_channel_id)
@@ -790,22 +919,24 @@ async def spam_about_elo_changes(client, faceit_nickname, spam_channel_id, curre
     if skill_before < current_skill:
         util.threadsafe(client, client.send_message(channel,
                                                     '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
-                                                    faceit_nickname, custom_nickname, int(current_elo - elo_before),
-                                                    skill_before, current_skill, current_elo, match_info_string)))
+                                                        faceit_nickname, custom_nickname, int(current_elo - elo_before),
+                                                        skill_before, current_skill, current_elo, match_info_string)))
         return
     elif skill_before > current_skill:
         util.threadsafe(client, client.send_message(channel,
                                                     '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n%s' % (
-                                                    faceit_nickname, custom_nickname, int(current_elo - elo_before),
-                                                    skill_before, current_skill, current_elo, match_info_string)))
+                                                        faceit_nickname, custom_nickname, int(current_elo - elo_before),
+                                                        skill_before, current_skill, current_elo, match_info_string)))
         return
     elif current_elo > elo_before:
         util.threadsafe(client, client.send_message(channel, '**%s%s** gained **%s** elo! (%s -> %s)\n%s' % (
-        faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
+            faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
+            match_info_string)))
         return
     elif elo_before > current_elo:
         util.threadsafe(client, client.send_message(channel, '**%s%s** lost **%s** elo! (%s -> %s)\n%s' % (
-        faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo, match_info_string)))
+            faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
+            match_info_string)))
         return
 
 
@@ -824,8 +955,8 @@ async def get_faceit_leaderboard(guild_id):
     toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'LAST SEEN'],
                                              toplist)
     return toplist_string + (
-                '\nLast changed: %s' % to_utc(as_helsinki(
-            last_entry_time)).strftime("%d/%m/%y %H:%M")), len(toplist)
+            '\nLast changed: %s' % to_utc(as_helsinki(
+        last_entry_time)).strftime("%d/%m/%y %H:%M")), len(toplist)
 
 
 async def get_last_seen_string(last_entry_time_string):
@@ -926,8 +1057,12 @@ async def get_all_players():
         ORDER BY id ASC
     """)
 
+
 async def get_players_in_guild(guild_id):
-    return await db.fetch("SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC", guild_id)
+    return await db.fetch(
+        "SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC",
+        guild_id)
+
 
 def register(client):
     util.start_task_thread(elo_notifier_task(client))
@@ -944,7 +1079,6 @@ def flat_map(func, xs):
 def max_or(xs, fallback):
     return max(xs) if len(xs) > 0 else fallback
 
-
     # random_highlights = {
     #     'ASSIST_KING': {'condition':(assists > kills), 'description': " **%s** had more assists (%s) than kills (%s)" % (nickname, assists, kills)},
     #     'MANY_KILLS_AND_LOSE' : {'condition':((kr_ratio >= 0.9) and (result == 0)), 'description': " **%s** had %s kills and still lost the match" % (nickname, kills)},
@@ -956,22 +1090,26 @@ def max_or(xs, fallback):
     # }
 
 
-
-
-
-
-#nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None
+# nickname="", assists=None, deaths=None, headshots=None, headshots_perc=None, kd_ratio=None, kr_ratio=None, kills=None, mvps=None, result=None, penta_kills=None, quadro_kills=None, triple_kills=None, rounds=None, match_length=None
 def tests():
     loop = asyncio.get_event_loop()
     tests = {
-        "ASSISTS_KING" : {"args": ["rce", 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had more assists (10) than kills (0)"},
-        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 10, 10, 0, 0, 0,0, 23, 1], "expected_result": "**Match highlight(s)**: **rce** had 10 kills (1 per round) and still lost the match"},
-        "HEADSHOTS_KING": {"args": ["rce", 0, 0, 10, 66, 0, 0, 10, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had **66** headshot percentage (10 out of 10 kills)"},
-        "MANY_KILLS_NO_MVPS": {"args": ["rce", 0, 0, 0, 0, 0, 0.8, 20, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** had 0 mvps but 20 kills (0.8 per round)"},
-        "BAD_STATS_STILL_WIN": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** won the match even though he was 0-0-0"},
-        "DIED_EVERY_ROUND": {"args": ["rce", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],"expected_result": "**Match highlight(s)**: **rce** died every round (23 times)"},
-        "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],"expected_result": "**Match highlight(s)**:rounds had an average length of **1.94** minutes"},
-        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 31, 0, 0, 10, 0, 0, 23, 1], "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills (1 per round) and still lost the match"},
+        "ASSISTS_KING": {"args": ["rce", 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],
+                         "expected_result": "**Match highlight(s)**: **rce** had more assists (10) than kills (0)"},
+        "MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 10, 10, 0, 0, 0, 0, 23, 1],
+                                "expected_result": "**Match highlight(s)**: **rce** had 10 kills (1 per round) and still lost the match"},
+        "HEADSHOTS_KING": {"args": ["rce", 0, 0, 10, 66, 0, 0, 10, 0, 0, 0, 0, 0, 23, 1],
+                           "expected_result": "**Match highlight(s)**: **rce** had **66** headshot percentage (10 out of 10 kills)"},
+        "MANY_KILLS_NO_MVPS": {"args": ["rce", 0, 0, 0, 0, 0, 0.8, 20, 0, 0, 0, 0, 0, 23, 1],
+                               "expected_result": "**Match highlight(s)**: **rce** had 0 mvps but 20 kills (0.8 per round)"},
+        "BAD_STATS_STILL_WIN": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 23, 1],
+                                "expected_result": "**Match highlight(s)**: **rce** won the match even though he was 0-0-0"},
+        "DIED_EVERY_ROUND": {"args": ["rce", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 1],
+                             "expected_result": "**Match highlight(s)**: **rce** died every round (23 times)"},
+        "LONG_MATCH": {"args": ["rce", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 3500],
+                       "expected_result": "**Match highlight(s)**:rounds had an average length of **1.94** minutes"},
+        "PENTA_KILLS_AND_MANY_KILLS_AND_LOSE": {"args": ["rce", 0, 0, 0, 0, 0, 1, 31, 0, 0, 10, 0, 0, 23, 1],
+                                                "expected_result": "**Match highlight(s)**:**rce** had **10** penta kill(s) and  they had 31 kills (1 per round) and still lost the match"},
     }
     for test_name in tests:
         test_args, test_expected_result = tests.get(test_name).get("args"), tests.get(test_name).get("expected_result")
@@ -981,30 +1119,51 @@ def tests():
         else:
             log.info("Test OK. Result: %s" % result)
 
-def create_player_obj(player_rank, player_dict):
-    return PlayerStats\
-    (
-        player_dict.get("nickname"),
-        player_dict.get("player_id"),
-        player_rank,
-        player_dict.get("csgo_skill_level"),
-        int(player_dict.get("player_stats").get("Kills")),
-        int(player_dict.get("player_stats").get("Assists")),
-        int(player_dict.get("player_stats").get("Deaths")),
-        int(player_dict.get("player_stats").get("Headshot")),
-        int(player_dict.get("player_stats").get( "Headshots %")),
-        float(player_dict.get("player_stats").get("K/D Ratio")),
-        float(player_dict.get("player_stats").get("K/R Ratio")),
-        int(player_dict.get("player_stats").get("MVPs")),
-        int(player_dict.get("player_stats").get("Penta Kills")),
-        int(player_dict.get("player_stats").get("Quadro Kills")),
-        int(player_dict.get("player_stats").get("Triple Kills")),
-        int(player_dict.get("player_stats").get("Result"))
-    )
 
+def create_player_obj(rank, player_dict):
+    return PlayerStats \
+            (
+            player_dict.get("nickname"),
+            player_dict.get("player_id"),
+            player_dict.get("game_skill_level"),
+            rank,
+            int(player_dict.get("player_stats").get("Kills")),
+            int(player_dict.get("player_stats").get("Assists")),
+            int(player_dict.get("player_stats").get("Deaths")),
+            int(player_dict.get("player_stats").get("Headshot")),
+            int(player_dict.get("player_stats").get("Headshots %")),
+            float(player_dict.get("player_stats").get("K/D Ratio")),
+            float(player_dict.get("player_stats").get("K/R Ratio")),
+            int(player_dict.get("player_stats").get("MVPs")),
+            int(player_dict.get("player_stats").get("Penta Kills")),
+            int(player_dict.get("player_stats").get("Quadro Kills")),
+            int(player_dict.get("player_stats").get("Triple Kills")),
+            int(player_dict.get("player_stats").get("Result"))
+        )
+
+def create_player_obj_old_api(rank, player_dict):
+    return PlayerStats \
+            (
+            player_dict.get("nickname"),
+            player_dict.get("player_id"),
+            player_dict.get("csgo_skill_level"),
+            rank,
+            int(player_dict.get("player_stats").get("Kills")),
+            int(player_dict.get("player_stats").get("Assists")),
+            int(player_dict.get("player_stats").get("Deaths")),
+            int(player_dict.get("player_stats").get("Headshot")),
+            int(player_dict.get("player_stats").get("Headshots %")),
+            float(player_dict.get("player_stats").get("K/D Ratio")),
+            float(player_dict.get("player_stats").get("K/R Ratio")),
+            int(player_dict.get("player_stats").get("MVPs")),
+            int(player_dict.get("player_stats").get("Penta Kills")),
+            int(player_dict.get("player_stats").get("Quadro Kills")),
+            int(player_dict.get("player_stats").get("Triple Kills")),
+            int(player_dict.get("player_stats").get("Result"))
+        )
 
 async def create_match_obj(match_details, match_stats):
-    return Match (
+    return Match(
         int(match_details.get("match_id")),
         int(match_stats.get("game_id")),
         int(match_stats.get("game_mode")),
@@ -1017,14 +1176,16 @@ async def create_match_obj(match_details, match_stats):
         int(match_stats.get("round_stats")),
         int(match_details.get("started_at")),
         int(match_details.get("finished_at")),
-        int(match_details.get("finished_at")) - int(match_details.get("finished_at")) / int(match_stats.get("round_stats").get("Rounds"))
+        int(match_details.get("finished_at")) - int(match_details.get("finished_at")) / int(
+            match_stats.get("round_stats").get("Rounds"))
     )
+
 
 class PlayerStats:
     nickname = None
     guid = None
-    rank = None
     faceit_level = None
+    rank = None
     kills = None
     assists = None
     deaths = None
@@ -1039,11 +1200,12 @@ class PlayerStats:
     triple_kills = None
     result = None
 
-    def __init__(self, nickname, guid, rank, faceit_level, kills, assists, deaths, headshots, headshots_perc, kd_ratio, kr_ratio, mvps, penta_kills, quadro_kills, triple_kills, result):
+    def __init__(self, nickname, guid, faceit_level, rank, kills, assists, deaths, headshots, headshots_perc, kd_ratio,
+                 kr_ratio, mvps, penta_kills, quadro_kills, triple_kills, result):
         self.nickname = nickname
         self.guid = guid
-        self.rank = rank
         self.faceit_level = faceit_level
+        self.rank = rank
         self.kills = kills
         self.assists = assists
         self.deaths = deaths
@@ -1057,6 +1219,7 @@ class PlayerStats:
         self.quadro_kills = quadro_kills
         self.triple_kills = triple_kills
         self.result = result
+
 
 class Match:
     match_id = None
@@ -1075,7 +1238,8 @@ class Match:
     finished_at = None
     map_average_length = None
 
-    def __init__(self, match_id, game_id, game_mode, match_round, played, competition_type, competition_name, teams_1, teams_2, round_stats, started_at, finished_at, map_average_length):
+    def __init__(self, match_id, game_id, game_mode, match_round, played, competition_type, competition_name, teams_1,
+                 teams_2, round_stats, started_at, finished_at, map_average_length):
         self.match_id = match_id
         self.game_id = game_id
         self.game_mode = game_mode
@@ -1089,3 +1253,4 @@ class Match:
         self.started_at = started_at
         self.finished_at = finished_at
         self.map_average_length = map_average_length
+
