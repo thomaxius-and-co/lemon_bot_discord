@@ -482,6 +482,9 @@ async def get_length_string(seconds):
 
 
 async def get_score_string(match_stats):
+    if not match_stats[0].get("round_stats").get("Score"):
+        log.error("SCORE MISSING ERROR: %s" % match_stats)
+        return ""
     overtime_score = None
     map = match_stats[0].get("round_stats").get("Map")
     score = match_stats[0].get("round_stats").get("Score").replace(' / ', '-')
@@ -588,77 +591,159 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
     enemy_team_total_kills = await get_team_total_kills(enemy_team)
     match_total_kills = player_team_total_kills + enemy_team_total_kills
 
-    base_string = "**Match highlight(s)**:"
-    highlight_string = ""
-    kill_highlights = {
-        'PENTA_KILLS': {'condition': (player.penta_kills >= 1),
-                        'description': "**%s** had **%s** penta kill(s)" % (player.nickname, player.penta_kills)},
-        'QUADRO_KILLS': {'condition': (player.quadro_kills >= 1),
-                         'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills)},
-        'TRIPLE_KILLS': {'condition': (player.triple_kills >= 5),
-                         'description': "**%s** had **%s** triple kill(s)" % (player.nickname, player.triple_kills)}
-    }
-    random_highlights = {
-        'ASSIST_KING': {'condition': (player.assists > player.kills),
-                        'description': " **%s** had more assists (%s) than kills (%s)" % (
-                        player.nickname, player.assists, player.kills)},
+    highlights = {
+        'PENTA_KILLS': {
+                        'condition': (player.penta_kills >= 1),
+                        'description': "**%s** had **%s** penta kill(s)" % (player.nickname, player.penta_kills),
+                        'priority': 100,
+                        'priority_multiplier': player.penta_kills
+                        },
+        'QUADRO_KILLS': {
+                        'condition': (player.quadro_kills >= 1),
+                        'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills),
+                        'priority': 100,
+                        'priority_multiplier': player.quadro_kills
+                        },
+        'TRIPLE_KILLS': {
+                        'condition': (player.triple_kills >= 2),
+                        'description': "**%s** had **%s** triple kill(s)" % (player.nickname, player.triple_kills),
+                        'priority': 50,
+                        'priority_multiplier': player.triple_kills
+                        },
+        'ASSIST_KING': {
+                        'condition': (player.assists > player.kills),
+                        'description': "**%s** had more assists (%s) than kills (%s)" % (player.nickname, player.assists, player.kills),
+                        'priority': 70,
+                        'priority_multiplier': rounds / 7
+                        },
         'MANY_KILLS_AND_LOSE': {
-            'condition': ((player.kr_ratio >= 0.9) or (player.kd_ratio >= 1.4)) and (player.result == 0) and (rounds > 25),
-            'description': " **%s** had %s kills (%s kdr/%s kpr) and still lost the match" % (
-            player.nickname, player.kills, player.kd_ratio, player.kr_ratio)},
-        'HEADSHOTS_KING': {'condition': (player.headshots_perc >= 65),
-                           'description': " **%s** had **%s** headshot percentage (%s out of %s kills)" % (
-                           player.nickname, player.headshots_perc, player.headshots, player.kills)},
-        'MANY_KILLS_NO_MVPS': {'condition': ((player.kr_ratio >= 0.8) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 3),
-                               'description': " **%s** had %s mvps but %s kills (%s per round)" % (
-                               player.nickname, player.mvps, player.kills, player.kr_ratio)},
-        'BAD_STATS_STILL_WIN': {'condition': (player.kd_ratio <= 0.6) and (player.result == 1),
-                                'description': " **%s** won the match even though he was %s-%s-%s" % (
-                                player.nickname, player.kills, player.assists, player.deaths)},
-        'DIED_EVERY_ROUND': {'condition': (player.deaths == rounds),
-                             'description': " **%s** died every round (%s times)" % (player.nickname, player.deaths)},
-        'TOP_FRAGGER_LOWEST_LEVEL_IN_TEAM': {'condition': await is_team_topfragger_but_lowest_level(player, player_team),
-                                    'description': "**%s** was the top fragger even though he was the lowest level in the team" % player.nickname},
-        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_TEAM': {'condition': await is_team_bottomfragger_but_highest_level(player, player_team),
-                                       'description': "**%s** was the bottom fragger even though he was the highest level in the team" % player.nickname},
-        'TOP_FRAGGER_LOWEST_LEVEL_IN_MATCH': {'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
-                                    'description': "**%s** was the top fragger even though he was the lowest level (%s) in the match" % (player.faceit_level, player.nickname)},
-        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_MATCH': {'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
-                                       'description': "**%s** was the bottom fragger even though he was the highest level (%s) in the match" % (player.faceit_level, player.nickname)},
-        'MATCH_TOP_FRAGGER': {'condition': await is_match_topfragger(player, player_team, enemy_team),
-                                                  'description': "**%s** was the top fragger of the match" % player.nickname},
-        'MATCH_BOTTOM_FRAGGER': {'condition': await is_match_bottomfragger(player, player_team, enemy_team),
-                                 'description': "**%s** was the bottom fragger of the match" % player.nickname},
-        'MATCH_KILLED_BIG_AMOUNT': {'condition': ((player.kills / match_total_kills) * 100) >= 14,
-                                 'description': "**{0}** had **{1:.3g}**% of the match total kills ({2})".format(player.nickname, ((player.kills / match_total_kills) * 100), match_total_kills)},
-        'TEAM_KILLED_BIG_AMOUNT': {'condition': ((player.kills / player_team_total_kills) * 100) >= 25,
-                                    'description': "**{0}** had **{1:.3g}**% of his teams total kills ({2})".format(player.nickname, ((player.kills / player_team_total_kills) * 100), player_team_total_kills)},
-        'ENEMY_TEAM_KILLED_BIG_AMOUNT': {'condition': ((player.kills / enemy_team_total_kills) * 100) >= 25,
-                                   'description': "**{0}** had **{1:.3g}**% of enemy teams total kills ({2})".format(player.nickname, ((player.kills / enemy_team_total_kills) * 100),
-                                                                                                                     enemy_team_total_kills)},
-        'MATCH_TOP_ASSISTER': {'condition': await is_match_top_assister(player, player_team, enemy_team),
-                                         'description': "**%s** had the most assists (%s) in the match." % (player.nickname, player.assists)},
-        'LONG_MATCH': {'condition': ((match_length / rounds) > 115),
-                       'description': "rounds had an average length of **{0:.3g}** minutes".format(
-                           (match_length / 60) / rounds)},
+                        'condition': ((player.kr_ratio >= 0.9) or (player.kd_ratio >= 1.4)) and (player.result == 0) and (rounds > 25),
+                        'description': "**%s** had %s kills (%s kdr/%s kpr) and still lost the match" % (player.nickname, player.kills, player.kd_ratio, player.kr_ratio),
+                        'priority': 70,
+                        'priority_multiplier': player.kd_ratio if player.kd_ratio >= 1.4 else (1 + player.kr_ratio)
+                        },
+        'HEADSHOTS_KING': {
+                        'condition': (player.headshots_perc >= 65) and rounds >= 20,
+                        'description': "**%s** had **%s** headshot percentage (%s out of %s kills)" % (player.nickname, player.headshots_perc, player.headshots, player.kills),
+                        'priority': 50,
+                        'priority_multiplier': rounds / 15
+                        },
+        'MANY_KILLS_NO_MVPS': {
+                        'condition': ((player.kr_ratio >= 0.8) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 3),
+                        'description': " **%s** had %s mvps but %s kills (%s per round)" % (player.nickname, player.mvps, player.kills, player.kr_ratio),
+                        'priority': 70,
+                        'priority_multiplier': player.kd_ratio
+                        },
+        'BAD_STATS_STILL_WIN': {
+                        'condition': (player.kd_ratio <= 0.6) and (player.result == 1),
+                        'description': " **%s** won the match even though he was %s-%s-%s" % (player.nickname, player.kills, player.assists, player.deaths),
+                        'priority': 90,
+                        'priority_multiplier': 1 + player.deaths / 10
+                        },
+        'DIED_EVERY_ROUND': {
+                        'condition': (player.deaths == rounds),
+                        'description': " **%s** died every round (%s times)" % (player.nickname, player.deaths),
+                        'priority': 80,
+                        'priority_multiplier': rounds / 10
+                        },
+        'TOP_FRAGGER_LOWEST_LEVEL_IN_TEAM': {
+                        'condition': await is_team_topfragger_but_lowest_level(player, player_team),
+                        'description': "**%s** was the top fragger even though he was the lowest level in the team" % player.nickname,
+                        'priority': 70,
+                        'priority_multiplier': player.kd_ratio
+                        },
+        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_TEAM': {
+                        'condition': await is_team_bottomfragger_but_highest_level(player, player_team),
+                        'description': "**%s** was the bottom fragger even though he was the highest level in the team" % player.nickname,
+                        'priority': 70,
+                        'priority_multiplier': 1 + (player.deaths / 50)
+                        },
+        'TOP_FRAGGER_LOWEST_LEVEL_IN_MATCH': {
+                        'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
+                        'description': "**%s** was the top fragger even though he was the lowest level (%s) in the match" % (player.faceit_level, player.nickname),
+                        'priority': 90,
+                        'priority_multiplier': player.kd_ratio
+                        },
+        'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_MATCH': {
+                        'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
+                        'description': "**%s** was the bottom fragger even though he was the highest level (%s) in the match" % (player.faceit_level, player.nickname),
+                        'priority': 90,
+                        'priority_multiplier': 1 + (player.deaths / 50)
+                        },
+        'MATCH_TOP_FRAGGER': {
+                        'condition': await is_match_topfragger(player, player_team, enemy_team),
+                        'description': "**%s** was the top fragger of the match" % player.nickname,
+                        'priority': 70,
+                        'priority_multiplier': player.kd_ratio
+                        },
+        'MATCH_BOTTOM_FRAGGER': {
+                        'condition': await is_match_bottomfragger(player, player_team, enemy_team),
+                        'description': "**%s** was the bottom fragger of the match" % player.nickname,
+                        'priority': 70,
+                        'priority_multiplier': 1 + (player.deaths / 50)
+                        },
+        'MATCH_KILLED_BIG_AMOUNT': {
+                        'condition': ((player.kills / match_total_kills) * 100) >= 14,
+                        'description': "**{0}** had **{1:.3g}**% of the match total kills ({2})".format(player.nickname, ((player.kills / match_total_kills) * 100), match_total_kills),
+                        'priority': 60,
+                        'priority_multiplier': 1 + (player.kills / match_total_kills)
+                        },
+        'TEAM_KILLED_BIG_AMOUNT': {
+                        'condition': ((player.kills / player_team_total_kills) * 100) >= 25,
+                        'description': "**{0}** had **{1:.3g}**% of his teams total kills ({2})".format(player.nickname, ((player.kills / player_team_total_kills) * 100), player_team_total_kills),
+                        'priority': 40,
+                        'priority_multiplier': 1.2 + (player.kills / enemy_team_total_kills)
+                        },
+        'ENEMY_TEAM_KILLED_BIG_AMOUNT': {
+                        'condition': ((player.kills / enemy_team_total_kills) * 100) >= 25,
+                        'description': "**{0}** had **{1:.3g}**% of enemy teams total kills ({2})".format(player.nickname, ((player.kills / enemy_team_total_kills) * 100),
+                                                                                                                         enemy_team_total_kills),
+                        'priority': 30,
+                        'priority_multiplier': 1.2 + (player.kills / enemy_team_total_kills)
+                        },
+        'MATCH_TOP_ASSISTER': {
+                        'condition': await is_match_top_assister(player, player_team, enemy_team),
+                        'description': "**%s** had the most assists (%s) in the match." % (player.nickname, player.assists),
+                        'priority': 50,
+                        'priority_multiplier': 1 + (player.assists / rounds)
+                        },
+        'LONG_MATCH': {
+                        'condition': ((match_length / rounds) > 115),
+                        'description': "rounds had an average length of **{0:.3g}** minutes".format(
+                           (match_length / 60) / rounds),
+                        'priority': 50,
+                        'priority_multiplier': ((match_length / rounds) / 75)
+                        },
     }
 
-    for x in kill_highlights:
-        condition = kill_highlights.get(x).get('condition')
+    base_string = "**Match highlight(s)**: "
+    highlight_string = ""
+
+    occured_highlights = []
+    occured_highlights_priorities = []
+
+    for x in highlights:
+        condition, description, priority, priority_multiplier = highlights.get(x).values()
         if condition:
-            highlight_string += base_string + kill_highlights.get(x).get("description")
-            break
-    occured_highlights = [x for x in random_highlights if random_highlights.get(x).get('condition')]
-    if not occured_highlights and not highlight_string:
+            priority *= priority_multiplier
+            occured_highlights.append(x)
+            occured_highlights_priorities.append(priority)
+
+
+    if not occured_highlights:
         return ""
-    if highlight_string and not occured_highlights:
-        return highlight_string
     else:
-        chosen_highlight = random_highlights.get(random.choice(occured_highlights)).get("description")
-        if highlight_string:
-            return highlight_string + " and " + chosen_highlight.replace("**" + player.nickname + "**", "")
+        while len(occured_highlights) >= 2:
+            chosen_highlight = random.choices(occured_highlights, occured_highlights_priorities)[0]
+            chosen_highlight_description = highlights.get(chosen_highlight).get("description")
+            del occured_highlights_priorities[occured_highlights.index(chosen_highlight)]
+            occured_highlights.remove(chosen_highlight)
+            if highlight_string:
+                return highlight_string + " and" + chosen_highlight_description.replace("**" + player.nickname + "**", "")
+            else:
+                highlight_string += base_string + chosen_highlight_description
         else:
-            return base_string + chosen_highlight
+            return highlight_string
 
     # Creates an object of every player and returns team's players sorted by kills (old api)
 async def merge_stats_and_details_old_api(team_player_details, team_player_stats):
@@ -1256,3 +1341,23 @@ class Match:
         self.finished_at = finished_at
         self.map_average_length = map_average_length
 
+
+# loop = asyncio.get_event_loop()
+# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",0)))
+#print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
+
+# player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
+#
+# enemy_team = [create_player_obj(1,{ 'nickname': 'e_Topfragger', 'player_id': '111111-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 10, 'player_stats': {'Assists': '3', 'Deaths': '15', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '28', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '1', 'Triple Kills': '2'}}),
+# create_player_obj(2,{ 'nickname': 'e_midfragger', 'player_id': '222222-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 10, 'player_stats': {'Assists': '3', 'Deaths': '15', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '20', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '1', 'Triple Kills': '2'}}),
+# create_player_obj(3,{ 'nickname': 'e_bottomfragger', 'player_id': '33333-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 10, 'player_stats': {'Assists': '3', 'Deaths': '15', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '10', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '1', 'Triple Kills': '2'}})]
+#
+# player_team = [create_player_obj(1,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}}),
+# create_player_obj(2,{ 'nickname': 'p_midfragger', 'player_id': '555555-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 10, 'player_stats': {'Assists': '3', 'Deaths': '6', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '22', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}}),
+# create_player_obj(3,{ 'nickname': 'p_bottomfragger', 'player_id': '666666-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 10, 'player_stats': {'Assists': '3', 'Deaths': '7', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '15', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})]
+#
+#
+#
+# loop = asyncio.get_event_loop()
+# print(loop.run_until_complete(is_match_bottomfragger_but_highest_level(player, player_team, enemy_team)))
+# print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
