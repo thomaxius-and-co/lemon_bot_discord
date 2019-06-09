@@ -510,6 +510,7 @@ async def get_info_strings(match_details, player_guid):
         match_stats = await get_match_stats(match_details.get("match_id"))
         if not match_stats:
             return None, None
+
         score_string = await get_score_string(match_stats)
         player_stats_string = await get_player_strings(match_stats, match_details, player_guid)
         return score_string, player_stats_string
@@ -645,7 +646,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority_multiplier': rounds / 15
                         },
         'MANY_KILLS_NO_MVPS': {
-                        'condition': ((player.kr_ratio >= 0.8) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 3),
+                        'condition': ((player.kr_ratio >= 0.9) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 2),
                         'description': " **%s** had %s mvps but %s kills (%s per round)" % (player.nickname, player.mvps, player.kills, player.kr_ratio),
                         'priority': 70,
                         'priority_multiplier': player.kd_ratio
@@ -719,8 +720,8 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'MATCH_TOP_ASSISTER': {
                         'condition': await is_match_top_assister(player, player_team, enemy_team),
-                        'description': "**%s** had the most assists (%s) in the match." % (player.nickname, player.assists),
-                        'priority': 50,
+                        'description': "**%s** had the most assists (%s) in the match" % (player.nickname, player.assists),
+                        'priority': 70,
                         'priority_multiplier': 1 + (player.assists / rounds)
                         },
         'LONG_MATCH': {
@@ -755,7 +756,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
             del occured_highlights_priorities[occured_highlights.index(chosen_highlight)]
             occured_highlights.remove(chosen_highlight)
             if highlight_string:
-                return highlight_string + " and" + chosen_highlight_description.replace("**" + player.nickname + "**", "")
+                return (highlight_string + " and" + chosen_highlight_description.replace("**" + player.nickname + "**", "")).replace("and had", "and")
             else:
                 highlight_string += base_string + chosen_highlight_description
         else:
@@ -826,6 +827,10 @@ async def get_match_stats_string(player_guid, from_timestamp):
     for match in matches:
         match_details = await get_match_details(match.get("match_id"))
         if not match_details:
+            continue
+        if match_details.get("game") != 'csgo':
+            log.info("Match is not csgo, skipping.. %s" % match_details) # Faceit api is so much fun that there aren't
+            # just csgo matches in the csgo endpoints
             continue
         score, stats = await get_info_strings(match_details, player_guid)
         if not score or not stats:
@@ -1357,9 +1362,8 @@ class Match:
         self.finished_at = finished_at
         self.map_average_length = map_average_length
 
-
 # loop = asyncio.get_event_loop()
-# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560003770)))
+# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560000457)))
 #print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
 
 # player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
