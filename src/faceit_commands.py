@@ -537,24 +537,40 @@ async def get_team_details(team):
 
 
 async def is_team_topfragger_but_lowest_level(player, player_team):
+    all_levels_are_equal = all(x.faceit_level==player_team[0].faceit_level for x in player_team)
+    if all_levels_are_equal:
+        return False
     players = sorted(player_team, reverse=True, key=lambda x: x.faceit_level)
     return (player.rank == 1) and (players[-1].guid == player.guid)
 
 
 async def is_team_bottomfragger_but_highest_level(player, player_team):
+    all_levels_are_equal = all(x.faceit_level==player_team[0].faceit_level for x in player_team)
+    if all_levels_are_equal:
+        return False
     players = sorted(player_team, reverse=True, key=lambda x: int(x.faceit_level))
+    if players[-1].faceit_level == players[-2].faceit_level: # if last two players have same level
+        return False
     return (player.rank == 5) and (players[0].guid == player.guid)
 
 
 async def is_match_topfragger_but_lowest_level(player, player_team, enemy_team):
     match_players = player_team + enemy_team
+    all_levels_are_equal = all(x.faceit_level==match_players[0].faceit_level for x in match_players)
+    if all_levels_are_equal:
+        return False
     match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
     match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    if match_players_by_kills[0].faceit_level == match_players_by_kills[1].faceit_level: # Two topfraggers have the same level
+        return False
     return (match_players_by_level[-1].guid == player.guid) and (match_players_by_kills[0].guid == player.guid)
 
 
 async def is_match_bottomfragger_but_highest_level(player, player_team, enemy_team):
     match_players = player_team + enemy_team
+    all_levels_are_equal = all(x.faceit_level==match_players[0].faceit_level for x in match_players)
+    if all_levels_are_equal:
+        return False
     match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
     match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
     return (match_players_by_level[0].guid == player.guid) and (match_players_by_kills[-1].guid == player.guid)
@@ -1343,7 +1359,7 @@ class Match:
 
 
 # loop = asyncio.get_event_loop()
-# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",0)))
+# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560003770)))
 #print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
 
 # player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
