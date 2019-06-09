@@ -610,8 +610,8 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                            'description': " **%s** had **%s** headshot percentage (%s out of %s kills)" % (
                            player.nickname, player.headshots_perc, player.headshots, player.kills)},
         'MANY_KILLS_NO_MVPS': {'condition': ((player.kr_ratio >= 0.8) or (player.kd_ratio >= 1.7)) and (rounds > 20) and (player.mvps <= 3),
-                               'description': " **%s** had 0 mvps but %s kills (%s per round)" % (
-                               player.nickname, player.kills, player.kr_ratio)},
+                               'description': " **%s** had %s mvps but %s kills (%s per round)" % (
+                               player.nickname, player.mvps, player.kills, player.kr_ratio)},
         'BAD_STATS_STILL_WIN': {'condition': (player.kd_ratio <= 0.6) and (player.result == 1),
                                 'description': " **%s** won the match even though he was %s-%s-%s" % (
                                 player.nickname, player.kills, player.assists, player.deaths)},
