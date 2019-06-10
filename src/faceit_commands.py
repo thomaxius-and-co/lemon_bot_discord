@@ -546,7 +546,7 @@ async def is_team_topfragger_but_lowest_level(player, player_team):
 
 
 async def is_team_bottomfragger_but_highest_level(player, player_team):
-    all_levels_are_equal = all(x.faceit_level==player_team[0].faceit_level for x in player_team)
+    all_levels_are_equal = all(x.faceit_level==player_team[0].faceit_level for x in player_team) #todo make a global function out of this
     if all_levels_are_equal:
         return False
     players = sorted(player_team, reverse=True, key=lambda x: int(x.faceit_level))
@@ -598,6 +598,19 @@ async def is_match_top_assister(player, player_team, enemy_team):
 async def get_team_total_kills(team):
     return sum([player.kills for player in team])
 
+async def has_many_kills_multi_kills(player):
+    return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 40
+
+async def died_the_most(player, player_team, enemy_team):
+    match_players = player_team + enemy_team
+    match_players_by_deaths = sorted(match_players, reverse=True, key=lambda x: x.deaths)
+    return match_players_by_deaths[0].guid == player.guid
+
+
+async def is_team_top_assister(player, player_team):
+    team_players_by_assists = sorted(player_team, reverse=True, key=lambda x: x.assists)
+    return team_players_by_assists[0].guid == player.guid
+
 
 async def get_highlights(player, match_stats, match_details, player_team, enemy_team):
     match_length = int(match_details.get("finished_at")) - int(match_details.get("started_at"))
@@ -618,7 +631,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
         'QUADRO_KILLS': {
                         'condition': (player.quadro_kills >= 1),
                         'description': "**%s** had **%s** quadro kill(s)" % (player.nickname, player.quadro_kills),
-                        'priority': 100,
+                        'priority': 60,
                         'priority_multiplier': player.quadro_kills
                         },
         'TRIPLE_KILLS': {
@@ -641,7 +654,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'HEADSHOTS_KING': {
                         'condition': (player.headshots_perc >= 65) and rounds >= 20,
-                        'description': "**%s** had **%s** headshot percentage (%s out of %s kills)" % (player.nickname, player.headshots_perc, player.headshots, player.kills),
+                        'description': "**%s** had **%s** headshot percentage (%s headshots out of %s kills)" % (player.nickname, player.headshots_perc, player.headshots, player.kills),
                         'priority': 50,
                         'priority_multiplier': rounds / 15
                         },
@@ -663,6 +676,12 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority': 80,
                         'priority_multiplier': rounds / 10
                         },
+        'DIED_OFTEN': {
+                        'condition': ((player.deaths / rounds) * 100) >= 90 and (player.deaths != rounds), # Don't do this highlight if DIED_EVERY_ROUND highlight is chosen todo: fix this
+                        'description': " **%s** died almost every round (%s times out of %s rounds)" % (player.nickname, player.deaths, rounds),
+                        'priority': 80,
+                        'priority_multiplier': rounds / 10
+        },
         'TOP_FRAGGER_LOWEST_LEVEL_IN_TEAM': {
                         'condition': await is_team_topfragger_but_lowest_level(player, player_team),
                         'description': "**%s** was the top fragger even though he was the lowest level in the team" % player.nickname,
@@ -689,7 +708,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'MATCH_TOP_FRAGGER': {
                         'condition': await is_match_topfragger(player, player_team, enemy_team),
-                        'description': "**%s** was the top fragger of the match" % player.nickname,
+                        'description': "**%s** was the top fragger of the match with %s kills" % (player.nickname, player.kills),
                         'priority': 70,
                         'priority_multiplier': player.kd_ratio
                         },
@@ -724,13 +743,54 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority': 70,
                         'priority_multiplier': 1 + (player.assists / rounds)
                         },
+        'TEAM_TOP_ASSISTER': {
+                        'condition': await is_team_top_assister(player, player_team) and not await is_match_top_assister(player, player_team, enemy_team), #todo fix..
+                        'description': "**%s** was the top assister of his team (%s assists)" % (player.nickname, player.assists),
+                        'priority': 70,
+                        'priority_multiplier': 1 + (player.assists / rounds)
+        },
         'LONG_MATCH': {
-                        'condition': ((match_length / rounds) > 115),
+                        'condition': ((match_length / rounds) >= 115),
                         'description': "rounds had an average length of **{0:.3g}** minutes".format(
                            (match_length / 60) / rounds),
                         'priority': 50,
                         'priority_multiplier': ((match_length / rounds) / 75)
                         },
+        'MANY_KILLS_MULTI_KILLS': {
+                        'condition': await has_many_kills_multi_kills(player),
+                        'description': "**{0}** had **{1:.3g}**% of their kills consist of either triple, quad or penta kills ({2}t-{3}q-{4}p)".format(player.nickname,
+                            ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills) * 100),  player.triple_kills, player.quadro_kills, player.penta_kills),
+                        'priority': 50,
+                        'priority_multiplier': rounds / 10
+                         },
+        'BIG_MVP_PERCENTAGE': {
+                        'condition': ((player.mvps / rounds) * 100) >= 30,
+                        'description': "**{0}** had **{1}**% mvp's (**{1:.3g}**% out of %s rounds)".format(
+                            player.nickname, player.mvps, (player.mvps / rounds) * 100, rounds),
+                        'priority': 90,
+                        'priority_multiplier': rounds / 10
+                        },
+        'BAD_HEADSHOT_RATE': {
+                        'condition': (player.headshots_perc <= 20) and (player.kills >= 20),
+                        'description': "**{0}** had a headshot percentage of only **{1:.3g}**% ({2} of {3} kills)".format(
+                            player.nickname, player.headshots_perc, player.headshots, player.kills),
+                        'priority': 90,
+                        'priority_multiplier': player.kills / 10
+        },
+        'HIGH_KR_RATIO': {
+                        'condition': (player.kr_ratio >= 1.2) and (rounds >= 15),
+                        'description': "**{0}** had an average of **{1}** kills per round".format(
+                            player.nickname, player.kr_ratio),
+                        'priority': 50,
+                        'priority_multiplier': player.kr_ratio
+        },
+        'DIED_THE_MOST': {
+            'condition': await died_the_most(player, player_team, enemy_team),
+            'description': "**{0}** died the most times in the match ({1} times)".format(
+                player.nickname, player.deaths),
+            'priority': 50,
+            'priority_multiplier': player.deaths / 10
+        },
     }
 
     base_string = "**Match highlight(s)**: "
@@ -756,7 +816,10 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
             del occured_highlights_priorities[occured_highlights.index(chosen_highlight)]
             occured_highlights.remove(chosen_highlight)
             if highlight_string:
-                return (highlight_string + " and" + chosen_highlight_description.replace("**" + player.nickname + "**", "")).replace("and had", "and")
+                highlight_string += " and" + chosen_highlight_description.replace("**" + player.nickname + "**", "")
+                if highlight_string[0:50].find("had") != -1: # todo: fix this
+                    highlight_string = highlight_string.replace("and had", "and")
+                return highlight_string
             else:
                 highlight_string += base_string + chosen_highlight_description
         else:
@@ -1362,8 +1425,10 @@ class Match:
         self.finished_at = finished_at
         self.map_average_length = map_average_length
 
+#todo: do actual testing and in an another file..
+#
 # loop = asyncio.get_event_loop()
-# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560000457)))
+# print(loop.run_until_complete(get_match_stats_string("60875fa4-c334-45fa-a634-056df2bb8926",0)))
 #print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
 
 # player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
