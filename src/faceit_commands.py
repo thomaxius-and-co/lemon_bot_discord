@@ -599,7 +599,7 @@ async def get_team_total_kills(team):
     return sum([player.kills for player in team])
 
 async def has_many_kills_multi_kills(player):
-    return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 40
+    return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 50
 
 async def died_the_most(player, player_team, enemy_team):
     match_players = player_team + enemy_team
@@ -758,7 +758,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'MANY_KILLS_MULTI_KILLS': {
                         'condition': await has_many_kills_multi_kills(player),
-                        'description': "**{0}** had **{1:.3g}**% of their kills consist of either triple, quad or penta kills ({2}t-{3}q-{4}p)".format(player.nickname,
+                        'description': "**{0}** had **{1:.3g}**% of their kills consist(ed) of either triple, quad or penta kills ({2}t-{3}q-{4}p)".format(player.nickname,
                             ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills) * 100),  player.triple_kills, player.quadro_kills, player.penta_kills),
                         'priority': 50,
                         'priority_multiplier': rounds / 10
