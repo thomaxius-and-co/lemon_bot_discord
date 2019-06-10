@@ -810,7 +810,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
     if not occured_highlights:
         return ""
     else:
-        while len(occured_highlights) >= 2:
+        while len(occured_highlights) >= 1:
             chosen_highlight = random.choices(occured_highlights, occured_highlights_priorities)[0]
             chosen_highlight_description = highlights.get(chosen_highlight).get("description")
             del occured_highlights_priorities[occured_highlights.index(chosen_highlight)]
@@ -1428,7 +1428,7 @@ class Match:
 #todo: do actual testing and in an another file..
 #
 # loop = asyncio.get_event_loop()
-# print(loop.run_until_complete(get_match_stats_string("60875fa4-c334-45fa-a634-056df2bb8926",0)))
+# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560105536)))
 #print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
 
 # player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
