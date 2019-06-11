@@ -765,8 +765,8 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                          },
         'BIG_MVP_PERCENTAGE': {
                         'condition': ((player.mvps / rounds) * 100) >= 30,
-                        'description': "**{0}** had **{1}**% mvp's (**{1:.3g}**% out of %s rounds)".format(
-                            player.nickname, player.mvps, (player.mvps / rounds) * 100, rounds),
+                        'description': "**{0}** had **{1}**% mvp's (**{2:.3g}**% out of {3} rounds)".format(
+                            player.nickname, player.mvps, ((player.mvps / rounds) * 100), rounds),
                         'priority': 90,
                         'priority_multiplier': rounds / 10
                         },
