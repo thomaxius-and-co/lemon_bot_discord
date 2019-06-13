@@ -598,6 +598,9 @@ async def is_match_top_assister(player, player_team, enemy_team):
 async def get_team_total_kills(team):
     return sum([player.kills for player in team])
 
+async def get_team_total_deaths(team):
+    return sum([player.deaths for player in team])
+
 async def has_many_kills_multi_kills(player):
     return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 50
 
@@ -617,9 +620,14 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
     match_length = match_length / int(
         match_stats[0].get("best_of"))  # Best of 3 matches are count as one match length..
     rounds = int(match_stats[0].get("round_stats").get("Rounds"))
+
     player_team_total_kills = await get_team_total_kills(player_team)
     enemy_team_total_kills = await get_team_total_kills(enemy_team)
     match_total_kills = player_team_total_kills + enemy_team_total_kills
+
+    player_team_total_deaths = await get_team_total_deaths(player_team)
+    enemy_team_total_deaths = await get_team_total_deaths(enemy_team)
+    match_total_deaths = player_team_total_deaths + enemy_team_total_deaths
 
     highlights = {
         'PENTA_KILLS': {
@@ -719,19 +727,19 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority_multiplier': 1 + (player.deaths / 50)
                         },
         'MATCH_KILLED_BIG_AMOUNT': {
-                        'condition': ((player.kills / match_total_kills) * 100) >= 14,
+                        'condition': ((player.kills / match_total_kills) * 100) >= 15,
                         'description': "**{0}** had **{1:.3g}**% of the match total kills ({2})".format(player.nickname, ((player.kills / match_total_kills) * 100), match_total_kills),
                         'priority': 60,
                         'priority_multiplier': 1 + (player.kills / match_total_kills)
                         },
         'TEAM_KILLED_BIG_AMOUNT': {
-                        'condition': ((player.kills / player_team_total_kills) * 100) >= 25,
+                        'condition': ((player.kills / player_team_total_kills) * 100) >= 30,
                         'description': "**{0}** had **{1:.3g}**% of his teams total kills ({2})".format(player.nickname, ((player.kills / player_team_total_kills) * 100), player_team_total_kills),
                         'priority': 40,
                         'priority_multiplier': 1.2 + (player.kills / enemy_team_total_kills)
                         },
         'ENEMY_TEAM_KILLED_BIG_AMOUNT': {
-                        'condition': ((player.kills / enemy_team_total_kills) * 100) >= 25,
+                        'condition': ((player.kills / enemy_team_total_kills) * 100) >= 30,
                         'description': "**{0}** had **{1:.3g}**% of enemy teams total kills ({2})".format(player.nickname, ((player.kills / enemy_team_total_kills) * 100),
                                                                                                                          enemy_team_total_kills),
                         'priority': 30,
@@ -785,11 +793,39 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority_multiplier': player.kr_ratio
         },
         'DIED_THE_MOST': {
-            'condition': await died_the_most(player, player_team, enemy_team),
-            'description': "**{0}** died the most times in the match ({1} times)".format(
-                player.nickname, player.deaths),
-            'priority': 50,
-            'priority_multiplier': player.deaths / 10
+                        'condition': await died_the_most(player, player_team, enemy_team),
+                        'description': "**{0}** died the most times in the match ({1} times)".format(
+                            player.nickname, player.deaths),
+                        'priority': 50,
+                        'priority_multiplier': player.deaths / 10
+        },
+        'TOP_FRAGGER_FEW_KILLS': {
+                        'condition': player.rank == 1 and player.kr_ratio <= 0.7 and rounds >= 20,
+                        'description': "**{0}** was the top fragger of his team with just **{1}** kills.".format(
+                            player.nickname, player.kills),
+                        'priority': 70,
+                        'priority_multiplier': rounds / 10
+        },
+        'BOTTOM_FRAGGER_GOOD_KD': {
+                        'condition': player.rank == 5 and player.kd_ratio >= 1.7 and rounds >= 10,
+                        'description': "**{0}** was the bottom fragger of his team even though he had a kd ratio of **{1}**.".format(
+                            player.nickname, player.kd_ratio),
+                        'priority': 100,
+                        'priority_multiplier': player.kd_ratio
+        },
+        'MATCH_DIED_BIG_AMOUNT': {
+                        'condition': ((player.deaths / match_total_deaths) * 100) >= 15,
+                        'description': "**{0}** had **{1:.3g}%** of the match's total deaths ({2}).".format(
+                            player.nickname, (player.deaths / match_total_deaths) * 100, player.deaths),
+                        'priority': 80,
+                        'priority_multiplier': player.deaths / 10
+        },
+        'TEAM_DIED_BIG_AMOUNT': {
+                        'condition': ((player.deaths / player_team_total_deaths) * 100) >= 30,
+                        'description': "**{0}** had **{1:.3g}%** of his team's total deaths ({2}).".format(
+                            player.nickname, (player.deaths / player_team_total_deaths) * 100, player.deaths),
+                        'priority': 80,
+                        'priority_multiplier': player.deaths / 10
         },
     }
 
@@ -884,7 +920,7 @@ async def get_match_length_string(match):
 async def get_match_stats_string(player_guid, from_timestamp):
     matches = await get_matches(player_guid, int(from_timestamp))
     if not matches:
-        return None
+        return ""
     i = 1
     match_info_string = ""
     for match in matches:
@@ -1428,7 +1464,7 @@ class Match:
 #todo: do actual testing and in an another file..
 #
 # loop = asyncio.get_event_loop()
-# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",1560105536)))
+# print(loop.run_until_complete(get_match_stats_string("e6234673-9422-4517-a9f4-7722b57cfdf5",0)))
 #print(loop.run_until_complete(is_match_topfragger_but_lowest_level(player, player_team, enemy_team)))
 
 # player = create_player_obj(2,{ 'nickname': 'p_Topfragger', 'player_id': '444444-ac8b-49b3-83f7-a1cb6367c9bf', 'csgo_skill_level': 55, 'player_stats': {'Assists': '3', 'Deaths': '5', 'Headshot': '17', 'Headshots %': '61', 'K/D Ratio': '1.87', 'K/R Ratio': '1.12', 'Kills': '6', 'MVPs': '7', 'Penta Kills': '1', 'Quadro Kills': '1', 'Result': '0', 'Triple Kills': '2'}})
