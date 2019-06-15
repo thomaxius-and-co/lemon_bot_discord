@@ -602,6 +602,8 @@ async def get_team_total_deaths(team):
     return sum([player.deaths for player in team])
 
 async def has_many_kills_multi_kills(player):
+    if player.kills == 0:
+        return False
     return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 50
 
 async def died_the_most(player, player_team, enemy_team):
