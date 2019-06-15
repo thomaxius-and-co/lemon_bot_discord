@@ -414,8 +414,8 @@ async def cmd_edit_channel_kbps(client, message, input):
     if not perms.administrator:
         await client.send_message(message.channel, "You do not have sufficient permissions.")
         return
-    if not input or not input.isdigit() or not (8000 <= int(input) <= 96000):
-        await client.send_message(message.channel, 'You need to specify channel bitrate between 8000-96000.')
+    if not input or not input.isdigit() or not (8000 <= int(input) <= 128000):
+        await client.send_message(message.channel, 'You need to specify channel bitrate between 8000-128000.')
         return
     num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels, num_of_skipped_channels = await edit_channel_bitrate(int(input))
     msg = ("Changed bitrate of %s channels, skipped %s channel(s)." % (num_of_succesfully_edited_channels, num_of_skipped_channels)) if (num_of_unsuccesfully_edited_channels == 0) \
