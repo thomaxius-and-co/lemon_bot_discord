@@ -38,7 +38,7 @@ import steam
 import anssicommands
 import awards
 import logger
-import faceit_commands
+import faceit_main
 import muutto
 import statistics
 import crypto
@@ -89,7 +89,7 @@ async def main():
     await crypto.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
-                   faceit_commands, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
+                   faceit_main, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
                    groom, shrek, ence_matches]:
         commands.update(module.register(client))
 
