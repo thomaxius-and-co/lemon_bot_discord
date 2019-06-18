@@ -19,8 +19,8 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_muutto(client, message, query):
-    muutto = to_utc(as_helsinki(datetime(2018, 3, 30, 12, 0)))
-    muuttoover = to_utc(as_helsinki(datetime(2018, 3, 31, 14, 0)))
+    muutto = to_utc(as_helsinki(datetime(2019, 7, 2, 15, 0)))
+    muuttoover = to_utc(as_helsinki(datetime(2019, 7, 2, 21, 0)))
     now = as_utc(datetime.now())
     now_to_last_muuttoover = now - muuttoover
 
