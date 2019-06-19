@@ -245,3 +245,331 @@ async def get_player_aliases(faceit_guid):
             faceit_guid = $1 AND faceit_nickname not in (SELECT faceit_nickname FROM faceit_player)
         ORDER BY
             created DESC""", faceit_guid)
+
+
+async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    query = """
+        SELECT
+            kills, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            kills DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit)
+    return await db.fetch(query)
+
+
+async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            assists, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            assists DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            deaths, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            deaths DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            kd_ratio, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            kd_ratio DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            kr_ratio, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            kr_ratio DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_dpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            dpr_ratio, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            dpr_ratio DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            triple_kills, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            triple_kills DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            quadro_kills, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            quadro_kills DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            penta_kills, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            penta_kills DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            quadro_kills, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            quadro_kills DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            headshot_percentage, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            headshot_percentage DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            headshots, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            headshots DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            mvps, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            mvps DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            (finished_at - started_at) DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+
+async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            total_rounds, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            total_rounds DESC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    elif from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    return await db.fetch("""
+        SELECT
+            kd_ratio, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            kd_ratio ASC LIMIT {3}
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+
+async def add_record(args):
+    await db.execute("""
+    INSERT INTO 
+                faceit_records (match_id, guild_id, faceit_guid, win ,player_team_rank, player_team_first_half_score, 
+                player_team_second_half_score, player_team_overtime_score, started_at, finished_at, added, kills, assists, 
+                deaths, headshots, headshot_percentage, mvps, triple_kills, quadro_kills, penta_kills, kd_ratio, kr_ratio, 
+                dpr_ratio, total_rounds, match_length_seconds)
+    VALUES 
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)""", *args)  # This POS wouldn't insert without specifying each field..'

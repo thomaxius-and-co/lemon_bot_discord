@@ -4,8 +4,8 @@ import random
 async def get_highlights(player, match_stats, match_details, player_team, enemy_team):
     match_length = int(match_details.get("finished_at")) - int(match_details.get("started_at"))
     match_length = match_length / int(
-        match_stats[0].get("best_of"))  # Best of 3 matches are count as one match length..
-    rounds = int(match_stats[0].get("round_stats").get("Rounds"))
+        match_stats.get("best_of"))  # Best of 3 matches are count as one match length..
+    rounds = int(match_stats.get("round_stats").get("Rounds"))
 
     player_team_total_kills = await get_team_total_kills(player_team)
     enemy_team_total_kills = await get_team_total_kills(enemy_team)
