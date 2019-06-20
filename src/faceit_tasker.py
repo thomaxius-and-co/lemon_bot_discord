@@ -52,7 +52,7 @@ async def check_faceit_elo(client):
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
                     channel = client.get_channel(channel_id)
                     log.info("Notifying channel %s", channel.id)
-                    matches = await get_matches(player_guid, to_utc(player_stats['changed']).timestamp())
+                    matches = await get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
                     matches = await get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_guid, matches)
@@ -197,7 +197,6 @@ async def get_record_string(player_guid, guild_id, matches):
     for record in current_records.values():
         record_item = record.get("record_item") # This is the item that comes from the DB
         if record_item:
-            record_condition = record.get("condition")
             record_value = record_item[0][0]
             record_holder_guid = record_item[0]['faceit_guid']
             record_holder_name = record_item[0]['faceit_nickname']
@@ -206,17 +205,14 @@ async def get_record_string(player_guid, guild_id, matches):
                 previous_record_value = record_item[1][0]
                 if previous_record_value == record_value:
                     continue # Don't spam if record is same as before
-
-                previous_record_holder_guid = record_item[1]['faceit_guid']
                 previous_record_holder_name = record_item[1]['faceit_nickname']
-                previous_record_string = "(previous record: %s by %s)" % (previous_record_value, previous_record_holder_name)
+                previous_record_string = "(previous record: **%s** by **%s**)" % (previous_record_value, previous_record_holder_name)
             else:
                 previous_record_string = ""
             record_message = record.get("message")
-            record_identifier = record.get("identifier")
             if player_guid == record_holder_guid and record_match_finished_at >= earliest_match_timestamp:
                 if record_string:
-                    record_string += "%s (%s) %s\n" % (record_message, record_value, previous_record_string)
+                    record_string += "**%s** (%s) %s\n" % (record_message, record_value, previous_record_string)
                 else:
                     record_string = "**%s** broke the following records: **%s** (%s) %s\n" % (record_holder_name, record_message, record_value, previous_record_string)
 
