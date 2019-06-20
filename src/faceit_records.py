@@ -97,7 +97,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_DPR_RATIO': {
             'record_title': 'Most deaths per round in a match',
-            'record_item': await faceit_db.top_dpr(guild_id, minimum_requirement=1),
+            'record_item': await faceit_db.top_dpr(guild_id, minimum_requirement=0.5),
             'condition': '>',
             'minimum_requirement': 0.5,
             'identifier': 'dpr_ratio',
