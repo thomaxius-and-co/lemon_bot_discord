@@ -22,9 +22,9 @@ async def exec(log, tx):
             triple_kills integer,
             quadro_kills integer,
             penta_kills integer,
-            kd_ratio numeric(10,2),
-            kr_ratio numeric(10,2),
-            dpr_ratio numeric(10,2),
+            kd_ratio numeric(4,2),
+            kr_ratio numeric(4,2),
+            dpr_ratio numeric(4,2),
             total_rounds integer, 
             match_length_seconds integer
             );

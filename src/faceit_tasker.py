@@ -82,105 +82,105 @@ async def get_records_by_guild(guild_id):
     records = {
         'MOST_KILLS': {
             'message': 'Most kills in a match',
-            'record_item': await faceit_db.top_kills(guild_id),
+            'record_item': await faceit_db.top_kills(guild_id, minimum_requirement=20),
             'condition': '>',
             'minimum_requirement': 20,
             'identifier': 'kills'
         },
         'MOST_ASSISTS': {
             'message': 'Most assists in a match',
-            'record_item': await faceit_db.top_assists(guild_id),
+            'record_item': await faceit_db.top_assists(guild_id, minimum_requirement=5),
             'condition': '>',
             'minimum_requirement': 5,
             'identifier': 'assists'
         },
         'MOST_DEATHS': {
             'message': 'Most deaths in a match',
-            'record_item': await faceit_db.top_deaths(guild_id),
+            'record_item': await faceit_db.top_deaths(guild_id, minimum_requirement=20),
             'condition': '>',
             'minimum_requirement': 20,
             'identifier': 'deaths'
         },
         'MOST_HEADSHOTS': {
             'message': 'Most headshots in a match',
-            'record_item': await faceit_db.top_headshots(guild_id),
+            'record_item': await faceit_db.top_headshots(guild_id, minimum_requirement=10),
             'condition': '>',
             'minimum_requirement': 10,
             'identifier': 'headshots'
         },
         'BIGGEST_HEADSHOT_PERCENTAGE': {
             'message': 'Biggest headshot percentage',
-            'record_item': await faceit_db.top_headshot_percentage(guild_id),
+            'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50),
             'condition': '>',
             'minimum_requirement': 50,
             'identifier': 'headshot_percentage'
         },
         'MOST_MVPS': {
             'message': 'Most mvps in a match',
-            'record_item': await faceit_db.top_mvps(guild_id),
+            'record_item': await faceit_db.top_mvps(guild_id, minimum_requirement=5),
             'condition': '>',
             'minimum_requirement': 5,
             'identifier': 'mvps'
         },
         'MOST_TRIPLE_KILLS': {
             'message': 'Most triple kills in a match',
-            'record_item': await faceit_db.top_triple_kills(guild_id),
+            'record_item': await faceit_db.top_triple_kills(guild_id, minimum_requirement=3),
             'condition': '>',
-            'minimum_requirement': 1,
+            'minimum_requirement': 3,
             'identifier': 'triple_kills'
         },
         'MOST_QUADRO_KILLS': {
             'message': 'Most quadro kills in a match',
-            'record_item': await faceit_db.top_quadro_kills(guild_id),
+            'record_item': await faceit_db.top_quadro_kills(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'quadro_kills'
         },
         'MOST_PENTA_KILLS': {
             'message': 'Most penta kills in a match',
-            'record_item': await faceit_db.top_penta_kills(guild_id),
+            'record_item': await faceit_db.top_penta_kills(guild_id, minimum_requirement=0),
             'condition': '>',
-            'minimum_requirement': 1,
+            'minimum_requirement': 0,
             'identifier': 'penta_kills'
         },
         'BIGGEST_KD_RATIO': {
             'message': 'Biggest kd ratio in a match',
-            'record_item': await faceit_db.top_kdr(guild_id),
+            'record_item': await faceit_db.top_kdr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'kd_ratio'
         },
         'BIGGEST_KR_RATIO': {
             'message': 'Biggest kills per round ratio in a match',
-            'record_item': await faceit_db.top_kpr(guild_id),
+            'record_item': await faceit_db.top_kpr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'kr_ratio'
         },
         'BIGGEST_DPR_RATIO': {
             'message': 'Most deaths per round in a match',
-            'record_item': await faceit_db.top_dpr(guild_id),
+            'record_item': await faceit_db.top_dpr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 0.5,
             'identifier': 'dpr_ratio'
         },
         'LONGEST_MATCH_ROUNDS': {
             'message': 'Longest match by rounds',
-            'record_item': await faceit_db.match_most_rounds(guild_id),
+            'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30),
             'condition': '>',
             'minimum_requirement': 30,
             'identifier': 'total_rounds'
         },
         'LONGEST_MATCH_SECONDS': {
-            'message': 'Longest match by rounds',
-            'record_item': await faceit_db.match_most_rounds(guild_id),
+            'message': 'Longest match by seconds',
+            'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=3600),
             'condition': '>',
             'minimum_requirement': 3600,
             'identifier': 'match_length_seconds'
         },
         'WORST_KD_RATIO': {
             'message': 'Worst kd ratio in a match',
-            'record_item': await faceit_db.worst_kd_ratio(guild_id),
+            'record_item': await faceit_db.worst_kd_ratio(guild_id, minimum_requirement=0.5),
             'minimum_requirement': 0.5,
             'condition': '<',
             'identifier': 'kr_ratio_worst'
@@ -190,18 +190,15 @@ async def get_records_by_guild(guild_id):
 
 
 async def get_record_string(player_guid, guild_id, matches):
-    matches_sorted_by_time = sorted(matches.values(), reverse=True, key=lambda x: int(x.get("match_details").get("finished_at")))
-    latest_match_timestamp = int(matches_sorted_by_time[0].get("match_details").get("finished_at"))
+    matches_sorted_by_time = sorted(matches.values(), reverse=True, key=lambda x: int(x.get("match_details").get("started_at")))
+    earliest_match_timestamp = int(matches_sorted_by_time[-1].get("match_details").get("started_at"))
     current_records = await get_records_by_guild(guild_id)
     record_string = ""
     for record in current_records.values():
         record_item = record.get("record_item") # This is the item that comes from the DB
         if record_item:
-            record_minimum_requirement = record.get("minimum_requirement")
             record_condition = record.get("condition")
             record_value = record_item[0][0]
-            if (record_condition == '>' and not (record_value > record_minimum_requirement)) or (record_condition == '<' and not (record_value > record_minimum_requirement)):
-                continue
             record_holder_guid = record_item[0]['faceit_guid']
             record_holder_name = record_item[0]['faceit_nickname']
             record_match_finished_at = record_item[0]['finished_at']
@@ -217,11 +214,11 @@ async def get_record_string(player_guid, guild_id, matches):
                 previous_record_string = ""
             record_message = record.get("message")
             record_identifier = record.get("identifier")
-            if player_guid == record_holder_guid and latest_match_timestamp >= record_match_finished_at:
+            if player_guid == record_holder_guid and record_match_finished_at >= earliest_match_timestamp:
                 if record_string:
                     record_string += "%s (%s) %s\n" % (record_message, record_value, previous_record_string)
                 else:
-                    record_string = "%s broke the following records: %s (%s) %s\n" % (record_holder_name, record_message, record_value, previous_record_string)
+                    record_string = "**%s** broke the following records: **%s** (%s) %s\n" % (record_holder_name, record_message, record_value, previous_record_string)
 
 
     return record_string
@@ -262,10 +259,10 @@ async def handle_records(player_guid, matches_dict, guild_id):
                     triple_kills = int(player.get("player_stats").get("Triple Kills"))
                     quadro_kills = int(player.get("player_stats").get("Quadro Kills"))
                     penta_kills = int(player.get("player_stats").get("Penta Kills"))
-                    kd_ratio =  float(format(float(player.get("player_stats").get("K/D Ratio")), '.2f'))
-                    kr_ratio =  float(format(float(player.get("player_stats").get("K/R Ratio")), '.2f'))
-                    dpr_ratio = int(player.get("player_stats").get("Deaths")) / rounds
-                    total_rounds =  rounds
+                    kd_ratio = round(float(player.get("player_stats").get("K/D Ratio")),2)
+                    kr_ratio = round(float(player.get("player_stats").get("K/R Ratio")),2)
+                    dpr_ratio = round((int(player.get("player_stats").get("Deaths")) / rounds),2)
+                    total_rounds = rounds
                     match_length_seconds: match_length_seconds
 
                     PLAYER_STAT_VALUES = {
@@ -285,7 +282,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         'match_length_seconds': match_length_seconds,
                         'kr_ratio_worst': kr_ratio,
                     }
-
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,
                             player_team_second_half_score, player_team_overtime_score, started_at, finished_at, added_timestamp,
                             kills, assists, deaths, headshots, headshot_percentage, mvps, triple_kills, quadro_kills,
@@ -307,7 +303,7 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         else:
                             record_minimum_requirement = record.get("minimum_requirement")
                             if (record_condition == '>' and stat > record_minimum_requirement) or (record_condition == '<' and stat > record_minimum_requirement):
-                                log.info("New record: %s, value %s" % (record_identifier, stat))
+                                log.info("New record: %s, value %s made by %s" % (record_identifier, stat, player_guid))
                                 await faceit_db.add_record(args)
                                 break # If only one record is broken, it is already enough for adding an item
 
@@ -354,15 +350,15 @@ async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before
         util.threadsafe(client, client.send_message(channel, msg[:2000]))
         return
     elif current_elo > elo_before:
-        msg = '**%s%s** gained **%s** elo! (%s -> %s)\n%s' % (
+        msg = '**%s%s** gained **%s** elo! (%s -> %s)\n%s\n%s' % (
             faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
-            match_info_string)
+            match_info_string, record_string)
         util.threadsafe(client, client.send_message(channel, msg[:2000]))
         return
     elif elo_before > current_elo:
-        msg = '**%s%s** lost **%s** elo! (%s -> %s)\n%s' % (
+        msg = '**%s%s** lost **%s** elo! (%s -> %s)\n%s\n%s' % (
             faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
-            match_info_string)
+            match_info_string, record_string)
         util.threadsafe(client, client.send_message(channel, msg[:2000]))
         return
 
@@ -734,4 +730,4 @@ class PlayerStats:
 #     #     print(match_stats_string)
 #
 # loop = asyncio.get_event_loop()
-# loop.run_until_complete(test("e6234673-9422-4517-a9f4-7722b57cfdf5",1560377896))
+# loop.run_until_complete(test("e6234673-9422-4517-a9f4-7722b57cfdf5",1560955392))
