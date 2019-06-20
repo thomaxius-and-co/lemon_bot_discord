@@ -9,6 +9,7 @@ import columnmaker
 from time_util import as_helsinki, to_utc, as_utc, to_helsinki
 from datetime import datetime, timedelta
 import faceit_common as fc
+import faceit_records as fr
 
 log = logger.get("FACEIT_COMMANDS")
 
@@ -190,6 +191,9 @@ async def cmd_faceit_commands(client, message, arg):
     elif arg == 'aliases':
         await cmd_show_aliases(client, message, secondarg)
         return
+    elif arg == 'records':
+        await cmd_show_records(client, message, secondarg)
+        return
     else:
         await client.send_message(message.channel, infomessage)
         return
@@ -213,6 +217,25 @@ async def cmd_show_aliases(client, message, faceit_nickname):
                         faceit_nickname))
                     return
     await client.send_message(message.channel, "No such player in the server, use !faceit listusers.")
+
+
+async def cmd_show_records(client, message, _):
+    guild_records = await fr.get_records_by_guild(message.server.id)
+    records_as_tuples = []
+    for record in guild_records.values():
+        record_item = record.get("record_item")
+        record_title = record.get("record_title")
+        record_minimum_requirement = record.get("minimum_requirement")
+        if record_item:
+            record_value = record_item[0][0]
+            record_holder = record_item[0]['faceit_nickname']
+            record_date = datetime.utcfromtimestamp(record_item[0]['finished_at']).strftime('%Y-%m-%d')
+            item = record_title, record_value, record_holder, record_date
+        else:
+            item = record_title, record_minimum_requirement, "-", "-"
+        records_as_tuples.append(item)
+    records_as_tuples = sorted(records_as_tuples, reverse=True, key=lambda x: x[3])
+    await client.send_message(message.channel, "```" + columnmaker.columnmaker(["Record name", "Value", "Record holder", "Record date"], records_as_tuples) + "```")
 
 
 async def cmd_add_faceit_channel(client, message, arg):

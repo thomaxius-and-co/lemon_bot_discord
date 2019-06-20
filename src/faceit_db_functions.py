@@ -253,7 +253,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
     query = """
         SELECT
@@ -276,7 +276,7 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -298,7 +298,7 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND deaths > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -320,7 +320,7 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -342,7 +342,7 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND kr_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -364,7 +364,7 @@ async def top_dpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND dpr_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -386,7 +386,7 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND triple_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -408,7 +408,7 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND quadro_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -430,9 +430,9 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND penta_kills > {0}".format(minimum_requirement)
-    return await db.fetch("""
+    query = """
         SELECT
             penta_kills, faceit_guid, faceit_nickname, finished_at
         FROM
@@ -443,7 +443,8 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             penta_kills DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, guild_id, additional_parameters_string, limit)
+    return await db.fetch(query)
 
 
 async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -452,7 +453,7 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND headshot_percentage > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -474,7 +475,7 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND headshots > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -496,7 +497,7 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND mvps > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -518,7 +519,7 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND finished_at - started_at > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
@@ -538,7 +539,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         minimum_rounds = minimum_requirement
     return await db.fetch("""
         SELECT
@@ -559,7 +560,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement:
+    elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio < {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT
