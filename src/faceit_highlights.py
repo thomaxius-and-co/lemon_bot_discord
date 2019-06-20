@@ -90,13 +90,13 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'TOP_FRAGGER_LOWEST_LEVEL_IN_MATCH': {
                         'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
-                        'description': "**%s** was the top fragger even though he was the lowest level (%s) in the match" % (player.faceit_level, player.nickname),
+                        'description': "**%s** was the top fragger even though he was the lowest level (%s) in the match" % (player.nickname, player.faceit_level),
                         'priority': 90,
                         'priority_multiplier': player.kd_ratio
                         },
         'BOTTOM_FRAGGER_HIGHEST_LEVEL_IN_MATCH': {
                         'condition': await is_match_topfragger_but_lowest_level(player, player_team, enemy_team),
-                        'description': "**%s** was the bottom fragger even though he was the highest level (%s) in the match" % (player.faceit_level, player.nickname),
+                        'description': "**%s** was the bottom fragger even though he was the highest level (%s) in the match" % (player.nickname, player.faceit_level),
                         'priority': 90,
                         'priority_multiplier': 1 + (player.deaths / 50)
                         },
@@ -297,6 +297,8 @@ async def is_match_bottomfragger_but_highest_level(player, player_team, enemy_te
         return False
     match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
     match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    if match_players_by_kills[-1].faceit_level == match_players_by_kills[-2].faceit_level: # Two bottomfraggers have the same level
+        return False
     return (match_players_by_level[0].guid == player.guid) and (match_players_by_kills[-1].guid == player.guid)
 
 

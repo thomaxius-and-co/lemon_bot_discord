@@ -254,7 +254,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
     elif minimum_requirement is not None:
-        additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
+        additional_parameters_string += " AND kills > {0}".format(minimum_requirement)
     query = """
         SELECT
             kills, faceit_guid, faceit_nickname, finished_at
@@ -526,6 +526,8 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
             finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at
         FROM
             faceit_records
+        JOIN
+            faceit_player using(faceit_guid)
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY

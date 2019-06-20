@@ -226,12 +226,17 @@ async def cmd_show_records(client, message, _):
         record_item = record.get("record_item")
         record_title = record.get("record_title")
         record_minimum_requirement = record.get("minimum_requirement")
+        record_function = record.get("function")
         if record_item:
             record_value = record_item[0][0]
+            if record_function:
+                record_value = await record_function(record_value)
             record_holder = record_item[0]['faceit_nickname']
             record_date = datetime.utcfromtimestamp(record_item[0]['finished_at']).strftime('%Y-%m-%d')
             item = record_title, record_value, record_holder, record_date
         else:
+            if record_function:
+                record_minimum_requirement = await record_function(record_minimum_requirement)
             item = record_title, record_minimum_requirement, "-", "-"
         records_as_tuples.append(item)
     records_as_tuples = sorted(records_as_tuples, reverse=True, key=lambda x: x[3])

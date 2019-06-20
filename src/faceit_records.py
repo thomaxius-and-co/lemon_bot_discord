@@ -12,109 +12,129 @@ async def get_records_by_guild(guild_id):
             'record_item': await faceit_db.top_kills(guild_id, minimum_requirement=20),
             'condition': '>',
             'minimum_requirement': 20,
-            'identifier': 'kills'
+            'identifier': 'kills',
+            'function': None
         },
         'MOST_ASSISTS': {
             'record_title': 'Most assists in a match',
             'record_item': await faceit_db.top_assists(guild_id, minimum_requirement=5),
             'condition': '>',
             'minimum_requirement': 5,
-            'identifier': 'assists'
+            'identifier': 'assists',
+            'function': None
         },
         'MOST_DEATHS': {
             'record_title': 'Most deaths in a match',
             'record_item': await faceit_db.top_deaths(guild_id, minimum_requirement=20),
             'condition': '>',
             'minimum_requirement': 20,
-            'identifier': 'deaths'
+            'identifier': 'deaths',
+            'function': None
         },
         'MOST_HEADSHOTS': {
             'record_title': 'Most headshots in a match',
             'record_item': await faceit_db.top_headshots(guild_id, minimum_requirement=10),
             'condition': '>',
             'minimum_requirement': 10,
-            'identifier': 'headshots'
+            'identifier': 'headshots',
+            'function': None
         },
         'BIGGEST_HEADSHOT_PERCENTAGE': {
             'record_title': 'Biggest headshot percentage',
             'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50),
             'condition': '>',
             'minimum_requirement': 50,
-            'identifier': 'headshot_percentage'
+            'identifier': 'headshot_percentage',
+            'function': None
         },
         'MOST_MVPS': {
             'record_title': 'Most mvps in a match',
             'record_item': await faceit_db.top_mvps(guild_id, minimum_requirement=5),
             'condition': '>',
             'minimum_requirement': 5,
-            'identifier': 'mvps'
+            'identifier': 'mvps',
+            'function': None
         },
         'MOST_TRIPLE_KILLS': {
             'record_title': 'Most triple kills in a match',
             'record_item': await faceit_db.top_triple_kills(guild_id, minimum_requirement=3),
             'condition': '>',
             'minimum_requirement': 3,
-            'identifier': 'triple_kills'
+            'identifier': 'triple_kills',
+            'function': None
         },
         'MOST_QUADRO_KILLS': {
             'record_title': 'Most quadro kills in a match',
             'record_item': await faceit_db.top_quadro_kills(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
-            'identifier': 'quadro_kills'
+            'identifier': 'quadro_kills',
+            'function': None
         },
         'MOST_PENTA_KILLS': {
             'record_title': 'Most penta kills in a match',
             'record_item': await faceit_db.top_penta_kills(guild_id, minimum_requirement=0),
             'condition': '>',
             'minimum_requirement': 0,
-            'identifier': 'penta_kills'
+            'identifier': 'penta_kills',
+            'function': None
         },
         'BIGGEST_KD_RATIO': {
             'record_title': 'Biggest kd ratio in a match',
             'record_item': await faceit_db.top_kdr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
-            'identifier': 'kd_ratio'
+            'identifier': 'kd_ratio',
+            'function': None
         },
         'BIGGEST_KR_RATIO': {
             'record_title': 'Biggest kills per round ratio in a match',
             'record_item': await faceit_db.top_kpr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 1,
-            'identifier': 'kr_ratio'
+            'identifier': 'kr_ratio',
+            'function': None
         },
         'BIGGEST_DPR_RATIO': {
             'record_title': 'Most deaths per round in a match',
             'record_item': await faceit_db.top_dpr(guild_id, minimum_requirement=1),
             'condition': '>',
             'minimum_requirement': 0.5,
-            'identifier': 'dpr_ratio'
+            'identifier': 'dpr_ratio',
+            'function': None
         },
         'LONGEST_MATCH_ROUNDS': {
             'record_title': 'Longest match by rounds',
             'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30),
             'condition': '>',
             'minimum_requirement': 30,
-            'identifier': 'total_rounds'
+            'identifier': 'total_rounds',
+            'function': None
         },
         'LONGEST_MATCH_SECONDS': {
-            'record_title': 'Longest match by seconds',
-            'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=3600),
+            'record_title': 'Longest match by time',
+            'record_item': await faceit_db.longest_match(guild_id, minimum_requirement=3000),
             'condition': '>',
-            'minimum_requirement': 3600,
-            'identifier': 'match_length_seconds'
+            'minimum_requirement': 3000,
+            'identifier': 'match_length_seconds',
+            'function': get_length_string
         },
         'WORST_KD_RATIO': {
             'record_title': 'Worst kd ratio in a match',
             'record_item': await faceit_db.worst_kd_ratio(guild_id, minimum_requirement=0.5),
             'minimum_requirement': 0.5,
             'condition': '<',
-            'identifier': 'kr_ratio_worst'
+            'identifier': 'kr_ratio_worst',
+            'function': None
         },
     }
     return records
 
+
+async def get_length_string(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
 async def get_record_string(player_guid, guild_id, matches):
     matches_sorted_by_time = sorted(matches.values(), reverse=True, key=lambda x: int(x.get("match_details").get("started_at")))
