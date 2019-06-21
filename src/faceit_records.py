@@ -95,14 +95,6 @@ async def get_records_by_guild(guild_id):
             'identifier': 'kr_ratio',
             'function': None
         },
-        'BIGGEST_DPR_RATIO': {
-            'record_title': 'Most deaths per round in a match',
-            'record_item': await faceit_db.top_dpr(guild_id, minimum_requirement=0.5),
-            'condition': '>',
-            'minimum_requirement': 0.5,
-            'identifier': 'dpr_ratio',
-            'function': None
-        },
         'LONGEST_MATCH_ROUNDS': {
             'record_title': 'Longest match by rounds',
             'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30),
@@ -127,14 +119,49 @@ async def get_records_by_guild(guild_id):
             'identifier': 'kr_ratio_worst',
             'function': None
         },
+        'BIGGEST_COMEBACK': {
+            'record_title': 'Biggest comeback in a match',
+            'record_item': await faceit_db.biggest_comeback(guild_id, minimum_requirement=3),
+            'minimum_requirement': 3,
+            'condition': '>',
+            'identifier': 'team_comeback',
+            'function': get_match_string
+        },
+        'BIGGEST_CHOKE': {
+            'record_title': 'Biggest choke in a match',
+            'record_item': await faceit_db.biggest_choke(guild_id, minimum_requirement=3),
+            'minimum_requirement': 3,
+            'condition': '>',
+            'identifier': 'team_choke',
+            'function': get_match_string
+        },
+        'WIN_BAD_STATS': {
+            'record_title': 'Match won with the worst kd ratio',
+            'record_item': await faceit_db.worst_stats_win(guild_id, minimum_requirement=0.5),
+            'minimum_requirement': 0.5,
+            'condition': '<',
+            'identifier': 'win_bad_stats',
+            'function': None
+        }
     }
     return records
 
 
-async def get_length_string(seconds):
+async def get_match_string(db_records, index=0):
+    if type(db_records) != list:
+        return "" # Bubblegum solution cause sometimes I need to call this without a list of db records..
+    return db_records[index]['additional_data']
+
+
+async def get_length_string(db_records=None, index=0):
+    if type(db_records) != list:  # Bubblebum fix cause sometimes this is called without a list of db records..
+        seconds = db_records
+    else:
+        seconds = db_records[index]['match_length']
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return '{:d}:{:02d}:{:02d}'.format(h, m, s)
+
 
 async def get_record_string(player_guid, guild_id, matches):
     matches_sorted_by_time = sorted(matches.values(), reverse=True, key=lambda x: int(x.get("match_details").get("started_at")))
@@ -145,23 +172,35 @@ async def get_record_string(player_guid, guild_id, matches):
         record_item = record.get("record_item") # This is the item that comes from the DB
         if record_item:
             record_value = record_item[0][0]
+            previous_record_value = record_item[1][0] if len(record_item) > 1 else None
+            previous_record_string = ""
+            record_function = record.get("function")
+            record_additional_string = record_value
+
+            if record_function:
+                record_additional_string = await record_function(record_item)
+
             record_holder_guid = record_item[0]['faceit_guid']
             record_holder_name = record_item[0]['faceit_nickname']
             record_match_finished_at = record_item[0]['finished_at']
-            if len(record_item) > 1:
-                previous_record_value = record_item[1][0]
-                if previous_record_value == record_value:
-                    continue # Don't spam if record is same as before
-                previous_record_holder_name = record_item[1]['faceit_nickname']
-                previous_record_string = "(previous record: **%s** by **%s**)" % (previous_record_value, previous_record_holder_name)
-            else:
-                previous_record_string = ""
             record_title = record.get("record_title")
+
             if player_guid == record_holder_guid and record_match_finished_at >= earliest_match_timestamp:
                 if record_string:
-                    record_string += "**%s** (%s) %s\n" % (record_title, record_value, previous_record_string)
+                    record_string += "\n**%s** (%s)" % (record_title, record_additional_string)
                 else:
-                    record_string = "**%s** broke the following records: **%s** (%s) %s\n" % (record_holder_name, record_title, record_value, previous_record_string)
+                    record_string = "**%s** broke the following records: **%s** (%s)" % (record_holder_name, record_title, record_additional_string)
+                    if previous_record_value:
+                        previous_record_additional_string = previous_record_value
+                        previous_record_holder_name = record_item[1]['faceit_nickname']
+                        if record_function:
+                            previous_record_additional_string = await record_function(record_item, 1)
+                        if previous_record_value == record_value:
+                            previous_record_string += " (tied with %s)" % previous_record_holder_name
+                            continue
+                        record_string += " (previous record: **%s** by **%s**)" % (
+                        previous_record_additional_string, previous_record_holder_name)
+
 
 
     return record_string
@@ -190,12 +229,19 @@ async def handle_records(player_guid, matches_dict, guild_id):
             players = team.get("players")
             for player in players:
                 if player.get("player_id") == player_guid: # If player is in this team
-                    added_timestamp = datetime.datetime.now()
+                    added_timestamp = datetime.now()
+                    player_team = teams.pop(teams.index(team))
+                    enemy_team = teams[0]
                     win = True if int(team.get("team_stats").get("Team Win")) == 1 else False
                     player_team_rank = await get_player_rank_in_team(players, player)
-                    player_team_first_half_score = int(team.get("team_stats").get("First Half Score"))
-                    player_team_second_half_score = int(team.get("team_stats").get("Second Half Score"))
-                    player_team_overtime_score = int(team.get("team_stats").get("Overtime score"))
+
+                    player_team_first_half_score = int(player_team.get("team_stats").get("First Half Score"))
+                    player_team_second_half_score = int(player_team.get("team_stats").get("Second Half Score"))
+                    player_team_overtime_score = int(player_team.get("team_stats").get("Overtime score"))
+                    enemy_team_first_half_score = int(enemy_team.get("team_stats").get("First Half Score"))
+                    enemy_team_second_half_score = int(enemy_team.get("team_stats").get("Second Half Score"))
+                    enemy_team_overtime_score = int(enemy_team.get("team_stats").get("Overtime score"))
+
                     kills = int(player.get("player_stats").get("Kills"))
                     assists = int(player.get("player_stats").get("Assists"))
                     deaths = int(player.get("player_stats").get("Deaths"))
@@ -209,46 +255,110 @@ async def handle_records(player_guid, matches_dict, guild_id):
                     kr_ratio = round(float(player.get("player_stats").get("K/R Ratio")),2)
                     dpr_ratio = round((int(player.get("player_stats").get("Deaths")) / rounds),2)
                     total_rounds = rounds
-                    match_length_seconds: match_length_seconds
 
                     PLAYER_STAT_VALUES = {
-                        'kills': kills,
-                        'assists': assists,
-                        'deaths': deaths,
-                        'headshots': headshots,
-                        'headshot_percentage': headshot_percentage,
-                        'mvps': mvps,
-                        'triple_kills': triple_kills,
-                        'quadro_kills': quadro_kills,
-                        'penta_kills': penta_kills,
-                        'kd_ratio': kd_ratio,
-                        'kr_ratio': kr_ratio,
-                        'dpr_ratio': dpr_ratio,
-                        'total_rounds': total_rounds,
-                        'match_length_seconds': match_length_seconds,
-                        'kr_ratio_worst': kr_ratio,
+                        'kills': {
+                            'value': kills,
+                            'condition': None
+                        },
+                        'assists': {
+                            'value': assists,
+                            'condition': None
+                        },
+                        'deaths': {
+                            'value': deaths,
+                            'condition': None
+                        },
+                        'headshots': {
+                            'value': headshots,
+                            'condition': None
+                        },
+                        'headshot_percentage': {
+                            'value': headshot_percentage,
+                            'condition': None
+                        },
+                        'mvps': {
+                            'value': mvps,
+                            'condition': None
+                        },
+                        'triple_kills': {
+                            'value': triple_kills,
+                            'condition': None
+                        },
+                        'quadro_kills': {
+                            'value': quadro_kills,
+                            'condition': None
+                        },
+                        'penta_kills': {
+                            'value': penta_kills,
+                            'condition': None
+                        },
+                        'kd_ratio': {
+                            'value': kd_ratio,
+                            'condition': None
+                        },
+                        'kr_ratio': {
+                            'value': kr_ratio,
+                            'condition': None
+                        },
+                        'total_rounds': {
+                            'value': total_rounds,
+                            'condition': None
+                        },
+                        'match_length_seconds': {
+                            'value': match_length_seconds,
+                            'condition': None
+                        },
+                        'kr_ratio_worst': {
+                            'value': kr_ratio,
+                            'condition': None
+                        },
+                        'team_choke': {
+                            'value': player_team_first_half_score - enemy_team_first_half_score,
+                            'condition': win is False and player_team_first_half_score > enemy_team_first_half_score
+                        },
+                        'team_comeback': {
+                            'value': enemy_team_first_half_score - player_team_first_half_score,
+                            'condition': win is True and player_team_first_half_score < enemy_team_first_half_score
+                        },
+                        'win_bad_stats': {
+                            'value': kd_ratio,
+                            'condition': win
+                        },
                     }
+
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,
                             player_team_second_half_score, player_team_overtime_score, started_at, finished_at, added_timestamp,
                             kills, assists, deaths, headshots, headshot_percentage, mvps, triple_kills, quadro_kills,
-                            penta_kills, kd_ratio, kr_ratio, dpr_ratio, total_rounds, match_length_seconds]
+                            penta_kills, kd_ratio, kr_ratio, total_rounds, enemy_team_first_half_score,
+                            enemy_team_second_half_score, enemy_team_overtime_score]
+
                     current_records = await get_records_by_guild(guild_id)
-                    for record, stat in zip(current_records.values(), PLAYER_STAT_VALUES.values()):
+                    for record, stat_item in zip(current_records.values(), PLAYER_STAT_VALUES.values()):
                         record_item = record.get("record_item") # This is the item that comes from the DB
                         record_identifier = record.get("identifier")
                         record_condition = record.get("condition")
+                        player_stat_value = stat_item.get("value")
                         if record_item:
                             record_value = record_item[0][0]  # This is the actual record value (eq. most assists)
                             record_holder = record_item[0][1]  # This is the actual record value (eq. most assists)
-                            player_stat = PLAYER_STAT_VALUES.get(record_identifier)
-                            if (record_condition == '>' and player_stat > record_value) or ((record_condition == '<' and player_stat < record_value)):
+                            player_stat_item = PLAYER_STAT_VALUES.get(record_identifier)
+
+                            condition_fullfilled = player_stat_item.get("condition")
+                            if condition_fullfilled is None or not condition_fullfilled:
+                                continue
+                            if (record_condition == '>' and (player_stat_value > record_value)) or (record_condition == '<' and (player_stat_value < record_value)):
                                 log.info("record %s broken, previous record %s by %s" % (record_identifier, record_value, record_holder))
+                                await faceit_db.add_record(args)
+                                break # If only one record is broken, it is already enough for adding an item
+                            if player_stat_value == record_value:
+                                log.info("record %s tied, previous record %s by %s" % (record_identifier, record_value, record_holder))
                                 await faceit_db.add_record(args)
                                 break # If only one record is broken, it is already enough for adding an item
 
                         else:
                             record_minimum_requirement = record.get("minimum_requirement")
-                            if (record_condition == '>' and stat > record_minimum_requirement) or (record_condition == '<' and stat > record_minimum_requirement):
-                                log.info("New record: %s, value %s made by %s" % (record_identifier, stat, player_guid))
+                            if (record_condition == '>' and (player_stat_value > record_minimum_requirement)) or (record_condition == '<' and (player_stat_value < record_minimum_requirement)):
+                                log.info("New record: %s, value %s made by %s" % (record_identifier, player_stat_value, player_guid))
                                 await faceit_db.add_record(args)
                                 break # If only one record is broken, it is already enough for adding an item

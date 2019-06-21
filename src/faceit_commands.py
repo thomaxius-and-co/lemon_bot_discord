@@ -230,7 +230,7 @@ async def cmd_show_records(client, message, _):
         if record_item:
             record_value = record_item[0][0]
             if record_function:
-                record_value = await record_function(record_value)
+                record_value = await record_function(record_item)
             record_holder = record_item[0]['faceit_nickname']
             record_date = datetime.utcfromtimestamp(record_item[0]['finished_at']).strftime('%Y-%m-%d')
             item = record_title, record_value, record_holder, record_date
