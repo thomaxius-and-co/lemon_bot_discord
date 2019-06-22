@@ -83,6 +83,9 @@ async def match_stats(match_id):
 
 
 async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, limit=100):
+    log.info("timestamp: %s" % from_timestamp)
+    from_timestamp = int(from_timestamp)
+    log.info("timestamp2: %s" % from_timestamp)
     if to_timestamp:
         to_timestamp_param = "&to={0}".format(to_timestamp)
     else:

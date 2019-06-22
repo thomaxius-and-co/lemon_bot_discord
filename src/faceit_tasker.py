@@ -59,7 +59,7 @@ async def check_faceit_elo(client):
                     log.info(to_utc(player_stats['changed']))
                     log.info(player_stats['changed'])
                     log.info('logs end')
-                    matches = await fc.get_matches(player_guid, int(player_stats['changed'].timestamp()))
+                    matches = await fc.get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
                     matches = await fc.get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_guid, matches)
@@ -443,9 +443,9 @@ class PlayerStats:
 #
 # async def test(player_guid, timestamp):
 #     print('time at start %s' % datetime.datetime.now())
-#     matches = await get_matches(player_guid, timestamp)
+#     matches = await fc.get_matches(player_guid, timestamp)
 #     print('time at matches %s' % datetime.datetime.now())
-#     matches = await get_combined_match_data(matches)
+#     matches = await fc.get_combined_match_data(matches)
 #     await fr.handle_records(player_guid, matches, "123123132")
 #
 #     print(await fr.get_record_string("d6186bc8-77b8-44be-8bb8-e82007668711", "123123132", matches))
@@ -459,21 +459,21 @@ class PlayerStats:
 #     #     match_stats_string = await get_match_stats_string(player_guid, matches)
 #     #     print('time at here4 %s' % datetime.datetime.now())
 #     #     print(match_stats_string)
-#
-#
-# async def test2(player_guid):
-#     player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
-#     if player_stats:
-#         print('heh')
-#         print(int(to_utc(player_stats['changed']).timestamp()))
-#         print(to_utc(player_stats['changed']).timestamp())
-#         to_utc(player_stats['changed']).timestamp()
-#         print(player_stats['changed'].timestamp())
-#         print('heh')
-#         for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
-#             matches = await get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
-#             print(matches)
-#
-#
+# #
+# #
+# # async def test2(player_guid):
+# #     player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
+# #     if player_stats:
+# #         print('heh')
+# #         print(int(to_utc(player_stats['changed']).timestamp()))
+# #         print(to_utc(player_stats['changed']).timestamp())
+# #         to_utc(player_stats['changed']).timestamp()
+# #         print(player_stats['changed'].timestamp())
+# #         print('heh')
+# #         for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
+# #             matches = await get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
+# #             print(matches)
+# #
+# #
 # loop = asyncio.get_event_loop()
-# loop.run_until_complete(test2("60875fa4-c334-45fa-a634-056df2bb8926"))
+# loop.run_until_complete(test("60875fa4-c334-45fa-a634-056df2bb8926", 0))

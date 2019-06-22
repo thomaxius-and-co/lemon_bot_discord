@@ -322,14 +322,13 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         },
                         'team_comeback': {
                             'value': enemy_team_first_half_score - player_team_first_half_score,
-                            'condition': win is True and player_team_first_half_score < enemy_team_first_half_score
+                            'condition': win is True and enemy_team_first_half_score > player_team_first_half_score
                         },
                         'win_bad_stats': {
                             'value': kd_ratio,
                             'condition': win
                         },
                     }
-
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,
                             player_team_second_half_score, player_team_overtime_score, started_at, finished_at, added_timestamp,
                             kills, assists, deaths, headshots, headshot_percentage, mvps, triple_kills, quadro_kills,

@@ -576,11 +576,11 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
     elif minimum_requirement is not None:
-        additional_parameters_string += " AND (enemy_team_first_half_score - player_team_first_half_score) > {0}".format(minimum_requirement)
+        additional_parameters_string += " AND (enemy_team_first_half_score - player_team_first_half_score) < {0}".format(minimum_requirement)
 
     return await db.fetch("""
         SELECT DISTINCT ON(enemy_team_first_half_score - player_team_first_half_score, faceit_guid) 
-            enemy_team_first_half_score - player_team_first_half_score AS first_half_score_difference, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-', 
+            enemy_team_first_half_score - player_team_first_half_score AS score_difference, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-', 
             enemy_team_first_half_score, ' -> ', player_team_first_half_score + player_team_second_half_score + player_team_overtime_score, '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data
         FROM
