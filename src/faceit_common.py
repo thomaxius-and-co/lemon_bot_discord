@@ -14,6 +14,50 @@ async def do_nick_change_check(guid, api_player_name, database_player_name):
         log.info("No nickname changes detected for user %s " % guid)
         return
 
+async def get_matches(player_guid, from_timestamp, to_timestamp=None):
+    try:
+        return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
+    except NotFound as e:
+        log.error(e)
+        return None
+
+# Combines match stats and match details (from two different api endpoints) to a dict
+async def get_combined_match_data(matches):
+    combined = {}
+    for match in matches:
+        match_id = match.get("match_id")
+        match_details = await get_match_details(match.get("match_id"))
+        if match_details.get("game") != 'csgo':
+            log.info("Match is not csgo, skipping.. %s" % match_details) # Faceit api is so much fun that there aren't
+            # just csgo matches in the csgo endpoints
+            continue
+        elif not match_details:
+            log.info("Match details not available, skipping.. %s" % match_details)
+            continue
+        match_stats = await get_match_stats(match.get("match_id"))
+        if not match_stats:
+            log.info("Match stats not available, skipping.. %s" % match_details)
+            continue
+        combined.update({match_id: {
+                                    'match_details': match_details,
+                                    'match_stats': match_stats[0]
+                                    }
+                        })
+    return combined
+
+async def get_match_details(match_id):
+    try:
+        return await faceit_api.match(match_id)
+    except NotFound as e:
+        log.error(e)
+
+
+async def get_match_stats(match_id):
+    try:
+        return await faceit_api.match_stats(match_id)
+    except NotFound as e:
+        log.error(e)
+
 
 async def get_user_stats_from_api_by_id(player_id):
     try:

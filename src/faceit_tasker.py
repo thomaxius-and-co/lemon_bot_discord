@@ -53,8 +53,14 @@ async def check_faceit_elo(client):
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
                     channel = client.get_channel(channel_id)
                     log.info("Notifying channel %s", channel.id)
-                    matches = await get_matches(player_guid, to_utc(player_stats['changed']).timestamp())
-                    matches = await get_combined_match_data(matches)
+                    log.info('logs:')
+                    log.info(int(to_utc(player_stats['changed']).timestamp()))
+                    log.info(int(player_stats['changed'].timestamp()))
+                    log.info(to_utc(player_stats['changed']))
+                    log.info(player_stats['changed'])
+                    log.info('logs end')
+                    matches = await fc.get_matches(player_guid, int(player_stats['changed'].timestamp()))
+                    matches = await fc.get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_guid, matches)
                         guild_id = channel.server.id
@@ -131,29 +137,6 @@ async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before
         return
 
 
-# Combines match stats and match details (from two different api endpoints) to a dict
-async def get_combined_match_data(matches):
-    combined = {}
-    for match in matches:
-        match_id = match.get("match_id")
-        match_details = await get_match_details(match.get("match_id"))
-        if match_details.get("game") != 'csgo':
-            log.info("Match is not csgo, skipping.. %s" % match_details) # Faceit api is so much fun that there aren't
-            # just csgo matches in the csgo endpoints
-            continue
-        elif not match_details:
-            log.info("Match details not available, skipping.. %s" % match_details)
-            continue
-        match_stats = await get_match_stats(match.get("match_id"))
-        if not match_stats:
-            log.info("Match stats not available, skipping.. %s" % match_details)
-            continue
-        combined.update({match_id: {
-                                    'match_details': match_details,
-                                    'match_stats': match_stats[0]
-                                    }
-                        })
-    return combined
 
 
 async def get_match_stats_string(player_guid, matches_dict):
@@ -175,11 +158,6 @@ async def get_match_stats_string(player_guid, matches_dict):
         return "*" + match_info_string.rstrip("\n") + "*"
 
 
-async def get_match_details(match_id):
-    try:
-        return await faceit_api.match(match_id)
-    except NotFound as e:
-        log.error(e)
         return None
 
 
@@ -187,13 +165,6 @@ async def get_info_strings(match_details, match_stats, player_guid):
     score_string = await get_score_string(match_stats)
     player_stats_string = await get_player_strings(match_stats, match_details, player_guid)
     return score_string, player_stats_string
-
-
-async def get_match_stats(match_id):
-    try:
-        return await faceit_api.match_stats(match_id)
-    except NotFound as e:
-        log.error(e)
 
 
 async def get_score_string(match_stats):
@@ -280,14 +251,6 @@ async def get_match_length_string(match):
     started_at = match.get("started_at")
     finished_at = match.get("finished_at")
     return await get_length_string(finished_at - started_at)
-
-
-async def get_matches(player_guid, from_timestamp, to_timestamp=None):
-    try:
-        return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
-    except NotFound as e:
-        log.error(e)
-        return None
 
 
 async def compare_toplists(client, old_toplist_dict):

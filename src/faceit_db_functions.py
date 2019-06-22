@@ -148,6 +148,19 @@ async def get_faceit_stats_of_player(guid):
         """, guid)
 
 
+async def get_guid_by_nickname(guid):
+    return await db.fetchval("""
+        SELECT
+            faceit_guid
+        FROM
+            faceit_player
+        WHERE
+            faceit_nickname = $1
+        LIMIT
+            1
+        """, guid)
+
+
 async def get_player_current_database_nickname(guid):
     return await db.fetchval("""
         SELECT

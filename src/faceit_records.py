@@ -168,6 +168,7 @@ async def get_record_string(player_guid, guild_id, matches):
     earliest_match_timestamp = int(matches_sorted_by_time[-1].get("match_details").get("started_at"))
     current_records = await get_records_by_guild(guild_id)
     record_string = ""
+    log.info(current_records)
     for record in current_records.values():
         record_item = record.get("record_item") # This is the item that comes from the DB
         if record_item:
@@ -210,7 +211,9 @@ async def get_player_rank_in_team(players_list, player_dict):
 
 
 async def handle_records(player_guid, matches_dict, guild_id):
+    log.info("Checking records..")
     for match in matches_dict.values():
+        log.debug("parsing match %s" % match)
         match_details = match.get("match_details")
         match_stats = match.get("match_stats")
         competition_type = match_details.get("competition_type")
@@ -355,7 +358,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
                                 log.info("record %s tied, previous record %s by %s" % (record_identifier, record_value, record_holder))
                                 await faceit_db.add_record(args)
                                 break # If only one record is broken, it is already enough for adding an item
-
                         else:
                             record_minimum_requirement = record.get("minimum_requirement")
                             if (record_condition == '>' and (player_stat_value > record_minimum_requirement)) or (record_condition == '<' and (player_stat_value < record_minimum_requirement)):

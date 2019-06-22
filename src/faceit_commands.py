@@ -155,6 +155,7 @@ async def cmd_faceit_commands(client, message, arg):
                   "\n<addnick <faceit actual nickname> <faceit custom nickname>" \
                   "\n<toplist>" \
                   "\n<aliases>" \
+                  "\n<records>" \
                   "```"
     if message.channel.is_private:
         await private_faceit_commands(client, message, arg)
@@ -193,6 +194,9 @@ async def cmd_faceit_commands(client, message, arg):
         return
     elif arg == 'records':
         await cmd_show_records(client, message, secondarg)
+        return
+    elif arg == 'parsepastrecords':
+        await cmd_parse_records_of_past_matches(client, message, secondarg)
         return
     else:
         await client.send_message(message.channel, infomessage)
@@ -241,6 +245,36 @@ async def cmd_show_records(client, message, _):
         records_as_tuples.append(item)
     records_as_tuples = sorted(records_as_tuples, reverse=True, key=lambda x: x[3])
     await client.send_message(message.channel, "```" + columnmaker.columnmaker(["Record name", "Value", "Record holder", "Record date"], records_as_tuples) + "```")
+
+
+async def cmd_parse_records_of_past_matches(client, message, arg):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, "You're not allowed to use this command.")
+        return
+    if not arg:
+        await client.send_message(message.channel, "Usage: !faceit parsepastrecords <player nickname> <timestamp>")
+        return
+    args = arg.split(' ',1)
+    if len(args) != 2:
+        await client.send_message(message.channel, "Usage: !faceit parsepastrecords <player nickname> <timestamp>")
+        return
+    nickname, timestamp = args
+    player_guid = await faceit_db.get_guid_by_nickname(nickname)
+    if not player_guid:
+        await client.send_message(message.channel, "Unknown player. Player must be in the database.")
+        return
+
+    message = await client.send_message(message.channel, "Processing..")
+    matches = await fc.get_matches(player_guid, timestamp)
+    matches = await fc.get_combined_match_data(matches)
+    if matches:
+        await fr.handle_records(player_guid, matches, message.server.id)
+        await client.edit_message(message, "%s matches processed for player %s" % (len(matches), nickname))
+        return
+    if not matches:
+        await client.send_message(message.channel, "No matches found with the given timestamp.")
+        return
 
 
 async def cmd_add_faceit_channel(client, message, arg):
