@@ -588,7 +588,7 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
         JOIN 
             faceit_player using(faceit_guid)
         WHERE
-            win = true AND (enemy_team_first_half_score - player_team_first_half_score) > 0 AND guild_id = '{0}' {1} 
+            win = true AND enemy_team_first_half_score > player_team_first_half_score AND guild_id = '{0}' {1} 
         ORDER BY
             enemy_team_first_half_score - player_team_first_half_score DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit))
@@ -612,10 +612,11 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
         JOIN 
             faceit_player using(faceit_guid)
         WHERE
-            win = false AND guild_id = '{0}' {1}
+            win = false AND  player_team_first_half_score  > enemy_team_first_half_score AND guild_id = '{0}' {1}
         ORDER BY
             player_team_first_half_score - enemy_team_first_half_score DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit))
+
 
 async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
