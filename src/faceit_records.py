@@ -142,6 +142,14 @@ async def get_records_by_guild(guild_id):
             'condition': '<',
             'identifier': 'win_bad_stats',
             'function': None
+        },
+        'LOSE_GOOD_STATS': {
+            'record_title': 'Match lost with the best kd ratio',
+            'record_item': await faceit_db.best_stats_lose(guild_id, minimum_requirement=0.5),
+            'minimum_requirement': 1.5,
+            'condition': '>',
+            'identifier': 'lose_good_stats',
+            'function': None
         }
     }
     return records

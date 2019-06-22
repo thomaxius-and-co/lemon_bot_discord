@@ -576,11 +576,11 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
     elif minimum_requirement is not None:
-        additional_parameters_string += " AND (enemy_team_first_half_score - player_team_first_half_score) < {0}".format(minimum_requirement)
+        additional_parameters_string += " AND (enemy_team_first_half_score - player_team_first_half_score) > {0}".format(minimum_requirement)
 
     return await db.fetch("""
         SELECT DISTINCT ON(enemy_team_first_half_score - player_team_first_half_score, faceit_guid) 
-            enemy_team_first_half_score - player_team_first_half_score AS score_difference, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-', 
+            enemy_team_first_half_score - player_team_first_half_score AS score_difference, enemy_team_first_half_score, player_team_first_half_score, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-', 
             enemy_team_first_half_score, ' -> ', player_team_first_half_score + player_team_second_half_score + player_team_overtime_score, '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data
         FROM
@@ -588,7 +588,7 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
         JOIN 
             faceit_player using(faceit_guid)
         WHERE
-            win = true AND guild_id = '{0}' {1}
+            win = true AND (enemy_team_first_half_score - player_team_first_half_score) > 0 AND guild_id = '{0}' {1} 
         ORDER BY
             enemy_team_first_half_score - player_team_first_half_score DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit))
@@ -617,7 +617,6 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
             player_team_first_half_score - enemy_team_first_half_score DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit))
 
-
 async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
     if player_guid:
@@ -638,6 +637,29 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
         ORDER BY
             kd_ratio ASC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit))
+
+
+async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    if from_timestamp:
+        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+    elif minimum_requirement is not None:
+        additional_parameters_string += " AND (kd_ratio > {0})".format(minimum_requirement)
+    return await db.fetch("""
+        SELECT DISTINCT ON(kd_ratio, faceit_guid) 
+            kd_ratio, faceit_guid, faceit_nickname, finished_at
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            win = false AND guild_id = '{0}' {1}
+        ORDER BY
+            kd_ratio DESC LIMIT {2}
+    """.format(guild_id, additional_parameters_string, limit))
+
 
 async def add_record(args):
     await db.execute("""
