@@ -227,7 +227,7 @@ async def handle_records(player_guid, matches_dict, guild_id):
         competition_type = match_details.get("competition_type")
         competition_name = match_details.get("competition_name")
         if competition_type != 'matchmaking' or competition_name not in ['CS:GO 5v5 PREMIUM', 'CS:GO 5v5']:
-            log.info("Match is not matchmaking, skipping..")
+            log.info("Match is not matchmaking, skipping.. (competition type: %s, competition name: %s" % (competition_type, competition_name))
             continue
         best_of = int(match_stats.get("best_of"))
         match_id = match_stats.get("match_id")
