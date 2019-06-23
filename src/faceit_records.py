@@ -5,6 +5,7 @@ from datetime import datetime
 
 log = logger.get("FACEIT_RECORDS")
 
+
 async def get_records_by_guild(guild_id):
     records = {
         'MOST_KILLS': {
@@ -157,7 +158,7 @@ async def get_records_by_guild(guild_id):
 
 async def get_match_string(db_records, index=0):
     if type(db_records) != list:
-        return "" # Bubblegum solution cause sometimes I need to call this without a list of db records..
+        return ""  # Bubblegum solution cause sometimes I need to call this without a list of db records..
     return db_records[index]['additional_data']
 
 
@@ -172,13 +173,14 @@ async def get_length_string(db_records=None, index=0):
 
 
 async def get_record_string(player_guid, guild_id, matches):
-    matches_sorted_by_time = sorted(matches.values(), reverse=True, key=lambda x: int(x.get("match_details").get("started_at")))
+    log.info("Fetching record string..")
+    matches_sorted_by_time = sorted(matches.values(), reverse=True,
+                                    key=lambda x: int(x.get("match_details").get("started_at")))
     earliest_match_timestamp = int(matches_sorted_by_time[-1].get("match_details").get("started_at"))
     current_records = await get_records_by_guild(guild_id)
     record_string = ""
-    log.info(current_records)
     for record in current_records.values():
-        record_item = record.get("record_item") # This is the item that comes from the DB
+        record_item = record.get("record_item")  # This is the item that comes from the DB
         if record_item:
             record_value = record_item[0][0]
             previous_record_value = record_item[1][0] if len(record_item) > 1 else None
@@ -198,7 +200,8 @@ async def get_record_string(player_guid, guild_id, matches):
                 if record_string:
                     record_string += "\n**%s** (%s)" % (record_title, record_additional_string)
                 else:
-                    record_string = "**%s** broke the following records: **%s** (%s)" % (record_holder_name, record_title, record_additional_string)
+                    record_string = "**%s** broke the following records: **%s** (%s)" % (
+                    record_holder_name, record_title, record_additional_string)
                     if previous_record_value:
                         previous_record_additional_string = previous_record_value
                         previous_record_holder_name = record_item[1]['faceit_nickname']
@@ -208,14 +211,14 @@ async def get_record_string(player_guid, guild_id, matches):
                             previous_record_string += " (tied with %s)" % previous_record_holder_name
                             continue
                         record_string += " (previous record: **%s** by **%s**)" % (
-                        previous_record_additional_string, previous_record_holder_name)
-
-
+                            previous_record_additional_string, previous_record_holder_name)
 
     return record_string
 
+
 async def get_player_rank_in_team(players_list, player_dict):
-    return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(player_dict) + 1
+    return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills"))).index(
+        player_dict) + 1
 
 
 async def handle_records(player_guid, matches_dict, guild_id):
@@ -227,7 +230,8 @@ async def handle_records(player_guid, matches_dict, guild_id):
         competition_type = match_details.get("competition_type")
         competition_name = match_details.get("competition_name")
         if competition_type != 'matchmaking' or competition_name not in ['CS:GO 5v5 PREMIUM', 'CS:GO 5v5']:
-            log.info("Match is not matchmaking, skipping.. (competition type: %s, competition name: %s" % (competition_type, competition_name))
+            log.info("Match is not matchmaking, skipping.. (competition type: %s, competition name: %s" % (
+            competition_type, competition_name))
             continue
         best_of = int(match_stats.get("best_of"))
         match_id = match_stats.get("match_id")
@@ -235,11 +239,11 @@ async def handle_records(player_guid, matches_dict, guild_id):
         started_at = int(match_details.get("started_at"))
         finished_at = int(match_details.get("finished_at"))
         match_length_seconds = (finished_at - started_at) / best_of
-        teams = match_stats.get("teams") # Get the two teams that played in the game
+        teams = match_stats.get("teams")  # Get the two teams that played in the game
         for team in teams:
             players = team.get("players")
             for player in players:
-                if player.get("player_id") == player_guid: # If player is in this team
+                if player.get("player_id") == player_guid:  # If player is in this team
                     added_timestamp = datetime.now()
                     player_team = teams.pop(teams.index(team))
                     enemy_team = teams[0]
@@ -262,9 +266,9 @@ async def handle_records(player_guid, matches_dict, guild_id):
                     triple_kills = int(player.get("player_stats").get("Triple Kills"))
                     quadro_kills = int(player.get("player_stats").get("Quadro Kills"))
                     penta_kills = int(player.get("player_stats").get("Penta Kills"))
-                    kd_ratio = round(float(player.get("player_stats").get("K/D Ratio")),2)
-                    kr_ratio = round(float(player.get("player_stats").get("K/R Ratio")),2)
-                    dpr_ratio = round((int(player.get("player_stats").get("Deaths")) / rounds),2)
+                    kd_ratio = round(float(player.get("player_stats").get("K/D Ratio")), 2)
+                    kr_ratio = round(float(player.get("player_stats").get("K/R Ratio")), 2)
+                    dpr_ratio = round((int(player.get("player_stats").get("Deaths")) / rounds), 2)
                     total_rounds = rounds
 
                     PLAYER_STAT_VALUES = {
@@ -326,48 +330,62 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         },
                         'team_choke': {
                             'value': player_team_first_half_score - enemy_team_first_half_score,
-                            'condition': win is False and player_team_first_half_score > enemy_team_first_half_score
+                            'condition': win is False and (player_team_first_half_score > enemy_team_first_half_score)
                         },
                         'team_comeback': {
                             'value': enemy_team_first_half_score - player_team_first_half_score,
-                            'condition': win is True and enemy_team_first_half_score > player_team_first_half_score
+                            'condition': win is True and (enemy_team_first_half_score > player_team_first_half_score)
                         },
                         'win_bad_stats': {
                             'value': kd_ratio,
                             'condition': win
                         },
+                        'lose_good_stats': {
+                            'value': kd_ratio,
+                            'condition': win is False
+                        },
                     }
+
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,
-                            player_team_second_half_score, player_team_overtime_score, started_at, finished_at, added_timestamp,
+                            player_team_second_half_score, player_team_overtime_score, started_at, finished_at,
+                            added_timestamp,
                             kills, assists, deaths, headshots, headshot_percentage, mvps, triple_kills, quadro_kills,
                             penta_kills, kd_ratio, kr_ratio, total_rounds, enemy_team_first_half_score,
                             enemy_team_second_half_score, enemy_team_overtime_score]
 
                     current_records = await get_records_by_guild(guild_id)
-                    for record, stat_item in zip(current_records.values(), PLAYER_STAT_VALUES.values()):
-                        record_item = record.get("record_item") # This is the item that comes from the DB
+
+                    for record in current_records.values():
+                        record_item = record.get("record_item")  # This is the item that comes from the DB
                         record_identifier = record.get("identifier")
                         record_condition = record.get("condition")
-                        player_stat_value = stat_item.get("value")
+                        record_minimum_requirement = record.get("minimum_requirement")
+
+                        player_stat_value, condition_fullfilled = PLAYER_STAT_VALUES.get(record_identifier).values()
+
+
                         if record_item:
                             record_value = record_item[0][0]  # This is the actual record value (eq. most assists)
                             record_holder = record_item[0][1]  # This is the actual record value (eq. most assists)
                             player_stat_item = PLAYER_STAT_VALUES.get(record_identifier)
-
                             condition_fullfilled = player_stat_item.get("condition")
-                            if condition_fullfilled is None or not condition_fullfilled:
+                            if condition_fullfilled is False:
                                 continue
-                            if (record_condition == '>' and (player_stat_value > record_value)) or (record_condition == '<' and (player_stat_value < record_value)):
-                                log.info("record %s broken, previous record %s by %s" % (record_identifier, record_value, record_holder))
+                            if (record_condition == '>' and (player_stat_value > record_value)) or (
+                                    record_condition == '<' and (player_stat_value < record_value)):
+                                log.info("record %s broken, previous record %s by %s" % (
+                                record_identifier, record_value, record_holder))
                                 await faceit_db.add_record(args)
-                                break # If only one record is broken, it is already enough for adding an item
+                                break  # If only one record is broken, it is already enough for adding an item
                             if player_stat_value == record_value:
-                                log.info("record %s tied, previous record %s by %s" % (record_identifier, record_value, record_holder))
+                                log.info("record %s tied, previous record %s by %s" % (
+                                record_identifier, record_value, record_holder))
                                 await faceit_db.add_record(args)
-                                break # If only one record is broken, it is already enough for adding an item
+                                break  # If only one record is broken, it is already enough for adding an item
                         else:
-                            record_minimum_requirement = record.get("minimum_requirement")
-                            if (record_condition == '>' and (player_stat_value > record_minimum_requirement)) or (record_condition == '<' and (player_stat_value < record_minimum_requirement)):
-                                log.info("New record: %s, value %s made by %s" % (record_identifier, player_stat_value, player_guid))
+                            if (record_condition == '>' and (player_stat_value > record_minimum_requirement)) or (
+                                    record_condition == '<' and (player_stat_value < record_minimum_requirement)):
+                                log.info("New record: %s, value %s made by %s" % (
+                                record_identifier, player_stat_value, player_guid))
                                 await faceit_db.add_record(args)
-                                break # If only one record is broken, it is already enough for adding an item
+                                break  # If only one record is broken, it is already enough for adding an item

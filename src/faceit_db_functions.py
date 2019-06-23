@@ -270,7 +270,9 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
         additional_parameters_string += " AND kills > {0}".format(minimum_requirement)
     query = """
         SELECT DISTINCT ON(kills, faceit_guid) 
-            kills, faceit_guid, faceit_nickname, finished_at
+            kills, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -293,7 +295,9 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
         additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(assists, faceit_guid) 
-            assists, faceit_guid, faceit_nickname, finished_at
+            assists, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -315,7 +319,9 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
         additional_parameters_string += " AND deaths > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(deaths, faceit_guid) 
-            deaths, faceit_guid, faceit_nickname, finished_at
+            deaths, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -337,7 +343,9 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         additional_parameters_string += " AND kd_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at
+            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -359,7 +367,9 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         additional_parameters_string += " AND kr_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kr_ratio, faceit_guid) 
-            kr_ratio, faceit_guid, faceit_nickname, finished_at
+            kr_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -381,7 +391,9 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         additional_parameters_string += " AND triple_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(triple_kills, faceit_guid) 
-            triple_kills, faceit_guid, faceit_nickname, finished_at
+            triple_kills, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -403,7 +415,9 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         additional_parameters_string += " AND quadro_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(quadro_kills, faceit_guid) 
-            quadro_kills, faceit_guid, faceit_nickname, finished_at
+            quadro_kills, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -425,7 +439,9 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
         additional_parameters_string += " AND penta_kills > {0}".format(minimum_requirement)
     query = """
         SELECT DISTINCT ON(penta_kills, faceit_guid) 
-            penta_kills, faceit_guid, faceit_nickname, finished_at
+            penta_kills, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -448,7 +464,9 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
         additional_parameters_string += " AND headshot_percentage > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(headshot_percentage, faceit_guid) 
-            headshot_percentage, faceit_guid, faceit_nickname, finished_at
+            headshot_percentage, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -470,7 +488,9 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
         additional_parameters_string += " AND headshots > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(headshots, faceit_guid) 
-            headshots, faceit_guid, faceit_nickname, finished_at
+            headshots, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -492,7 +512,9 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
         additional_parameters_string += " AND mvps > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(mvps, faceit_guid) 
-            mvps, faceit_guid, faceit_nickname, finished_at
+            mvps, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -514,7 +536,9 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
         additional_parameters_string += " AND finished_at - started_at > {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(finished_at - started_at, faceit_guid) 
-            finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at
+            finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN
@@ -536,7 +560,9 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
         minimum_rounds = minimum_requirement
     return await db.fetch("""
         SELECT DISTINCT ON(total_rounds, faceit_guid) 
-            total_rounds, faceit_guid, faceit_nickname, finished_at
+            total_rounds, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -557,7 +583,9 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
         additional_parameters_string += " AND kd_ratio < {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at
+            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -580,9 +608,11 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
 
     query = """
         SELECT DISTINCT ON(enemy_team_first_half_score - player_team_first_half_score, faceit_guid)
-            enemy_team_first_half_score - player_team_first_half_score AS score_difference, enemy_team_first_half_score, player_team_first_half_score, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-',
+            enemy_team_first_half_score - player_team_first_half_score AS score_difference, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-',
             enemy_team_first_half_score, ' -> ', player_team_first_half_score + player_team_second_half_score + player_team_overtime_score, '-',
-            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN
@@ -590,9 +620,8 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
         WHERE
             win = true and enemy_team_first_half_score > player_team_first_half_score AND guild_id = '{0}' {1} 
         ORDER BY
-            enemy_team_first_half_score - player_team_first_half_score DESC LIMIT {2}
+            score_difference DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit)
-    log.info(query)
     return await db.fetch(query)
 
 
@@ -608,7 +637,9 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
         SELECT DISTINCT ON(player_team_first_half_score - enemy_team_first_half_score, faceit_guid) 
             player_team_first_half_score - enemy_team_first_half_score AS score_difference, faceit_guid, faceit_nickname, finished_at, concat(player_team_first_half_score, '-', 
             enemy_team_first_half_score, ' -> ', player_team_first_half_score + player_team_second_half_score + player_team_overtime_score, '-', 
-            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) AS additional_data, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -616,9 +647,8 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
         WHERE
             win = false AND  player_team_first_half_score > enemy_team_first_half_score AND guild_id = '{0}' {1}
         ORDER BY
-            player_team_first_half_score - enemy_team_first_half_score DESC LIMIT {2}
+            score_difference DESC LIMIT {2}
     """.format(guild_id, additional_parameters_string, limit)
-    log.info(query)
     return await db.fetch(query)
 
 async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -631,7 +661,9 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
         additional_parameters_string += " AND (kd_ratio < {0})".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at
+            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 
@@ -653,7 +685,9 @@ async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=No
         additional_parameters_string += " AND (kd_ratio > {0})".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at
+            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
             faceit_records
         JOIN 

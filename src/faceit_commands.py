@@ -10,7 +10,7 @@ from time_util import as_helsinki, to_utc, as_utc, to_helsinki
 from datetime import datetime, timedelta
 import faceit_common as fc
 import faceit_records as fr
-
+import asyncio
 log = logger.get("FACEIT_COMMANDS")
 
 
@@ -237,14 +237,24 @@ async def cmd_show_records(client, message, _):
                 record_value = await record_function(record_item)
             record_holder = record_item[0]['faceit_nickname']
             record_date = datetime.utcfromtimestamp(record_item[0]['finished_at']).strftime('%Y-%m-%d')
-            item = record_title, record_value, record_holder, record_date
+            match_score = record_item[0]['match_score']
+            item = record_title, record_value, record_holder, record_date, match_score
         else:
             if record_function:
                 record_minimum_requirement = await record_function(record_minimum_requirement)
-            item = record_title, record_minimum_requirement, "-", "-"
+            item = record_title, record_minimum_requirement, "-", "-", "-"
         records_as_tuples.append(item)
     records_as_tuples = sorted(records_as_tuples, reverse=True, key=lambda x: x[3])
-    await client.send_message(message.channel, "```" + columnmaker.columnmaker(["Record name", "Value", "Record holder", "Record date"], records_as_tuples) + "```")
+    column_titles = ["Record name", "Value", "Record holder", "Record date", "Match score"]
+    table = columnmaker.columnmaker(column_titles, records_as_tuples)
+    msg = ("```" + table + "```")
+    if len(msg) > 2000:
+        table_first_half, table_second_half = records_as_tuples[:len(records_as_tuples)//2], records_as_tuples[len(records_as_tuples)//2:] #todo implement properly
+        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_first_half) + "```")
+        await asyncio.sleep(.5)
+        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_second_half) + "```")
+    else:
+        await client.send_message(message.channel, msg)
 
 
 async def cmd_parse_records_of_past_matches(client, message, arg):
