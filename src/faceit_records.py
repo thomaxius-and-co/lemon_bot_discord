@@ -146,11 +146,19 @@ async def get_records_by_guild(guild_id):
         },
         'LOSE_GOOD_STATS': {
             'record_title': 'Match lost with the best kd ratio',
-            'record_item': await faceit_db.best_stats_lose(guild_id, minimum_requirement=0.5),
+            'record_item': await faceit_db.best_stats_lose(guild_id, minimum_requirement=1.5),
             'minimum_requirement': 1.5,
             'condition': '>',
             'identifier': 'lose_good_stats',
             'function': None
+        },
+        'SHORTEST_MATCH': {
+            'record_title': 'Shortest match by time',
+            'record_item': await faceit_db.shortest_match(guild_id, minimum_requirement=2500),
+            'minimum_requirement': 2500,
+            'condition': '<',
+            'identifier': 'shortest_match',
+            'function': get_length_string
         }
     }
     return records
@@ -344,6 +352,11 @@ async def handle_records(player_guid, matches_dict, guild_id):
                             'value': kd_ratio,
                             'condition': win is False
                         },
+                        'shortest_match': {
+                            'value': match_length_seconds,
+                            'condition': None
+                        },
+
                     }
 
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,

@@ -222,6 +222,9 @@ async def cmd_show_aliases(client, message, faceit_nickname):
                     return
     await client.send_message(message.channel, "No such player in the server, use !faceit listusers.")
 
+def widest_in_list_of_tuples(list_of_tuples, index):
+    return len(max(list_of_tuples,key=lambda x: len(str(x[index])))[index])
+
 
 async def cmd_show_records(client, message, _):
     guild_records = await fr.get_records_by_guild(message.server.id)
@@ -249,10 +252,11 @@ async def cmd_show_records(client, message, _):
     table = columnmaker.columnmaker(column_titles, records_as_tuples)
     msg = ("```" + table + "```")
     if len(msg) > 2000:
+        widest_record_title, widest_record_value, widest_record_holder, = widest_in_list_of_tuples(records_as_tuples, 0), widest_in_list_of_tuples(records_as_tuples, 1), max([widest_in_list_of_tuples(records_as_tuples, 2),len("Record holder")])
         table_first_half, table_second_half = records_as_tuples[:len(records_as_tuples)//2], records_as_tuples[len(records_as_tuples)//2:] #todo implement properly
-        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_first_half) + "```")
+        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_first_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
         await asyncio.sleep(.5)
-        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_second_half) + "```")
+        await client.send_message(message.channel, "```" + columnmaker.columnmaker(column_titles, table_second_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
     else:
         await client.send_message(message.channel, msg)
 
