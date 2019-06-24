@@ -16,6 +16,3 @@ def as_utc(time):
 def to_utc(time):
     """Translate existing time with timezone to UTC"""
     return time.astimezone(tz=pytz.utc)
-
-print(to_utc(datetime.datetime.fromtimestamp(1561161817)).timestamp())
-print(to_utc(datetime.datetime.fromtimestamp(1561161817)).timestamp())

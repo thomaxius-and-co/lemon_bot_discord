@@ -1,6 +1,3 @@
-
-
-import faceit_main as fm
 import logger
 import faceit_db_functions as faceit_db
 import faceit_api
