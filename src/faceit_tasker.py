@@ -12,6 +12,7 @@ import faceit_highlights as fh
 import faceit_common as fc
 import faceit_records as fr
 import datetime
+import copy
 
 NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
@@ -53,19 +54,13 @@ async def check_faceit_elo(client):
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
                     channel = client.get_channel(channel_id)
                     log.info("Notifying channel %s", channel.id)
-                    log.info('logs:')
-                    log.info(int(to_utc(player_stats['changed']).timestamp()))
-                    log.info(int(player_stats['changed'].timestamp()))
-                    log.info(to_utc(player_stats['changed']))
-                    log.info(player_stats['changed'])
-                    log.info('logs end')
                     matches = await fc.get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
                     matches = await fc.get_combined_match_data(matches)
                     if matches:
-                        match_stats_string = await get_match_stats_string(player_guid, matches)
+                        match_stats_string = await get_match_stats_string(player_guid, copy.deepcopy(matches))
                         guild_id = channel.server.id
-                        await fr.handle_records(player_guid, matches, guild_id)
-                        records_string = await fr.get_record_string(player_guid, guild_id, matches)
+                        await fr.handle_records(player_guid, copy.deepcopy(matches), guild_id)
+                        records_string = await fr.get_record_string(player_guid, guild_id, copy.deepcopy(matches))
                     else:
                         log.info("No matches found for user %s" % player_guid)
                         match_stats_string = ''
@@ -157,8 +152,6 @@ async def get_match_stats_string(player_guid, matches_dict):
     else:
         return "*" + match_info_string.rstrip("\n") + "*"
 
-
-        return None
 
 
 async def get_info_strings(match_details, match_stats, player_guid):
@@ -448,7 +441,7 @@ class PlayerStats:
 #     matches = await fc.get_combined_match_data(matches)
 #     await fr.handle_records(player_guid, matches, "123123132")
 #
-#     print(await fr.get_record_string("d6186bc8-77b8-44be-8bb8-e82007668711", "123123132", matches))
+#     print(await fr.get_record_string("60875fa4-c334-45fa-a634-056df2bb8926", "123123132", matches))
 #     # print(sorted(matches.values(), key=lambda x: x.get("match_details").get("started_at"))[0].get("match_details").get("started_at"))
 #     # return
 #     # #await handle_records(player_guid, matches)
@@ -459,21 +452,21 @@ class PlayerStats:
 #     #     match_stats_string = await get_match_stats_string(player_guid, matches)
 #     #     print('time at here4 %s' % datetime.datetime.now())
 #     #     print(match_stats_string)
-# #
-# #
-# # async def test2(player_guid):
-# #     player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
-# #     if player_stats:
-# #         print('heh')
-# #         print(int(to_utc(player_stats['changed']).timestamp()))
-# #         print(to_utc(player_stats['changed']).timestamp())
-# #         to_utc(player_stats['changed']).timestamp()
-# #         print(player_stats['changed'].timestamp())
-# #         print('heh')
-# #         for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
-# #             matches = await get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
-# #             print(matches)
-# #
-# #
+# # #
+# # #
+# # # async def test2(player_guid):
+# # #     player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
+# # #     if player_stats:
+# # #         print('heh')
+# # #         print(int(to_utc(player_stats['changed']).timestamp()))
+# # #         print(to_utc(player_stats['changed']).timestamp())
+# # #         to_utc(player_stats['changed']).timestamp()
+# # #         print(player_stats['changed'].timestamp())
+# # #         print('heh')
+# # #         for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
+# # #             matches = await get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
+# # #             print(matches)
+# # #
+# # #
 # loop = asyncio.get_event_loop()
 # loop.run_until_complete(test("60875fa4-c334-45fa-a634-056df2bb8926", 0))

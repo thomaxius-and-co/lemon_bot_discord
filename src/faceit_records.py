@@ -7,6 +7,7 @@ log = logger.get("FACEIT_RECORDS")
 
 
 async def get_records_by_guild(guild_id):
+    log.info("Fetching current records for guild id %s" % guild_id)
     records = {
         'MOST_KILLS': {
             'record_title': 'Most kills in a match',
@@ -251,6 +252,8 @@ async def handle_records(player_guid, matches_dict, guild_id):
         for team in teams:
             players = team.get("players")
             for player in players:
+                if player.get("player_id") != player_guid:
+                    log.info("player is not here, %s %s" % (player.get("player_id"), player_guid))
                 if player.get("player_id") == player_guid:  # If player is in this team
                     added_timestamp = datetime.now()
                     player_team = teams.pop(teams.index(team))
@@ -358,7 +361,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         },
 
                     }
-
                     args = [match_id, guild_id, player_guid, win, player_team_rank, player_team_first_half_score,
                             player_team_second_half_score, player_team_overtime_score, started_at, finished_at,
                             added_timestamp,
@@ -367,7 +369,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
                             enemy_team_second_half_score, enemy_team_overtime_score]
 
                     current_records = await get_records_by_guild(guild_id)
-
                     for record in current_records.values():
                         record_item = record.get("record_item")  # This is the item that comes from the DB
                         record_identifier = record.get("identifier")
@@ -375,7 +376,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         record_minimum_requirement = record.get("minimum_requirement")
 
                         player_stat_value, condition_fullfilled = PLAYER_STAT_VALUES.get(record_identifier).values()
-
 
                         if record_item:
                             record_value = record_item[0][0]  # This is the actual record value (eq. most assists)
