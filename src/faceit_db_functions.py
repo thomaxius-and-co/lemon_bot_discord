@@ -454,14 +454,16 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
     return await db.fetch(query)
 
 
-async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
+async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None, minimum_kills=None):
     additional_parameters_string = ""
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
         additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
-    elif minimum_requirement is not None:
+    if minimum_requirement is not None:
         additional_parameters_string += " AND headshot_percentage > {0}".format(minimum_requirement)
+    elif minimum_kills is not None:
+        additional_parameters_string += " AND kills > {0}".format(minimum_kills)
     return await db.fetch("""
         SELECT DISTINCT ON(headshot_percentage, faceit_guid) 
             headshot_percentage, faceit_guid, faceit_nickname, finished_at, 

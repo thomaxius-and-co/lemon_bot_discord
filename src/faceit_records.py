@@ -42,8 +42,8 @@ async def get_records_by_guild(guild_id):
             'function': None
         },
         'BIGGEST_HEADSHOT_PERCENTAGE': {
-            'record_title': 'Biggest headshot percentage',
-            'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50),
+            'record_title': 'Biggest headshot percentage (over 15 kills)',
+            'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50, minimum_kills=15),
             'condition': '>',
             'minimum_requirement': 50,
             'identifier': 'headshot_percentage',
