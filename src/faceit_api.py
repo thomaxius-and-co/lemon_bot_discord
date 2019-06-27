@@ -34,8 +34,6 @@ async def player_history(player_id, offset=0, limit=20):
         return json
     elif response.status == 404:
         raise NotFound("User not found (player_id: {0})".format(player_id))
-    else:
-        raise UnknownError(response)
 
 
 async def user(nickname):
@@ -45,8 +43,6 @@ async def user(nickname):
         return json
     elif response.status == 404:
         raise NotFound("User not found (nickname: {0})".format(nickname))
-    else:
-        raise UnknownError(response)
 
 
 async def user_by_id(player_id):
@@ -56,8 +52,6 @@ async def user_by_id(player_id):
         return json
     elif response.status == 404:
         raise NotFound("User not found (player_id: {0})".format(player_id))
-    else:
-        raise UnknownError(response)
 
 
 async def ranking(player_id, region="EU", game_id="csgo"):
@@ -67,8 +61,6 @@ async def ranking(player_id, region="EU", game_id="csgo"):
         return json.get("position", None)
     elif response.status == 404:
         raise NotFound("User not found (player_id: {0})".format(player_id))
-    else:
-        raise UnknownError(response)
 
 
 async def match_stats(match_id):
@@ -78,8 +70,6 @@ async def match_stats(match_id):
         return json.get("rounds", None)
     elif response.status == 404:
         raise NotFound("Match not found (match id: {0})".format(match_id))
-    else:
-        raise UnknownError(response)
 
 
 async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, limit=100):
@@ -96,8 +86,6 @@ async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, l
         return json.get("items", None)
     elif response.status == 404:
         raise NotFound("No matches found for player_id {0}".format(player_id))
-    else:
-        raise UnknownError(response)
 
 
 async def match(matchid):
@@ -107,8 +95,6 @@ async def match(matchid):
         return json
     elif response.status == 404:
         raise NotFound("Match {0} not found.".format(matchid))
-    else:
-        raise UnknownError(response)
 
 
 @retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 30)
@@ -126,5 +112,5 @@ async def _call_api(path, query=None):
                 continue
 
             if response.status not in [200, 404]:
-                raise Exception("Error fetching data from faceit: HTTP status {0}".format(response.status))
+                raise UnknownError(response)
             return response
