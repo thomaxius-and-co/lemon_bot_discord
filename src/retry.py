@@ -48,7 +48,7 @@ def random_between(low, high):
 
 def log_error(func, attempt, e):
     fmt = "{0}.{1} failed {2} retries. Final exception: {3}"
-    log.error(fmt.format(func.__module__, func.__name__, attempt, e))
+    log.warn(fmt.format(func.__module__, func.__name__, attempt, e))
 
 def log_retry(func, delay_seconds, attempt, e):
     fmt = "Retrying {0}.{1} in {2} ms (attempt {3}). Exception:\n{4}"
