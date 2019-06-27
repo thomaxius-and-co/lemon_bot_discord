@@ -5,7 +5,7 @@ import util
 import logger
 import discord
 import faceit_api
-from faceit_api import NotFound
+from faceit_api import NotFound, UnknownError
 from time_util import to_utc
 from util import pmap
 import faceit_highlights as fh
@@ -23,9 +23,15 @@ async def elo_notifier_task(client):
         await asyncio.sleep(fetch_interval)
         try:
             await check_faceit_elo(client)
+        except UnknownError as e:
+            if e.response.status == 500:
+                # Faceit API is broken and  there's probably very little we can
+                # do so no reason to spam errors channel
+                log.warn("Failed to check faceit stats\n" + traceback.format_exc())
+            else:
+                await util.log_exception(log, "Failed to check faceit stats")
         except Exception as e:
-            log.error("Failed to check faceit stats: ")
-            await util.log_exception(log)
+            await util.log_exception(log, "Failed to check faceit stats")
 
 
 async def check_faceit_elo(client):
