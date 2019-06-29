@@ -265,7 +265,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kills > {0}".format(minimum_requirement)
     query = """
@@ -290,7 +290,7 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -314,7 +314,7 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND deaths > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -338,7 +338,7 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -362,7 +362,7 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kr_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -386,7 +386,7 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND triple_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -410,7 +410,7 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND quadro_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -434,7 +434,7 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND penta_kills > {0}".format(minimum_requirement)
     query = """
@@ -459,7 +459,7 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     if minimum_requirement is not None:
         additional_parameters_string += " AND headshot_percentage > {0}".format(minimum_requirement)
     elif minimum_kills is not None:
@@ -485,7 +485,7 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND headshots > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -509,7 +509,7 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND mvps > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -533,7 +533,7 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND finished_at - started_at > {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -556,7 +556,7 @@ async def shortest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None,
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND finished_at - started_at < {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -580,7 +580,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         minimum_rounds = minimum_requirement
     return await db.fetch("""
@@ -603,7 +603,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio < {0}".format(minimum_requirement)
     return await db.fetch("""
@@ -627,7 +627,7 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (enemy_team_first_half_score - player_team_first_half_score) > {0}".format(minimum_requirement)
 
@@ -655,7 +655,7 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (player_team_first_half_score - enemy_team_first_half_score) > {0}".format(minimum_requirement)
     query = """
@@ -681,7 +681,7 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (kd_ratio < {0})".format(minimum_requirement)
     return await db.fetch("""
@@ -705,7 +705,7 @@ async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=No
     if player_guid:
         additional_parameters_string += " AND player_guid = {0}".format(player_guid)
     if from_timestamp:
-        additional_parameters_string += " AND from_timestamp = {0}".format(from_timestamp)
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (kd_ratio > {0})".format(minimum_requirement)
     return await db.fetch("""
@@ -733,3 +733,18 @@ async def add_record(args):
                 total_rounds, enemy_team_first_half_score, enemy_team_second_half_score, enemy_team_overtime_score)
     VALUES 
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)""", *args)  # This POS wouldn't insert without specifying each field..'
+
+
+
+async def get_last_reset_timestamp(guild_id):
+    return await db.fetchval(
+        "SELECT extract(epoch FROM reset_date) as reset_date FROM faceit_records_config WHERE guild_id = $1 ORDER BY reset_date DESC LIMIT 1",
+        guild_id)
+
+async def add_records_reset_date(guild_id, date, user_id):
+    await db.execute("""
+    INSERT INTO
+        faceit_records_config (guild_id, reset_date, reset_by)
+    VALUES
+        ($1, $2, $3)
+    """, guild_id, date, user_id)

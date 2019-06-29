@@ -8,10 +8,13 @@ log = logger.get("FACEIT_RECORDS")
 
 async def get_records_by_guild(guild_id):
     log.info("Fetching current records for guild id %s" % guild_id)
+    from_timestamp = await faceit_db.get_last_reset_timestamp(guild_id)
+    if not from_timestamp:
+        from_timestamp = 0
     records = {
         'MOST_KILLS': {
             'record_title': 'Most kills in a match',
-            'record_item': await faceit_db.top_kills(guild_id, minimum_requirement=20),
+            'record_item': await faceit_db.top_kills(guild_id, minimum_requirement=20, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 20,
             'identifier': 'kills',
@@ -19,7 +22,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_ASSISTS': {
             'record_title': 'Most assists in a match',
-            'record_item': await faceit_db.top_assists(guild_id, minimum_requirement=5),
+            'record_item': await faceit_db.top_assists(guild_id, minimum_requirement=5, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 5,
             'identifier': 'assists',
@@ -27,7 +30,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_DEATHS': {
             'record_title': 'Most deaths in a match',
-            'record_item': await faceit_db.top_deaths(guild_id, minimum_requirement=20),
+            'record_item': await faceit_db.top_deaths(guild_id, minimum_requirement=20, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 20,
             'identifier': 'deaths',
@@ -35,7 +38,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_HEADSHOTS': {
             'record_title': 'Most headshots in a match',
-            'record_item': await faceit_db.top_headshots(guild_id, minimum_requirement=10),
+            'record_item': await faceit_db.top_headshots(guild_id, minimum_requirement=10, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 10,
             'identifier': 'headshots',
@@ -43,7 +46,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_HEADSHOT_PERCENTAGE': {
             'record_title': 'Biggest headshot percentage (over 15 kills)',
-            'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50, minimum_kills=15),
+            'record_item': await faceit_db.top_headshot_percentage(guild_id, minimum_requirement=50, minimum_kills=15, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 50,
             'identifier': 'headshot_percentage',
@@ -51,7 +54,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_MVPS': {
             'record_title': 'Most mvps in a match',
-            'record_item': await faceit_db.top_mvps(guild_id, minimum_requirement=5),
+            'record_item': await faceit_db.top_mvps(guild_id, minimum_requirement=5, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 5,
             'identifier': 'mvps',
@@ -59,7 +62,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_TRIPLE_KILLS': {
             'record_title': 'Most triple kills in a match',
-            'record_item': await faceit_db.top_triple_kills(guild_id, minimum_requirement=3),
+            'record_item': await faceit_db.top_triple_kills(guild_id, minimum_requirement=3, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 3,
             'identifier': 'triple_kills',
@@ -67,7 +70,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_QUADRO_KILLS': {
             'record_title': 'Most quadro kills in a match',
-            'record_item': await faceit_db.top_quadro_kills(guild_id, minimum_requirement=1),
+            'record_item': await faceit_db.top_quadro_kills(guild_id, minimum_requirement=1, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'quadro_kills',
@@ -75,7 +78,7 @@ async def get_records_by_guild(guild_id):
         },
         'MOST_PENTA_KILLS': {
             'record_title': 'Most penta kills in a match',
-            'record_item': await faceit_db.top_penta_kills(guild_id, minimum_requirement=0),
+            'record_item': await faceit_db.top_penta_kills(guild_id, minimum_requirement=0, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 0,
             'identifier': 'penta_kills',
@@ -83,7 +86,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_KD_RATIO': {
             'record_title': 'Biggest kd ratio in a match',
-            'record_item': await faceit_db.top_kdr(guild_id, minimum_requirement=1),
+            'record_item': await faceit_db.top_kdr(guild_id, minimum_requirement=1, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'kd_ratio',
@@ -91,7 +94,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_KR_RATIO': {
             'record_title': 'Biggest kills per round ratio in a match',
-            'record_item': await faceit_db.top_kpr(guild_id, minimum_requirement=1),
+            'record_item': await faceit_db.top_kpr(guild_id, minimum_requirement=1, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 1,
             'identifier': 'kr_ratio',
@@ -99,7 +102,7 @@ async def get_records_by_guild(guild_id):
         },
         'LONGEST_MATCH_ROUNDS': {
             'record_title': 'Longest match by rounds',
-            'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30),
+            'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 30,
             'identifier': 'total_rounds',
@@ -107,7 +110,7 @@ async def get_records_by_guild(guild_id):
         },
         'LONGEST_MATCH_SECONDS': {
             'record_title': 'Longest match by time',
-            'record_item': await faceit_db.longest_match(guild_id, minimum_requirement=3000),
+            'record_item': await faceit_db.longest_match(guild_id, minimum_requirement=3000, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 3000,
             'identifier': 'match_length_seconds',
@@ -115,7 +118,7 @@ async def get_records_by_guild(guild_id):
         },
         'WORST_KD_RATIO': {
             'record_title': 'Worst kd ratio in a match',
-            'record_item': await faceit_db.worst_kd_ratio(guild_id, minimum_requirement=0.5),
+            'record_item': await faceit_db.worst_kd_ratio(guild_id, minimum_requirement=0.5, from_timestamp=from_timestamp),
             'minimum_requirement': 0.5,
             'condition': '<',
             'identifier': 'kr_ratio_worst',
@@ -123,7 +126,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_COMEBACK': {
             'record_title': 'Biggest comeback in a match',
-            'record_item': await faceit_db.biggest_comeback(guild_id, minimum_requirement=3),
+            'record_item': await faceit_db.biggest_comeback(guild_id, minimum_requirement=3, from_timestamp=from_timestamp),
             'minimum_requirement': 3,
             'condition': '>',
             'identifier': 'team_comeback',
@@ -131,7 +134,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_CHOKE': {
             'record_title': 'Biggest choke in a match',
-            'record_item': await faceit_db.biggest_choke(guild_id, minimum_requirement=3),
+            'record_item': await faceit_db.biggest_choke(guild_id, minimum_requirement=3, from_timestamp=from_timestamp),
             'minimum_requirement': 3,
             'condition': '>',
             'identifier': 'team_choke',
@@ -139,7 +142,7 @@ async def get_records_by_guild(guild_id):
         },
         'WIN_BAD_STATS': {
             'record_title': 'Match won with the worst kd ratio',
-            'record_item': await faceit_db.worst_stats_win(guild_id, minimum_requirement=0.5),
+            'record_item': await faceit_db.worst_stats_win(guild_id, minimum_requirement=0.5, from_timestamp=from_timestamp),
             'minimum_requirement': 0.5,
             'condition': '<',
             'identifier': 'win_bad_stats',
@@ -147,7 +150,7 @@ async def get_records_by_guild(guild_id):
         },
         'LOSE_GOOD_STATS': {
             'record_title': 'Match lost with the best kd ratio',
-            'record_item': await faceit_db.best_stats_lose(guild_id, minimum_requirement=1.5),
+            'record_item': await faceit_db.best_stats_lose(guild_id, minimum_requirement=1.5, from_timestamp=from_timestamp),
             'minimum_requirement': 1.5,
             'condition': '>',
             'identifier': 'lose_good_stats',
@@ -155,7 +158,7 @@ async def get_records_by_guild(guild_id):
         },
         'SHORTEST_MATCH': {
             'record_title': 'Shortest match by time',
-            'record_item': await faceit_db.shortest_match(guild_id, minimum_requirement=2500),
+            'record_item': await faceit_db.shortest_match(guild_id, minimum_requirement=2500, from_timestamp=from_timestamp),
             'minimum_requirement': 2500,
             'condition': '<',
             'identifier': 'shortest_match',

@@ -195,9 +195,29 @@ async def cmd_faceit_commands(client, message, arg):
     elif arg == 'parsepastrecords':
         await cmd_parse_records_of_past_matches(client, message, secondarg)
         return
+    elif arg == 'resetrecords':
+        await cmd_reset_records(client, message, secondarg)
+        return
     else:
         await client.send_message(message.channel, infomessage)
         return
+
+async def cmd_reset_records(client, message, _):
+    perms = message.channel.permissions_for(message.author)
+    if not perms.administrator:
+        await client.send_message(message.channel, "You're not allowed to use this command.")
+        return
+    await client.send_message(message.channel, "This will reset the records of this guild. Type 'yes' to confirm, "
+                                               "or 'no' to cancel.")
+    answer = await client.wait_for_message(timeout=60, author=message.author)
+    if answer and answer.content.lower() == 'yes':
+        await faceit_db.add_records_reset_date(message.server.id, datetime.now(), message.author.id)
+        log.info("User %s triggered rest of records for guild %s" % (message.author.id, message.server.id))
+        await client.send_message(message.channel, "Records reset.")
+    elif answer is None or answer.content.lower() == 'no':
+        await client.send_message(message.channel,
+                                  "Deletion of records cancelled.")
+    return
 
 
 async def cmd_show_aliases(client, message, faceit_nickname):
