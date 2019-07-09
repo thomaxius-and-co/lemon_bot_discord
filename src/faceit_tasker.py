@@ -13,6 +13,7 @@ import faceit_common as fc
 import faceit_records as fr
 import datetime
 import copy
+import traceback
 
 NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
