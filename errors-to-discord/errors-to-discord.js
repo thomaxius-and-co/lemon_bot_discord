@@ -3,14 +3,13 @@ const https = require("https")
 const zlib = require("zlib")
 const splitMessage = require("./split.js")
 
-const AWS = require("aws-sdk")
-AWS.config.update({ region: "eu-west-1" })
-const SecretsManager = new AWS.SecretsManager({ apiVersion: "2017-10-17" })
+const { mkSecret } = require("./secrets.js")
+
+const secretWebhookUrl = mkSecret("discord-alarm-webhook")
 
 const MAX_MESSAGE_LENGTH = 2000 - "``````".length
 
 exports.handler = async function(event, context) {
-  const DISCORD_WEBHOOK_URL = await fetchSecretWebhookUrl()
   console.log("Handling event:", JSON.stringify(event, null, 2))
   const payload = await gunzipObj(event.awslogs.data)
   console.log("Payload:", JSON.stringify(payload, null, 2))
@@ -25,7 +24,12 @@ exports.handler = async function(event, context) {
           icon_url: "https://rce.fi/error.png",
           text: "```" + msg + "```",
         }
-        await post(DISCORD_WEBHOOK_URL + "/slack", data)
+        const webhookUrl = await secretWebhookUrl.get()
+        const {res} = await post(webhookUrl + "/slack", data)
+        if (res.statusCode !== 200) {
+          secretWebhookUrl.clear()
+          throw new Error("Failed to post message. Cleared cached webhook URL in case it has changed")
+        }
       }
     }
   }
@@ -66,19 +70,11 @@ function post(url, data) {
       res.on("end", () => {
         const result = chunks.join("")
         console.log("POST", url, res.statusCode, JSON.stringify(data, null, 2), result)
-        resolve(result)
+        resolve({ res, body: result })
       })
     })
     req.on("error", reject)
     req.write(JSON.stringify(data))
     req.end()
   })
-}
-
-async function fetchSecretWebhookUrl() {
-  const response = await SecretsManager.getSecretValue({
-    SecretId: "discord-alarm-webhook",
-    VersionStage: "AWSCURRENT",
-  }).promise()
-  return response.SecretString
 }
