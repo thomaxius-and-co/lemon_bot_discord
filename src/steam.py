@@ -30,7 +30,7 @@ async def cmd_steam_common(client, message, args):
         return len(args.split(" ")) >= 2
 
     if not valid(args):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     usernames = args.split(" ")
@@ -38,7 +38,7 @@ async def cmd_steam_common(client, message, args):
     for username in usernames:
         steamid = await api.steamid(username)
         if steamid is None:
-            await client.send_message(message.channel, "Username {username} is not valid".format(username=username))
+            await message.channel.send("Username {username} is not valid".format(username=username))
             return
         steamids.append(steamid)
 
@@ -59,7 +59,7 @@ async def cmd_steam_common(client, message, args):
 
 
         msg = "Found the following common games:\n{0}".format("\n".join(game_names))
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)
     else:
         msg = "Unfortunately I didn't find any common games"
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)

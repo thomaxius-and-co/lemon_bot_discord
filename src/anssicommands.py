@@ -23,7 +23,7 @@ should_choices =["Kyllä" , "Ei" , "Ei ikinä" , "Tottakai"]
 
 async def cmd_ask(client, message, question):
     if not question:
-        await client.send_message(message.channel, 'kys pls')
+        await message.channel.send('kys pls')
         return
 
     if question.lower().startswith("onko"):
@@ -62,7 +62,7 @@ async def cmd_ask(client, message, question):
         choices = default_choices
 
     await asyncio.sleep(2)
-    await client.send_message(message.channel, random.choice(choices) + " :thinking: ")
+    await message.channel.send(random.choice(choices) + " :thinking: ")
 
 def register(client):
     return {

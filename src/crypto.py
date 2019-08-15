@@ -60,7 +60,7 @@ async def get_available_coins():
         available_coins_list.append(coin_name)
 
 async def cmd_roadtobillion(client, message, _):
-    await client.send_message(message.channel, await rtb_message_builder())
+    await message.channel.send(await rtb_message_builder())
 
 async def rtb_message_builder():
     msg = '```'
@@ -159,19 +159,19 @@ async def get_crypto_price(coin):
 async def cmd_crypto(client, message, arg):
     arg = arg.lower()
     if arg and (arg == 'list'):
-        await client.send_message(message.channel, 'Available cryptocoins: %s' % ', '.join(available_coins_list))
+        await message.channel.send('Available cryptocoins: %s' % ', '.join(available_coins_list))
         return
     if arg and (arg not in available_coins):
         arg = coin_symbols.get(arg, None)
         if not arg:
             if not available_coins_list:
                 await get_available_coins()
-            await client.send_message(message.channel, 'Unknown coin. You can check available '
+            await message.channel.send('Unknown coin. You can check available '
                                                        'coins with !crypto list')
             return
     else:
         arg = available_coins.get(arg)
-    await client.send_message(message.channel, await message_builder(arg if arg else None))
+    await message.channel.send(await message_builder(arg if arg else None))
 
 async def message_builder(arg):
     if arg:

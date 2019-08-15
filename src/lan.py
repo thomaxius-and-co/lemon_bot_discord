@@ -25,14 +25,14 @@ async def cmd_lan(client, message, query):
     now = as_utc(datetime.now())
 
     if (lan < now) and (lan_over > now):
-        await client.send_message(message.channel, "HelmiLAN is currently happening!!")
+        await message.channel.send("HelmiLAN is currently happening!!")
         return
 
     if lan < now:
-        await client.send_message(message.channel, "HelmiLAN is already over but väsymys remains.")
+        await message.channel.send("HelmiLAN is already over but väsymys remains.")
         return
 
     delta = lan - now
     template = "Time until HelmiLAN: {0} days, {1} hours, {2} minutes, {3} seconds"
     msg = template.format(*delta_to_tuple(delta))
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)

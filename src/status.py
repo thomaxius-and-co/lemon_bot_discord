@@ -64,7 +64,7 @@ async def cmd_clearstatus(client, message, _):
     global CUSTOM_STATUS_DISPLAYED
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return
     CUSTOM_STATUS = None
     CUSTOM_STATUS_DISPLAYED = None
@@ -75,14 +75,13 @@ async def cmd_status(client, message, input):
     global CUSTOM_STATUS_DISPLAYED
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return
     if not input:
-        await client.send_message(message.channel,
-                                  'You need to specify a status. For example: ```!status I am online!```')
+        await message.channel.send('You need to specify a status. For example: ```!status I am online!```')
         return
     if len(input) > 128:
-        await client.send_message(message.channel, 'Maximum allowed length for status is 128 characters.')
+        await message.channel.send('Maximum allowed length for status is 128 characters.')
         return
     await client.change_presence(game=discord.Game(name=input))
     CUSTOM_STATUS = input

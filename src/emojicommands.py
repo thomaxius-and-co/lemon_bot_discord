@@ -24,7 +24,7 @@ async def doemojilist(client, message):
                 emojilist.append((rankandemoji, emojiname, str(created_at)+'\n'))
             x += 1
     if not emojilist and not animated_emojilist:
-        await client.send_message(message.channel, 'No emoji found.')
+        await message.channel.send('No emoji found.')
         return
     else:
         msg = ''
@@ -35,11 +35,11 @@ async def doemojilist(client, message):
                 msg = "**Animated emojis:** \n"
             for item in list:
                 if (len(msg) + len(''.join(map(''.join, item)))) > 1982:
-                    await client.send_message(message.channel, msg)
+                    await message.channel.send(msg)
                     msg = ''
                 msg += ''.join(map(''.join, item))
                 if item == list[-1]:
-                    await client.send_message(message.channel, msg)
+                    await message.channel.send(msg)
 
 async def get_emojis(guild):
     return [x for x in guild.emojis if (x.url[-4:] != ".gif")]
@@ -95,19 +95,19 @@ async def showleastusedemojis(client, message):
     animated_emojilist = await get_animated_emojis(message.channel.guild)
     emojilist = await get_emojis(message.channel.guild)
     if not emojilist and not animated_emojilist:
-        await client.send_message(message.channel, 'No emoji found.')
+        await message.channel.send('No emoji found.')
         return
     top_twentyfive = await get_least_used_emojis(emojilist, message.channel.guild.id)
     top_twentyfive_animated = await get_least_used_emojis(animated_emojilist, message.channel.guild.id)
     if not top_twentyfive and not top_twentyfive_animated:
-        await client.send_message(message.channel, 'No emoji has been used.')
+        await message.channel.send('No emoji has been used.')
         return
     if top_twentyfive:
         msg = ('Top 25 least used emoji :'
                '\n' + '\n'.join(
             map(''.join, [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive]))
                + '\n(emoji, number of times used, times used per day)')
-        await client.send_message(message.channel, msg[:1999])
+        await message.channel.send(msg[:1999])
 
     await sleep(.25)
     if top_twentyfive_animated:
@@ -116,32 +116,32 @@ async def showleastusedemojis(client, message):
                                     [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in
                                      top_twentyfive_animated]))
                + '\n(emoji, number of times used, times used per day)')
-        await client.send_message(message.channel, msg[:1999])
+        await message.channel.send(msg[:1999])
 
 async def showmostusedemojis(client, message):
     animated_emojilist = await get_animated_emojis(message.channel.guild)
     emojilist = await get_emojis(message.channel.guild)
     if not emojilist and not animated_emojilist:
-        await client.send_message(message.channel, 'No emoji found.')
+        await message.channel.send('No emoji found.')
         return
     top_twentyfive = await get_most_used_emojis(emojilist, message.channel.guild.id)
     top_twentyfive_animated = await get_most_used_emojis(animated_emojilist, message.channel.guild.id)
 
     if not top_twentyfive and not top_twentyfive_animated:
-        await client.send_message(message.channel, 'No emoji has been used.')
+        await message.channel.send('No emoji has been used.')
         return
     if top_twentyfive:
         msg = ('Top 25 most used emoji :'
                                                '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive]))
                               + '\n(emoji, number of times used, times used per day)')
-        await client.send_message(message.channel, msg[:1999])
+        await message.channel.send(msg[:1999])
 
     await sleep(.25)
     if top_twentyfive_animated:
         msg = ('Top 25 most used emoji (animated):'
                                                '\n'+'\n'.join(map(''.join, [ (x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive_animated]))
                               + '\n(emoji, number of times used, times used per day)')
-        await client.send_message(message.channel, msg[:1999])
+        await message.channel.send(msg[:1999])
 
 async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'leastused':
@@ -153,7 +153,7 @@ async def cmd_emojicommands(client, message, arg):
     if arg.lower() == 'list':
         await doemojilist(client, message)
     else:
-        await client.send_message(message.channel, 'Usage: !emoji <list> or <leastused> or <mostused>')  # obv more features will be added later
+        await message.channel.send('Usage: !emoji <list> or <leastused> or <mostused>')  # obv more features will be added later
         return
 
 def register(client):

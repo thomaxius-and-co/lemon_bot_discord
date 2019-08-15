@@ -117,25 +117,25 @@ async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before
         msg = '**%s%s** gained **%s** elo and a new skill level! (Skill level %s -> %s, Elo now: %s)\n%s\n%s' % (
                                                         faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                         skill_before, current_skill, current_elo, match_info_string, record_string)
-        util.threadsafe(client, client.send_message(channel, msg[:2000]))
+        util.threadsafe(client, channel.send(msg[:2000]))
         return
     elif skill_before > current_skill:
         msg = '**%s%s** lost **%s** elo and lost a skill level! (Skill level %s -> %s, Elo now: %s)\n%s\n%s' % (
                                                         faceit_nickname, custom_nickname, int(current_elo - elo_before),
                                                         skill_before, current_skill, current_elo, match_info_string, record_string)
-        util.threadsafe(client, client.send_message(channel, msg[:2000]))
+        util.threadsafe(client, channel.send(msg[:2000]))
         return
     elif current_elo > elo_before:
         msg = '**%s%s** gained **%s** elo! (%s -> %s)\n%s\n%s' % (
             faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
             match_info_string, record_string)
-        util.threadsafe(client, client.send_message(channel, msg[:2000]))
+        util.threadsafe(client, channel.send(msg[:2000]))
         return
     elif elo_before > current_elo:
         msg = '**%s%s** lost **%s** elo! (%s -> %s)\n%s\n%s' % (
             faceit_nickname, custom_nickname, int(current_elo - elo_before), elo_before, current_elo,
             match_info_string, record_string)
-        util.threadsafe(client, client.send_message(channel, msg[:2000]))
+        util.threadsafe(client, channel.send(msg[:2000]))
         return
 
 
@@ -300,7 +300,7 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
     if msg:
         log.info('Attempting to spam channel %s with the following message: %s', spam_channel_id, msg)
         channel = discord.Object(id=spam_channel_id)
-        util.threadsafe(client, client.send_message(channel, msg))
+        util.threadsafe(client, channel.send(msg))
         await asyncio.sleep(.25)
     log.info("Rank changes checked")
 

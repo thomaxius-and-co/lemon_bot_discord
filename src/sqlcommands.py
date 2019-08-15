@@ -28,7 +28,7 @@ async def send_quote(client, channel, random_message):
     embed = discord.Embed(description=sanitized)
     embed.set_author(name=name, icon_url=avatar_url)
     embed.set_footer(text=str(timestamp))
-    await client.send_message(channel, embed=embed)
+    await channel.send(embed=embed)
 
 async def random_message_with_filter(filters, params):
     return await db.fetchrow("""
@@ -419,7 +419,7 @@ def check_length(x,i):
 async def cmd_top(client, message, input):
     guild_id = message.guild.id
     if not input:
-        await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
+        await message.channel.send('You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
         return
 
@@ -429,35 +429,32 @@ async def cmd_top(client, message, input):
     if input == 'spammers' or input == '!spammers':
         reply, amountofpeople = await top_message_counts("AND 1 = $1", [1], excludecommands)
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+            await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
         parameter = '(commands included)' if not excludecommands else '(commands not included)'
         header = 'Top %s spammers %s\n' % (amountofpeople, parameter)
-        await client.send_message(message.channel, '```' + header + reply + '```')
+        await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'bestgrammar':
         reply, amountofpeople = await get_best_grammar()
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+            await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
         header = 'Top %s people with the best grammar (most messages written with proper grammar)\n' % (amountofpeople)
-        await client.send_message(message.channel, '```' + header + reply + '```')
+        await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'worstgrammar':
         reply, amountofpeople = await get_worst_grammar()
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+            await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
         header = 'Top %s people with the worst grammar (most messages written with bad grammar)\n' % (amountofpeople)
-        await client.send_message(message.channel, '```' + header + reply + '```')
+        await message.channel.send('```' + header + reply + '```')
         return
 
     elif input[0:6] == 'custom' or input[0:7] == '!custom':
@@ -468,8 +465,7 @@ async def cmd_top(client, message, input):
         custom_filter = "AND ({0})".format(filters)
         reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough chat logged into the database to form a toplist.')
+            await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
         word = 'word' if len(customwords) == 1 else 'words'
@@ -477,55 +473,49 @@ async def cmd_top(client, message, input):
 
         title = 'Top %s users of the %s: %s %s' % (amountofpeople, word, ', '.join(customwords), parameter)
 
-        await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
+        await message.channel.send(('```%s \n' % title + reply + '```'))
         return
 
     elif input == 'whosaidit':
         ranking, amountofpeople = await getwhosaiditranking()
         if not ranking or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough players to form a toplist.')
+            await message.channel.send('Not enough players to form a toplist.')
             return
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
         time_until_reset = await get_time_until_reset()
-        await client.send_message(message.channel,
-                                  ('```%s \n' % title + ranking + '\n' + time_until_reset + '```'))
+        await message.channel.send(('```%s \n' % title + ranking + '\n' + time_until_reset + '```'))
         return
 
     elif input == 'whosaidit weekly':
         weekly_winners_list = await get_whosaidit_weekly_ranking()
         if not weekly_winners_list:
-            await client.send_message(message.channel,
-                                      'Not enough players to form a weekly toplist.')
+            await message.channel.send('Not enough players to form a weekly toplist.')
             return
 
         title = 'Weekly whosaidit winners:'
-        await client.send_message(message.channel,
-                                  (title + '\n' + '```' + weekly_winners_list + '```'))
+        await message.channel.send((title + '\n' + '```' + weekly_winners_list + '```'))
         return
     elif input == 'blackjack' or input == 'bj':
         reply, amountofpeople = await getblackjacktoplist()
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough players to form a toplist.')
+            await message.channel.send('Not enough players to form a toplist.')
             return
 
         header = 'Top %s blackjack players\n' % (amountofpeople)
-        await client.send_message(message.channel, '```' + header + reply + '```')
+        await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'slots':
         reply, amountofpeople = await getslotstoplist()
         jackpot = await get_jackpot()
         if not reply or not amountofpeople:
-            await client.send_message(message.channel,
-                                      'Not enough players to form a toplist. (need 100 games to qualify')
+            await message.channel.send('Not enough players to form a toplist. (need 100 games to qualify')
             return
 
         header = 'Top %s slots players (need 100 games to qualify)\n' % (amountofpeople)
         jackpot = '\nCurrent jackpot: %s$' % (jackpot['jackpot'])
-        await client.send_message(message.channel, '```' + header + reply + jackpot + '```')
+        await message.channel.send('```' + header + reply + jackpot + '```')
         return
 
     for trophy in CUSTOM_TROPHY_NAMES:
@@ -539,8 +529,7 @@ async def cmd_top(client, message, input):
             custom_filter = "AND ({0})".format(filters)
             reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
             if not reply or not amountofpeople:
-                await client.send_message(message.channel,
-                                          'Nobody has this trophy.')
+                await message.channel.send('Nobody has this trophy.')
                 return
 
             word = 'word' if len(customwords) == 1 else 'words'
@@ -548,13 +537,13 @@ async def cmd_top(client, message, input):
 
             title = 'Leaderboard of trophy %s (top %s users of the %s: %s %s)' % (trophy, amountofpeople, word, ', '.join(customwords), parameter)
 
-            await client.send_message(message.channel, ('```%s \n' % title + reply + '```'))
+            await message.channel.send(('```%s \n' % title + reply + '```'))
             return
     else:
         msg = "Unknown list. Available lists: spammers, whosaidit, blackjack, slots, bestgrammar, custom <words separated by comma>"
         if CUSTOM_TROPHY_NAMES:
             msg += ", " + ", ".join(CUSTOM_TROPHY_NAMES)
-        await client.send_message(message.channel, msg[:2000])
+        await message.channel.send(msg[:2000])
         return
 
 async def get_jackpot():
@@ -639,7 +628,7 @@ async def getcustomwords(input, message, client):
         return len(value) > 0
     customwords = [word for word in customwords if checkifsmall(word)]
     if len(customwords) == 0:
-        await client.send_message(message.channel,"You need to specify custom words to search for.")
+        await message.channel.send("You need to specify custom words to search for.")
         return
     return customwords
 
@@ -663,7 +652,7 @@ async def cmd_randomquote(client, themessage, input):
     guild_id = themessage.guild.id
     channel = themessage.channel
     if await is_playing(guild_id, themessage.author):
-        await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit.)")
+        await channel.send("Sorry, cheating is not allowed. (You are playing whosaidit.)")
         return
     if input is not None and 'custom' in input.lower()[0:6]:
         customwords = await getcustomwords(input, themessage, client)
@@ -671,7 +660,7 @@ async def cmd_randomquote(client, themessage, input):
             return
         random_message = await random(guild_id, customwords)
         if random_message is None:
-            await client.send_message(channel, "Sorry, no messages could be found")
+            await channel.send("Sorry, no messages could be found")
             return
         await send_quote(client, channel, random_message)
         return
@@ -686,12 +675,12 @@ async def cmd_randomquote(client, themessage, input):
                 break
 
         if channel is None:
-            await client.send_message(themessage.channel, "Sorry, I couldn't find such channel")
+            await themessage.channel.send("Sorry, I couldn't find such channel")
             return
 
     random_message = await random_quote_from_channel(channel.id)
     if random_message is None:
-        await client.send_message(themessage.channel, "Sorry, no messages could be found")
+        await themessage.channel.send("Sorry, no messages could be found")
     else:
         await send_quote(client, themessage.channel, random_message)
 
@@ -699,8 +688,7 @@ async def cmd_whosaidit(client, message, _):
     if not await is_playing(message.guild.id, message.author):
         await add_user_to_playing_dict(message.guild.id, message.author)
     else:
-        await client.send_message(message.channel,
-                                  '%s: Cannot play: You already have an unfinished game.' % message.author.name)
+        await message.channel.send('%s: Cannot play: You already have an unfinished game.' % message.author.name)
         return
     await dowhosaidit(client, message, _)
 
@@ -710,8 +698,7 @@ async def dowhosaidit(client, message, _):
     channel = message.channel
     listofspammers = await checkifenoughmsgstoplay(guild_id)
     if not listofspammers or len(listofspammers) < 5:
-        await client.send_message(channel,
-                                  'Not enough chat logged to play.')
+        await channel.send('Not enough chat logged to play.')
         await remove_user_from_playing_dict(message.guild.id, message.author)
         return
     rand.shuffle(listofspammers)
@@ -719,8 +706,7 @@ async def dowhosaidit(client, message, _):
     listofspammers.remove(name)
     quote = await getquoteforquotegame(guild_id, name)
     if not quote:
-        await client.send_message(channel,
-                                  'Not enough chat logged to play.') # I guess this is a pretty
+        await channel.send('Not enough chat logged to play.') # I guess this is a pretty
         #  rare occasion, # but just in case
         await remove_user_from_playing_dict(message.guild.id, message.author)
         return
@@ -733,19 +719,18 @@ async def send_question(client, message, listofspammers, thequote):
     options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(), listofspammers[3].lower(),
                correctname.lower()]
     rand.shuffle(options)
-    await client.send_message(message.channel,
-                    "It's time to play 'Who said it?' !\n %s, who"
+    await message.channel.send("It's time to play 'Who said it?' !\n %s, who"
                     " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
     answer = await getresponse(client, correctname, options, message)
     if answer and answer == 'correct':
-        await client.send_message(message.channel, "%s: Correct! It was %s" % (message.author.name, correctname))
+        await message.channel.send("%s: Correct! It was %s" % (message.author.name, correctname))
     elif answer and answer == 'wrong':
-        await client.send_message(message.channel, "%s: Wrong! It was %s" % (message.author.name, correctname))
+        await message.channel.send("%s: Wrong! It was %s" % (message.author.name, correctname))
     else:
         answer = 'wrong'
-        await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
+        await message.channel.send("%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
     await remove_user_from_playing_dict(message.guild.id, message.author)
     return
@@ -772,40 +757,40 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
 
 async def cmd_add_excluded_user(client, message, input):
     if not input:
-        await client.send_message(message.channel, 'Usage: !addexcludeduser <userID>. '
+        await message.channel.send('Usage: !addexcludeduser <userID>. '
                                                    'or highlight someone: !addexcludeduser @Thomaxius')
         return
     input = input[:-1].lstrip('<@')
     if not input.isdigit():
-        await client.send_message(message.channel, 'UserID has to be numeric.')
+        await message.channel.send('UserID has to be numeric.')
         return
     excluded_users = await get_excluded_users()
     if input in excluded_users:
-        await client.send_message(message.channel, 'UserID is already in the database.')
+        await message.channel.send('UserID is already in the database.')
         return
     member = discord.utils.get(message.guild.members, id=input)
     if not member:
-        await client.send_message(message.channel, 'UserID not found in the server.')
+        await message.channel.send('UserID not found in the server.')
         return
     await add_excluded_user_into_database(input, message.author.id)
-    await client.send_message(message.channel, 'Added **%s** into the database.' % member.name)
+    await message.channel.send('Added **%s** into the database.' % member.name)
 
 async def cmd_delete_excluded_user(client, message, input):
     if not input:
-        await client.send_message(message.channel, 'Usage: !delexcludedduser <userID>. '
+        await message.channel.send('Usage: !delexcludedduser <userID>. '
                                                    'or highlight someone: !delexcludedduser @Thomaxius')
         return
     input = input[:-1].lstrip('<@')
     if not input.isdigit():
-        await client.send_message(message.channel, 'UserID has to be numeric.')
+        await message.channel.send('UserID has to be numeric.')
         return
     excluded_users = await get_excluded_users()
     if input not in excluded_users:
-        await client.send_message(message.channel, 'UserID not found in the database')
+        await message.channel.send('UserID not found in the database')
         return
     member = discord.utils.get(message.guild.members, id=input)
     await del_excluded_user_from_database(input)
-    await client.send_message(message.channel, 'Removed **%s** from the database.' % member.name)
+    await message.channel.send('Removed **%s** from the database.' % member.name)
 
 async def get_excluded_users():
     results = await db.fetch("""

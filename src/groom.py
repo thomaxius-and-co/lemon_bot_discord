@@ -20,11 +20,11 @@ async def cmd_groom(client, message, arg):
     location_infos = list(map(build_location_time_message, loc_times.items()))
 
     if not location_infos:
-        await client.send_message(message.channel, "No parturs found")
+        await message.channel.send("No parturs found")
         return
 
     for msg in split_message_for_sending(location_infos, join_str="\n\n"):
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)
 
 def build_location_time_message(loc_times):
     loc, times = loc_times
