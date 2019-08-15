@@ -1,4 +1,5 @@
 import logger
+from discord.abc import GuildChannel
 import faceit_db_functions as faceit_db
 import faceit_api
 from faceit_api import NotFound, UnknownError
@@ -12,7 +13,7 @@ log = logger.get("FACEIT_COMMANDS")
 
 
 async def cmd_do_faceit_toplist(client, message, input):
-    if message.channel.is_private:
+    if not isinstance(message.channel, GuildChannel):
         await message.channel.send('This command does not work on private servers.')
         return
     toplist, amountofpeople = await get_faceit_leaderboard(message.guild.id)
@@ -150,7 +151,7 @@ async def cmd_faceit_commands(client, message, arg):
                   "\n<aliases>" \
                   "\n<records>" \
                   "```"
-    if message.channel.is_private:
+    if not isinstance(message.channel, GuildChannel):
         await private_faceit_commands(client, message, arg)
         return
     if not arg:
