@@ -238,7 +238,7 @@ async def cmd_countchars(client, message, input):
 async def cmd_clear(client, message, arg):
     limit = 10
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(message.channel.server.me)
+    botperms = message.channel.permissions_for(message.channel.guild.me)
     if not perms.administrator:
         await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
         log.info("!CLEAR: User %s access denied", message.author)
@@ -274,7 +274,7 @@ async def cmd_clearbot(client, message, arg):
     # It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
     limit = 10
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(message.channel.server.me)
+    botperms = message.channel.permissions_for(message.channel.guild.me)
 
     def isbot(message):
         return message.author == client.user and message.author.bot  # Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
@@ -451,7 +451,7 @@ async def get_guild_censored_words(client, guild_id):
     guild_censored_words = []
     if censored_word_entries:
         for channel in client.get_all_channels():
-            if channel.server.id == guild_id:
+            if channel.guild.id == guild_id:
                 for entry in censored_word_entries:
                     if entry['exchannel_id'] == channel.id:
                         guild_censored_words.append(entry)
@@ -496,7 +496,7 @@ async def cmd_list_censored_words(client, message, _):
     if not perms.administrator:
         await client.send_message(message.channel, "You do not have sufficient permissions.")
         return
-    censored_word_entries = await get_guild_censored_words(client, message.server.id)
+    censored_word_entries = await get_guild_censored_words(client, message.guild.id)
     if not censored_word_entries:
         await client.send_message(message.channel, "No censored words have been defined.")
         return
@@ -524,7 +524,7 @@ async def cmd_del_censored_words(client, message, arg):
         await client.send_message(message.channel, "You must specify an ID to delete, eq. !deletecensoredwords 1. "
                                                    "Use !listcensoredwords to find out the correct ID.")
         return
-    censored_word_entries = await get_guild_censored_words(client, message.server.id)
+    censored_word_entries = await get_guild_censored_words(client, message.guild.id)
     if not censored_word_entries:
         await client.send_message(message.channel, "No censored words have been defined.")
         return
@@ -587,10 +587,10 @@ async def cmd_randomcolor(client, message, _):
     await client.send_message(message.channel, link)
 
 async def do_censored_words_check(client, message):
-    if message.server is None:
+    if message.guild is None:
         return True
     message_words = message.content.split(' ')
-    illegal_messages = await get_guild_censored_words(client, message.server.id)
+    illegal_messages = await get_guild_censored_words(client, message.guild.id)
     if not illegal_messages:
         return True
     for row in illegal_messages:
@@ -643,9 +643,7 @@ def parse_raw_msg(msg):
     return json.loads(msg)
 
 @client.event
-async def on_socket_raw_receive(raw_msg):
-    msg = parse_raw_msg(raw_msg)
-
+async def on_socket_response(msg):
     type = msg.get("t", None)
     data = msg.get("d", None)
 
@@ -726,7 +724,7 @@ def autocorrect_command(cmd):
 
 @client.event
 async def on_ready():
-    await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
+    await client.change_presence(activity=discord.Game(name='is not working | I am your worker. I am your slave.'))
     await status.main(client)
 
 if __name__ == "__main__":

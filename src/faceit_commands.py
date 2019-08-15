@@ -15,7 +15,7 @@ async def cmd_do_faceit_toplist(client, message, input):
     if message.channel.is_private:
         await client.send_message(message.channel, 'This command does not work on private servers.')
         return
-    toplist, amountofpeople = await get_faceit_leaderboard(message.server.id)
+    toplist, amountofpeople = await get_faceit_leaderboard(message.guild.id)
     if not toplist or not amountofpeople:
         await client.send_message(message.channel,
                                   'No faceit players have been added to the database, or none of them have rank.')
@@ -25,7 +25,7 @@ async def cmd_do_faceit_toplist(client, message, input):
 
 
 async def cmd_add_faceit_nickname(client, message, arg):
-    guild_id = message.server.id
+    guild_id = message.guild.id
     errormessage = "Usage: !faceit addnick <faceit user> <nickname>\n for example: !faceit addnick rce jallulover69"
     if not arg:
         await client.send_message(message.channel, errormessage)
@@ -64,7 +64,7 @@ async def cmd_faceit_stats(client, message, faceit_nickname):
 
 
 async def cmd_list_faceit_users(client, message, _):
-    guild_faceit_players_entries = await faceit_db.get_players_in_guild(message.server.id)
+    guild_faceit_players_entries = await faceit_db.get_players_in_guild(message.guild.id)
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "No faceit users have been defined.")
         return
@@ -79,7 +79,7 @@ async def cmd_list_faceit_users(client, message, _):
 
 
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
-    guild_id = message.server.id
+    guild_id = message.guild.id
     if not faceit_nickname:
         await client.send_message(message.channel, "You need to specify a faceit nickname for the user to be added, "
                                                    "for example: !faceit adduser Jallu-rce")
@@ -110,13 +110,13 @@ async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
 
 
 async def cmd_del_faceit_user(client, message, arg):
-    guild_id = message.server.id
+    guild_id = message.guild.id
     if not arg:
         await client.send_message(message.channel,
                                   "You must specify faceit nickname, or an ID to delete, eq. !faceit deluser 1. "
                                   "Use !faceit list to find out the correct ID.")
         return
-    guild_faceit_players_entries = await faceit_db.get_players_in_guild(message.server.id)
+    guild_faceit_players_entries = await faceit_db.get_players_in_guild(message.guild.id)
     if not guild_faceit_players_entries:
         await client.send_message(message.channel, "There are no faceit players added.")
         return
@@ -211,8 +211,8 @@ async def cmd_reset_records(client, message, _):
                                                "or 'no' to cancel.")
     answer = await client.wait_for_message(timeout=60, author=message.author)
     if answer and answer.content.lower() == 'yes':
-        await faceit_db.add_records_reset_date(message.server.id, datetime.now(), message.author.id)
-        log.info("User %s triggered rest of records for guild %s" % (message.author.id, message.server.id))
+        await faceit_db.add_records_reset_date(message.guild.id, datetime.now(), message.author.id)
+        log.info("User %s triggered rest of records for guild %s" % (message.author.id, message.guild.id))
         await client.send_message(message.channel, "Records reset.")
     elif answer is None or answer.content.lower() == 'no':
         await client.send_message(message.channel,
@@ -221,7 +221,7 @@ async def cmd_reset_records(client, message, _):
 
 
 async def cmd_show_aliases(client, message, faceit_nickname):
-    guild_players = await faceit_db.get_players_in_guild(message.server.id)
+    guild_players = await faceit_db.get_players_in_guild(message.guild.id)
     for record in guild_players:
         if faceit_nickname == record['faceit_nickname']:
             player_guid = await get_faceit_guid(faceit_nickname)
@@ -244,7 +244,7 @@ def widest_in_list_of_tuples(list_of_tuples, index):
 
 
 async def cmd_show_records(client, message, _):
-    guild_records = await fr.get_records_by_guild(message.server.id)
+    guild_records = await fr.get_records_by_guild(message.guild.id)
     records_as_tuples = []
     for record in guild_records.values():
         record_item = record.get("record_item")
@@ -300,7 +300,7 @@ async def cmd_parse_records_of_past_matches(client, message, arg):
     matches = await fc.get_matches(player_guid, timestamp)
     matches = await fc.get_combined_match_data(matches)
     if matches:
-        await fr.handle_records(player_guid, matches, message.server.id)
+        await fr.handle_records(player_guid, matches, message.guild.id)
         await client.edit_message(message, "%s matches processed for player %s" % (len(matches), nickname))
         return
     if not matches:
@@ -312,7 +312,7 @@ async def cmd_add_faceit_channel(client, message, arg):
     if not arg:
         await client.send_message(message.channel, 'You must specify a channel name.')
         return
-    guild_id = message.server.id
+    guild_id = message.guild.id
     channel_id = await get_channel_id(client, arg)
     if not channel_id:
         await client.send_message(message.channel, 'No such channel.')

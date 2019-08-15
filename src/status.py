@@ -33,7 +33,7 @@ async def check_user_and_message_count(client):
 
 async def change_status(client, status):
     await client.change_presence(
-        game=discord.Game(name=status))
+        activity=discord.Game(name=status))
 
 async def get_user_count():
     result = await db.fetchrow("""
@@ -68,7 +68,7 @@ async def cmd_clearstatus(client, message, _):
         return
     CUSTOM_STATUS = None
     CUSTOM_STATUS_DISPLAYED = None
-    await client.change_presence(game=discord.Game(name=None))
+    await client.change_presence(activity=discord.Game(name=None))
 
 async def cmd_status(client, message, input):
     global CUSTOM_STATUS

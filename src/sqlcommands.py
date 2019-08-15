@@ -417,7 +417,7 @@ def check_length(x,i):
     return len(str(x[i]))
 
 async def cmd_top(client, message, input):
-    guild_id = message.server.id
+    guild_id = message.guild.id
     if not input:
         await client.send_message(message.channel, 'You need to specify a toplist. Available toplists: spammers,'
                                                    ' custom <words separated by comma>')
@@ -660,7 +660,7 @@ async def is_playing(guild_id, name):
     return name in playing_list
 
 async def cmd_randomquote(client, themessage, input):
-    guild_id = themessage.server.id
+    guild_id = themessage.guild.id
     channel = themessage.channel
     if await is_playing(guild_id, themessage.author):
         await client.send_message(channel, "Sorry, cheating is not allowed. (You are playing whosaidit.)")
@@ -679,8 +679,8 @@ async def cmd_randomquote(client, themessage, input):
     if input is None:
         channel = themessage.channel
     else:
-        server = themessage.channel.server
-        for c in server.channels:
+        guild = themessage.channel.guild
+        for c in guild.channels:
             if c.name == input:
                 channel = c
                 break
@@ -696,8 +696,8 @@ async def cmd_randomquote(client, themessage, input):
         await send_quote(client, themessage.channel, random_message)
 
 async def cmd_whosaidit(client, message, _):
-    if not await is_playing(message.server.id, message.author):
-        await add_user_to_playing_dict(message.server.id, message.author)
+    if not await is_playing(message.guild.id, message.author):
+        await add_user_to_playing_dict(message.guild.id, message.author)
     else:
         await client.send_message(message.channel,
                                   '%s: Cannot play: You already have an unfinished game.' % message.author.name)
@@ -706,13 +706,13 @@ async def cmd_whosaidit(client, message, _):
 
 
 async def dowhosaidit(client, message, _):
-    guild_id = message.server.id
+    guild_id = message.guild.id
     channel = message.channel
     listofspammers = await checkifenoughmsgstoplay(guild_id)
     if not listofspammers or len(listofspammers) < 5:
         await client.send_message(channel,
                                   'Not enough chat logged to play.')
-        await remove_user_from_playing_dict(message.server.id, message.author)
+        await remove_user_from_playing_dict(message.guild.id, message.author)
         return
     rand.shuffle(listofspammers)
     name = rand.choice(listofspammers)
@@ -722,7 +722,7 @@ async def dowhosaidit(client, message, _):
         await client.send_message(channel,
                                   'Not enough chat logged to play.') # I guess this is a pretty
         #  rare occasion, # but just in case
-        await remove_user_from_playing_dict(message.server.id, message.author)
+        await remove_user_from_playing_dict(message.guild.id, message.author)
         return
     await send_question(client, message, listofspammers, quote)
 
@@ -747,7 +747,7 @@ async def send_question(client, message, listofspammers, thequote):
         answer = 'wrong'
         await client.send_message(message.channel, "%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
-    await remove_user_from_playing_dict(message.server.id, message.author)
+    await remove_user_from_playing_dict(message.guild.id, message.author)
     return
 
 async def getresponse(client, name, options, message):
@@ -783,7 +783,7 @@ async def cmd_add_excluded_user(client, message, input):
     if input in excluded_users:
         await client.send_message(message.channel, 'UserID is already in the database.')
         return
-    member = discord.utils.get(message.server.members, id=input)
+    member = discord.utils.get(message.guild.members, id=input)
     if not member:
         await client.send_message(message.channel, 'UserID not found in the server.')
         return
@@ -803,7 +803,7 @@ async def cmd_delete_excluded_user(client, message, input):
     if input not in excluded_users:
         await client.send_message(message.channel, 'UserID not found in the database')
         return
-    member = discord.utils.get(message.server.members, id=input)
+    member = discord.utils.get(message.guild.members, id=input)
     await del_excluded_user_from_database(input)
     await client.send_message(message.channel, 'Removed **%s** from the database.' % member.name)
 

@@ -65,7 +65,7 @@ async def check_faceit_elo(client):
                     matches = await fc.get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_guid, copy.deepcopy(matches))
-                        guild_id = channel.server.id
+                        guild_id = channel.guild.id
                         await fr.handle_records(player_guid, copy.deepcopy(matches), guild_id)
                         records_string = await fr.get_record_string(player_guid, guild_id, copy.deepcopy(matches))
                     else:
