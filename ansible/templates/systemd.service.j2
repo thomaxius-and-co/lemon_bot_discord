@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 User={{ app_name }}
 Group={{ app_name }}
-ExecStart=/usr/bin/python3.6 -u /home/{{ app_name }}/src/run_lemon_bot.py
+ExecStart=/usr/bin/python3.7 -u /home/{{ app_name }}/src/run_lemon_bot.py
 WorkingDirectory=/home/{{ app_name }}
 Environment=ADMIN_USER_IDS={{ secrets.admin_user_ids }}
 Environment=LEMONBOT_TOKEN={{ secrets.discord_token }}
