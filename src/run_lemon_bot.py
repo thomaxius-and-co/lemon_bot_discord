@@ -251,17 +251,20 @@ async def cmd_clear(client, message, arg):
         limit = int(arg)
     await message.channel.send("This will delete %s messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author)
-    if answer and answer.content.lower() == 'yes':
-        try:
-            await client.purge_from(message.channel, limit=limit + 3)
-            await message.channel.send("%s messages succesfully deleted." % limit)
-            log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
-        except discord.errors.HTTPException as e:
-            if e.text == "You can only bulk delete messages that are under 14 days old.":
-                await message.channel.send("You can only delete messages from the past 14 days - "
-                                                           " please lower your message amount.")
-    elif answer is None or answer.content.lower() == 'no':
+    try:
+        answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
+        if answer.content.lower() == 'yes':
+            try:
+                await client.purge_from(message.channel, limit=limit + 3)
+                await message.channel.send("%s messages succesfully deleted." % limit)
+                log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
+            except discord.errors.HTTPException as e:
+                if e.text == "You can only bulk delete messages that are under 14 days old.":
+                    await message.channel.send("You can only delete messages from the past 14 days - "
+                                                               " please lower your message amount.")
+        elif answer.content.lower() == 'no':
+            await message.channel.send("Deletion of messages cancelled.")
+    except asyncio.TimeoutError:
         await message.channel.send("Deletion of messages cancelled.")
     return
 
@@ -285,17 +288,20 @@ async def cmd_clearbot(client, message, arg):
         limit = int(arg)
     await message.channel.send("This will delete %s of **bot's** messages from the channel. Type 'yes' to confirm, "
                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author)
-    if answer and answer.content.lower() == 'yes':
-        try:
-            await client.purge_from(message.channel, limit=limit + 3, check=isbot)
-            await message.channel.send("%s bot messages succesfully deleted." % limit)
-            log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
-        except discord.errors.HTTPException as e:
-            if e.text == "You can only bulk delete messages that are under 14 days old.":
-                await message.channel.send("You can only delete messages from the past 14 days - "
-                                                           " please lower your message amount.")
-    elif answer is None or answer.content.lower() == 'no':
+    try:
+        answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
+        if answer.content.lower() == 'yes':
+            try:
+                await client.purge_from(message.channel, limit=limit + 3, check=isbot)
+                await message.channel.send("%s bot messages succesfully deleted." % limit)
+                log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
+            except discord.errors.HTTPException as e:
+                if e.text == "You can only bulk delete messages that are under 14 days old.":
+                    await message.channel.send("You can only delete messages from the past 14 days - "
+                                                               " please lower your message amount.")
+        elif answer.content.lower() == 'no':
+            await message.channel.send("Deletion of messages cancelled.")
+    except asyncio.TimeoutError:
         await message.channel.send("Deletion of messages cancelled.")
     return
 

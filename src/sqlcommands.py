@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import re
 import json
@@ -723,12 +724,13 @@ async def send_question(client, message, listofspammers, thequote):
                     " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
-    answer = await getresponse(client, correctname, options, message)
-    if answer and answer == 'correct':
-        await message.channel.send("%s: Correct! It was %s" % (message.author.name, correctname))
-    elif answer and answer == 'wrong':
-        await message.channel.send("%s: Wrong! It was %s" % (message.author.name, correctname))
-    else:
+    try:
+        answer = await getresponse(client, correctname, options, message)
+        if answer and answer == 'correct':
+            await message.channel.send("%s: Correct! It was %s" % (message.author.name, correctname))
+        elif answer and answer == 'wrong':
+            await message.channel.send("%s: Wrong! It was %s" % (message.author.name, correctname))
+    except asyncio.TimeoutError:
         answer = 'wrong'
         await message.channel.send("%s: Time is up! The answer was %s" % (message.author.name, correctname))
     await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
@@ -736,10 +738,12 @@ async def send_question(client, message, listofspammers, thequote):
     return
 
 async def getresponse(client, name, options, message):
-    def is_response(message):
-        return message.content.lower() == name.lower() or message.content.lower() in options
+    def is_response(m):
+        is_reply = m.channel == message.channel and m.author == message.author
+        is_option = m.content.lower() == name.lower() or m.content.lower() in options
+        return is_reply and is_option
 
-    answer = await client.wait_for_message(timeout=15, channel=message.channel, author=message.author, check=is_response)
+    answer = await client.wait_for("message", timeout=15, check=is_response)
     if answer:
         theanswer = answer.content.lower()
         if theanswer == name.lower():

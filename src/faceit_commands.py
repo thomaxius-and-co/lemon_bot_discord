@@ -205,13 +205,17 @@ async def cmd_reset_records(client, message, _):
         return
     await message.channel.send("This will reset the records of this guild. Type 'yes' to confirm, "
                                                "or 'no' to cancel.")
-    answer = await client.wait_for_message(timeout=60, author=message.author)
-    if answer and answer.content.lower() == 'yes':
-        await faceit_db.add_records_reset_date(message.guild.id, datetime.now(), message.author.id)
-        log.info("User %s triggered rest of records for guild %s" % (message.author.id, message.guild.id))
-        await message.channel.send("Records reset.")
-    elif answer is None or answer.content.lower() == 'no':
+    try:
+        answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
+        if answer.content.lower() == 'yes':
+            await faceit_db.add_records_reset_date(message.guild.id, datetime.now(), message.author.id)
+            log.info("User %s triggered rest of records for guild %s" % (message.author.id, message.guild.id))
+            await message.channel.send("Records reset.")
+        elif answer.content.lower() == 'no':
+            await message.channel.send("Deletion of records cancelled.")
+    except asyncio.TimeoutError:
         await message.channel.send("Deletion of records cancelled.")
+
     return
 
 
