@@ -86,7 +86,7 @@ async def process_feed(client, id, url, last_entry, channel_id):
             else:
               embed.set_author(name=feed_title, url=feed_url)
 
-            channel = discord.Object(id=channel_id)
+            channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
             util.threadsafe(client, channel.send(embed=embed))
 
         # Update last entry

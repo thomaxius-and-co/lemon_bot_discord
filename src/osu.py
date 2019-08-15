@@ -129,7 +129,7 @@ async def process_user(client, user, pp_key, rank_key, mode):
       pp_diff = round(pp_diff, 1),
       rank_str = rank_str
     )
-    channel = discord.Object(id=channel_id)
+    channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
     util.threadsafe(client, channel.send(msg))
     await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
 

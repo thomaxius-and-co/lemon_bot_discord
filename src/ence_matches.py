@@ -105,7 +105,7 @@ async def do_matchday_spam(client, matches):
         log.info('No spam channels have been set')
         return
     for row in channels_query:
-        channel = discord.Object(id=row['channel_id'])
+        channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
         if len(matches) > 1:
             msg = "It is match day!\nToday we have %s matches:\n" % len(matches)
         else:
@@ -137,7 +137,7 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
     log.info('Match spammer task: waking up and attempting to spam')
     if await not_rescheduled(earliest_match):
         for row in channels_query:
-            channel = discord.Object(id=row['channel_id'])
+            channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
             util.threadsafe(client, channel.send(("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
         await update_last_spammed_time()
         # todo: fire up do_tasks after this function

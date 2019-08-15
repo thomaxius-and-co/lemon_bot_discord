@@ -110,7 +110,7 @@ async def fetch_players_batch(player_ids):
 async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill,
                                  skill_before, custom_nickname, match_info_string, record_string):
     await asyncio.sleep(0.1)
-    channel = discord.Object(id=spam_channel_id)
+    channel = util.threadsafe(client, client.fetch_channel(int(spam_channel_id)))
     message = None
 
     if skill_before < current_skill:
@@ -299,7 +299,7 @@ async def check_and_spam_rank_changes(client, old_toplist, new_toplist, spam_cha
                         player_name, old_rank, new_rank)
     if msg:
         log.info('Attempting to spam channel %s with the following message: %s', spam_channel_id, msg)
-        channel = discord.Object(id=spam_channel_id)
+        channel = util.threadsafe(client, client.fetch_channel(int(spam_channel_id)))
         util.threadsafe(client, channel.send(msg))
         await asyncio.sleep(.25)
     log.info("Rank changes checked")

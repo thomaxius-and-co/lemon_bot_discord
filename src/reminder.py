@@ -68,8 +68,8 @@ async def process_next_reminder(client):
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
-            user = util.threadsafe(client, client.get_user_info(user_id))
-            util.threadsafe(client, message.channel.send(msg))
+            user = util.threadsafe(client, client.fetch_user(int(user_id)))
+            util.threadsafe(client, user.send(msg))
 
             await tx.execute("""
                 UPDATE reminder
