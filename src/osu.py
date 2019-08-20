@@ -67,7 +67,7 @@ async def cmd_osu_add(client, message, arg):
         await db.execute("""
             INSERT INTO osu_pp (osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank, changed)
             VALUES ($1, $2, $3, $4, $5, $6, current_timestamp)
-        """, user_std.id, message.channel.id, user_std.pp, user_std.rank, user_mania.pp, user_mania.rank)
+        """, user_std.id, str(message.channel.id), user_std.pp, user_std.rank, user_mania.pp, user_mania.rank)
     except UniqueViolationError:
         return await message.channel.send(f"User is already added")
 
@@ -146,7 +146,7 @@ async def update_pp(pp_key, rank_key, pp, rank, user_id, channel_id):
       SET {pp_key} = $1, {rank_key} = $2, changed = current_timestamp
       WHERE osu_user_id = $3 AND channel_id = $4
     """.format(pp_key=pp_key, rank_key=rank_key)
-    await db.execute(sql, pp, rank, user_id, channel_id)
+    await db.execute(sql, pp, rank, user_id, str(channel_id))
 
 async def task(client):
     util.threadsafe(client, client.wait_until_ready())

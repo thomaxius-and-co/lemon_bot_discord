@@ -88,7 +88,7 @@ prizeMultipliers = {
 
 
 async def get_balance(user):
-    balance = await db.fetchval("SELECT balance FROM casino_account WHERE user_id = $1", user.id)
+    balance = await db.fetchval("SELECT balance FROM casino_account WHERE user_id = $1", str(user.id))
     return balance if balance is not None else 0
 
 
@@ -99,7 +99,7 @@ async def add_money(user, amount):
         VALUES ($1, $2)
         ON CONFLICT (user_id) DO UPDATE
         SET balance = GREATEST(0, a.balance + EXCLUDED.balance)
-    """, user.id, amount)
+    """, str(user.id), amount)
 
 async def save_slots_stats(user, amounttobankaccount, winnings):
     await add_money(user, amounttobankaccount)
@@ -144,7 +144,7 @@ async def update_slots_stats(user, wins, losses, moneyspent, moneywon):
         losses_slots = GREATEST(0, a.losses_slots + EXCLUDED.losses_slots),
         moneyspent_slots = GREATEST(0, a.moneyspent_slots + EXCLUDED.moneyspent_slots),
         moneywon_slots = GREATEST(0, a.moneywon_slots + EXCLUDED.moneywon_slots)
-    """, user.id, wins, losses, moneyspent, moneywon)
+    """, str(user.id), wins, losses, moneyspent, moneywon)
 
 
 async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrenders, blackjack, moneywon):
@@ -160,7 +160,7 @@ async def update_blackjack_stats(user, wins, moneyspent, losses, ties, surrender
         surrenders = GREATEST(0, a.surrenders + EXCLUDED.surrenders),
         bj_blackjack = GREATEST(0, a.bj_blackjack + EXCLUDED.bj_blackjack),
         moneywon_bj = GREATEST(0, a.moneywon_bj + EXCLUDED.moneywon_bj)
-    """, user.id, wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
+    """, str(user.id), wins, losses, moneyspent, ties, surrenders, blackjack, moneywon)
 
 
 async def makedeck(blackjack=True):
@@ -177,7 +177,7 @@ async def makedeck(blackjack=True):
 
 
 async def get_bet(user):
-    bet = await db.fetchval("SELECT bet FROM casino_bet WHERE user_id = $1", user.id)
+    bet = await db.fetchval("SELECT bet FROM casino_bet WHERE user_id = $1", str(user.id))
     return bet if bet is not None else 0
 
 
@@ -188,7 +188,7 @@ async def set_bet(user, amount):
         VALUES ($1, $2)
         ON CONFLICT (user_id) DO UPDATE
         SET bet = GREATEST(0, EXCLUDED.bet)
-    """, user.id, amount)
+    """, str(user.id), amount)
 
 
 async def get_jackpot():

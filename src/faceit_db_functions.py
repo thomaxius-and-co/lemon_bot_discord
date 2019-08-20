@@ -45,7 +45,7 @@ async def set_faceit_nickname(guild_id, faceit_name, custom_nickname):
         UPDATE faceit_guild_ranking gr SET custom_nickname = $1
         FROM faceit_player p WHERE p.faceit_guid = gr.faceit_guid
         AND gr.guild_id = $2 AND p.faceit_nickname = $3
-    """, custom_nickname, guild_id, faceit_name)
+    """, custom_nickname, str(guild_id), faceit_name)
 
 
 async def get_toplist_from_db(guild_id):
@@ -98,7 +98,7 @@ async def get_toplist_from_db(guild_id):
             order by 
               faceit_ranking asc
             limit 10
-            """, guild_id)
+            """, str(guild_id))
 
 
 async def get_all_players():
@@ -112,7 +112,7 @@ async def get_all_players():
 async def get_players_in_guild(guild_id):
     return await db.fetch(
         "SELECT * FROM faceit_guild_ranking JOIN faceit_player USING (faceit_guid) WHERE guild_id = $1 ORDER BY id ASC",
-        guild_id)
+        str(guild_id))
 
 
 async def delete_faceit_user_from_database_with_row_id(guild_id, row_id):
@@ -121,7 +121,7 @@ async def delete_faceit_user_from_database_with_row_id(guild_id, row_id):
         WHERE guild_id = $1 AND faceit_guid = (
             SELECT faceit_guid FROM faceit_player WHERE id = $2
         )
-    """, guild_id, row_id)
+    """, str(guild_id), row_id)
 
 
 async def delete_faceit_user_from_database_with_faceit_nickname(guild_id, faceit_nickname):
@@ -130,7 +130,7 @@ async def delete_faceit_user_from_database_with_faceit_nickname(guild_id, faceit
         WHERE guild_id = $1 AND faceit_guid = (
             SELECT faceit_guid FROM faceit_player WHERE faceit_nickname LIKE $2
         )
-    """, guild_id, faceit_nickname)
+    """, str(guild_id), faceit_nickname)
 
 
 async def get_faceit_stats_of_player(guid):
@@ -216,11 +216,11 @@ async def insert_data_to_player_stats_table(guid, elo, skill_level, ranking):
 
 async def assign_faceit_player_to_server_ranking(guild_id, faceit_guid):
     already_in_db = await db.fetchval(
-        "SELECT count(*) = 1 FROM faceit_guild_ranking WHERE guild_id = $1 AND faceit_guid = $2", guild_id, faceit_guid)
+        "SELECT count(*) = 1 FROM faceit_guild_ranking WHERE guild_id = $1 AND faceit_guid = $2", str(guild_id), faceit_guid)
     if already_in_db == True:
         return False
 
-    await db.execute("INSERT INTO faceit_guild_ranking (guild_id, faceit_guid) VALUES ($1, $2)", guild_id, faceit_guid)
+    await db.execute("INSERT INTO faceit_guild_ranking (guild_id, faceit_guid) VALUES ($1, $2)", str(guild_id), faceit_guid)
     return True
 
 
@@ -233,7 +233,7 @@ async def update_faceit_channel(guild_id, channel_id):
     await db.execute("""
         INSERT INTO faceit_notification_channel (guild_id, channel_id) VALUES ($1, $2)
         ON CONFLICT (guild_id) DO UPDATE SET channel_id = EXCLUDED.channel_id
-    """, guild_id, channel_id)
+    """, str(guild_id), channel_id)
 
 
 async def get_player_add_date(faceit_guid):
@@ -281,7 +281,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             kills DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit)
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
 
@@ -306,7 +306,7 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             assists DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -330,7 +330,7 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             deaths DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -354,7 +354,7 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             kd_ratio DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -378,7 +378,7 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             kr_ratio DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -402,7 +402,7 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             triple_kills DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -426,7 +426,7 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             quadro_kills DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -450,7 +450,7 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             penta_kills DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit)
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
 
@@ -477,7 +477,7 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             headshot_percentage DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -501,7 +501,7 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             headshots DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -525,7 +525,7 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             mvps DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -549,7 +549,7 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             (finished_at - started_at) DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 async def shortest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
@@ -572,7 +572,7 @@ async def shortest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None,
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             (finished_at - started_at) ASC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -596,7 +596,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             total_rounds DESC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
@@ -619,7 +619,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
             kd_ratio ASC LIMIT {3}
-    """.format(minimum_rounds, guild_id, additional_parameters_string, limit))
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
 async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -646,7 +646,7 @@ async def biggest_comeback(guild_id, limit=2, player_guid=None, from_timestamp=N
             win = true and enemy_team_first_half_score > player_team_first_half_score AND guild_id = '{0}' {1} 
         ORDER BY
             score_difference DESC LIMIT {2}
-    """.format(guild_id, additional_parameters_string, limit)
+    """.format(str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
 
@@ -673,7 +673,7 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
             win = false AND  player_team_first_half_score > enemy_team_first_half_score AND guild_id = '{0}' {1}
         ORDER BY
             score_difference DESC LIMIT {2}
-    """.format(guild_id, additional_parameters_string, limit)
+    """.format(str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
 async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -697,7 +697,7 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
             win = true AND guild_id = '{0}' {1}
         ORDER BY
             kd_ratio ASC LIMIT {2}
-    """.format(guild_id, additional_parameters_string, limit))
+    """.format(str(guild_id), additional_parameters_string, limit))
 
 
 async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -721,7 +721,7 @@ async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=No
             win = false AND guild_id = '{0}' {1}
         ORDER BY
             kd_ratio DESC LIMIT {2}
-    """.format(guild_id, additional_parameters_string, limit))
+    """.format(str(guild_id), additional_parameters_string, limit))
 
 
 async def add_record(args):
@@ -739,7 +739,7 @@ async def add_record(args):
 async def get_last_reset_timestamp(guild_id):
     return await db.fetchval(
         "SELECT extract(epoch FROM reset_date) as reset_date FROM faceit_records_config WHERE guild_id = $1 ORDER BY reset_date DESC LIMIT 1",
-        guild_id)
+        str(guild_id))
 
 async def add_records_reset_date(guild_id, date, user_id):
     await db.execute("""
@@ -747,4 +747,4 @@ async def add_records_reset_date(guild_id, date, user_id):
         faceit_records_config (guild_id, reset_date, reset_by)
     VALUES
         ($1, $2, $3)
-    """, guild_id, date, user_id)
+    """, str(guild_id), date, str(user_id))
