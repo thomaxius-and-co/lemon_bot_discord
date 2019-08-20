@@ -10,7 +10,7 @@ add-apt-repository -y ppa:deadsnakes/ppa
 apt-get -q update
 
 apt-get -q install -y \
-  python3.6 python3.6-dev \
+  python3.7 python3.7-dev \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
 pip install -r ansible/requirements.txt > /dev/null
