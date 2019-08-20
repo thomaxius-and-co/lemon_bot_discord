@@ -105,7 +105,7 @@ async def do_matchday_spam(client, matches):
         log.info('No spam channels have been set')
         return
     for row in channels_query:
-        channel = discord.Object(id=row['channel_id'])
+        channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
         if len(matches) > 1:
             msg = "It is match day!\nToday we have %s matches:\n" % len(matches)
         else:
@@ -114,7 +114,7 @@ async def do_matchday_spam(client, matches):
             item = [match[0], match[1], match[2], match[3], match[6]]
             if item not in matches_list:
                 matches_list += [item] # Competition, Home team, away team, map, tod
-        util.threadsafe(client, client.send_message(channel, msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
+        util.threadsafe(client, channel.send(msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
     await update_last_spammed_time()
     if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
@@ -137,8 +137,8 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
     log.info('Match spammer task: waking up and attempting to spam')
     if await not_rescheduled(earliest_match):
         for row in channels_query:
-            channel = discord.Object(id=row['channel_id'])
-            util.threadsafe(client, client.send_message(channel, ("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
+            channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
+            util.threadsafe(client, channel.send(("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
         await update_last_spammed_time()
         # todo: fire up do_tasks after this function
         # todo: fix this and spam about new match time if match is rescheduled
@@ -252,8 +252,7 @@ async def not_added(comparsion_match, matches):
 async def cmd_ence(client, message, arg):
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     if not LAST_CHECKED:
-        await client.send_message(message.channel,
-                                  "https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
+        await message.channel.send("https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
     else:
         list_of_matches = deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y])
 
@@ -262,7 +261,7 @@ async def cmd_ence(client, message, arg):
             return x
         list_of_matches = [convert_date(x) for x in list_of_matches if x[5] > now] #We want to keep only matches that are upcoming, and show only date in date column
 
-        await client.send_message(message.channel, (("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
+        await message.channel.send((("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
             "%Y-%m-%d %H:%M")) + columnmaker.columnmaker(
             ['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
             , list_of_matches) + ("\n+ %s pending MDL matches" % (UNDEFINED_MATCHES_COUNT)) + "\n#EZ4ENCE```"))

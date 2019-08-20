@@ -22,9 +22,9 @@ async def cmd_withings_devices(client, message, arg):
     user_id = message.author.id
     try:
         devices = await api.getdevice(user_id)
-        await client.send_message(message.channel, str(devices))
+        await message.channel.send(str(devices))
     except AccountNotLinkedException:
-        await client.send_message(message.channel, "Please link your Withings account")
+        await message.channel.send("Please link your Withings account")
 
 def register(client):
     return {

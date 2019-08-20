@@ -86,7 +86,8 @@ async def process_feed(client, id, url, last_entry, channel_id):
             else:
               embed.set_author(name=feed_title, url=feed_url)
 
-            util.threadsafe(client, client.send_message(discord.Object(id=channel_id), embed=embed))
+            channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
+            util.threadsafe(client, channel.send(embed=embed))
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
@@ -133,7 +134,7 @@ async def cmd_feed(client, message, arg):
 async def cmd_feed_list(client, message, _):
     feeds = await db.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", message.channel.id)
     msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)
 
 async def cmd_feed_add(client, message, url):
     # TODO: Check the feed is valid
@@ -160,7 +161,7 @@ async def respond(client, message, reaction):
         await client.add_reaction(message, reaction)
     except discord.errors.Forbidden:
         with suppress(discord.errors.Forbidden):
-            await client.send_message(message.channel, reaction)
+            await message.channel.send(reaction)
 
 def register(client):
     log.info("Registering")

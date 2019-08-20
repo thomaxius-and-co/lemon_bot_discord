@@ -131,7 +131,7 @@ async def get_user_days_in_chat():
 
 
 async def cmd_trophycabinet(client, message, arg):
-    oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
+    oldmessage = await message.channel.send('Please wait while I check the book of winners..')
     user_id = message.author.id
     trophycabinet = await find_user_trophies(user_id)
     msg = ''
@@ -150,32 +150,31 @@ async def cmd_deletetrophy(client, message, arg):
         msg += str(y) + '. ' + x + '\n'
         y += 1
     if not arg.isdigit():
-        await client.send_message(message.channel, "You need to specify a trophy ID. Available trophy ID's:\n" + msg)
+        await message.channel.send("You need to specify a trophy ID. Available trophy ID's:\n" + msg)
         return
     if not CUSTOM_TROPHY_NAMES:
-        await client.send_message(message.channel, "There are no throphies")
+        await message.channel.send("There are no throphies")
         return
     if len(CUSTOM_TROPHY_NAMES) <= int(arg) - 1 or (
         int(arg) == 0):  # Even though giving 0 as ID works, It's not we want heh
-        await client.send_message(message.channel, "Invalid trophy ID. Available trophy ID's:\n" + msg)
+        await message.channel.send("Invalid trophy ID. Available trophy ID's:\n" + msg)
         return
 
     trophytobedeleted = CUSTOM_TROPHY_NAMES[int(arg) - 1]
     await delete_trophy(CUSTOM_TROPHY_NAMES[int(arg) - 1])
-    await client.send_message(message.channel,
-                              'Succesfully deleted trophy: ' + trophytobedeleted)  # the ugly code above should be just temponary..
+    await message.channel.send('Succesfully deleted trophy: ' + trophytobedeleted)  # the ugly code above should be just temponary..
 
 
 async def cmd_listtrophies(client, message, arg):
     if not CUSTOM_TROPHY_NAMES:
-        await client.send_message(message.channel, "There are no throphies.")
+        await message.channel.send("There are no throphies.")
         return
     msg = ''
     y = 1
     for x in CUSTOM_TROPHY_NAMES:
         msg += str(y) + '. ' + x + '\n'
         y += 1
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)
 
 
 async def cmd_addtrophy(client, message, arg):
@@ -183,27 +182,27 @@ async def cmd_addtrophy(client, message, arg):
     error = "Correct usage: name= followed by conditions=, for example:\n``` " \
             "!addtrophy name=Most polite people conditions=Thank you, please, you're welcome```"
     if not (arg[0:5].startswith("name=")) or ("conditions=" not in arg):
-        await client.send_message(message.channel, error)
+        await message.channel.send(error)
         return
     name, conditions = parse_award_info(arg)
     conditions = check_and_remove_invalid_words(conditions)
     if not name or not conditions:
-        await client.send_message(message.channel, error)
+        await message.channel.send(error)
         return
     if not check_and_remove_invalid_words(conditions):
-        await client.send_message(message.channel, "Your trophy contains invalid conditions.")
+        await message.channel.send("Your trophy contains invalid conditions.")
         return
     if len(name) > 100:
-        await client.send_message(message.channel, "Trophy name can't be over 100 characters.")
+        await message.channel.send("Trophy name can't be over 100 characters.")
         return
     alreadyexists = name in CUSTOM_TROPHY_NAMES
     if alreadyexists:
-        await client.send_message(message.channel, "There is a trophy with a similar name already.")
+        await message.channel.send("There is a trophy with a similar name already.")
         return
     await sleep(1)
     await add_custom_award_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
-    await client.send_message(message.channel, "Succesfully added a trophy.")
+    await message.channel.send("Succesfully added a trophy.")
 
 
 def check_and_remove_invalid_words(input):
@@ -235,7 +234,7 @@ async def add_custom_award_to_database(name, conditions, message_id):
 
 
 async def cmd_alltrophies(client, message, arg):
-    oldmessage = await client.send_message(message.channel, 'Please wait while I check the book of winners..')
+    oldmessage = await message.channel.send('Please wait while I check the book of winners..')
     trophycabinet = await find_all_trophies()
     msg = ''
     if trophycabinet:

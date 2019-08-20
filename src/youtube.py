@@ -16,9 +16,9 @@ async def cmd_youtube(client, message, query):
         html = BeautifulSoup(await r.text(), "lxml")
         element = html.find(attrs={'class': 'yt-uix-tile-link'})
         if element is None:
-            await client.send_message(message.channel, "Sorry, I couldn't find any videos with that query.")
+            await message.channel.send("Sorry, I couldn't find any videos with that query.")
             return
 
         url = 'https://www.youtube.com' + element['href']
-        await client.send_message(message.channel, url)
+        await message.channel.send(url)
 

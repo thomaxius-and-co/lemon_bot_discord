@@ -113,9 +113,9 @@ async def cmd_enchant(client, message, arg):
     try:
         raw_data = arg.split(' ')
         enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
-        await client.send_message(message.channel, enchanting_results)
+        await message.channel.send(enchanting_results)
     except Exception:
-        await client.send_message(message.channel, 'Use the Format --> ```!enchant target_level fail_stacks```')
+        await message.channel.send('Use the Format --> ```!enchant target_level fail_stacks```')
 
 # Rolling the odds for a user.
 async def cmd_roll(client, message, arg):
@@ -131,22 +131,22 @@ async def cmd_roll(client, message, arg):
         return arg.isdigit() and int(arg) >= 1
 
     if not valid(arg):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     rand_roll = random.randint(0, int(arg))
-    await client.send_message(message.channel, '%s your roll is %s.' % (message.author.name, rand_roll))
+    await message.channel.send('%s your roll is %s.' % (message.author.name, rand_roll))
 
 # eight ball function to return the magic of the eight ball.
 async def cmd_8ball(client, message, question):
     prediction = random.choice(EIGHT_BALL_OPTIONS)
-    await client.send_message(message.channel, 'Question: [%s], %s.' % (question, prediction))
+    await message.channel.send('Question: [%s], %s.' % (question, prediction))
 
 # Function to get the weather by zip code. using: http://openweathermap.org
 # you can get an API key on the web site.
 async def cmd_weather(client, message, zip_code):
     if not zip_code:
-        await client.send_message(message.channel, "You must specify a city, eq. Säkylä.")
+        await message.channel.send("You must specify a city, eq. Säkylä.")
         return
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
     async with aiohttp.ClientSession() as session:
@@ -157,18 +157,18 @@ async def cmd_weather(client, message, zip_code):
         C = (F - 32) * 5 / 9
         status = data['weather'][0]['description']
         payload = 'In %s: Weather is: %s, Temp is: %s°C  (%s°F) ' % (location, status, round(C), round(F))
-        await client.send_message(message.channel, payload)
+        await message.channel.send(payload)
 
 async def domath(channel, input):
     if len(input) < 3:
-        await client.send_message(channel, "Error: You need to input at least 3 digits, for example: ```!math 5 + 5```")
+        await channel.send("Error: You need to input at least 3 digits, for example: ```!math 5 + 5```")
         return
     for char in input:
         if char not in '1234567890+-/*()^':
-            await client.send_message(channel, "Error: Your calculation containts invalid character(s): %s" % char)
+            await channel.send("Error: Your calculation containts invalid character(s): %s" % char)
             return
     if input[0] in '/*+-':  # Can't make -9 or /9 etc
-        await client.send_message(channel, "Error: First digit must be numeric, for example: ```!math 5 + 5```")
+        await channel.send("Error: First digit must be numeric, for example: ```!math 5 + 5```")
         return
     i = 1
     i2 = 2
@@ -183,23 +183,21 @@ async def domath(channel, input):
     try:
         return eval(input)
     except Exception:
-        await client.send_message(channel, "Error: There is an error in your calculation.")
+        await channel.send("Error: There is an error in your calculation.")
         return
 
 async def cmd_help(client, message, _):
-        await client.send_message(message.channel,
-                                  'https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
+        await message.channel.send('https://github.com/thomaxius-and-co/lemon_bot_discord/blob/master/README.md#commands')
 
 # Simple math command.
 async def cmd_math(client, message, arg):
     if not arg:
-        await client.send_message(message.channel,
-                                  'You need to specify at least 3 digits, for example: ```!math 5 + 5```')
+        await message.channel.send('You need to specify at least 3 digits, for example: ```!math 5 + 5```')
         return
     result = await domath(message.channel, arg.replace(" ", ""))
     if not result:
         return
-    await client.send_message(message.channel, '%s equals to %s' % (arg, result))
+    await message.channel.send('%s equals to %s' % (arg, result))
 
 async def cmd_translate(client, message, arg):
     usage = (
@@ -213,60 +211,61 @@ async def cmd_translate(client, message, arg):
 
     arg = arg.strip()
     if not valid(arg):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     fromlang, tolang, input = parse(arg)
     translator = Translator(bing_client_id, bing_client_secret)
     translation = translator.translate(input, tolang, fromlang)
-    await client.send_message(message.channel, translation)
+    await message.channel.send(translation)
 
 
 # this Spanks the user and calls them out on the server, with an '@' message.
 # Format ==> @User has been, INSERT_ITEM_HERE
 async def cmd_spank(client, message, target_user):
     punishment = random.choice(SPANK_BANK)
-    await client.send_message(message.channel, "%s has been, %s by %s." % (target_user, punishment, message.author.name))
+    await message.channel.send("%s has been, %s by %s." % (target_user, punishment, message.author.name))
 
 async def cmd_countchars(client, message, input):
     if input:
-        await client.send_message(message.channel, "%s: %s character(s), %s word(s)." % (message.author, len(input), len(input.split(" "))))
+        await message.channel.send("%s: %s character(s), %s word(s)." % (message.author, len(input), len(input.split(" "))))
     else:
-        await client.send_message(message.channel, "Usage: !countchars <character(s) and word(s) to be counted>.")
+        await message.channel.send("Usage: !countchars <character(s) and word(s) to be counted>.")
 
 # Delete 50 messages from channel
 async def cmd_clear(client, message, arg):
     limit = 10
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(message.channel.server.me)
+    botperms = message.channel.permissions_for(message.channel.guild.me)
     if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         log.info("!CLEAR: User %s access denied", message.author)
         return
     if not botperms.manage_messages:
-        await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
+        await message.channel.send("Error: bot doesn't have permission to manage messages.")
         return
     if arg and arg.isdigit():
         if int(arg) < 1:
-            await client.send_message(message.channel, "You need to input a positive amount.")
+            await message.channel.send("You need to input a positive amount.")
             return
         limit = int(arg)
-    await client.send_message(message.channel, "This will delete %s messages from the channel. Type 'yes' to confirm, "
+    await message.channel.send("This will delete %s messages from the channel. Type 'yes' to confirm, "
                                                "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author)
-    if answer and answer.content.lower() == 'yes':
-        try:
-            await client.purge_from(message.channel, limit=limit + 3)
-            await client.send_message(message.channel,
-                                      "%s messages succesfully deleted." % limit)
-            log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
-        except discord.errors.HTTPException as e:
-            if e.text == "You can only bulk delete messages that are under 14 days old.":
-                await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
-                                                           " please lower your message amount.")
-    elif answer is None or answer.content.lower() == 'no':
-        await client.send_message(message.channel,
-                                  "Deletion of messages cancelled.")
+    try:
+        answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
+        if answer.content.lower() == 'yes':
+            try:
+                await client.purge_from(message.channel, limit=limit + 3)
+                await message.channel.send("%s messages succesfully deleted." % limit)
+                log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
+            except discord.errors.HTTPException as e:
+                if e.text == "You can only bulk delete messages that are under 14 days old.":
+                    await message.channel.send("You can only delete messages from the past 14 days - "
+                                                               " please lower your message amount.")
+        elif answer.content.lower() == 'no':
+            await message.channel.send("Deletion of messages cancelled.")
+    except asyncio.TimeoutError:
+        await message.channel.send("Deletion of messages cancelled.")
     return
 
 # Delete 50 of bots messages
@@ -274,36 +273,36 @@ async def cmd_clearbot(client, message, arg):
     # It might be wise to make a separate command for each type of !clear, so there are less chances for mistakes.
     limit = 10
     perms = message.channel.permissions_for(message.author)
-    botperms = message.channel.permissions_for(message.channel.server.me)
+    botperms = message.channel.permissions_for(message.channel.guild.me)
 
     def isbot(message):
         return message.author == client.user and message.author.bot  # Double check just in case the bot turns sentinent and thinks about deleting everyone's messages
 
     if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return
     if not botperms.manage_messages:
-        await client.send_message(message.channel, "Error: bot doesn't have permission to manage messages.")
+        await message.channel.send("Error: bot doesn't have permission to manage messages.")
         return
     if arg and arg.isdigit():
         limit = int(arg)
-    await client.send_message(message.channel,
-                              "This will delete %s of **bot's** messages from the channel. Type 'yes' to confirm, "
-                              "or 'no' to cancel." % limit)
-    answer = await client.wait_for_message(timeout=60, author=message.author)
-    if answer and answer.content.lower() == 'yes':
-        try:
-            await client.purge_from(message.channel, limit=limit + 3, check=isbot)
-            await client.send_message(message.channel,
-                                      "%s bot messages succesfully deleted." % limit)
-            log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
-        except discord.errors.HTTPException as e:
-            if e.text == "You can only bulk delete messages that are under 14 days old.":
-                await client.send_message(message.channel, "You can only delete messages from the past 14 days - "
-                                                           " please lower your message amount.")
-    elif answer is None or answer.content.lower() == 'no':
-        await client.send_message(message.channel,
-                                  "Deletion of messages cancelled.")
+    await message.channel.send("This will delete %s of **bot's** messages from the channel. Type 'yes' to confirm, "
+                               "or 'no' to cancel." % limit)
+    try:
+        answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
+        if answer.content.lower() == 'yes':
+            try:
+                await client.purge_from(message.channel, limit=limit + 3, check=isbot)
+                await message.channel.send("%s bot messages succesfully deleted." % limit)
+                log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
+            except discord.errors.HTTPException as e:
+                if e.text == "You can only bulk delete messages that are under 14 days old.":
+                    await message.channel.send("You can only delete messages from the past 14 days - "
+                                                               " please lower your message amount.")
+        elif answer.content.lower() == 'no':
+            await message.channel.send("Deletion of messages cancelled.")
+    except asyncio.TimeoutError:
+        await message.channel.send("Deletion of messages cancelled.")
     return
 
 async def cmd_wolframalpha(client, message, query):
@@ -318,7 +317,7 @@ async def cmd_wolframalpha(client, message, query):
     log.info("Searching WolframAlpha for '%s'", query)
 
     if not valid(query):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     await client.send_typing(message.channel)
@@ -326,17 +325,17 @@ async def cmd_wolframalpha(client, message, query):
     try:
         res = wolframalpha_client.query(query)
         answer = next(res.results).text
-        await client.send_message(message.channel, answer)
+        await message.channel.send(answer)
     except ConnectionResetError:
-        await client.send_message(message.channel, 'Sorry, WolframAlpha is slow as fuck right now.')
+        await message.channel.send('Sorry, WolframAlpha is slow as fuck right now.')
     except Exception as e:
         log.error("Error querying WolframAlpha: {0} {1}".format(type(e), e))
-        await client.send_message(message.channel, 'I don\'t know how to answer that.')
+        await message.channel.send('I don\'t know how to answer that.')
 
 async def cmd_version(client, message, args):
     # todo: Make this function update automatically with some sort of github api.. Version
     # number should be commits divided by 1000.
-    await client.send_message(message.channel, "\n".join([
+    await message.channel.send("\n".join([
         "Current version of the bot: 0.09",
         "Changelog: Improvements to slots and blackjack",
     ]))
@@ -347,17 +346,17 @@ def pos_in_string(string, arg):
 async def cmd_add_censored_word(client, message, input):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, 'You do not have permissions for this command.')
+        await message.channel.send('You do not have permissions for this command.')
         return
     if not input or (not input[0:6].startswith('words=')):
-        await client.send_message(message.channel, 'Usage: !addcensoredword **words**=word1, word2, word3, word4 '
+        await message.channel.send('Usage: !addcensoredword **words**=word1, word2, word3, word4 '
                                                    '**exchannel**=Main **infomessage**=Profanity is not allowed.\n '
                                                    'If no channel or message is specified, no channels will be '
                                                    'excluded and default info message will be used.')
         return
     bannedwords, exchannel, infomessage = parse_censored_word_message(input)
     if ("!deletecensoredwords") in bannedwords.lower() or ("!listcensoredwords" in bannedwords.lower()):
-        await client.send_message(message.channel, 'You cannot define these commands as censored words.')
+        await message.channel.send('You cannot define these commands as censored words.')
         return
     if exchannel:
         exchannel_id = await get_channel_info(exchannel)
@@ -365,24 +364,24 @@ async def cmd_add_censored_word(client, message, input):
             msg = "Error: Channel doesn't exist, or the bot doesn't have permission for that channel."
             if '_' in exchannel:
                 msg += '\nTry converting underscores to spaces, for example: game_of_thrones -> game of thrones.'
-            await client.send_message(message.channel, msg)
+            await message.channel.send(msg)
             return
     if not exchannel:
         exchannel_id = None
     if not bannedwords:
-        await client.send_message(message.channel, "You must specify words to ban.")
+        await message.channel.send("You must specify words to ban.")
         return
 
     if (pos_in_string(input, "infomessage=") < pos_in_string(input, "exchannel=")) and (
                     "infomessage=" in input and "exchannel=" in input):
-        await client.send_message(message.channel, "You must use the following format: \n"
+        await message.channel.send("You must use the following format: \n"
                                                    "!addcensoredword **words**=<word1>, <word2>, ..., <wordN> "
                                                    "**exchannel**=<channel to be excluded> **infomessage**=<message>\n"
                                                    "You can define just **exchannel** or **infomessage**, or both.")
         return
     await sleep(1)
     await add_censored_word_into_database(bannedwords, message.id, exchannel_id, infomessage)
-    await client.send_message(message.channel, 'Succesfully defined a new censored word entry.')
+    await message.channel.send('Succesfully defined a new censored word entry.')
     return
 
 async def get_channel_info(user_channel_name):
@@ -412,16 +411,16 @@ async def edit_channel_bitrate(bitrate):
 async def cmd_edit_channel_kbps(client, message, input):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        await message.channel.send("You do not have sufficient permissions.")
         return
     if not input or not input.isdigit() or not (8000 <= int(input) <= 128000):
-        await client.send_message(message.channel, 'You need to specify channel bitrate between 8000-128000.')
+        await message.channel.send('You need to specify channel bitrate between 8000-128000.')
         return
     num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels, num_of_skipped_channels = await edit_channel_bitrate(int(input))
     msg = ("Changed bitrate of %s channels, skipped %s channel(s)." % (num_of_succesfully_edited_channels, num_of_skipped_channels)) if (num_of_unsuccesfully_edited_channels == 0) \
         else ("Changed bitrate of %s channel(s), skipped %s, failed %s\n(The bot is probably lacking manage permissions for some channel(s)."
               % (num_of_succesfully_edited_channels, num_of_skipped_channels, num_of_unsuccesfully_edited_channels))
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)
 
 
 
@@ -451,7 +450,7 @@ async def get_guild_censored_words(client, guild_id):
     guild_censored_words = []
     if censored_word_entries:
         for channel in client.get_all_channels():
-            if channel.server.id == guild_id:
+            if channel.guild.id == guild_id:
                 for entry in censored_word_entries:
                     if entry['exchannel_id'] == channel.id:
                         guild_censored_words.append(entry)
@@ -479,26 +478,26 @@ async def cmd_pickone(client, message, args):
         return len(args.split(",")) >= 2
 
     if not valid(args):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     choices = args.split(",")
     if len(choices) == 2:
         if random.randrange(0, 30) == 1:
-            await client.send_message(message.channel, 'Why not have both? :thinking:')
+            await message.channel.send('Why not have both? :thinking:')
             return
     jibbajabba = random.choice(BOT_ANSWERS)
     choice = random.choice(choices)
-    await client.send_message(message.channel, '%s %s' % (jibbajabba, choice.strip()))
+    await message.channel.send('%s %s' % (jibbajabba, choice.strip()))
 
 async def cmd_list_censored_words(client, message, _):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        await message.channel.send("You do not have sufficient permissions.")
         return
-    censored_word_entries = await get_guild_censored_words(client, message.server.id)
+    censored_word_entries = await get_guild_censored_words(client, message.guild.id)
     if not censored_word_entries:
-        await client.send_message(message.channel, "No censored words have been defined.")
+        await message.channel.send("No censored words have been defined.")
         return
     else:
         msg = ''
@@ -509,33 +508,33 @@ async def cmd_list_censored_words(client, message, _):
             exchannel = (' **Excluded channel:** ' + row['exchannel_id']) if row['exchannel_id'] else ''
             ID = str(i) + ':'
             if len((msg + ID + censored_words + info_message + exchannel + '\n')) >= 2000:
-                await client.send_message(message.channel, msg)
+                await message.channel.send(msg)
                 msg = ''
             msg += ID + censored_words + info_message + exchannel + '\n'
             i += 1
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)
 
 async def cmd_del_censored_words(client, message, arg):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, "You do not have sufficient permissions.")
+        await message.channel.send("You do not have sufficient permissions.")
         return
     if not arg or not arg.isdigit():
-        await client.send_message(message.channel, "You must specify an ID to delete, eq. !deletecensoredwords 1. "
+        await message.channel.send("You must specify an ID to delete, eq. !deletecensoredwords 1. "
                                                    "Use !listcensoredwords to find out the correct ID.")
         return
-    censored_word_entries = await get_guild_censored_words(client, message.server.id)
+    censored_word_entries = await get_guild_censored_words(client, message.guild.id)
     if not censored_word_entries:
-        await client.send_message(message.channel, "No censored words have been defined.")
+        await message.channel.send("No censored words have been defined.")
         return
     else:
         index = int(arg) - 1
         if index > len(censored_word_entries) - 1 or int(
                 arg) == 0:  # While defining 0 as an ID works, we don't want that heh
-            await client.send_message(message.channel, "No such ID in list.")
+            await message.channel.send("No such ID in list.")
             return
         await delete_censored_words_from_database(censored_word_entries[index]['message_id'])
-        await client.send_message(message.channel, "Censored word succesfully deleted.")
+        await message.channel.send("Censored word succesfully deleted.")
         return
 
 async def delete_censored_words_from_database(message_id):
@@ -548,7 +547,7 @@ async def cmd_sql(client, message, query):
 
     ADMIN_USER_IDS = list(filter(len, os.environ.get("ADMIN_USER_IDS", "").split(",")))
     if message.author.id not in ADMIN_USER_IDS:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return
 
     def valid(query):
@@ -556,12 +555,12 @@ async def cmd_sql(client, message, query):
 
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
-        await client.send_message(message.channel, 'https://youtu.be/gvdf5n-zI14')
+        await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return
 
     query = query.strip()
     if not valid(query):
-        await client.send_message(message.channel, usage)
+        await message.channel.send(usage)
         return
 
     def limit_msg_length(template, content):
@@ -574,23 +573,23 @@ async def cmd_sql(client, message, query):
             results = await cur.fetch(100)
             msg = "\n".join(map(str, results)) if results else "No results"
             msg = limit_msg_length("```%s```", msg)
-            await client.send_message(message.channel, msg)
+            await message.channel.send(msg)
     except asyncpg.exceptions.PostgresError as err:
         msg = limit_msg_length("```ERROR: %s```", str(err))
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)
 
 async def cmd_randomcolor(client, message, _):
     # Credits to colorcombos.com
     char = '0123456789ABCDEF'
     randchars = ''.join(random.choice(char) for _ in range(6))
     link = 'http://www.colorcombos.com/images/colors/%s.png' % randchars
-    await client.send_message(message.channel, link)
+    await message.channel.send(link)
 
 async def do_censored_words_check(client, message):
-    if message.server is None:
+    if message.guild is None:
         return True
     message_words = message.content.split(' ')
-    illegal_messages = await get_guild_censored_words(client, message.server.id)
+    illegal_messages = await get_guild_censored_words(client, message.guild.id)
     if not illegal_messages:
         return True
     for row in illegal_messages:
@@ -601,12 +600,12 @@ async def do_censored_words_check(client, message):
                 if not row['exchannel_id']:
                     await sleep(1)  # To prevent ratelimit from being reached
                     await client.delete_message(message)
-                    await client.send_message(message.author, info_message)
+                    await message.author.send(info_message)
                     return False
                 if row['exchannel_id'] and await wrong_channel_for_this_word(message.channel.id, row['exchannel_id']):
                     await sleep(1)  # To prevent ratelimit from being reached
                     await client.delete_message(message)
-                    await client.send_message(message.author, info_message)
+                    await message.author.send(info_message)
                     return False
     return True
 
@@ -643,9 +642,7 @@ def parse_raw_msg(msg):
     return json.loads(msg)
 
 @client.event
-async def on_socket_raw_receive(raw_msg):
-    msg = parse_raw_msg(raw_msg)
-
+async def on_socket_response(msg):
     type = msg.get("t", None)
     data = msg.get("d", None)
 
@@ -726,7 +723,7 @@ def autocorrect_command(cmd):
 
 @client.event
 async def on_ready():
-    await client.change_presence(game=discord.Game(name='is not working | I am your worker. I am your slave.'))
+    await client.change_presence(activity=discord.Game(name='is not working | I am your worker. I am your slave.'))
     await status.main(client)
 
 if __name__ == "__main__":

@@ -157,7 +157,7 @@ TEMPLATES_FIREBALL = {
 def mk_cmd_laiva(templates):
     async def cmd_laiva(client, message, _):
         if message.channel.id not in ALLOWED_CHANNELS:
-            await client.send_message(message.channel, "You cannot use this command here.")
+            await message.channel.send("You cannot use this command here.")
             return
 
         theme = templates["theme"]
@@ -168,16 +168,16 @@ def mk_cmd_laiva(templates):
 
 
         if (laiva < now) and (laivaover > now):
-            await client.send_message(message.channel, templates["happening"])
+            await message.channel.send(templates["happening"])
             return
 
         if ((laivaover + timedelta(days=1)) < now) and laiva < now:
             time_ago = delta_to_str(now - laivaover)
-            await client.send_message(message.channel, templates["ended"](time_ago))
+            await message.channel.send(templates["ended"](time_ago))
             return
 
         if laivaover < now:
-            await client.send_message(message.channel, templates["over"])
+            await message.channel.send(templates["over"])
             return
 
         time_left = delta_to_str(laiva - now)
@@ -185,7 +185,7 @@ def mk_cmd_laiva(templates):
         if (laiva - timedelta(days=len(memes)-1)) < now:
             days_to_go = (laiva - now).days
             msg += "\n" + templates["meme_text"](days_to_go)
-        await client.send_message(message.channel, msg)
+        await message.channel.send(msg)
     return cmd_laiva
 
 def delta_to_str(delta):

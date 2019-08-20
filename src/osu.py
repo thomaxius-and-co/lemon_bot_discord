@@ -24,14 +24,14 @@ async def cmd_osu(client, message, user):
     user_info = await api.user(user, Mode.Standard)
 
     if not user_info:
-        await client.send_message(message.channel, "User %s not found" % user)
+        await message.channel.send("User %s not found" % user)
         return
 
     user_line = "{user.username} (#{user.rank}) has {user.pp_rounded} pp and {user.accuracy_rounded}% acc".format(user=user_info)
 
     scores = await api.user_best(user, 5, Mode.Standard)
     if not scores:
-        await client.send_message(message.channel, "No scores found for user %s" % user)
+        await message.channel.send("No scores found for user %s" % user)
         return
 
     plays = []
@@ -51,7 +51,7 @@ async def cmd_osu(client, message, user):
         ))
 
     reply = "**{user_line}**\n```{plays}```".format(user_line=user_line, plays="\n".join(plays))
-    await client.send_message(message.channel, reply)
+    await message.channel.send(reply)
 
 async def cmd_osu_add(client, message, arg):
     user = arg.strip()
@@ -61,15 +61,15 @@ async def cmd_osu_add(client, message, arg):
     user_std = await api.user(user, Mode.Standard)
     user_mania = await api.user(user, Mode.Mania)
     if not user_std or not user_mania:
-        return await client.send_message(message.channel, "User could not be found")
+        return await message.channel.send("User could not be found")
 
     try:
         await db.execute("""
             INSERT INTO osu_pp (osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank, changed)
             VALUES ($1, $2, $3, $4, $5, $6, current_timestamp)
-        """, user_std.id, message.channel.id, user_std.pp, user_std.rank, user_mania.pp, user_mania.rank)
+        """, user_std.id, str(message.channel.id), user_std.pp, user_std.rank, user_mania.pp, user_mania.rank)
     except UniqueViolationError:
-        return await client.send_message(message.channel, f"User is already added")
+        return await message.channel.send(f"User is already added")
 
 async def cmd_osu_remove(client, message, arg):
     user = arg.strip()
@@ -129,7 +129,8 @@ async def process_user(client, user, pp_key, rank_key, mode):
       pp_diff = round(pp_diff, 1),
       rank_str = rank_str
     )
-    util.threadsafe(client, client.send_message(discord.Object(id=channel_id), msg))
+    channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
+    util.threadsafe(client, channel.send(msg))
     await update_pp(pp_key, rank_key, u.pp, u.rank, user_id, channel_id)
 
 def format_change(diff):
@@ -145,7 +146,7 @@ async def update_pp(pp_key, rank_key, pp, rank, user_id, channel_id):
       SET {pp_key} = $1, {rank_key} = $2, changed = current_timestamp
       WHERE osu_user_id = $3 AND channel_id = $4
     """.format(pp_key=pp_key, rank_key=rank_key)
-    await db.execute(sql, pp, rank, user_id, channel_id)
+    await db.execute(sql, pp, rank, user_id, str(channel_id))
 
 async def task(client):
     util.threadsafe(client, client.wait_until_ready())

@@ -26,7 +26,7 @@ async def cmd_reminder(client, message, text):
     reminder = parse_reminder(text)
     if reminder is None:
         reply = "Sorry {message.author.mention}, I couldn't figure out the time for your reminder.".format(message=message)
-        await client.send_message(message.channel, reply)
+        await message.channel.send(reply)
         await client.add_reaction(message, emoji.CROSS_MARK)
         return
 
@@ -34,13 +34,13 @@ async def cmd_reminder(client, message, text):
 
     reply = "Hello, {0}! I'll remind you about `{1}` at `{2}`!".format(
         message.author.mention, reminder.text, to_helsinki(reminder.time))
-    await client.send_message(message.channel, reply)
+    await message.channel.send(reply)
 
 async def add_reminder(user_id, time, text, original_text):
     await db.execute("""
         INSERT INTO reminder(user_id, ts, text, original_text)
         VALUES ($1, $2, $3, $4)
-    """, user_id, time.replace(tzinfo=None), text, original_text)
+    """, str(user_id), time.replace(tzinfo=None), text, original_text)
 
 async def task(client):
     # Wait until the client is ready
@@ -68,8 +68,8 @@ async def process_next_reminder(client):
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
-            user = util.threadsafe(client, client.get_user_info(user_id))
-            util.threadsafe(client, client.send_message(user, msg))
+            user = util.threadsafe(client, client.fetch_user(int(user_id)))
+            util.threadsafe(client, user.send(msg))
 
             await tx.execute("""
                 UPDATE reminder

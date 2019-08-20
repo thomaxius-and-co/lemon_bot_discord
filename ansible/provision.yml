@@ -31,15 +31,26 @@
     - include: postgres.yml
     - include: redis.yml
 
+    - name: Remove old packages
+      apt:
+        state: absent
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - python3.6
+          - python3.6-dev
+
     - name: Install required packages
       apt:
-        name: "{{ item }}"
-      with_items:
-        - python3.6
-        - python3.6-dev
-        - libpq-dev
-        - libxml2-dev # for lxml
-        - libxslt1-dev # for lxml
+        update_cache: yes
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - python3.7
+          - python3.7-dev
+          - libpq-dev
+          - libxml2-dev # for lxml
+          - libxslt1-dev # for lxml
 
     - name: Copy source to server
       synchronize:

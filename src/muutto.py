@@ -25,20 +25,20 @@ async def cmd_muutto(client, message, query):
     now_to_last_muuttoover = now - muuttoover
 
     if (muutto < now) and (muuttoover > now):
-        await client.send_message(message.channel, "Muutto is currently happening!! (probably)")
+        await message.channel.send("Muutto is currently happening!! (probably)")
         return
 
     if ((muuttoover + timedelta(days=4)) < now) and muutto < now:
-        await client.send_message(message.channel, ("**Muutto ended:** {0} days, {1} hours, {2} minutes, {3} seconds ago, **next muutto:** TBA.")
+        await message.channel.send(("**Muutto ended:** {0} days, {1} hours, {2} minutes, {3} seconds ago, **next muutto:** TBA.")
                                   .format(*delta_to_tuple(now_to_last_muuttoover)))
         return
 
     if muuttoover < now:
-        await client.send_message(message.channel, "Muutto is over, but infernal tuparit are still coming!!")
+        await message.channel.send("Muutto is over, but infernal tuparit are still coming!!")
         return
 
     delta = muutto - now
     template = "Time left until muutto: {0} days, {1} hours, {2} minutes, {3} seconds!!"
     msg = template.format(*delta_to_tuple(delta))
-    await client.send_message(message.channel, msg)
+    await message.channel.send(msg)
 
