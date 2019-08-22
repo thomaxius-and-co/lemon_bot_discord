@@ -154,7 +154,7 @@ async def user_by_id(user_id, game_mode):
 
 async def user(name, game_mode):
     users = map(User, await call_api("get_user", {
-        "type": "u",
+        "type": "string",
         "u": name,
         "m": game_mode.value,
         "event_days": "1",
@@ -166,7 +166,7 @@ async def user_best(name, limit, game_mode):
         raise Error("osu: invalid limit")
 
     return map(Play, await call_api("get_user_best", {
-        "type": "u",
+        "type": "string",
         "u": name,
         "m": game_mode.value,
         "limit": str(limit),
