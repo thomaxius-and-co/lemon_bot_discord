@@ -59,7 +59,7 @@ async def check_faceit_elo(client):
                                                                   ranking)
 
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
-                    channel = client.get_channel(channel_id)
+                    channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
                     log.info("Notifying channel %s", channel.id)
                     matches = await fc.get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
                     matches = await fc.get_combined_match_data(matches)
