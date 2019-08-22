@@ -59,14 +59,15 @@ function init_virtualenv {
   echo "+ Initializing virtualenv"
   local python_cmd="${1:-$(which python)}"
 
-  if [ ! -d .venv ]; then
-    virtualenv --python=$python_cmd "$ROOT/.venv" > /dev/null
+  local venv="$ROOT/.venv-$($python_cmd --version 2>&1 | cut -f 2 -d ' ')"
+  if [ ! -d "$venv" ]; then
+    virtualenv --python=$python_cmd "$venv" > /dev/null
   fi
 
-  if [ -f "$ROOT/.venv/Scripts/activate" ]; then
-    source "$ROOT/.venv/Scripts/activate"
-  elif [ -f "$ROOT/.venv/bin/activate" ]; then
-    source "$ROOT/.venv/bin/activate"
+  if [ -f "$venv/Scripts/activate" ]; then
+    source "$venv/Scripts/activate"
+  elif [ -f "$venv/bin/activate" ]; then
+    source "$venv/bin/activate"
   fi
 
   pip install -r "$ROOT/src/requirements.txt"

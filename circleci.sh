@@ -11,8 +11,11 @@ apt-get -q update
 
 apt-get -q install -y \
   python3.7 python3.7-dev \
+  libxml2-dev libxslt1-dev zlib1g-dev \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
+
+curl https://bootstrap.pypa.io/get-pip.py | python3.7
 pip install -r ansible/requirements.txt > /dev/null
 
 DATABASE_HOST="localhost" \
