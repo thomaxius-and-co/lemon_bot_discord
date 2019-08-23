@@ -162,7 +162,7 @@ def invalid_quote(quote):
 
 def make_word_filters(guild_id, words):
     conditions = "content ~* $1 AND guild_id = $2"
-    params = ["|".join(words), guild_id]
+    params = ["|".join(words), str(guild_id)]
     return conditions, params
 
 async def random(guild_id, filter):
@@ -170,7 +170,7 @@ async def random(guild_id, filter):
     return await random_message_with_filter("AND ({0})".format(word_filters), params)
 
 async def random_quote_from_channel(channel_id):
-    return await random_message_with_filter("AND m->>'channel_id' = $1", [channel_id])
+    return await random_message_with_filter("AND m->>'channel_id' = $1", [str(channel_id)])
 
 async def get_user_days_in_chat():
     rows = await db.fetch("""
