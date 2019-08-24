@@ -540,12 +540,16 @@ async def cmd_del_censored_words(client, message, arg):
 async def delete_censored_words_from_database(message_id):
     await db.execute("DELETE from censored_words where message_id like $1", message_id)
 
+def get_admins():
+    id_strings = os.environ.get("ADMIN_USER_IDS", "").split(",")
+    return list(map(int, filter(len, id_strings)))
+
 async def cmd_sql(client, message, query):
     usage = (
         "Usage: `!sql <query>`\n"
     )
 
-    ADMIN_USER_IDS = list(filter(len, os.environ.get("ADMIN_USER_IDS", "").split(",")))
+    ADMIN_USER_IDS = get_admins()
     if message.author.id not in ADMIN_USER_IDS:
         await message.channel.send('https://youtu.be/gvdf5n-zI14')
         return

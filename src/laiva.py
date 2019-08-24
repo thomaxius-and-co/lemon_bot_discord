@@ -5,7 +5,7 @@ import random
 from time_util import as_helsinki, as_utc, to_utc
 
 
-ALLOWED_CHANNELS = ['359308335184609281', '141649840923869184', '244452088279465985']
+ALLOWED_CHANNELS = [359308335184609281, 141649840923869184, 244452088279465985]
 
 def register(client):
     return {
@@ -154,9 +154,12 @@ TEMPLATES_FIREBALL = {
     "over": "Fireball is already over, but ihan vitun jäätävä jano remains.",
 }
 
+def is_allowed_channel(channel_id):
+    return channel_id in ALLOWED_CHANNELS
+
 def mk_cmd_laiva(templates):
     async def cmd_laiva(client, message, _):
-        if message.channel.id not in ALLOWED_CHANNELS:
+        if not is_allowed_channel(channel.id):
             await message.channel.send("You cannot use this command here.")
             return
 
