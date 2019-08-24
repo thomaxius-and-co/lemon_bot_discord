@@ -53,11 +53,6 @@ import ence_matches
 log = logger.get("BOT")
 
 client = discord.Client()
-wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
-API_KEY = os.environ['OPEN_WEATHER_APPID']
-token = os.environ['LEMONBOT_TOKEN']
-bing_client_id = os.environ['BING_CLIENTID']
-bing_client_secret = os.environ['BING_SECRET']
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
@@ -94,6 +89,7 @@ async def main():
         commands.update(module.register(client))
 
     try:
+        token = os.environ['LEMONBOT_TOKEN']
         await client.start(token)
         raise Exception("client.start() returned")
     except Exception as e:
@@ -148,6 +144,8 @@ async def cmd_weather(client, message, zip_code):
     if not zip_code:
         await message.channel.send("You must specify a city, eq. Säkylä.")
         return
+
+    API_KEY = os.environ['OPEN_WEATHER_APPID']
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
     async with aiohttp.ClientSession() as session:
         r = await session.get(link)
@@ -215,6 +213,8 @@ async def cmd_translate(client, message, arg):
         return
 
     fromlang, tolang, input = parse(arg)
+    bing_client_id = os.environ['BING_CLIENTID']
+    bing_client_secret = os.environ['BING_SECRET']
     translator = Translator(bing_client_id, bing_client_secret)
     translation = translator.translate(input, tolang, fromlang)
     await message.channel.send(translation)
@@ -323,6 +323,7 @@ async def cmd_wolframalpha(client, message, query):
     await client.send_typing(message.channel)
 
     try:
+        wolframalpha_client = wolframalpha.Client(os.environ['WOLFRAM_ALPHA_APPID'])
         res = wolframalpha_client.query(query)
         answer = next(res.results).text
         await message.channel.send(answer)
