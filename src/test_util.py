@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 import asyncio
 import functools
+import os
 
 import database as db
 
@@ -25,3 +27,15 @@ async def clear_schema(tx, schema):
 async def get_tables(tx, schema):
   sql = "select table_name from information_schema.tables where table_schema = $1"
   return map(lambda r: r["table_name"], await tx.fetch(sql, schema))
+
+@contextmanager
+def env(key, value):
+    original = os.environ.get(key, None)
+    try:
+        os.environ[key] = value
+        yield
+    finally:
+        if original is None:
+            del os.environ[key]
+        else:
+            os.environ[key] = original
