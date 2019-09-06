@@ -159,7 +159,7 @@ def is_allowed_channel(channel_id):
 
 def mk_cmd_laiva(templates):
     async def cmd_laiva(client, message, _):
-        if not is_allowed_channel(channel.id):
+        if not is_allowed_channel(message.channel.id):
             await message.channel.send("You cannot use this command here.")
             return
 
