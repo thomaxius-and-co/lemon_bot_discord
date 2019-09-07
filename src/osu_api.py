@@ -44,12 +44,6 @@ class User:
 
         self._best = None
 
-    @property
-    async def best(self):
-        if self._best is None:
-            self._best = await user_best(self.username)
-        return self._best
-
 class Play:
     def __init__(self, json):
         self.json = json
