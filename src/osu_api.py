@@ -1,6 +1,5 @@
 import aiohttp
 import enum
-import json
 import os
 
 import cache

@@ -1,5 +1,4 @@
 from timeit import default_timer as timer
-from contextlib import contextmanager
 import functools
 
 import logger

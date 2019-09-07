@@ -1,8 +1,6 @@
 import database as db
-import discord
 from asyncio import sleep
 import logger
-from util import pmap
 from time_util import as_utc
 
 log = logger.get("emojicommands")

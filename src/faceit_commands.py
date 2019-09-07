@@ -4,8 +4,8 @@ import faceit_db_functions as faceit_db
 import faceit_api
 from faceit_api import NotFound, UnknownError
 import columnmaker
-from time_util import as_helsinki, to_utc, as_utc, to_helsinki
-from datetime import datetime, timedelta
+from time_util import as_helsinki, to_utc
+from datetime import datetime
 import faceit_common as fc
 import faceit_records as fr
 import asyncio

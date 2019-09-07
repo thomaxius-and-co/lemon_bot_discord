@@ -2,7 +2,6 @@ import asyncio
 from enum import IntEnum
 import json
 import os
-import traceback
 import aiohttp
 import database as db
 import util

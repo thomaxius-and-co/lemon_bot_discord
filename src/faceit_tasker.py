@@ -3,15 +3,12 @@ import faceit_db_functions as faceit_db
 import asyncio
 import util
 import logger
-import discord
-import faceit_api
-from faceit_api import NotFound, UnknownError
+from faceit_api import UnknownError
 from time_util import to_utc
 from util import pmap
 import faceit_highlights as fh
 import faceit_common as fc
 import faceit_records as fr
-import datetime
 import copy
 import traceback
 

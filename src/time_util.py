@@ -1,5 +1,4 @@
 import pytz
-import datetime
 
 def as_helsinki(time):
     """Interpret a time without timezone as Europe/Helsinki without adjusting time"""

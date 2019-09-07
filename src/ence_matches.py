@@ -5,8 +5,7 @@ import columnmaker
 import logger
 import datetime
 import util
-from time_util import to_helsinki, as_utc, as_helsinki, to_utc
-import discord
+from time_util import to_helsinki, as_utc
 import database as db
 from copy import deepcopy
 from asyncio import sleep

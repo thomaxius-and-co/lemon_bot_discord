@@ -1,7 +1,5 @@
 import asyncio
-import traceback
 
-import discord
 import parsedatetime
 from datetime import datetime
 from time_util import to_utc, to_helsinki, as_utc, as_helsinki

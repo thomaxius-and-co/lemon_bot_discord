@@ -1,7 +1,4 @@
 import asyncio
-import discord
-import os
-import json
 from asyncpg.exceptions import UniqueViolationError
 import aiohttp
 

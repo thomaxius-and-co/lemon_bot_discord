@@ -1,6 +1,3 @@
-import asyncio
-import functools
-
 from test_util import async_test, reset_db
 import database as db
 

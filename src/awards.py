@@ -1,6 +1,5 @@
 import database as db
 from asyncio import sleep
-import discord
 import logger
 
 log = logger.get("AWARDS")

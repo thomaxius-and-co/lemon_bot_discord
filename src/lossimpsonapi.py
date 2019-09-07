@@ -1,6 +1,5 @@
 import aiohttp
 import logger
-import retry
 
 # Credits to https://thesimpsonsquoteapi.glitch.me & Jason Luboff
 

@@ -1,5 +1,4 @@
 # Anssi's first command!!
-import time
 import random
 import asyncio
 

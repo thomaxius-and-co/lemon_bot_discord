@@ -1,6 +1,5 @@
 import os
 import aiohttp
-import json
 import cache
 
 import logger

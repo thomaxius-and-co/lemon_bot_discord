@@ -1,10 +1,8 @@
 import asyncio
-import json
 import os
 import sys
 import threading
 import traceback
-import aiohttp
 import logger
 
 log = logger.get("UTIL")
