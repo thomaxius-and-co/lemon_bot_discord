@@ -156,7 +156,7 @@ async def user(name, game_mode):
 
 async def user_best(name, limit, game_mode):
     if not (1 <= limit <= 100):
-        raise Error("osu: invalid limit")
+        raise ValueError("osu: invalid limit")
 
     return map(Play, await call_api("get_user_best", {
         "type": "string",
