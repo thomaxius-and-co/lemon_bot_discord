@@ -1,0 +1,15 @@
+---
+# See: https://dependabot.com/docs/config-file/
+version: 1
+update_configs:
+  - package_manager: "python"
+    directory: "src"
+    update_schedule: "live"
+
+  - package_manager: "javascript"
+    directory: "web"
+    update_schedule: "live"
+
+  - package_manager: "python"
+    directory: "ansible"
+    update_schedule: "live"
