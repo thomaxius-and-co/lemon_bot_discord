@@ -18,13 +18,13 @@ apt-get -q install -y \
 curl https://bootstrap.pypa.io/get-pip.py | python3.7
 pip install -r ansible/requirements.txt > /dev/null
 
-DATABASE_HOST="localhost" \
-DATABASE_PORT="5432" \
-DATABASE_NAME="lemon" \
-DATABASE_USERNAME="lemon" \
-DATABASE_PASSWORD="lemon" \
-REDIS_HOST="localhost" \
-REDIS_PORT="6379" \
-./test.sh
+#DATABASE_HOST="localhost" \
+#DATABASE_PORT="5432" \
+#DATABASE_NAME="lemon" \
+#DATABASE_USERNAME="lemon" \
+#DATABASE_PASSWORD="lemon" \
+#REDIS_HOST="localhost" \
+#REDIS_PORT="6379" \
+#./test.sh
 ./journald-cloudwatch/build.sh
 ./deploy.sh
