@@ -123,7 +123,7 @@ async def rolling_message_counts():
 async def messages_in_last_in_last_week_month():
     async def exec(days):
         sql = """
-            SELECT sum(daily.count)::bigint AS count
+            SELECT coalesce(sum(daily.count), 0)::bigint AS count
             FROM (
                 SELECT count(*)::numeric AS count
                 FROM message
