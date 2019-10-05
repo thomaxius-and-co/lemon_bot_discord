@@ -2,6 +2,9 @@
 Description=Upload journald logs to AWS CloudWatch Logs
 After=network.target
 
+[Install]
+WantedBy=multi-user.target
+
 [Service]
 ExecStart=/opt/journald-cloudwatch/journald-cloudwatch
 Restart=always
