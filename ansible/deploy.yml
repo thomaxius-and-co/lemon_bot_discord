@@ -109,6 +109,10 @@
           LogGroupName: "{{ prefix }}-bot"
         alarm_actions:
           - "{{ sns_topic_out.sns_arn }}"
+        insufficient_data_actions:
+          - "{{ sns_topic_out.sns_arn }}"
+        ok_actions:
+          - "{{ sns_topic_out.sns_arn }}"
 
     - name: Create metric for errors logged
       aws_metric_filter:
@@ -135,6 +139,10 @@
         period: 60
         evaluation_periods: 1
         alarm_actions:
+          - "{{ sns_topic_out.sns_arn }}"
+        insufficient_data_actions:
+          - "{{ sns_topic_out.sns_arn }}"
+        ok_actions:
           - "{{ sns_topic_out.sns_arn }}"
       with_items:
         - "{{ prefix }}-bot"
