@@ -67,7 +67,10 @@
 
 - name: Subscribe errors to Discord lambda to error logs
   aws_cloudwatch_logs_subscription_filter:
-    logGroupName: "{{ prefix }}-bot"
-    filterName: "{{ prefix }}-bot-errors-subscription-filter"
+    logGroupName: "{{ prefix }}-{{ item }}"
+    filterName: "{{ prefix }}-{{ item }}-errors-subscription-filter"
     filterPattern: "[date, time, level=ERROR, module, message]"
     destinationArn: "{{ errors_to_discord_lambda_out.Configuration.FunctionArn }}"
+  with_items:
+    - bot
+    - archiver
