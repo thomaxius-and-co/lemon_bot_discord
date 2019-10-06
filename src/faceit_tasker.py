@@ -47,6 +47,10 @@ async def check_faceit_elo(client):
     for record in faceit_players:
         player_guid = record['faceit_guid']
         player_database_nick = record['faceit_nickname']
+
+        # Skip check if faceit api call failed for the player
+        if not api_responses[player_guid]: continue
+
         player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
         if player_stats:
             current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
@@ -103,9 +107,16 @@ async def get_server_rankings_per_guild():
 
 
 async def fetch_players_batch(player_ids):
-    responses = await pmap(fc.get_user_stats_from_api_by_id, player_ids)
-    return dict(zip(player_ids, responses))
+    def is_error_response(response_tuple):
+        return all(x is None for x in response_tuple)
 
+    responses = await pmap(fc.get_user_stats_from_api_by_id, player_ids)
+
+    result = dict()
+    for player_id, response in zip(player_ids, responses):
+        if not is_error_response(response):
+            result[player_id] = response
+    return result
 
 async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before, current_skill,
                                  skill_before, custom_nickname, match_info_string, record_string):
