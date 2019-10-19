@@ -3,6 +3,7 @@ import discord
 import os
 import json
 from asyncpg.exceptions import UniqueViolationError
+import aiohttp
 
 import command
 import database as db
@@ -83,8 +84,11 @@ async def cmd_osu_remove(client, message, arg):
 async def check_pps(client):
     users = await db.fetch("SELECT osu_user_id, channel_id, standard_pp, standard_rank, mania_pp, mania_rank FROM osu_pp")
     for u in users:
+      try:
         await process_standard(client, u)
         await process_mania(client, u)
+      except aiohttp.client_exceptions.ContentTypeError:
+        log.warn("osu! API responded with whatever non-json garbage :shrug:")
 
 
 async def process_standard(client, user):
