@@ -14,6 +14,11 @@ log = logger.get("ARCHIVER")
 
 ERROR_MISSING_ACCESS = 50001
 
+class HttpError(RuntimeError):
+  def __init__(self, response):
+    super().__init__("HTTP status {0}".format(response.status))
+    self.response = response
+
 class ChannelType(IntEnum):
     GUILD_TEXT = 0
     DM = 1
@@ -34,6 +39,8 @@ async def get(path):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as r:
             log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
+            if r.status == 500:
+                raise HttpError(r)
             response = await r.json()
             if r.status == 429:
                 log.warn("Hit ratelimit for path: %s", path)
@@ -178,6 +185,11 @@ async def main():
         try:
             log.info("Starting archival")
             await run_archival()
+        except HttpError as e:
+            if e.response.status == 500:
+                log.warn("Discord responded with something strange: %s", e.response)
+            else:
+                await util.log_exception(log)
         except Exception:
             await util.log_exception(log)
         await asyncio.sleep(15 * 60)
