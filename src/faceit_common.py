@@ -68,7 +68,10 @@ async def get_user_stats_from_api_by_id(player_id):
         log.error(str(e))
         return None, None, None, None, None
     except UnknownError as e:
-        log.error("Unknown error: {0}".format(str(e)))
+        if e.response.status >= 500:
+            log.warning("Unknown error: {0}".format(str(e)))
+        else:
+            log.error("Unknown error: {0}".format(str(e)))
         return None, None, None, None, None
 
     csgo = user.get("games", {}).get("csgo", {})
