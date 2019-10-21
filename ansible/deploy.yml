@@ -64,7 +64,7 @@
         path: "../alarms-to-discord"
         role: "{{ lambda_role_out.iam_role.arn }}"
         handler: "alarms-to-discord.handler"
-        runtime: "nodejs8.10"
+        runtime: "nodejs10.x"
       register: lambda_out
 
     - include: errors-to-discord.yml
