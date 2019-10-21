@@ -46,7 +46,7 @@ async def check_faceit_elo(client):
         player_database_nick = record['faceit_nickname']
 
         # Skip check if faceit api call failed for the player
-        if not api_responses[player_guid]: continue
+        if player_guid not in api_responses: continue
 
         player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
         if player_stats:
