@@ -25,7 +25,7 @@ async def elo_notifier_task(client):
             if e.response.status == 500:
                 # Faceit API is broken and  there's probably very little we can
                 # do so no reason to spam errors channel
-                log.warn("Failed to check faceit stats\n" + traceback.format_exc())
+                log.warning("Failed to check faceit stats\n" + traceback.format_exc())
             else:
                 await util.log_exception(log, "Failed to check faceit stats")
         except Exception as e:

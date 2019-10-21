@@ -42,8 +42,8 @@ async def get(path):
                 raise HttpError(r)
             response = await r.json()
             if r.status == 429:
-                log.warn("Hit ratelimit for path: %s", path)
-                log.warn(response)
+                log.warning("Hit ratelimit for path: %s", path)
+                log.warning(response)
                 await asyncio.sleep(float(response["retry_after"]) / 1000.0)
                 return await get(path)
 
@@ -186,7 +186,7 @@ async def main():
             await run_archival()
         except HttpError as e:
             if e.response.status == 500:
-                log.warn("Discord responded with something strange: %s", e.response)
+                log.warning("Discord responded with something strange: %s", e.response)
             else:
                 await util.log_exception(log)
         except Exception:

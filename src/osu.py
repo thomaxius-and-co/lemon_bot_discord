@@ -85,7 +85,7 @@ async def check_pps(client):
         await process_standard(client, u)
         await process_mania(client, u)
       except aiohttp.client_exceptions.ContentTypeError:
-        log.warn("osu! API responded with whatever non-json garbage :shrug:")
+        log.warning("osu! API responded with whatever non-json garbage :shrug:")
 
 
 async def process_standard(client, user):
