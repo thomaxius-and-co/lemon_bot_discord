@@ -14,7 +14,7 @@ def main():
             "name": {"type": "str", "required": True},
             "path": {"type": "str", "required": True},
             "handler": {"type": "str", "required": True},
-            "runtime": {"type": "str", "required": True, "choices": ["nodejs6.10", "nodejs8.10"]},
+            "runtime": {"type": "str", "required": True},
             "role": {"type": "str", "required": True},
             "env": {"type": "dict"},
         }
