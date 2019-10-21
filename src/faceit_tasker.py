@@ -47,10 +47,10 @@ async def check_faceit_elo(client):
 
         # Skip check if faceit api call failed for the player
         if player_guid not in api_responses: continue
+        current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
 
         player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
         if player_stats:
-            current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
             await fc.do_nick_change_check(player_guid, csgo_name, player_database_nick)
             if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
@@ -80,8 +80,6 @@ async def check_faceit_elo(client):
                                                  match_stats_string, records_string)
 
         else:
-            current_elo, skill_level, csgo_name, ranking, last_played = await fc.get_user_stats_from_api_by_id(
-                player_guid)
             if not current_elo or not ranking:  # Currently, only EU ranking is supported
                 continue
             await faceit_db.insert_data_to_player_stats_table(player_guid, current_elo, skill_level,
