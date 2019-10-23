@@ -26,15 +26,18 @@ async def get_combined_match_data(matches):
     combined = {}
     for match in matches:
         match_id = match.get("match_id")
-        match_details = await get_match_details(match.get("match_id"))
+        match_details = await faceit_api.match(match_id)
+        if match_details is None:
+            log.warning("Match details not available, skipping.. (match_id: %s)" % match_id)
+            continue
         if match_details.get("game") != 'csgo':
             log.info("Match is not csgo, skipping.. %s" % match_details) # Faceit api is so much fun that there aren't
             # just csgo matches in the csgo endpoints
             continue
         elif not match_details:
-            log.info("Match details not available, skipping.. %s" % match_details)
+            log.warning("Match details not available, skipping.. %s" % match_details)
             continue
-        match_stats = await get_match_stats(match.get("match_id"))
+        match_stats = await faceit_api.match_stats(match_id)
         if not match_stats:
             log.info("Match stats not available, skipping.. %s" % match_details)
             continue
@@ -44,19 +47,6 @@ async def get_combined_match_data(matches):
                                     }
                         })
     return combined
-
-async def get_match_details(match_id):
-    try:
-        return await faceit_api.match(match_id)
-    except NotFound as e:
-        log.error(e)
-
-
-async def get_match_stats(match_id):
-    try:
-        return await faceit_api.match_stats(match_id)
-    except NotFound as e:
-        log.error(e)
 
 
 async def get_user_stats_from_api_by_id(player_id):
