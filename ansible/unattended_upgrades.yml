@@ -4,7 +4,7 @@
 
 - name: Configure unattended-upgrades
   template:
-    src: "templates/{{ item }}"
+    src: "{{ item }}"
     dest: "/etc/apt/apt.conf.d/{{ item }}"
   with_items:
     - 20auto-upgrades
