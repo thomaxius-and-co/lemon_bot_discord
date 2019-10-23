@@ -14,13 +14,6 @@ async def do_nick_change_check(guid, api_player_name, database_player_name):
         log.info("No nickname changes detected for user %s " % guid)
         return
 
-async def get_matches(player_guid, from_timestamp, to_timestamp=None):
-    try:
-        return await faceit_api.player_match_history(player_guid, from_timestamp, to_timestamp)
-    except NotFound as e:
-        log.error(e)
-        return None
-
 # Combines match stats and match details (from two different api endpoints) to a dict
 async def get_combined_match_data(matches):
     combined = {}

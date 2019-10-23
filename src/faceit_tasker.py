@@ -9,6 +9,7 @@ from util import pmap
 import faceit_highlights as fh
 import faceit_common as fc
 import faceit_records as fr
+import faceit_api
 import copy
 import traceback
 
@@ -62,7 +63,7 @@ async def check_faceit_elo(client):
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
                     channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
                     log.info("Notifying channel %s", channel.id)
-                    matches = await fc.get_matches(player_guid, int(to_utc(player_stats['changed']).timestamp()))
+                    matches = await faceit_api.player_match_history(player_guid, int(to_utc(player_stats['changed']).timestamp()))
                     matches = await fc.get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_guid, copy.deepcopy(matches))

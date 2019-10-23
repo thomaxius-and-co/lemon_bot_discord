@@ -295,7 +295,7 @@ async def cmd_parse_records_of_past_matches(client, message, arg):
         return
 
     message = await message.channel.send("Processing..")
-    matches = await fc.get_matches(player_guid, timestamp)
+    matches = await faceit_api.player_match_history(player_guid, timestamp)
     matches = await fc.get_combined_match_data(matches)
     if matches:
         await fr.handle_records(player_guid, matches, message.guild.id)

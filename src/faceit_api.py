@@ -69,7 +69,7 @@ async def match_stats(match_id):
     if response.status == 200:
         return json.get("rounds", None)
     elif response.status == 404:
-        raise NotFound("Match not found (match id: {0})".format(match_id))
+        return None
 
 
 async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, limit=100):
@@ -85,7 +85,7 @@ async def player_match_history(player_id, from_timestamp=0, to_timestamp=None, l
     if response.status == 200:
         return json.get("items", None)
     elif response.status == 404:
-        return None
+        return []
 
 
 async def match(matchid):
