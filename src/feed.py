@@ -132,7 +132,7 @@ async def cmd_feed(client, message, arg):
     await handler(client, message, arg)
 
 async def cmd_feed_list(client, message, _):
-    feeds = await db.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", message.channel.id)
+    feeds = await db.fetch("SELECT url FROM feed WHERE channel_id = $1 ORDER BY feed_id", str(message.channel.id))
     msg = "Feeds in this channel:\n" + "\n".join(map(lambda f: f[0], feeds))
     await message.channel.send(msg)
 
@@ -140,7 +140,7 @@ async def cmd_feed_add(client, message, url):
     # TODO: Check the feed is valid
     # TODO: Find feeds from linked url
 
-    await db.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, message.channel.id)
+    await db.execute("INSERT INTO feed (url, channel_id) VALUES ($1, $2)", url, str(message.channel.id))
 
     log.info("Added feed '{0}'".format(url))
     await respond(client, message, emoji.WHITE_HEAVY_CHECK_MARK)
