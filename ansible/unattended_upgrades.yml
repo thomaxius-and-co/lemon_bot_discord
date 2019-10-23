@@ -8,7 +8,7 @@
     dest: "/etc/apt/apt.conf.d/{{ item }}"
   with_items:
     - 20auto-upgrades
-    - 50untattended-upgrades
+    - 50unattended-upgrades
 
 - name: Start unattended-upgrades
   systemd:
