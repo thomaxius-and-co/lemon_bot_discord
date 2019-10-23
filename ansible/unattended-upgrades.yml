@@ -1,0 +1,17 @@
+---
+- name: Install unattended-upgrades
+  apt: state=present name=unattended-upgrades
+
+- name: Configure unattended-upgrades
+  template:
+    src: "templates/{{ item }}"
+    dest: "/etc/apt/apt.conf.d/{{ item }}"
+  with_items:
+    - 20auto-upgrades
+    - 50untattended-upgrades
+
+- name: Start unattended-upgrades
+  systemd:
+    name: "unattended-upgrades"
+    state: restarted
+    enabled: yes

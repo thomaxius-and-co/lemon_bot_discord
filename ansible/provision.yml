@@ -15,6 +15,7 @@
 
   tasks:
     - include: deployment_dependencies.yml
+    - include: unattended_upgrades.yml
 
     - name: Add Deadsnakes PPA
       apt_repository:
