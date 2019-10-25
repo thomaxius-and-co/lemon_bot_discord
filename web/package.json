@@ -38,7 +38,8 @@
     "react": "16.4.1",
     "react-dom": "16.4.1",
     "request": "2.87.0",
-    "request-promise": "4.2.2"
+    "request-promise": "4.2.2",
+    "uuid": "3.3.3"
   },
   "devDependencies": {
     "nodemon": "1.17.5",

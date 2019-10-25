@@ -1,5 +1,6 @@
 const request = require('request-promise')
 const {db} = require('./db')
+const uuid = require('uuid/v4')
 
 const API_HOSTNAME = `wbsapi.withings.net`
 const AUTH_HOSTNAME = `account.withings.com`
@@ -49,7 +50,7 @@ function refreshAccessToken(userId) {
 
 function redirectToAuth(req, res) {
   // TODO: If user already has account linked this might not be required (unless token is expired?)
-  req.session.withings_state = `thisshouldprobablybesomethingrandombutnotnecessarilysecret`
+  req.session.withings_state = uuid()
   res.redirect(makeAuthorizeUrl(req.session.withings_state))
 }
 
