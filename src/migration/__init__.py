@@ -9,10 +9,8 @@ log = logger.get("MIGRATION")
 
 async def run_migrations(tx):
     migrations = find_migrations()
+    await init_migration_table(tx)
     version = await get_current_schema_version(tx)
-    if not version:
-        await init_migration_table(tx, migrations)
-        return
 
     log.info("Current schema version is {0}".format(version))
 
@@ -26,18 +24,18 @@ async def run_migrations(tx):
 
         await insert_version(tx, new_version)
 
-    log.info("Schema is in up to date")
+    log.info("Schema is up to date")
 
-async def init_migration_table(tx, migrations):
-    max_version = max(map(itemgetter(0), migrations))
-    log.info("Migration table not initialized. Initializing at version {0}".format(max_version))
+async def init_migration_table(tx):
+    if await table_exists(tx, "schema_version"): return
+
+    log.info("Migration table not initialized. Creating it")
     await tx.execute("""
         CREATE TABLE schema_version (
             version NUMERIC NOT NULL,
             upgraded TIMESTAMP NOT NULL DEFAULT current_timestamp
         )
     """)
-    await insert_version(tx, max_version)
 
 async def insert_version(tx, new_version):
     await tx.execute("INSERT INTO schema_version (version) VALUES ($1)", new_version)
@@ -61,11 +59,8 @@ def is_newer_than(current_version):
     return lambda x: x[0] > current_version
 
 async def get_current_schema_version(tx):
-    if await table_exists(tx, "schema_version"):
-        result = await tx.fetchrow("SELECT max(version)::bigint FROM schema_version")
-        return result[0] if result is not None else 0
-    else:
-        return 0
+    max_version = await tx.fetchval("SELECT max(version)::bigint FROM schema_version")
+    return max_version if max_version is not None else 0
 
 async def table_exists(tx, table_name):
     rows = await tx.fetch("SELECT * FROM information_schema.tables WHERE table_name = $1", table_name)
