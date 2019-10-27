@@ -25,7 +25,7 @@ async def cmd_reminder(client, message, text):
     if reminder is None:
         reply = "Sorry {message.author.mention}, I couldn't figure out the time for your reminder.".format(message=message)
         await message.channel.send(reply)
-        await client.add_reaction(message, emoji.CROSS_MARK)
+        await message.add_reaction(emoji.CROSS_MARK)
         return
 
     await add_reminder(message.author.id, reminder.time, reminder.text, reminder.original_text)

@@ -14,7 +14,7 @@ async def cmd_withings(client, message, arg):
     cmd, arg = command.parse(arg, prefix="")
     handler = subcommands.get(cmd, None)
     if handler is None:
-        await client.add_reaction(message, emoji.CROSS_MARK)
+        await message.add_reaction(emoji.CROSS_MARK)
         return
     await handler(client, message, arg)
 
