@@ -114,18 +114,6 @@
         ok_actions:
           - "{{ sns_topic_out.sns_arn }}"
 
-    - name: Create metric for errors logged
-      aws_metric_filter:
-        filterName: "{{ item }}-errors-logged-filter"
-        logGroupName: "{{ item }}"
-        filterPattern: "[date, time, level = ERROR, module, message]"
-        metricNamespace: "General"
-        metricName: "{{ item }}-errors-logged"
-        metricValue: "1"
-      with_items:
-        - "{{ prefix }}-bot"
-        - "{{ prefix }}-archiver"
-
 - name: Create server
   hosts: localhost
   gather_facts: no
