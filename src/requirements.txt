@@ -5,7 +5,6 @@ asyncpg==0.16.0
 bs4==0.0.1
 discord.py==1.2.3
 feedparser==5.2.1
-lxml==4.2.1
 parsedatetime==2.4
 pytz==2018.4
 websockets==6.0

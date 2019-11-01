@@ -38,8 +38,8 @@
         name: "{{ packages }}"
       vars:
         packages:
-          - python3.6
-          - python3.6-dev
+          - python3.7
+          - python3.7-dev
 
     - name: Install required packages
       apt:
@@ -47,8 +47,8 @@
         name: "{{ packages }}"
       vars:
         packages:
-          - python3.7
-          - python3.7-dev
+          - python3.8
+          - python3.8-dev
           - libpq-dev
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
@@ -64,7 +64,7 @@
         - restart services
 
     - name: Install Python dependencies
-      shell: "python3.7 -m pip install -r /home/{{ app_name }}/src/requirements.txt"
+      shell: "python3.8 -m pip install -r /home/{{ app_name }}/src/requirements.txt"
       notify:
         - restart services
 
