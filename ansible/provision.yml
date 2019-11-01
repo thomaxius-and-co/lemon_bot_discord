@@ -49,6 +49,7 @@
         packages:
           - python3.8
           - python3.8-dev
+          - python3.8-distutils
           - libpq-dev
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
@@ -62,6 +63,9 @@
           - "--chown=lemon:lemon"
       notify:
         - restart services
+
+    - name: Install pip
+      shell: "curl https://bootstrap.pypa.io/get-pip.py | python3.8"
 
     - name: Install Python dependencies
       shell: "python3.8 -m pip install -r /home/{{ app_name }}/src/requirements.txt"
