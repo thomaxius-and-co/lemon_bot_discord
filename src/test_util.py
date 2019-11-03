@@ -1,9 +1,11 @@
 from contextlib import contextmanager
+from operator import itemgetter
 import asyncio
 import functools
 import os
 
 import database as db
+import migration
 
 def async_test(task):
   @functools.wraps(task)
@@ -15,6 +17,14 @@ def async_test(task):
 async def reset_db():
     async with db.transaction() as tx:
         await clear_schema(tx, "public")
+        await set_latest_migration_version(tx)
+
+
+async def set_latest_migration_version(tx):
+  migrations = migration.find_migrations()
+  latest_version = max(map(itemgetter(0), migrations))
+  await migration.init_migration_table(tx)
+  await migration.insert_version(tx, latest_version)
 
 async def clear_schema(tx, schema):
   print("Initializing database")
