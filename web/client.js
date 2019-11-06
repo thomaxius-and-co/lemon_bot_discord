@@ -8,6 +8,7 @@ const faceitStatisticsPage = require("./pages/faceitStatisticsPage")
 const personalFaceitStatsPage = require("./pages/personalFaceitStatsPage")
 const whosaiditPage = require("./pages/whosaiditPage")
 const adminPage = require("./pages/adminPage")
+const Sentry = require("@sentry/browser")
 
 const findPage = path => {
   switch (path) {
@@ -36,4 +37,18 @@ class App extends React.Component {
   }
 }
 
-window.onload = () => ReactDOM.hydrate(<App/>, document)
+window.onload = () => {
+  if (window.location.hostname !== "localhost") {
+    Sentry.init({
+      dsn: "https://d9974734991140ce9eb549909652a761@sentry.io/1809679",
+      integrations: [
+        new Sentry.Integrations.GlobalHandlers({
+          onerror: true,
+          onunhandledrejection: true,
+        })
+      ]
+    })
+  }
+
+  ReactDOM.hydrate(<App/>, document)
+}
