@@ -2,6 +2,8 @@
   apt_repository:
     repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
     state: present
+- set_fact:
+    postgres_version: 11
 
 - name: Add PostgreSQL apt package key
   apt_key:
@@ -12,12 +14,12 @@
   apt:
     update_cache: yes
     package:
-      - postgresql-11
-      - postgresql-client-11
+      - "postgresql-{{ postgres_version }}"
+      - "postgresql-client-{{ postgres_version }}"
       - python-psycopg2
 
 - name: Configure postgresql
-  copy: src=files/{{ item }} dest=/etc/postgresql/9.5/main/{{ item }} group=postgres owner=postgres
+  copy: src=files/{{ item }} dest=/etc/postgresql/{{ postgres_version }}/main/{{ item }} group=postgres owner=postgres
   with_items:
     - postgresql.conf
     - pg_hba.conf
