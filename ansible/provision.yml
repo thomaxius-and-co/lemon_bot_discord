@@ -12,6 +12,7 @@
     - name: Install python on remote machine
       raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
       changed_when: False
+    - setup:
 
   tasks:
     - include: deployment_dependencies.yml
@@ -60,7 +61,7 @@
         dest: "/home/{{ app_name }}"
         delete: yes
         rsync_opts:
-          - "--chown=lemon:lemon"
+          - "--chown={{ app_name }}:{{ app_name }}"
       notify:
         - restart services
 

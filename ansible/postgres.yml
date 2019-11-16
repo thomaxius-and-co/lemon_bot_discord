@@ -1,5 +1,27 @@
-- name: Install postgres
+# Postgres 11
+
+- name: Add PostgreSQL apt repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+    state: present
+
+- name: Add PostgreSQL apt package key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+
+- name: Install PostgreSQL
   apt:
+    update_cache: yes
+    package:
+      - postgresql-11
+      - postgresql-client-11
+
+# Postgres 9.5
+- name: Uninstall old PostgreSQL version
+  apt:
+    state: absent
     name: "{{ item }}"
   with_items:
     - postgresql

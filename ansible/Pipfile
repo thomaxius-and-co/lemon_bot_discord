@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+ansible = "==2.9.1"
+awscli = "==1.16.144"
+boto = "==2.49.0"
+boto3 = "==1.9.134"
+botocore = "==1.12.134"
+dopy = {git = "https://github.com/rce/dopy.git", editable = true, ref = "monitoring"}
+
+[requires]
+python_version = "2.7.15"

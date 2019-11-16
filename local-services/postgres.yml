@@ -1,8 +1,20 @@
-- name: Install required packages
-  apt: name={{ item }}
-  with_items:
-    - postgresql
-    - python-psycopg2
+- name: Add PostgreSQL apt repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+    state: present
+
+- name: Add PostgreSQL apt package key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Install PostgreSQL and psycopg2 for configuring it
+  apt:
+    update_cache: yes
+    package:
+      - postgresql-11
+      - postgresql-client-11
+      - python-psycopg2
 
 - name: Configure postgresql
   copy: src=files/{{ item }} dest=/etc/postgresql/9.5/main/{{ item }} group=postgres owner=postgres

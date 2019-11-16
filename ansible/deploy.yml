@@ -154,4 +154,4 @@
         groupname: server
       changed_when: False
 
-- include: provision.yml
+- import_playbook: provision.yml
