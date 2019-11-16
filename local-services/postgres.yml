@@ -29,7 +29,7 @@
   become_user: postgres
 
 - name: Create database user
-  postgresql_user: db=lemon name=lemon password=lemon priv=ALL
+  postgresql_user: db=lemon name=lemon password=lemon priv=ALL encrypted=yes
   become_user: postgres
 
 - name: Add pg_trgm extension to support indexes for LIKE operator

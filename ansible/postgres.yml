@@ -37,6 +37,7 @@
     name: "{{ secrets.db.username }}"
     password: "{{ secrets.db.password }}"
     priv: "ALL"
+    encrypted: yes
   become_user: postgres
 
 - name: Add pg_trgm extension to support indexes for LIKE operator
