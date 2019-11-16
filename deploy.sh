@@ -1,12 +1,12 @@
 #!/bin/bash
 
+export AWS_REGION="eu-west-1"
+export AWS_DEFAULT_REGION="$AWS_REGION"
+
 ROOT="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 cd $ROOT
 
 set -o errexit
-trap "rm vault.pw" SIGINT SIGTERM EXIT
-
-echo $ANSIBLE_VAULT_PASSWORD > vault.pw
 
 set +o errexit
 export NVM_DIR="$ROOT/.nvm"
@@ -19,7 +19,7 @@ discord_alarm_webhook_secret_arn="$(aws secretsmanager describe-secret --secret-
 ANSIBLE_CONFIG="$ROOT/ansible/ansible.cfg" \
 ANSIBLE_LIBRARY="$ROOT/ansible/library" \
 ansible-playbook \
-  --vault-password-file=vault.pw \
+  --vault-password-file=./get_vault_password.sh \
   --extra-vars=@ansible/secrets.yml \
   --extra-vars "discord_alarm_webhook_secret_arn=$discord_alarm_webhook_secret_arn" \
   ansible/deploy.yml
