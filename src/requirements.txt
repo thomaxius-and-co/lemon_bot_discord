@@ -3,7 +3,7 @@ aiohttp==3.5.4
 aioredis==1.1.0
 asyncpg==0.19.0
 bs4==0.0.1
-discord.py==1.2.3
+discord.py==1.2.5
 feedparser==5.2.1
 parsedatetime==2.4
 pytz==2018.4
