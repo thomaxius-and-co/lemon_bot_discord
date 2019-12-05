@@ -12,25 +12,27 @@ class InvalidUrlError(Exception):
 class InvalidExtensionError(Exception):
     pass
 
-async def cmd_mememaker(client, message, args):
+async def cmd_mememaker(client, original_message, args):
     if not args:
-        await message.channel.send("Usage: !mememaker <image url>.{0}".format('|'.join(ALLOWED_EXTENSIONS_LIST)))
+        await original_message.channel.send("Usage: !mememaker <image url>.{0}".format('|'.join(ALLOWED_EXTENSIONS_LIST)))
         return
     args = args.lstrip('```').rstrip('```').lstrip('`').rstrip('`')
     url, image_extension = args, args[-3:]
     if not is_valid_extension(image_extension):
-        await message.channel.send("Url must end with .{0}".format('|'.join(ALLOWED_EXTENSIONS_LIST)))
+        await original_message.channel.send("Url must end with .{0}".format('|'.join(ALLOWED_EXTENSIONS_LIST)))
         return
+    new_message = await original_message.channel.send('Please wait, manufacturing meme..')
+    await original_message.delete()
     try:
         meme_url = await meme_from_url(args)
     except InvalidUrlError as e:
-        await message.channel.send("Error: url provided is invalid")
+        await new_message.edit(content="Error: url provided is invalid")
         return
     except Exception as e:
-        await message.channel.send("There was an error processing your command.")
+        await new_message.edit(content="There was an error processing your command.")
         log.error(e)
         return
-    await message.channel.send(meme_url)
+    await new_message.edit(content=meme_url)
 
 def is_valid_extension(extension):
     return extension in ALLOWED_EXTENSIONS_LIST
@@ -39,7 +41,7 @@ async def meme_from_url(url):
     async with aiohttp.ClientSession() as session:
         url = "http://memeapi.santamaa.com/memefromurl?url={0}".format(url)
         response = await session.get(url)
-        log.info("%s %s %s %s", response.method, response.url, response.status, await
+        log.debug("%s %s %s %s", response.method, response.url, response.status, await
         response.text())
         if response.status not in [200, 404]:
             raise Exception("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
