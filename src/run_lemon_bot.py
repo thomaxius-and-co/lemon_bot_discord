@@ -49,6 +49,7 @@ import withings
 import groom
 import shrek
 import ence_matches
+import mememaker
 
 log = logger.get("BOT")
 
@@ -85,7 +86,7 @@ async def main():
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, awards, laiva,
                    faceit_main, muutto, statistics, crypto, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek, ence_matches]:
+                   groom, shrek, ence_matches, mememaker]:
         commands.update(module.register(client))
 
     try:
