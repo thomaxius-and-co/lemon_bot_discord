@@ -10,6 +10,6 @@ pytz==2018.4
 websockets==6.0
 wolframalpha==3.0.1
 requests==2.17.3
-lxml==4.2.1
+lxml==4.2.5
 pandas==0.23.4
 cfscrape==1.9.5
