@@ -35,7 +35,7 @@ async def cmd_mememaker(client, original_message, args):
     await new_message.edit(content=meme_url)
 
 def is_valid_extension(extension):
-    return extension in ALLOWED_EXTENSIONS_LIST
+    return extension.lower() in ALLOWED_EXTENSIONS_LIST
 
 async def meme_from_url(url):
     async with aiohttp.ClientSession() as session:
