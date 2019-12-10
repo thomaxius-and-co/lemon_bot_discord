@@ -33,14 +33,12 @@ async def cmd_mememaker(client, original_message, args):
 
     try:
         meme_url = await meme_from_url(args)
+        await new_message.edit(content=meme_url)
     except InvalidUrlError as e:
         await new_message.edit(content="Error: url provided is invalid")
-        return
     except Exception as e:
-        await new_message.edit(content="There was an error processing your command.")
         log.error(e)
-        return
-    await new_message.edit(content=meme_url)
+        await new_message.edit(content="There was an error processing your command.")
 
 def is_valid_extension(extension):
     return extension.lower() in ALLOWED_EXTENSIONS_LIST
