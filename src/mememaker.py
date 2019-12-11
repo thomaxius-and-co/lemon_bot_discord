@@ -1,4 +1,6 @@
+from contextlib import suppress
 import aiohttp
+import discord
 import logger
 import json
 
@@ -22,20 +24,24 @@ async def cmd_mememaker(client, original_message, args):
         await original_message.channel.send("Url must end with .{0}".format('|'.join(ALLOWED_EXTENSIONS_LIST)))
         return
     new_message = await original_message.channel.send('Please wait, manufacturing meme..')
-    await original_message.delete()
+
+    # It's OK if the bot doesn't have permissions to delete the command
+    # message. In private chat there isn't even an option to give the bot such
+    # permission.
+    with suppress(discord.errors.Forbidden):
+        await original_message.delete()
+
     try:
         meme_url = await meme_from_url(args)
+        await new_message.edit(content=meme_url)
     except InvalidUrlError as e:
         await new_message.edit(content="Error: url provided is invalid")
-        return
     except Exception as e:
-        await new_message.edit(content="There was an error processing your command.")
         log.error(e)
-        return
-    await new_message.edit(content=meme_url)
+        await new_message.edit(content="There was an error processing your command.")
 
 def is_valid_extension(extension):
-    return extension in ALLOWED_EXTENSIONS_LIST
+    return extension.lower() in ALLOWED_EXTENSIONS_LIST
 
 async def meme_from_url(url):
     async with aiohttp.ClientSession() as session:
