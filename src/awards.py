@@ -130,16 +130,16 @@ async def get_user_days_in_chat():
 
 
 async def cmd_trophycabinet(client, message, arg):
-    oldmessage = await message.channel.send('Please wait while I check the book of winners..')
+    bot_message = await message.channel.send('Please wait while I check the book of winners..')
     user_id = message.author.id
     trophycabinet = await find_user_trophies(user_id)
     msg = ''
     if trophycabinet:
         for trophy in trophycabinet:
             msg += ':trophy: ' + trophy + '\n'
-        await client.edit_message(oldmessage, 'Your trophies:\n' + msg + '\n')
+        await bot_message.edit(content='Your trophies:\n' + msg + '\n')
     else:
-        await client.edit_message(oldmessage, 'You have no trophies.')
+        await bot_message.edit(content='You have no trophies.')
 
 
 async def cmd_deletetrophy(client, message, arg):
@@ -233,16 +233,16 @@ async def add_custom_award_to_database(name, conditions, message_id):
 
 
 async def cmd_alltrophies(client, message, arg):
-    oldmessage = await message.channel.send('Please wait while I check the book of winners..')
+    bot_message = await message.channel.send('Please wait while I check the book of winners..')
     trophycabinet = await find_all_trophies()
     msg = ''
     if trophycabinet:
         for trophy in trophycabinet:
             msg += ':trophy: ' + trophy + '\n'
-        log.info(oldmessage, msg + '\n')
-        await client.edit_message(oldmessage, msg + '\n')
+        log.info(msg + '\n')
+        await bot_message.edit(content=msg + '\n')
     else:
-        await client.edit_message(oldmessage, 'Nobody has won a trophy yet.')
+        await bot_message.edit(content='Nobody has won a trophy yet.')
 
 
 async def find_user_trophies(user_id):
