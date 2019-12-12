@@ -151,7 +151,14 @@ async def cmd_weather(client, message, zip_code):
     async with aiohttp.ClientSession() as session:
         r = await session.get(link)
         data = await r.json()
-        location = data['name']
+        if int(data['cod']) == 404:
+            await message.channel.send("City not found.")
+            return
+        elif int(data['cod']) != 200:
+            await message.channel.send("Error fetching weather. Please try again and\or with different parameter(s)")
+            log.error('cmd_weather : {}'.format(data))
+            return
+        location = data.get('name', None)
         F = data['main']['temp'] * 1.8 - 459.67
         C = (F - 32) * 5 / 9
         status = data['weather'][0]['description']
