@@ -24,7 +24,7 @@
    * Database functions:
 	* Auto retrieving and archiving messages from discord servers to a local database
 	* Multiple commands to access chatlogs: !randomquote, !top <list of who said what the most>, etc.
-   * Awards for certain things (they work as archievements, basically)
+   * Trophies for certain things (they work as archievements, basically)
    * Simple statistics webfront
 
 ## Development

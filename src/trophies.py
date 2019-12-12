@@ -2,7 +2,7 @@ import database as db
 from asyncio import sleep
 import logger
 
-log = logger.get("AWARDS")
+log = logger.get("TROPHIES")
 
 TROPHY_NAMES = ['Top spammer', 'Whosaidit total #1', 'Whosaidit all time high score',
                 'Biggest gambling problem', 'Best grammar', 'Worst grammar', 'Spammer of the week']
@@ -183,7 +183,7 @@ async def cmd_addtrophy(client, message, arg):
     if not (arg[0:5].startswith("name=")) or ("conditions=" not in arg):
         await message.channel.send(error)
         return
-    name, conditions = parse_award_info(arg)
+    name, conditions = parse_trophy_info(arg)
     conditions = check_and_remove_invalid_words(conditions)
     if not name or not conditions:
         await message.channel.send(error)
@@ -199,7 +199,7 @@ async def cmd_addtrophy(client, message, arg):
         await message.channel.send("There is a trophy with a similar name already.")
         return
     await sleep(1)
-    await add_custom_award_to_database(name, conditions, message.id)
+    await add_custom_trophy_to_database(name, conditions, message.id)
     CUSTOM_TROPHY_NAMES.append(name)
     await message.channel.send("Succesfully added a trophy.")
 
@@ -217,19 +217,19 @@ def check_and_remove_invalid_words(input):
     return ', '.join(valid_list)
 
 
-def parse_award_info(unparsed_arg):
+def parse_trophy_info(unparsed_arg):
     list_with_args = unparsed_arg.split('conditions=')
     name = str(list_with_args[0]).replace('name=', '', 1)
     conditions = list_with_args[-1]
     return name.rstrip(' '), conditions
 
 
-async def add_custom_award_to_database(name, conditions, message_id):
+async def add_custom_trophy_to_database(name, conditions, message_id):
     await db.execute("""
         INSERT INTO custom_trophies AS a
         (message_id, trophy_name, trophy_conditions)
         VALUES ($1, $2, $3)""", message_id, name, conditions)
-    log.info('Added custom award to the database: message_id %s, trophy name: %s, conditions: %s', message_id, name, conditions)
+    log.info('Added custom trophy to the database: message_id %s, trophy name: %s, conditions: %s', message_id, name, conditions)
 
 
 async def cmd_alltrophies(client, message, arg):

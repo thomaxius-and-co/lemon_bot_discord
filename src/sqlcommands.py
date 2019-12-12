@@ -9,7 +9,7 @@ import random as rand
 from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_utc, to_helsinki
-from awards import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
+from trophies import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
 import logger
 
 log = logger.get("SQLCOMMANDS")
