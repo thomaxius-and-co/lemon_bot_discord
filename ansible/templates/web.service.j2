@@ -12,6 +12,7 @@ User={{ app_name }}
 Group={{ app_name }}
 ExecStart=/home/{{ app_name }}/web/run.sh
 WorkingDirectory=/home/{{ app_name }}/web
+LimitNOFILE=10000
 Environment=NODE_ENV=production
 Environment=ADMIN_USER_IDS={{ secrets.admin_user_ids }}
 Environment=LEMONBOT_TOKEN={{ secrets.discord_token }}
