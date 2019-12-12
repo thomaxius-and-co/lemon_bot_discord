@@ -146,6 +146,7 @@ async def cmd_weather(client, message, zip_code):
         await message.channel.send("You must specify a city, eq. Säkylä.")
         return
 
+
     API_KEY = os.environ['OPEN_WEATHER_APPID']
     link = 'http://api.openweathermap.org/data/2.5/weather?q=%s&APPID=%s' % (zip_code, API_KEY)
     async with aiohttp.ClientSession() as session:
@@ -263,7 +264,7 @@ async def cmd_clear(client, message, arg):
         answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
         if answer.content.lower() == 'yes':
             try:
-                await client.purge_from(message.channel, limit=limit + 3)
+                await message.channel.purge(limit=limit + 3)
                 await message.channel.send("%s messages succesfully deleted." % limit)
                 log.info("!CLEAR: %s deleted %s messages.", message.author, limit)
             except discord.errors.HTTPException as e:
@@ -300,7 +301,7 @@ async def cmd_clearbot(client, message, arg):
         answer = await client.wait_for("message", timeout=60, check=lambda m: m.author == message.author)
         if answer.content.lower() == 'yes':
             try:
-                await client.purge_from(message.channel, limit=limit + 3, check=isbot)
+                await message.channel.purge(limit=limit + 3, check=isbot)
                 await message.channel.send("%s bot messages succesfully deleted." % limit)
                 log.info("!CLEARBOT: %s deleted %s bot messages.", message.author, limit)
             except discord.errors.HTTPException as e:
