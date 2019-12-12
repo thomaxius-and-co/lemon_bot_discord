@@ -294,15 +294,15 @@ async def cmd_parse_records_of_past_matches(client, message, arg):
         await message.channel.send("Unknown player. Player must be in the database.")
         return
 
-    message = await message.channel.send("Processing..")
+    bot_message = await message.channel.send("Processing..")
     matches = await faceit_api.player_match_history(player_guid, timestamp)
     matches = await fc.get_combined_match_data(matches)
     if matches:
         await fr.handle_records(player_guid, matches, message.guild.id)
-        await client.edit_message(message, "%s matches processed for player %s" % (len(matches), nickname))
+        await bot_message.edit(content="%s matches processed for player %s" % (len(matches), nickname))
         return
     if not matches:
-        await message.channel.send("No matches found with the given timestamp.")
+        await bot_message.edit(content="No matches found with the given timestamp.")
         return
 
 
