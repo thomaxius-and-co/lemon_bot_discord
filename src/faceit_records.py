@@ -255,8 +255,6 @@ async def handle_records(player_guid, matches_dict, guild_id):
         for team in teams:
             players = team.get("players")
             for player in players:
-                if player.get("player_id") != player_guid:
-                    log.info("player is not here, %s %s" % (player.get("player_id"), player_guid))
                 if player.get("player_id") == player_guid:  # If player is in this team
                     added_timestamp = datetime.now()
                     player_team = teams.pop(teams.index(team))
