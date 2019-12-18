@@ -30,6 +30,13 @@
       user:
         name: "{{ app_name }}"
 
+    - name: Set open file limit
+      template:
+        src: "templates/99-sysctl.conf.j2"
+        dest: "/etc/sysctl.d/99-sysctl.conf"
+      notify:
+        - reload sysctl.conf
+
     - include: postgres.yml
     - include: redis.yml
 
@@ -98,6 +105,9 @@
     - include: logs.yml
 
   handlers:
+    - name: reload sysctl.conf
+      shell: sysctl -p
+
     - name: reload unit files
       shell: systemctl daemon-reload
 
