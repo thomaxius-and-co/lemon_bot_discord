@@ -159,7 +159,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                          },
         'BIG_MVP_PERCENTAGE': {
                         'condition': ((player.mvps / rounds) * 100) >= 30,
-                        'description': "**{0}** had **{1}**% mvp's (**{2:.3g}**% out of {3} rounds)".format(
+                        'description': "**{0}** had **{1}** mvp's (**{2:.3g}**% out of {3} rounds)".format(
                             player.nickname, player.mvps, ((player.mvps / rounds) * 100), rounds),
                         'priority': 90,
                         'priority_multiplier': rounds / 10
@@ -295,8 +295,8 @@ async def is_match_bottomfragger_but_highest_level(player, player_team, enemy_te
     all_levels_are_equal = all(x.faceit_level==match_players[0].faceit_level for x in match_players)
     if all_levels_are_equal:
         return False
-    match_players_by_level = sorted(match_players, reverse=True, key=lambda x: x.faceit_level)
-    match_players_by_kills = sorted(match_players, reverse=True, key=lambda x: x.kills)
+    match_players_by_level = sorted(match_players, key=lambda x: x.faceit_level)
+    match_players_by_kills = sorted(match_players, key=lambda x: x.kills)
     if match_players_by_kills[-1].faceit_level == match_players_by_kills[-2].faceit_level: # Two bottomfraggers have the same level
         return False
     return (match_players_by_level[0].guid == player.guid) and (match_players_by_kills[-1].guid == player.guid)
