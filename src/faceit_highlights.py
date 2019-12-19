@@ -73,7 +73,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority_multiplier': rounds / 10
                         },
         'DIED_OFTEN': {
-                        'condition': ((player.deaths / rounds) * 100) >= 90 and (player.deaths != rounds), # Don't do this highlight if DIED_EVERY_ROUND highlight is chosen todo: fix this
+                        'condition': ((player.deaths / rounds) * 100) >= 90 and (player.deaths != rounds),
                         'description': " **%s** died almost every round (%s times out of %s rounds)" % (player.nickname, player.deaths, rounds),
                         'priority': 80,
                         'priority_multiplier': rounds / 10
