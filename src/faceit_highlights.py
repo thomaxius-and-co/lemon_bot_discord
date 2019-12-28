@@ -1,5 +1,6 @@
 import random
 import logger
+import json
 
 log = logger.get("FACEIT_HIGHLIGHTS")
 
@@ -222,6 +223,13 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'priority': 80,
                         'priority_multiplier': player.deaths / 10
         },
+        'ENEMY_BOTTOM_FRAGGER_TWICE_AS_GOOD': {
+                        'condition': await enemy_bottom_fragger_twice_as_good(player, enemy_team),
+                        'description': "**Let's not talk about this**: Enemy team's bottom fragger had **{0:.3g}%** times more kills ({1}) than {2}.".format(
+                            (await get_bottom_fragger(enemy_team)).kills / player.kills, (await get_bottom_fragger(enemy_team)).kills, player.nickname),
+                        'priority': 180,
+                        'priority_multiplier': player.deaths / 10
+        },
     }
 
     base_string = "**Player highlight(s)**:\n"
@@ -229,7 +237,6 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
 
     occured_highlights = []
     occured_highlights_priorities = []
-
 
     for x in highlights:
         condition, description, priority, priority_multiplier = highlights.get(x).values()
@@ -248,8 +255,6 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
         occured_highlights.remove(chosen_highlight)
         highlight_string += "     - " + chosen_highlight_description + "\n"
     return highlight_string
-
-
 
 async def players_sorted_by_kills(players_list):
     return sorted(players_list, reverse=True, key=lambda x: int(x.get("player_stats").get("Kills")))
@@ -340,3 +345,10 @@ async def died_the_most(player, player_team, enemy_team):
 async def is_team_top_assister(player, player_team):
     team_players_by_assists = sorted(player_team, reverse=True, key=lambda x: x.assists)
     return team_players_by_assists[0].guid == player.guid
+
+async def enemy_bottom_fragger_twice_as_good(player, enemy_team):
+    enemy_bottom_fragger = await get_bottom_fragger(enemy_team)
+    return enemy_bottom_fragger.kills >= (player.kills * 2)
+
+async def get_bottom_fragger(team):
+    return [player for player in team if player.rank == 5][0]
