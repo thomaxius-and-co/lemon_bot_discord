@@ -8,6 +8,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 rustup install 1.39.0
 
 cd journald-cloudwatch
+rustup override set 1.39.0
 cargo test --release
 cargo build --release
 
