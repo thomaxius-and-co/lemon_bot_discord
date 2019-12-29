@@ -4,6 +4,11 @@ import json
 
 log = logger.get("FACEIT_HIGHLIGHTS")
 
+highlight_template_dict = {
+    'condition': None,
+    'description': None
+}
+
 async def get_highlights(player, match_stats, match_details, player_team, enemy_team):
     match_length = int(match_details.get("finished_at")) - int(match_details.get("started_at"))
     match_length = match_length / int(
@@ -271,7 +276,6 @@ async def died_the_most(player, player_team, enemy_team):
     match_players_by_deaths = sorted(match_players, reverse=True, key=lambda x: x.deaths)
     return match_players_by_deaths[0].guid == player.guid
 
-
 async def is_team_top_assister(player, player_team):
     team_players_by_assists = sorted(player_team, reverse=True, key=lambda x: x.assists)
     return team_players_by_assists[0].guid == player.guid
@@ -281,4 +285,4 @@ async def enemy_bottom_fragger_twice_as_good(player, enemy_team):
     return enemy_bottom_fragger.kills >= (player.kills * 2)
 
 async def get_bottom_fragger(team):
-    return [player for player in team if player.rank == 5][0]
+    return [player for player in team if player.rank == len(team)][0]
