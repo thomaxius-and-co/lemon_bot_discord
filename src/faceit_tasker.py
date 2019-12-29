@@ -219,7 +219,7 @@ async def get_player_strings(match_stats, match_details, player_guid):
                 player = [player_obj for player_obj in player_team if player_obj.guid == player.get("player_id")][0]
 
                 highlight_string = await fh.get_highlights(player, match_stats, match_details, player_team, enemy_team)
-                return "**Player stats:** #%s %s-%s-%s (%s kdr) %s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
+                return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
     return ""
 
 
