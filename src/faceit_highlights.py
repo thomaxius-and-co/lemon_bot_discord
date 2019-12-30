@@ -1,11 +1,12 @@
 import random
 import logger
-import json
+import faceit_api as api
+import PlayerStats from faceit_tasker
 
 log = logger.get("FACEIT_HIGHLIGHTS")
 
 highlight_template_dict = {
-    'condition': None,
+    'condition': False,
     'description': None
 }
 
@@ -150,7 +151,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                             player.kills),
         },
         'BOTTOM_FRAGGER_GOOD_KD': {
-                        'condition': player.rank == 5 and player.kd_ratio >= 1.7 and rounds >= 10,
+                        'condition': player.rank == len(player_team) and player.kd_ratio >= 1.7 and rounds >= 10,
                         'description': "**Sweating for nothing**: Bottom fragger of the team even though had a kd ratio of **{0}**.".format(
                             player.kd_ratio),
         },
@@ -164,11 +165,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'description': "**Human shield (team)**: **{0:.3g}%** of team's total deaths ({1}).".format(
                             (player.deaths / player_team_total_deaths) * 100, player.deaths),
         },
-        'ENEMY_BOTTOM_FRAGGER_TWICE_AS_GOOD': {
-                        'condition': await enemy_bottom_fragger_twice_as_good(player, enemy_team),
-                        'description': "**Let's not talk about this**: Enemy team's bottom fragger had **{0:.3g}%** times more kills ({1}) than {2}.".format(
-                            (await get_bottom_fragger(enemy_team)).kills / player.kills, (await get_bottom_fragger(enemy_team)).kills, player.nickname),
-        },
+        'ENEMY_BOTTOM_FRAGGER_TWICE_AS_GOOD': await enemy_bottom_fragger_twice_as_good(player, enemy_team)
     }
 
     base_string = "**Player highlight(s)**:\n"
@@ -217,7 +214,7 @@ async def is_team_bottomfragger_but_highest_level(player, player_team):
     players = sorted(player_team, reverse=True, key=lambda x: int(x.faceit_level))
     if players[-1].faceit_level == players[-2].faceit_level: # if last two players have same level
         return False
-    return (player.rank == 5) and (players[0].guid == player.guid)
+    return (player.rank == len(player_team)) and (players[0].guid == player.guid)
 
 
 async def is_match_topfragger_but_lowest_level(player, player_team, enemy_team):
@@ -280,9 +277,20 @@ async def is_team_top_assister(player, player_team):
     team_players_by_assists = sorted(player_team, reverse=True, key=lambda x: x.assists)
     return team_players_by_assists[0].guid == player.guid
 
-async def enemy_bottom_fragger_twice_as_good(player, enemy_team):
-    enemy_bottom_fragger = await get_bottom_fragger(enemy_team)
-    return enemy_bottom_fragger.kills >= (player.kills * 2)
+async def enemy_bottom_fragger_twice_as_good(player, enemy_team) -> dict:
+    hightlight_dict = highlight_template_dict.copy()
+    enemy_team_bottom_fragger = await get_bottom_fragger(enemy_team)
+    if enemy_team_bottom_fragger.kills >= (player.kills * 2):
+        highlight_template_dict.update(
+            {
+                'condition': True,
+                'description': "**Let's not talk about this**: Enemy team's bottom fragger had **{0:.3g}** times more kills ({1}) than {2}."
+                    .format((enemy_team_bottom_fragger.kills / player.kills), enemy_team_bottom_fragger.kills, player.nickname),
+            }
+        )
+    return hightlight_dict
 
-async def get_bottom_fragger(team):
+async def get_bottom_fragger(team) -> PlayerStats:
     return [player for player in team if player.rank == len(team)][0]
+
+
