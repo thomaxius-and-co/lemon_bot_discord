@@ -299,7 +299,7 @@ async def enemy_bottom_fragger_twice_as_good(player, enemy_team) -> dict:
     hightlight_dict = highlight_template_dict.copy()
     enemy_team_bottom_fragger = await get_bottom_fragger(enemy_team)
     if enemy_team_bottom_fragger.kills >= (player.kills * 2):
-        highlight_template_dict.update(
+        hightlight_dict.update(
             {
                 'condition': True,
                 'description': "**Let's not talk about this**: Enemy team's bottom fragger had **{0:.3g}** times more kills ({1}) than {2}."
