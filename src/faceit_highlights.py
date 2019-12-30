@@ -1,7 +1,5 @@
 import random
 import logger
-import faceit_api as api
-import PlayerStats from faceit_tasker
 
 log = logger.get("FACEIT_HIGHLIGHTS")
 
@@ -165,6 +163,26 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'description': "**Human shield (team)**: **{0:.3g}%** of team's total deaths ({1}).".format(
                             (player.deaths / player_team_total_deaths) * 100, player.deaths),
         },
+        'ENEMY_TEAM_WIN_WITH_BOT': {
+                        'condition': player.result == 0 and len(enemy_team) != 5,
+                        'description': "**Against all odds**: Match won even though team had {0} leaver(s).".format(
+                            5 - len(enemy_team)),
+        },
+        'ENEMY_TEAM_LOSE_WITH_BOT': {
+                        'condition': player.result == 1 and len(enemy_team) != 5,
+                        'description': "**Handicapped**: Enemy team had {0} leaver(s).".format(
+                            5 - len(enemy_team)),
+        },
+        'PLAYER_TEAM_WIN_WITH_BOT': {
+                        'condition': player.result == 1 and len(player_team) != 5,
+                        'description': "**Outnumbered, not outplayed**: Match won even though team had {0} leaver(s).".format(
+                            5 - len(player_team)),
+        },
+        'PLAYER_TEAM_LOSE_WITH_BOT': {
+                        'condition': player.result == 0 and len(player_team) != 5,
+                        'description': "**Outnumbered**: Team had {0} leaver(s).".format(
+                            5 - len(player_team)),
+        },
         'ENEMY_BOTTOM_FRAGGER_TWICE_AS_GOOD': await enemy_bottom_fragger_twice_as_good(player, enemy_team)
     }
 
@@ -290,7 +308,7 @@ async def enemy_bottom_fragger_twice_as_good(player, enemy_team) -> dict:
         )
     return hightlight_dict
 
-async def get_bottom_fragger(team) -> PlayerStats:
+async def get_bottom_fragger(team) -> object:
     return [player for player in team if player.rank == len(team)][0]
 
 
