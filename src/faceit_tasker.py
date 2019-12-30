@@ -220,8 +220,7 @@ async def get_player_strings(match_stats, match_details, player_guid):
 
                 highlight_string = await fh.get_highlights(player, match_stats, match_details, player_team, enemy_team)
                 return "**Player stats:** #%s %s-%s-%s (%s kdr)%s" % (player.rank, player.kills, player.assists, player.deaths, player.kd_ratio, ("\n" + highlight_string if highlight_string else ''))
-    return ""
-
+    return "Player ragequit from the match!" # Player is not in either team, which means they have left the match
 
     # Creates an object of every player and returns team's players sorted by kills (old api)
 async def merge_stats_and_details_old_api(team_player_details, team_player_stats):
