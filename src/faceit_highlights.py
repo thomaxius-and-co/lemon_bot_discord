@@ -165,7 +165,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
         },
         'ENEMY_TEAM_WIN_WITH_BOT': {
                         'condition': player.result == 0 and len(enemy_team) != 5,
-                        'description': "**Against all odds**: Match won even though team had {0} leaver(s).".format(
+                        'description': "**Against all odds**: Enemy team won even though they had {0} leaver(s).".format(
                             5 - len(enemy_team)),
         },
         'ENEMY_TEAM_LOSE_WITH_BOT': {
@@ -280,20 +280,25 @@ async def is_match_top_assister(player, player_team, enemy_team):
 async def get_team_total_kills(team):
     return sum([player.kills for player in team])
 
+
 async def get_team_total_deaths(team):
     return sum([player.deaths for player in team])
 
+
 async def has_many_kills_multi_kills(player):
     return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 50
+
 
 async def died_the_most(player, player_team, enemy_team):
     match_players = player_team + enemy_team
     match_players_by_deaths = sorted(match_players, reverse=True, key=lambda x: x.deaths)
     return match_players_by_deaths[0].guid == player.guid
 
+
 async def is_team_top_assister(player, player_team):
     team_players_by_assists = sorted(player_team, reverse=True, key=lambda x: x.assists)
     return team_players_by_assists[0].guid == player.guid
+
 
 async def enemy_bottom_fragger_twice_as_good(player, enemy_team) -> dict:
     hightlight_dict = highlight_template_dict.copy()
@@ -307,6 +312,7 @@ async def enemy_bottom_fragger_twice_as_good(player, enemy_team) -> dict:
             }
         )
     return hightlight_dict
+
 
 async def get_bottom_fragger(team) -> object:
     return [player for player in team if player.rank == len(team)][0]
