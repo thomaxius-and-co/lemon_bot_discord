@@ -63,6 +63,15 @@ async def ranking(player_id, region="EU", game_id="csgo"):
         raise NotFound("User not found (player_id: {0})".format(player_id))
 
 
+async def player_stats(player_id, game_id='csgo'):
+    response = await _call_api("""/players/{0}/stats/{1}""".format(player_id, game_id))
+    json = await response.json()
+    if response.status == 200:
+        return json
+    elif response.status == 404:
+        return None
+
+
 async def match_stats(match_id):
     response = await _call_api("""/matches/{0}/stats""".format(match_id))
     json = await response.json()

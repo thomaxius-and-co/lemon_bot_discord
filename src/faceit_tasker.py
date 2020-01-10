@@ -50,23 +50,23 @@ async def check_faceit_elo(client):
         if player_guid not in api_responses: continue
         current_elo, skill_level, csgo_name, ranking, last_played = api_responses[player_guid]
 
-        player_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
-        if player_stats:
+        player_db_stats = await faceit_db.get_faceit_stats_of_player(player_guid)
+        if player_db_stats:
             await fc.do_nick_change_check(player_guid, csgo_name, player_database_nick)
-            if not current_elo or not ranking or not player_stats['faceit_ranking'] or not player_stats[
+            if not current_elo or not ranking or not player_db_stats['faceit_ranking'] or not player_db_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
                 continue
-            if current_elo != player_stats['faceit_elo']:
+            if current_elo != player_db_stats['faceit_elo']:
                 await faceit_db.insert_data_to_player_stats_table(player_guid, current_elo, skill_level,
                                                                   ranking)
-
-                for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid):
+                player_all_time_stats = await faceit_api.player_stats(player_guid)
+                for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid): #todo fix this, doesn't have to be done again for each server
                     channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
                     log.info("Notifying channel %s", channel.id)
-                    matches = await faceit_api.player_match_history(player_guid, int(to_utc(player_stats['changed']).timestamp()))
+                    matches = await faceit_api.player_match_history(player_guid, int(to_utc(player_db_stats['changed']).timestamp()))
                     matches = await fc.get_combined_match_data(matches)
                     if matches:
-                        match_stats_string = await get_match_stats_string(player_guid, copy.deepcopy(matches))
+                        match_stats_string = await get_match_stats_string(player_all_time_stats, copy.deepcopy(matches))
                         guild_id = channel.guild.id
                         await fr.handle_records(player_guid, copy.deepcopy(matches), guild_id)
                         records_string = await fr.get_record_string(player_guid, guild_id, copy.deepcopy(matches))
@@ -75,8 +75,8 @@ async def check_faceit_elo(client):
                         match_stats_string = ''
                         records_string = ''
                     await spam(client, record['faceit_nickname'], channel_id,
-                                                 current_elo, player_stats['faceit_elo'], skill_level,
-                                                 player_stats['faceit_skill'], (
+                                                 current_elo, player_db_stats['faceit_elo'], skill_level,
+                                                 player_db_stats['faceit_skill'], (
                                                      ' "' + custom_nickname + '"' if custom_nickname else ''),
                                                  match_stats_string, records_string)
 
@@ -146,10 +146,10 @@ async def spam(client, faceit_nickname, spam_channel_id, current_elo, elo_before
         return
 
 
-
-
-async def get_match_stats_string(player_guid, matches_dict):
+async def get_match_stats_string(player_all_time_stats, matches_dict) -> str:
     i = 1
+    player_guid = player_all_time_stats.get('player_id')
+    match_number = int(player_all_time_stats.get('lifetime').get('Matches', 0)) #todo what if no matches yet?
     match_info_string = ""
     for match in matches_dict.values():
         match_details = match.get('match_details')
@@ -157,7 +157,7 @@ async def get_match_stats_string(player_guid, matches_dict):
         score_string, stats_string = await get_info_strings(match_details, match_stats, player_guid)
         match_length_string = await get_match_length_string(match_details)
         match_info_string += "%s %s %s %s\n" % (
-        ("**Match %s**" % i) if len(matches_dict) > 1 else "**Match**", score_string, match_length_string, stats_string)
+        ("**Match (#%s) %s of %s**" % (match_number + i, i, len(matches_dict))) if has_multiple_matches(matches_dict) else "**Match (#%s)**" % match_number+1, score_string, match_length_string, stats_string)
         i += 1
         if i > 10:  # Only fetch a max of 10 matches
             break
@@ -166,6 +166,9 @@ async def get_match_stats_string(player_guid, matches_dict):
     else:
         return "*" + match_info_string.rstrip("\n") + "*"
 
+
+def has_multiple_matches(matches_dict) -> bool:
+    return len(matches_dict) > 1
 
 
 async def get_info_strings(match_details, match_stats, player_guid):
