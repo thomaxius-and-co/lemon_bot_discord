@@ -149,7 +149,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                             player.kills),
         },
         'BOTTOM_FRAGGER_GOOD_KD': {
-                        'condition': player.rank == len(player_team) and player.kd_ratio >= 1.7 and rounds >= 10,
+                        'condition': player.rank == len(player_team) and player.kd_ratio >= 1.5 and rounds >= 10,
                         'description': "**Sweating for nothing**: Bottom fragger of the team even though had a kd ratio of **{0}**.".format(
                             player.kd_ratio),
         },
