@@ -157,7 +157,7 @@ async def get_match_stats_string(player_all_time_stats, matches_dict) -> str:
         score_string, stats_string = await get_info_strings(match_details, match_stats, player_guid)
         match_length_string = await get_match_length_string(match_details)
         match_info_string += "%s %s %s %s\n" % (
-        ("**Match (#%s) %s of %s**" % (match_number + i, i, len(matches_dict))) if has_multiple_matches(matches_dict) else "**Match (#%s)**" % match_number+1, score_string, match_length_string, stats_string)
+        ("**Match (#%s) %s of %s**" % (match_number + i, i, len(matches_dict))) if has_multiple_matches(matches_dict) else "**Match (#%s)**" % (match_number+1), score_string, match_length_string, stats_string)
         i += 1
         if i > 10:  # Only fetch a max of 10 matches
             break
