@@ -37,7 +37,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'ASSIST_KING': {
                         'condition': (player.assists > player.kills),
-                        'description': "**Helping hand**: More assists (%s) than kills (%s)" % (player.assists, player.kills),
+                        'description': "**The sidekick**: More assists (%s) than kills (%s)" % (player.assists, player.kills),
                         },
         'MANY_KILLS_AND_LOSE': {
                         'condition': ((player.kr_ratio >= 0.9) or (player.kd_ratio >= 1.4)) and (player.result == 0) and (rounds > 25),
