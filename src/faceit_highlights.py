@@ -134,7 +134,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                             player.kr_ratio),
         },
         'LOW_KR_RATIO_LOW_DPR_RATIO': {
-                        'condition': (player.kr_ratio <= 0.5) and (rounds >= 15) and (player.kd_ratio >= 0.9),
+                        'condition': (player.kr_ratio <= 0.6) and (player.kd_ratio >= 0.8),
                         'description': "**Sorry I was asleep**: Average of only **{0}** kills per round and only {1} deaths.".format(
                             player.kr_ratio, player.deaths),
         },
