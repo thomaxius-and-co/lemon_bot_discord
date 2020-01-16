@@ -113,6 +113,11 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         'description': "**Going the distance**: rounds had an average length of **{0:.3g}** minutes".format(
                            (match_length / 60) / rounds),
                         },
+        'SHORT_MATCH': {
+                        'condition': ((match_length / rounds) <= 80),
+                        'description': "**Quick in the sheets, quick in the streets**: rounds had an average length of only **{0:.3g}** minutes".format(
+                           (match_length / 60) / rounds),
+                        },
         'MANY_KILLS_MULTI_KILLS': {
                         'condition': await has_many_kills_multi_kills(player),
                         'description': "**I only do 'em if I can do 'em all**: **{0:.3g}**% of kills consist(ed) of either triple, quad or penta kills ({1}t-{2}q-{3}p)".format(
