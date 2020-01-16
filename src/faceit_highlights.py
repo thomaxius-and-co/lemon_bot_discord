@@ -57,7 +57,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                         },
         'DIED_EVERY_ROUND': {
                         'condition': (player.deaths == rounds),
-                        'description': "**The kamikazer**:  Died every round (%s times)" % (player.deaths),
+                        'description': "**The entry deather**:  Died every round (%s times)" % (player.deaths),
                         },
         'DIED_OFTEN': {
                         'condition': ((player.deaths / rounds) * 100) >= 90 and (player.deaths != rounds),
