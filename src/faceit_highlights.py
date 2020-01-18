@@ -114,7 +114,7 @@ async def get_highlights(player, match_stats, match_details, player_team, enemy_
                            (match_length / 60) / rounds),
                         },
         'SHORT_MATCH': {
-                        'condition': ((match_length / rounds) <= 80),
+                        'condition': ((match_length / rounds) <= 70),
                         'description': "**Quick in the sheets, quick in the streets**: rounds had an average length of only **{0:.3g}** minutes".format(
                            (match_length / 60) / rounds),
                         },
