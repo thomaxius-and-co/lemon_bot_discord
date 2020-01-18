@@ -381,6 +381,29 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
+async def top_apr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
+    additional_parameters_string = ""
+    if player_guid:
+        additional_parameters_string += " AND player_guid = {0}".format(player_guid)
+    if from_timestamp:
+        additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
+    elif minimum_requirement is not None:
+        additional_parameters_string += " AND (assists *1.00 ) / total_rounds > {0}".format(minimum_requirement)
+    return await db.fetch("""
+        SELECT DISTINCT ON((assists * 1.00) / total_rounds, faceit_guid) 
+            round(((assists * 1.00) / total_rounds),3) as apr_ratio, faceit_guid, faceit_nickname, finished_at, 
+            concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
+            enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
+        FROM
+            faceit_records
+        JOIN 
+            faceit_player using(faceit_guid)
+        WHERE
+            total_rounds >= {0} AND guild_id = '{1}' {2}
+        ORDER BY
+            (assists * 1.00) / total_rounds DESC LIMIT {3}
+    """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
+
 async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
     if player_guid:

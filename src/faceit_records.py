@@ -100,6 +100,14 @@ async def get_records_by_guild(guild_id):
             'identifier': 'kr_ratio',
             'function': None
         },
+        'BIGGEST_APR_RATIO': {
+            'record_title': 'Biggest assists per round ratio in a match',
+            'record_item': await faceit_db.top_apr(guild_id, minimum_requirement=1, from_timestamp=from_timestamp),
+            'condition': '>',
+            'minimum_requirement': 0.5,
+            'identifier': 'apr_ratio',
+            'function': None
+        },
         'LONGEST_MATCH_ROUNDS': {
             'record_title': 'Longest match by rounds',
             'record_item': await faceit_db.match_most_rounds(guild_id, minimum_requirement=30, from_timestamp=from_timestamp),
@@ -280,6 +288,7 @@ async def handle_records(player_guid, matches_dict, guild_id):
                     penta_kills = int(player.get("player_stats").get("Penta Kills"))
                     kd_ratio = round(float(player.get("player_stats").get("K/D Ratio")), 2)
                     kr_ratio = round(float(player.get("player_stats").get("K/R Ratio")), 2)
+                    apr_ratio = round(float(player.get("player_stats").get("Assists")) / rounds, 2)
                     dpr_ratio = round((int(player.get("player_stats").get("Deaths")) / rounds), 2)
                     total_rounds = rounds
 
@@ -326,6 +335,10 @@ async def handle_records(player_guid, matches_dict, guild_id):
                         },
                         'kr_ratio': {
                             'value': kr_ratio,
+                            'condition': None
+                        },
+                        'apr_ratio': {
+                            'value': apr_ratio,
                             'condition': None
                         },
                         'total_rounds': {
