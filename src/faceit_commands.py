@@ -316,7 +316,7 @@ async def cmd_add_faceit_channel(client, message, arg):
         await message.channel.send('No such channel.')
         return
     else:
-        await faceit_db.update_faceit_channel(guild_id, channel_id)
+        await faceit_db.update_faceit_channel(guild_id, str(channel_id))
         await message.channel.send('Faceit spam channel added.')
         return
 
