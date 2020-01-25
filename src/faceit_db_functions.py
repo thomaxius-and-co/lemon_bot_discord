@@ -628,7 +628,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
     if from_timestamp:
         additional_parameters_string += " AND finished_at >= {0}".format(from_timestamp)
     elif minimum_requirement is not None:
-        additional_parameters_string += " AND kd_ratio > {0}".format(minimum_requirement)
+        additional_parameters_string += " AND kd_ratio < {0}".format(minimum_requirement)
     return await db.fetch("""
         SELECT DISTINCT ON(kd_ratio, faceit_guid) 
             kd_ratio, faceit_guid, faceit_nickname, finished_at, 
