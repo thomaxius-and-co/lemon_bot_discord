@@ -102,7 +102,7 @@ async def get_records_by_guild(guild_id):
         },
         'BIGGEST_APR_RATIO': {
             'record_title': 'Biggest assists per round ratio in a match',
-            'record_item': await faceit_db.top_apr(guild_id, minimum_requirement=0.5, from_timestamp=from_timestamp),
+            'record_item': await faceit_db.top_apr(guild_id, minimum_requirement=0.3, from_timestamp=from_timestamp),
             'condition': '>',
             'minimum_requirement': 0.3,
             'identifier': 'apr_ratio',
