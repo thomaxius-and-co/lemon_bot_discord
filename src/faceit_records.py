@@ -192,7 +192,7 @@ async def get_length_string(db_records=None, index=0):
     return '{:d}:{:02d}:{:02d}'.format(h, m, s)
 
 
-async def get_record_string(player_guid, guild_id, matches):
+async def get_record_string(player_guid, guild_id, matches) -> str:
     log.info("Fetching record string..")
     matches_sorted_by_time = sorted(matches.values(), reverse=True,
                                     key=lambda x: int(x.get("match_details").get("started_at")))
@@ -213,18 +213,21 @@ async def get_record_string(player_guid, guild_id, matches):
 
             record_holder_guid = record_item[0]['faceit_guid']
             record_holder_name = record_item[0]['faceit_nickname']
+            previous_record_holder_name = record_item[1]['faceit_nickname']
             record_match_finished_at = record_item[0]['finished_at']
             record_title = record.get("record_title")
 
             if player_guid == record_holder_guid and record_match_finished_at >= earliest_match_timestamp:
-                if record_string:
+                if record_string and record_tied(previous_record_value, record_value):
+                    record_string += "\n**%s** (%s) (tied with %s)" % (record_title, record_additional_string, previous_record_holder_name)
+                    continue
+                if record_string and not record_tied(previous_record_value, record_value):
                     record_string += "\n**%s** (%s)" % (record_title, record_additional_string)
                 else:
                     record_string = "**%s** broke the following records: **%s** (%s)" % (
                     record_holder_name, record_title, record_additional_string)
                     if previous_record_value:
                         previous_record_additional_string = previous_record_value
-                        previous_record_holder_name = record_item[1]['faceit_nickname']
                         if record_function:
                             previous_record_additional_string = await record_function(record_item, 1)
                         if previous_record_value == record_value:
@@ -234,6 +237,9 @@ async def get_record_string(player_guid, guild_id, matches):
                             previous_record_additional_string, previous_record_holder_name)
 
     return record_string
+
+async def record_tied(value, value2):
+    return value == value2
 
 
 async def get_player_rank_in_team(players_list, player_dict):

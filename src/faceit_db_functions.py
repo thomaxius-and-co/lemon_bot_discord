@@ -269,8 +269,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kills > {0}".format(minimum_requirement)
     query = """
-        SELECT DISTINCT ON(kills, faceit_guid) 
-            kills, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kills, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -280,7 +279,7 @@ async def top_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            kills DESC LIMIT {3}
+            kills DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
@@ -294,8 +293,7 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
     elif minimum_requirement is not None:
         additional_parameters_string += " AND assists > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(assists, faceit_guid) 
-            assists, faceit_guid, faceit_nickname, finished_at, 
+        SELECT assists, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -305,7 +303,7 @@ async def top_assists(guild_id, limit=2, minimum_rounds=16, player_guid=None, fr
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            assists DESC LIMIT {3}
+            assists DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -318,8 +316,7 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
     elif minimum_requirement is not None:
         additional_parameters_string += " AND deaths > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(deaths, faceit_guid) 
-            deaths, faceit_guid, faceit_nickname, finished_at, 
+        SELECT deaths, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -329,7 +326,7 @@ async def top_deaths(guild_id, limit=2, minimum_rounds=16, player_guid=None, fro
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            deaths DESC LIMIT {3}
+            deaths DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -342,8 +339,7 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kd_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -353,7 +349,7 @@ async def top_kdr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            kd_ratio DESC LIMIT {3}
+            kd_ratio DESC, total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -366,8 +362,7 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kr_ratio > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(kr_ratio, faceit_guid) 
-            kr_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kr_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -377,7 +372,7 @@ async def top_kpr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            kr_ratio DESC LIMIT {3}
+            kr_ratio DESC, total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -390,8 +385,7 @@ async def top_apr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (assists *1.00 ) / total_rounds > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON((assists * 1.00) / total_rounds, faceit_guid) 
-            round(((assists * 1.00) / total_rounds),3) as apr_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT round(((assists * 1.00) / total_rounds),3) as apr_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -413,8 +407,7 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
     elif minimum_requirement is not None:
         additional_parameters_string += " AND triple_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(triple_kills, faceit_guid) 
-            triple_kills, faceit_guid, faceit_nickname, finished_at, 
+        SELECT triple_kills, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -424,7 +417,7 @@ async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            triple_kills DESC LIMIT {3}
+            triple_kills DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -437,8 +430,7 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
     elif minimum_requirement is not None:
         additional_parameters_string += " AND quadro_kills > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(quadro_kills, faceit_guid) 
-            quadro_kills, faceit_guid, faceit_nickname, finished_at, 
+        SELECT quadro_kills, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -448,7 +440,7 @@ async def top_quadro_kills(guild_id, limit=2, minimum_rounds=16, player_guid=Non
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            quadro_kills DESC LIMIT {3}
+            quadro_kills DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -461,8 +453,7 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
     elif minimum_requirement is not None:
         additional_parameters_string += " AND penta_kills > {0}".format(minimum_requirement)
     query = """
-        SELECT DISTINCT ON(penta_kills, faceit_guid) 
-            penta_kills, faceit_guid, faceit_nickname, finished_at, 
+        SELECT penta_kills, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -472,7 +463,7 @@ async def top_penta_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            penta_kills DESC LIMIT {3}
+            penta_kills DESC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
@@ -488,8 +479,7 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
     elif minimum_kills is not None:
         additional_parameters_string += " AND kills > {0}".format(minimum_kills)
     return await db.fetch("""
-        SELECT DISTINCT ON(headshot_percentage, faceit_guid) 
-            headshot_percentage, faceit_guid, faceit_nickname, finished_at, 
+        SELECT headshot_percentage, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -499,7 +489,7 @@ async def top_headshot_percentage(guild_id, limit=2, minimum_rounds=16, player_g
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            headshot_percentage DESC LIMIT {3}
+            headshot_percentage DESC, total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -512,8 +502,7 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
     elif minimum_requirement is not None:
         additional_parameters_string += " AND headshots > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(headshots, faceit_guid) 
-            headshots, faceit_guid, faceit_nickname, finished_at, 
+        SELECT headshots, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -523,7 +512,7 @@ async def top_headshots(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            headshots DESC LIMIT {3}
+            headshots DESC, total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -536,8 +525,7 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
     elif minimum_requirement is not None:
         additional_parameters_string += " AND mvps > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(mvps, faceit_guid) 
-            mvps, faceit_guid, faceit_nickname, finished_at, 
+        SELECT mvps, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -547,7 +535,7 @@ async def top_mvps(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            mvps DESC LIMIT {3}
+            mvps DESC, total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -560,8 +548,7 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
     elif minimum_requirement is not None:
         additional_parameters_string += " AND finished_at - started_at > {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(finished_at - started_at, faceit_guid) 
-            finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at, 
+        SELECT finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -583,8 +570,7 @@ async def shortest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None,
     elif minimum_requirement is not None:
         additional_parameters_string += " AND finished_at - started_at < {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(finished_at - started_at, faceit_guid) 
-            finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at, 
+        SELECT finished_at - started_at as match_length, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -607,8 +593,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
     elif minimum_requirement is not None:
         minimum_rounds = minimum_requirement
     return await db.fetch("""
-        SELECT DISTINCT ON(total_rounds, faceit_guid) 
-            total_rounds, faceit_guid, faceit_nickname, finished_at, 
+        SELECT total_rounds, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -618,7 +603,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            total_rounds DESC LIMIT {3}
+            total_rounds DESC, (finished_at - started_at) DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
@@ -630,8 +615,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
     elif minimum_requirement is not None:
         additional_parameters_string += " AND kd_ratio < {0}".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kd_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -641,7 +625,7 @@ async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None,
         WHERE
             total_rounds >= {0} AND guild_id = '{1}' {2}
         ORDER BY
-            kd_ratio ASC LIMIT {3}
+            kd_ratio ASC, total_rounds ASC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
 
@@ -708,8 +692,7 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (kd_ratio < {0})".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kd_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -719,7 +702,7 @@ async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=No
         WHERE
             win = true AND guild_id = '{0}' {1}
         ORDER BY
-            kd_ratio ASC LIMIT {2}
+            kd_ratio ASC, total_rounds ASC LIMIT {2}
     """.format(str(guild_id), additional_parameters_string, limit))
 
 
@@ -732,8 +715,7 @@ async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=No
     elif minimum_requirement is not None:
         additional_parameters_string += " AND (kd_ratio > {0})".format(minimum_requirement)
     return await db.fetch("""
-        SELECT DISTINCT ON(kd_ratio, faceit_guid) 
-            kd_ratio, faceit_guid, faceit_nickname, finished_at, 
+        SELECT kd_ratio, faceit_guid, faceit_nickname, finished_at, 
             concat(player_team_first_half_score + player_team_second_half_score + player_team_overtime_score,  '-', 
             enemy_team_first_half_score + enemy_team_second_half_score + enemy_team_overtime_score) as match_score
         FROM
@@ -743,7 +725,7 @@ async def best_stats_lose(guild_id, limit=2, player_guid=None, from_timestamp=No
         WHERE
             win = false AND guild_id = '{0}' {1}
         ORDER BY
-            kd_ratio DESC LIMIT {2}
+            kd_ratio DESC, total_rounds DESC LIMIT {2}
     """.format(str(guild_id), additional_parameters_string, limit))
 
 
