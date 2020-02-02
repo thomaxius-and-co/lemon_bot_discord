@@ -204,6 +204,7 @@ async def get_record_string(player_guid, guild_id, matches) -> str:
         if record_item:
             record_value = record_item[0][0]
             previous_record_value = record_item[1][0] if len(record_item) > 1 else None
+            previous_record_holder_name = record_item[1]['faceit_nickname'] if len(record_item) > 1 else None
             previous_record_string = ""
             record_function = record.get("function")
             record_additional_string = record_value
@@ -213,7 +214,6 @@ async def get_record_string(player_guid, guild_id, matches) -> str:
 
             record_holder_guid = record_item[0]['faceit_guid']
             record_holder_name = record_item[0]['faceit_nickname']
-            previous_record_holder_name = record_item[1]['faceit_nickname']
             record_match_finished_at = record_item[0]['finished_at']
             record_title = record.get("record_title")
 
