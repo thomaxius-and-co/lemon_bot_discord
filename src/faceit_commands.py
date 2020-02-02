@@ -241,7 +241,7 @@ def widest_in_list_of_tuples(list_of_tuples, index):
     return len(max(list_of_tuples,key=lambda x: len(str(x[index])))[index])
 
 
-async def cmd_show_records(client, message, _):
+async def cmd_show_records(client, message, _) -> None:
     guild_records = await fr.get_records_by_guild(message.guild.id)
     records_as_tuples = []
     for record in guild_records.values():
