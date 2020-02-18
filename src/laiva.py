@@ -9,7 +9,7 @@ ALLOWED_CHANNELS = [359308335184609281, 141649840923869184, 244452088279465985]
 
 def register(client):
     return {
-        "laiva": mk_cmd_laiva(TEMPLATES_DIAMOND),
+        "laiva": mk_cmd_laiva(TEMPLATES_LAIVA_SEASON_TWO),
         #"fireball": mk_cmd_laiva(TEMPLATES_FIREBALL),
         #"laivalle": mk_cmd_laiva(TEMPLATES_LAIVA),
     }
@@ -116,12 +116,12 @@ TEMPLATES_LAIVA = {
     "over": "Laiva is already over, but paha olo remains.",
 }
 
-TEMPLATES_DIAMOND = {
-    "theme": "The exclusive Diamond-laiva only for Diamond-people",
-    "happening": "The exclusive Diamond-laiva only for Diamond-people is currently happening!!",
-    "ended": lambda time_ago: f"**Last exclusive Diamond-laiva only for Diamond-people ended:** {time_ago} ago, **next laiva:** TBA.",
+TEMPLATES_LAIVA_SEASON_TWO = {
+    "theme": "The Laiva Season 2",
+    "happening": "The Laiva Season 2 is currently happening!!",
+    "ended": lambda time_ago: f"**Last laiva (The Laiva Season 2) ended:** {time_ago} ago, **next laiva:** TBA.",
     "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
-    "over": "The exclusive Diamond-laiva only for Diamond-people is already over, but paha olo remains.",
+    "over": "The Laiva Season 2 is already over, but paha olo remains.",
 }
 
 memes_fireball = list(map(parse_image_id, [
@@ -172,8 +172,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2020, 1, 10, 17, 15)))
-        laivaover = to_utc(as_helsinki(datetime(2020, 1, 12, 10, 0)))
+        laiva = to_utc(as_helsinki(datetime(2020, 2, 20, 17, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2020, 2, 22, 10, 0)))
 
         now = as_utc(datetime.now())
 
