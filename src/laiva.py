@@ -100,7 +100,8 @@ memes = ["1GAYBN9wUUDEzP7rpJyaQuuApC5sqXMUJ",
 "1JpseTz7oq6rvM00eO50zIUoSwE8WQM7K",
 "1dSVUJoF5NfCnaQ_eWF2p87K4002OJ0wl",
 "1a2CCCduhyxLSK5-DH5bFlRtW1eIaE3c7",
-"1uoSgEYH-ynl74y3Szccyp0Gf8ZOOw00k"]
+"1uoSgEYH-ynl74y3Szccyp0Gf8ZOOw00k",
+"1Nvd0p_YxFlgQJQtxxfAWUnR_L4yIIkjs"]
 
 def image_url_from_id(image_id):
     return "https://drive.google.com/file/d/" + image_id + "/view?usp=sharing"
