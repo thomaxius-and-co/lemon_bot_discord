@@ -33,7 +33,7 @@ async def get_corona_stats():
 async def cmd_corona(client, message, _):
     try:
         infected_amount, last_infected_date, recovered_amount, deaths_amount = await get_corona_stats()
-        await message.channel.send("**Total infected**: {0}\n**Total recovered:** {1}\n**Total deaths:** {2}\n**Last infection case:** {3}"
+        await message.channel.send("**Corona statistics of Finland**\n**Total infected**: {0}\n**Total recovered:** {1}\n**Total deaths:** {2}\n**Last infection case:** {3}"
                                    .format(infected_amount, recovered_amount, deaths_amount, last_infected_date.strftime('%Y-%m-%d %H:%M')))
     except:
         await message.channel.send("There was an error getting corona stats.")
