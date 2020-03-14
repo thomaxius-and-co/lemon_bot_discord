@@ -2,14 +2,32 @@ import database as db
 from asyncio import sleep
 import discord
 import logger
+import corona
 
 log = logger.get("STATUS")
 
 CUSTOM_STATUS = None
 CUSTOM_STATUS_DISPLAYED = False
 
-async def main(client):
-    await check_user_and_message_count(client)
+
+
+async def main(client, task_name):
+    task = TASKS.get(task_name, None)
+    if not task:
+        raise Exception('Error: Invalid task name supplied to status.py')
+    await task(client)
+
+
+async def corona_stats_into_status(client):
+    global CUSTOM_STATUS_DISPLAYED
+    while True:
+        log.info("Checking and updating corona stats")
+        infected_amount, last_infected_date, recovered_amount, deaths_amount = await corona.get_corona_stats()
+        if not CUSTOM_STATUS:
+            await change_status(client, "Finland: Infected: {0} Recovered: {1} Deaths: {2}".format(infected_amount, recovered_amount, deaths_amount))
+        await sleep(1800)
+
+
 
 async def check_user_and_message_count(client):
     global CUSTOM_STATUS_DISPLAYED
@@ -86,6 +104,11 @@ async def cmd_status(client, message, input):
     await client.change_presence(game=discord.Game(name=input))
     CUSTOM_STATUS = input
     CUSTOM_STATUS_DISPLAYED = True
+
+TASKS = {
+    'corona': corona_stats_into_status,
+    'messages_count': check_user_and_message_count
+}
 
 def register(client):
     return {
