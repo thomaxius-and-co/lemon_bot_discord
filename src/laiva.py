@@ -118,7 +118,7 @@ TEMPLATES_LAIVA = {
 }
 
 TEMPLATES_LAIVA_SEASON_TWO = {
-    "theme": "The Laiva Season 2",
+    "theme": "The Laiva Season 2 Episode I: I survived Corona",
     "happening": "The Laiva Season 2 is currently happening!!",
     "ended": lambda time_ago: f"**Last laiva (The Laiva Season 2) ended:** {time_ago} ago, **next laiva:** TBA.",
     "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
@@ -173,8 +173,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2020, 3, 20, 17, 0)))
-        laivaover = to_utc(as_helsinki(datetime(2020, 3, 22, 11, 0)))
+        laiva = to_utc(as_helsinki(datetime(2020, 5, 22, 17, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2020, 5, 24, 11, 0)))
 
         now = as_utc(datetime.now())
 
