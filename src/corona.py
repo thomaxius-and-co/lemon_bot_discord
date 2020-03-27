@@ -43,8 +43,8 @@ async def cmd_corona(client, message, _):
             "**Total infected**: {0}",
             "**Total recovered:** {1}",
             "**Total deaths:** {2}",
-            "**Mortality rate: {3}",
-            "**Deaths if {4}% of population get infected: {5}",
+            "**Mortality rate:** {3}",
+            "**Deaths if {4}% of population get infected:** {5}",
             "**Last infection case:** {6}"
         ]).format(
             infected_amount,
