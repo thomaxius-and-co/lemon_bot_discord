@@ -40,22 +40,13 @@ async def cmd_corona(client, message, _):
         total_deaths_over_time = round(total_infections_over_time * mortality_rate)
         await message.channel.send("\n".join([
             "**Corona statistics of Finland**",
-            "**Total infected**: {0}",
-            "**Total recovered:** {1}",
-            "**Total deaths:** {2}",
-            "**Mortality rate:** {3}",
-            "**Deaths if {4}% of population get infected:** {5}",
-            "**Last infection case:** {6}"
-        ]).format(
-            infected_amount,
-            recovered_amount,
-            deaths_amount,
-            mortality_rate,
-            total_deaths_over_time,
-            percentage_of_people_to_get_infected,
-            total_deaths_over_time,
-            last_infected_date.strftime('%Y-%m-%d %H:%M')
-        ))
+            "**Total infected**: {0}".format(infected_amount),
+            "**Total recovered:** {0}".format(recovered_amount),
+            "**Total deaths:** {0}".format(deaths_amount),
+            "**Mortality rate:** {0:.2f}%".format(mortality_rate * 100),
+            "**Deaths if {0:.2f}% of population get infected:** {1}".format(percentage_of_people_to_get_infected, total_deaths_over_time),
+            "**Last infection case:** {0}".format(last_infected_date.strftime('%Y-%m-%d %H:%M')),
+        ]))
     except:
         await message.channel.send("There was an error getting corona stats.")
 
