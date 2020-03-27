@@ -9,8 +9,6 @@ CORONA_API_URL = 'https://w3qa5ydb4l.execute-api.eu-west-1.amazonaws.com/prod/fi
 # Source: https://dvv.fi/
 POPULATION_OF_FINLAND = 5_544_152
 
-
-
 async def _call_api(url):
     async with aiohttp.ClientSession() as session:
         response = await session.get(url)
@@ -40,8 +38,24 @@ async def cmd_corona(client, message, _):
         percentage_of_people_to_get_infected = 40
         total_infections_over_time = POPULATION_OF_FINLAND * (percentage_of_people_to_get_infected / 100)
         total_deaths_over_time = round(total_infections_over_time * mortality_rate)
-        await message.channel.send("**Corona statistics of Finland**\n**Total infected**: {0}\n**Total recovered:** {1}\n**Total deaths:** {2}\n**Mortality rate: {3}\n**Deaths if {4}% of population get infected: {5}\n**Last infection case:** {6}"
-                                   .format(infected_amount, recovered_amount, deaths_amount, mortality_rate, total_deaths_over_time, percentage_of_people_to_get_infected, total_deaths_over_time, last_infected_date.strftime('%Y-%m-%d %H:%M')))
+        await message.channel.send("\n".join([
+            "**Corona statistics of Finland**",
+            "**Total infected**: {0}",
+            "**Total recovered:** {1}",
+            "**Total deaths:** {2}",
+            "**Mortality rate: {3}",
+            "**Deaths if {4}% of population get infected: {5}",
+            "**Last infection case:** {6}"
+        ]).format(
+            infected_amount,
+            recovered_amount,
+            deaths_amount,
+            mortality_rate,
+            total_deaths_over_time,
+            percentage_of_people_to_get_infected,
+            total_deaths_over_time,
+            last_infected_date.strftime('%Y-%m-%d %H:%M')
+        ))
     except:
         await message.channel.send("There was an error getting corona stats.")
 
