@@ -6,6 +6,8 @@ log = logger.get("CORONA")
 
 CORONA_API_URL = 'https://w3qa5ydb4l.execute-api.eu-west-1.amazonaws.com/prod/finnishCoronaData'
 
+# Source: https://dvv.fi/
+POPULATION_OF_FINLAND = 5_544_152
 
 
 
@@ -33,8 +35,13 @@ async def get_corona_stats():
 async def cmd_corona(client, message, _):
     try:
         infected_amount, last_infected_date, recovered_amount, deaths_amount = await get_corona_stats()
-        await message.channel.send("**Corona statistics of Finland**\n**Total infected**: {0}\n**Total recovered:** {1}\n**Total deaths:** {2}\n**Last infection case:** {3}"
-                                   .format(infected_amount, recovered_amount, deaths_amount, last_infected_date.strftime('%Y-%m-%d %H:%M')))
+        mortality_rate = deaths_amount / infected_amount
+
+        percentage_of_people_to_get_infected = 40
+        total_infections_over_time = POPULATION_OF_FINLAND * (percentage_of_people_to_get_infected / 100)
+        total_deaths_over_time = round(total_infections_over_time * mortality_rate)
+        await message.channel.send("**Corona statistics of Finland**\n**Total infected**: {0}\n**Total recovered:** {1}\n**Total deaths:** {2}\n**Mortality rate: {3}\n**Deaths if {4}% of population get infected: {5}\n**Last infection case:** {6}"
+                                   .format(infected_amount, recovered_amount, deaths_amount, mortality_rate, total_deaths_over_time, percentage_of_people_to_get_infected, total_deaths_over_time, last_infected_date.strftime('%Y-%m-%d %H:%M')))
     except:
         await message.channel.send("There was an error getting corona stats.")
 
