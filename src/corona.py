@@ -33,12 +33,12 @@ async def infected_stats(json):
 
 async def infections_count_difference_string(infections_today, infections_yesterday):
     operator = ''
-    difference = infections_today - infections_yesterday
+    difference = infections_yesterday - infections_today
     if difference == 0:
         return ''
     if difference > 0:
         operator = '+'
-    return '({0}{1} since yesterday)'.format(operator, difference)
+    return '({0}{1} compared to yesterday)'.format(operator, difference)
 
 async def get_corona_stats():
     response = await _call_api(CORONA_API_URL)
