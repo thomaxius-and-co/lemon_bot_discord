@@ -22,9 +22,9 @@ async def corona_stats_into_status(client):
     global CUSTOM_STATUS_DISPLAYED
     while True:
         log.info("Checking and updating corona stats")
-        infected_amount, last_infected_date, recovered_amount, deaths_amount = await corona.get_corona_stats()
+        total_infections_amount, date_last_infected, infections_today, infections_yesterday, recovered_amount, deaths_amount = await corona.get_corona_stats()
         if not CUSTOM_STATUS:
-            await change_status(client, "Finland: Infected: {0} Recovered: {1} Deaths: {2}".format(infected_amount, recovered_amount, deaths_amount))
+            await change_status(client, "Finland: Infected: {0} Recovered: {1} Deaths: {2}".format(total_infections_amount, recovered_amount, deaths_amount))
         await sleep(1800)
 
 
