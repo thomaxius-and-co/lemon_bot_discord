@@ -22,13 +22,13 @@ async def parse_date(datestr) -> datetime:
     return datetime.datetime.strptime(datestr, '%Y-%m-%dT%H:%M:%S.%f%z')
 
 async def daily_stats(cases, comparsion_date) -> list:
-    return [x for x in cases if datetime.datetime.strptime(x.get('date'), '%Y-%m-%dT%H:%M:%S.%f%z').date() == comparsion_date]
+    return [x for x in cases if datetime.datetime.strptime(x.get('date'), '%Y-%m-%dT%H:%M:%S.%f%z').date() == comparsion_date.date()]
 
 async def infected_stats(json):
     today = datetime.datetime.today()
     yesterday = today - datetime.timedelta(days=1)
     confirmed_cases = json.get('confirmed')
-    total_infections_amount, date_last_infected, infections_today, infections_yesterday = len(confirmed_cases), await parse_date(confirmed_cases[-1].get('date')), await daily_stats(confirmed_cases, today.date()),  await daily_stats(confirmed_cases, yesterday)
+    total_infections_amount, date_last_infected, infections_today, infections_yesterday = len(confirmed_cases), await parse_date(confirmed_cases[-1].get('date')), await daily_stats(confirmed_cases, today),  await daily_stats(confirmed_cases, yesterday)
     return total_infections_amount, date_last_infected, len(infections_today), len(infections_yesterday)
 
 async def infections_count_difference_string(infections_today, infections_yesterday):
@@ -38,7 +38,7 @@ async def infections_count_difference_string(infections_today, infections_yester
         return ''
     if difference > 0:
         operator = '+'
-    return '({0}{1} since yesterday)'.format(operator, difference)
+    return '({0}{1} compared to yesterday)'.format(operator, difference)
 
 async def get_corona_stats():
     response = await _call_api(CORONA_API_URL)
