@@ -45,7 +45,7 @@ async def infections_count_difference_string(infections_today: int, infections_y
     return '({0}{1} compared to yesterday)'.format(operator, difference)
 
 
-async def get_corona_stats():
+async def get_corona_stats() -> [int, datetime, int, int, int, int]:
     response = await _call_api(CORONA_API_URL)
     json = await response.json()
     total_infections_amount, date_last_infected, infections_today, infections_yesterday = await infected_stats(json)
