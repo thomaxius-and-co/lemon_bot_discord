@@ -10,7 +10,7 @@ CORONA_API_URL = 'https://w3qa5ydb4l.execute-api.eu-west-1.amazonaws.com/prod/fi
 POPULATION_OF_FINLAND = 5_544_152
 
 
-async def _call_api(url):
+async def _call_api(url: str) -> aiohttp.client_reqrep.ClientResponse:
     async with aiohttp.ClientSession() as session:
         response = await session.get(url)
         log.debug("%s %s %s %s", response.method, response.url, response.status, await response.text())
@@ -18,20 +18,24 @@ async def _call_api(url):
             raise Exception('Error fetching from corona api')
         return response
 
-async def parse_date(datestr) -> datetime:
+
+async def parse_date(datestr: str) -> datetime:
     return datetime.datetime.strptime(datestr, '%Y-%m-%dT%H:%M:%S.%f%z')
 
-async def daily_stats(cases, comparsion_date) -> list:
+
+async def daily_stats(cases: list, comparsion_date: datetime) -> list:
     return [x for x in cases if datetime.datetime.strptime(x.get('date'), '%Y-%m-%dT%H:%M:%S.%f%z').date() == comparsion_date.date()]
 
-async def infected_stats(json):
+
+async def infected_stats(json: dict):
     today = datetime.datetime.today()
     yesterday = today - datetime.timedelta(days=1)
     confirmed_cases = json.get('confirmed')
     total_infections_amount, date_last_infected, infections_today, infections_yesterday = len(confirmed_cases), await parse_date(confirmed_cases[-1].get('date')), await daily_stats(confirmed_cases, today),  await daily_stats(confirmed_cases, yesterday)
     return total_infections_amount, date_last_infected, len(infections_today), len(infections_yesterday)
 
-async def infections_count_difference_string(infections_today, infections_yesterday):
+
+async def infections_count_difference_string(infections_today: int, infections_yesterday: int) -> str:
     operator = ''
     difference = infections_today - infections_yesterday
     if difference == 0:
@@ -39,6 +43,7 @@ async def infections_count_difference_string(infections_today, infections_yester
     if difference > 0:
         operator = '+'
     return '({0}{1} compared to yesterday)'.format(operator, difference)
+
 
 async def get_corona_stats():
     response = await _call_api(CORONA_API_URL)
@@ -48,7 +53,8 @@ async def get_corona_stats():
     deaths_amount = len(json.get('deaths'))
     return total_infections_amount, date_last_infected, infections_today, infections_yesterday, recovered_amount, deaths_amount
 
-async def cmd_corona(client, message, _):
+
+async def cmd_corona(client, message, _) -> None:
     try:
         total_infections_amount, date_last_infected, infections_today, infections_yesterday, recovered_amount, deaths_amount = await get_corona_stats()
         mortality_rate = deaths_amount / total_infections_amount
@@ -69,7 +75,7 @@ async def cmd_corona(client, message, _):
         await message.channel.send("There was an error getting corona stats.")
 
 
-def register(client):
+def register(client) -> ():
     return {
         "corona": cmd_corona
     }
