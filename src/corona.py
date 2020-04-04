@@ -84,7 +84,6 @@ async def cmd_corona(client, message, _) -> None:
             "**Total recovered:** {0}".format(recovered_amount),
             "**Total hospitalised: {0}** (**{1}** in ICU, **{2}** in ward)".format(total_hospitalised, total_in_icu, total_in_ward),
             "**Total deaths:** {0}".format(deaths_amount),
-            "**Total deaths:** {0}".format(deaths_amount),
             "**Mortality rate:** {0:.2f}%".format(mortality_rate * 100),
             "**Deaths if {0:.2f}% of population get infected:** {1}".format(percentage_of_people_to_get_infected, total_deaths_over_time),
             "**Last infection case:** {0}".format(date_last_infected.strftime('%Y-%m-%d %H:%M')),
