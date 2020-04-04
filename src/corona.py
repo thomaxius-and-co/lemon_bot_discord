@@ -4,7 +4,7 @@ import aiohttp
 
 log = logger.get("CORONA")
 
-CORONA_API_URL = 'https://w3qa5ydb4l.execute-api.eu-west-1.amazonaws.com/prod/finnishCoronaData'
+CORONA_API_URL = 'https://w3qa5ydb4l.execute-api.eu-west-1.amazonaws.com/prod/finnishCoronaData/v2'
 
 # Source: https://dvv.fi/
 POPULATION_OF_FINLAND = 5_544_152
