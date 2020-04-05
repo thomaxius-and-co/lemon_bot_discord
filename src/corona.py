@@ -16,7 +16,7 @@ POPULATION_OF_FINLAND = 5_544_152
 ICU_CAPACITY = 230
 
 # Source: Thomaxius
-WARD_CAPACITY = 800
+WARD_CAPACITY = 1300
 
 
 async def _call_api(url: str) -> aiohttp.client_reqrep.ClientResponse:
@@ -86,10 +86,10 @@ async def cmd_corona(client, message, _) -> None:
         total_deaths_over_time = round(total_infections_over_time * mortality_rate)
         await message.channel.send("\n".join([
             "**Corona statistics of Finland**",
-            "**New infections yesterday:**: {0} {1}".format(infections_yesterday, await infections_count_difference_string(infections_yesterday, infections_two_days_ago)),
-            "**Total infected**: {0}".format(total_infections_amount),
+            "**New infections yesterday:** {0} {1}".format(infections_yesterday, await infections_count_difference_string(infections_yesterday, infections_two_days_ago)),
+            "**Total infected:** {0}".format(total_infections_amount),
             "**Total recovered:** {0}".format(recovered_amount),
-            "**Total hospitalised: {0}** (**{1}/{2}** in ICU, **{3}/{4}** in ward)".format(total_hospitalised, total_in_icu, ICU_CAPACITY, total_in_ward, WARD_CAPACITY),
+            "**Total hospitalised:** {0} ({1}/{2} in ICU, {3}/{4} in ward)".format(total_hospitalised, total_in_icu, ICU_CAPACITY, total_in_ward, WARD_CAPACITY),
             "**Total deaths:** {0}".format(deaths_amount),
             "**Mortality rate:** {0:.2f}%".format(mortality_rate * 100),
             "**Deaths if {0:.2f}% of population get infected:** {1}".format(percentage_of_people_to_get_infected, total_deaths_over_time),
