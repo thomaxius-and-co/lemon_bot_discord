@@ -1,7 +1,8 @@
 import logger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import aiohttp
 import traceback
+from math import floor
 
 log = logger.get("CORONA")
 
@@ -18,6 +19,10 @@ ICU_CAPACITY = 230
 # Source: Thomaxius
 WARD_CAPACITY = 1300
 
+# Source: https://yle.fi/uutiset/3-11283466
+RESTAURANTS_OPEN_DATE = date(2020, 5, 31)
+
+TODAY = date.today()
 
 async def _call_api(url: str) -> aiohttp.client_reqrep.ClientResponse:
     async with aiohttp.ClientSession() as session:
@@ -76,6 +81,10 @@ async def get_hospitalised() -> [int, int, int]:
     return await latest_hospitalised_stats_by_day(json)
 
 
+def delta_to_str(delta: timedelta) -> str:
+    return "{0} days".format(delta.days)
+
+
 async def cmd_corona(client, message, _) -> None:
     try:
         total_infections_amount, date_last_infected, infections_yesterday, infections_two_days_ago, recovered_amount, deaths_amount = await get_corona_stats()
@@ -94,6 +103,7 @@ async def cmd_corona(client, message, _) -> None:
             "**Mortality rate:** {0:.2f}%".format(mortality_rate * 100),
             "**Deaths if {0:.2f}% of population get infected:** {1}".format(percentage_of_people_to_get_infected, total_deaths_over_time),
             "**Last infection case:** {0}".format(date_last_infected.strftime('%Y-%m-%d %H:%M')),
+            "**Days until restaurants open:** {0}".format(delta_to_str(RESTAURANTS_OPEN_DATE - TODAY)) if TODAY < RESTAURANTS_OPEN_DATE else "",
         ]))
     except Exception:
         log.error(traceback.format_exc())
