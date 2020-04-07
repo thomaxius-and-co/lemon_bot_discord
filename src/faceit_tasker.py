@@ -23,7 +23,7 @@ async def elo_notifier_task(client):
         try:
             await check_faceit_elo(client)
         except UnknownError as e:
-            if e.response.status == 500:
+            if 500 <= e.response.status <= 599:
                 # Faceit API is broken and  there's probably very little we can
                 # do so no reason to spam errors channel
                 log.warning("Failed to check faceit stats\n" + traceback.format_exc())
