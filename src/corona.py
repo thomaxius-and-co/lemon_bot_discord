@@ -22,8 +22,6 @@ WARD_CAPACITY = 1300
 # Source: https://yle.fi/uutiset/3-11283466
 RESTAURANTS_OPEN_DATE = date(2020, 5, 31)
 
-TODAY = date.today()
-
 async def _call_api(url: str) -> aiohttp.client_reqrep.ClientResponse:
     async with aiohttp.ClientSession() as session:
         response = await session.get(url)
@@ -41,7 +39,7 @@ async def daily_stats(cases: list, comparsion_date: datetime) -> list:
     return [x for x in cases if datetime.strptime(x.get('date'), '%Y-%m-%dT%H:%M:%S.%fZ').date() == comparsion_date.date()]
 
 
-async def infected_stats(json: dict):
+async def infected_stats(json: dict) -> [int, datetime, int, int]:
     yesterday = datetime.today() - timedelta(days=1)
     two_days_ago = datetime.today() - timedelta(days=2)
     confirmed_cases = json.get('confirmed')
@@ -87,6 +85,7 @@ def delta_to_str(delta: timedelta) -> str:
 
 async def cmd_corona(client, message, _) -> None:
     try:
+        today = date.today()
         total_infections_amount, date_last_infected, infections_yesterday, infections_two_days_ago, recovered_amount, deaths_amount = await get_corona_stats()
         total_hospitalised, total_in_ward, total_in_icu, _ = await get_hospitalised()
         mortality_rate = deaths_amount / total_infections_amount
@@ -103,7 +102,7 @@ async def cmd_corona(client, message, _) -> None:
             "**Mortality rate:** {0:.2f}%".format(mortality_rate * 100),
             "**Deaths if {0:.2f}% of population get infected:** {1}".format(percentage_of_people_to_get_infected, total_deaths_over_time),
             "**Last infection case:** {0}".format(date_last_infected.strftime('%Y-%m-%d %H:%M')),
-            "**Days until restaurants open:** {0}".format(delta_to_str(RESTAURANTS_OPEN_DATE - TODAY)) if TODAY < RESTAURANTS_OPEN_DATE else "",
+            "**Days until restaurants open:** {0}".format(delta_to_str(RESTAURANTS_OPEN_DATE - today)) if today < RESTAURANTS_OPEN_DATE else "",
         ]))
     except Exception:
         log.error(traceback.format_exc())
