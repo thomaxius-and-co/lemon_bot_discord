@@ -56,10 +56,12 @@ async def check_faceit_elo(client):
             if not current_elo or not ranking or not player_db_stats['faceit_ranking'] or not player_db_stats[
                 'faceit_ranking']:  # Currently, only EU ranking is supported
                 continue
-            if current_elo != player_db_stats['faceit_elo']:
+            if (current_elo != player_db_stats['faceit_elo']) or (ranking != player_db_stats['faceit_ranking']):
                 await faceit_db.insert_data_to_player_stats_table(player_guid, current_elo, skill_level,
                                                                   ranking)
                 player_all_time_stats = await faceit_api.player_stats(player_guid)
+                if current_elo == player_db_stats['faceit_elo']:
+                    return # Don't spam if elo hasn't changed, but ranking has
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid): #todo fix this, doesn't have to be done again for each server
                     channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
                     log.info("Notifying channel %s", channel.id)
