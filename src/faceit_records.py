@@ -218,10 +218,10 @@ async def get_record_string(player_guid, guild_id, matches) -> str:
             record_title = record.get("record_title")
 
             if player_guid == record_holder_guid and record_match_finished_at >= earliest_match_timestamp:
-                if record_string and record_tied(previous_record_value, record_value):
+                if record_string and await record_tied(previous_record_value, record_value):
                     record_string += "\n**%s** (%s) (tied with %s)" % (record_title, record_additional_string, previous_record_holder_name)
                     continue
-                if record_string and not record_tied(previous_record_value, record_value):
+                if record_string and not await record_tied(previous_record_value, record_value):
                     record_string += "\n**%s** (%s)" % (record_title, record_additional_string)
                 else:
                     record_string = "**%s** broke the following records: **%s** (%s)" % (
