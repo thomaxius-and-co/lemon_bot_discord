@@ -19,10 +19,6 @@ LAST_CHECKED = None
 UNDEFINED_MATCHES_COUNT = 0
 LAST_SPAMMED = None
 
-hltv_league_names = {
-    'ESEA MDL Season 29 Europe': 'MDL'
-}
-
 hltv_maps = {
     'cch': 'de_cache',
     'mrg': 'de_mirage',
@@ -33,7 +29,6 @@ hltv_maps = {
     'trn': 'de_train'
 }
 
-#Hltv names are shortened and some times abbrevations, so we'll use the MDL equivalent
 # todo: fetch teams from both sites instead
 hltv_mdl_team_alias = {
     'EURONICS': 'Euronics Gaming EU',
@@ -65,7 +60,6 @@ async def do_tasks(client):
         global MATCHES_DICT
         MATCHES_DICT.clear()
         await parse_hltv_matches(await get_hltv_matches())
-        await parse_mdl_matches(await get_mdl_matches())
         global LAST_CHECKED
         LAST_CHECKED = datetime.datetime.now()
         await check_if_ence_day(client)
@@ -143,24 +137,6 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
         # todo: fix this and spam about new match time if match is rescheduled
 
 
-async def get_mdl_matches():
-    log.info("Fetching MDL matches")
-    scraper = cfscrape.create_scraper()
-    page = scraper.get("https://play.esea.net/teams/82159")
-    if page.status_code != 200:
-        log.info("Failed to fetch MDL matches. Error code %s" % page.status_code)
-        return
-    doc = lh.fromstring(page.content)
-    tr_elements = doc.xpath('//tr')  # Get table elements
-    #Fetch only matches that have map as Pending veto or  result as 'Upcoming (0)'
-    if len(tr_elements) < 5:
-        log.info("No MDL matches to fetch.")
-        return
-    upcoming_mdl_matches_elements = [element for element in tr_elements[1:] if element[4] and (element[4].text_content() == 'Upcoming (0)') or (element[3] and element[3].text_content() == 'Pending Veto')]
-    log.info("Fetched %s MDL matches." % len(upcoming_mdl_matches_elements))
-    return upcoming_mdl_matches_elements
-
-
 async def get_hltv_matches():
     log.info("Fetching HLTV matches")
     scraper = cfscrape.create_scraper()
@@ -201,43 +177,6 @@ async def parse_hltv_matches(match_elements):
                 MATCHES_DICT.update({date.date():[item]})
     log.info("HLTV matches parsed.")
 
-
-async def parse_mdl_matches(match_elements):
-    now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
-    global UNDEFINED_MATCHES_COUNT
-    UNDEFINED_MATCHES_COUNT = 0
-    if match_elements:
-        for element in match_elements:
-            home_team = element[1].text_content() if element[1].text_content() != '-' and element[1].text_content() else 'TBD'
-            away_team = element[2].text_content() if element[2].text_content() != '-' and element[2].text_content() else 'TBD'
-            map = element[3].text_content() if element[3].text_content() != '-' and element[3].text_content() else 'TBD'
-            status = element[4].text_content().replace('Upcoming (0)', 'Upcoming') if element[4].text_content() != '-' and element[4].text_content() else 'Unconfirmed'
-            date = element[len(element)-1].text_content().replace('\n','').replace('\r','').strip() #element length varies
-            if date != '-' and date:
-                try:
-                    date = datetime.datetime.strptime(date, "%b %d %y")
-                except ValueError:
-                    date = datetime.datetime.strptime(date, "%b %d, %I:%M%p").replace(year=datetime.datetime.now().year)
-            else:
-                date = 'TBD'
-            if date != 'TBD':
-                if date < now:
-                    log.info('MDL Match already started, not adding it to matches dict')
-                    continue
-            tod = '-' # Even though some MDL matches have time of day, I  don't think It's very reliable, considering
-            #  they're set for weeks before the match is even confirmed. Instead, We will fetch time of day when it is match day.
-            item = ['MDL', home_team, away_team, map, status, date, tod]
-            if (home_team == 'TBD') and (away_team == 'TBD') and (status != 'Upcoming'): # I think It's pointless to show matches that have no confirmed teams or maps yet.
-                UNDEFINED_MATCHES_COUNT += 1
-                continue
-            matchday_item = MATCHES_DICT.get(date.date(), None)
-            if matchday_item:
-                if await not_added(item, matchday_item):  # Check if item minus time of day is already added. This can happen if MDL has the same match with a different time added.
-                    MATCHES_DICT.get(date.date()).append(item)
-            else:
-                MATCHES_DICT.update({date.date():[item]})
-    log.info("MDL matches parsed.")
-
 async def not_added(comparsion_match, matches):
     for match in matches:
         log.info('match: %s, comparsion_match %s' % (matches, comparsion_match))
@@ -263,7 +202,7 @@ async def cmd_ence(client, message, arg):
         await message.channel.send((("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
             "%Y-%m-%d %H:%M")) + columnmaker.columnmaker(
             ['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
-            , list_of_matches) + ("\n+ %s pending MDL matches" % (UNDEFINED_MATCHES_COUNT)) + "\n#EZ4ENCE```"))
+            , list_of_matches) + "\n#EZ4ENCE```"))
 
 
 def register(client):
