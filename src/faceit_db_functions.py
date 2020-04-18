@@ -96,7 +96,7 @@ async def get_toplist_from_db(guild_id):
             LEFT JOIN 
               ranking using (guild_id)     
             order by 
-              faceit_ranking asc
+              faceit_elo, faceit_ranking asc
             limit 10
             """, str(guild_id))
 
@@ -398,6 +398,7 @@ async def top_apr(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_t
             (assists * 1.00) / total_rounds DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
+
 async def top_triple_kills(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
     if player_guid:
@@ -561,6 +562,7 @@ async def longest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, 
             (finished_at - started_at) DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
 
+
 async def shortest_match(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
     if player_guid:
@@ -605,6 +607,7 @@ async def match_most_rounds(guild_id, limit=2, minimum_rounds=16, player_guid=No
         ORDER BY
             total_rounds DESC, (finished_at - started_at) DESC LIMIT {3}
     """.format(minimum_rounds, str(guild_id), additional_parameters_string, limit))
+
 
 async def worst_kd_ratio(guild_id, limit=2, minimum_rounds=16, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
@@ -683,6 +686,7 @@ async def biggest_choke(guild_id, limit=2, player_guid=None, from_timestamp=None
     """.format(str(guild_id), additional_parameters_string, limit)
     return await db.fetch(query)
 
+
 async def worst_stats_win(guild_id, limit=2, player_guid=None, from_timestamp=None, minimum_requirement=None):
     additional_parameters_string = ""
     if player_guid:
@@ -738,7 +742,6 @@ async def add_record(args):
                 total_rounds, enemy_team_first_half_score, enemy_team_second_half_score, enemy_team_overtime_score)
     VALUES 
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)""", *args)  # This POS wouldn't insert without specifying each field..'
-
 
 
 async def get_last_reset_timestamp(guild_id):
