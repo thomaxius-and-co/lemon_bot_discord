@@ -77,7 +77,6 @@ async def cmd_list_faceit_users(client, message, _):
         await message.channel.send(msg)
 
 
-
 async def cmd_add_faceit_user_into_database(client, message, faceit_nickname):
     guild_id = message.guild.id
     if not faceit_nickname:
@@ -199,6 +198,7 @@ async def cmd_faceit_commands(client, message, arg):
         await message.channel.send(infomessage)
         return
 
+
 async def cmd_reset_records(client, message, _):
     perms = message.channel.permissions_for(message.author)
     if not perms.administrator:
@@ -236,6 +236,7 @@ async def cmd_show_aliases(client, message, faceit_nickname):
                     await message.channel.send("**%s** has no aliases." % (faceit_nickname))
                     return
     await message.channel.send("No such player in the server, use !faceit listusers.")
+
 
 def widest_in_list_of_tuples(list_of_tuples, index):
     return len(max(list_of_tuples,key=lambda x: len(str(x[index])))[index])
