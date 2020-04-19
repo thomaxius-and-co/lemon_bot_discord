@@ -60,11 +60,11 @@ async def check_faceit_elo(client):
                 await faceit_db.insert_data_to_player_stats_table(player_guid, current_elo, skill_level,
                                                                   ranking)
                 player_all_time_stats = await faceit_api.player_stats(player_guid)
+                matches = await faceit_api.player_match_history(player_guid, int(to_utc(player_db_stats['changed']).timestamp()))
+                matches = await fc.get_combined_match_data(matches)
                 for channel_id, custom_nickname in await faceit_db.channels_to_notify_for_user(player_guid): #todo fix this, doesn't have to be done again for each server
                     channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
                     log.info("Notifying channel %s", channel.id)
-                    matches = await faceit_api.player_match_history(player_guid, int(to_utc(player_db_stats['changed']).timestamp()))
-                    matches = await fc.get_combined_match_data(matches)
                     if matches:
                         match_stats_string = await get_match_stats_string(player_all_time_stats, copy.deepcopy(matches))
                         guild_id = channel.guild.id
