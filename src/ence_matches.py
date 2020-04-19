@@ -18,6 +18,7 @@ MATCHES_DICT = {}
 LAST_CHECKED = None
 UNDEFINED_MATCHES_COUNT = 0
 LAST_SPAMMED = None
+ENCE_HLTV_MATCHES_LIST_URL = "https://www.hltv.org/matches?team=4869"
 
 hltv_maps = {
     'cch': 'de_cache',
@@ -26,34 +27,11 @@ hltv_maps = {
     'nuke': 'de_nuke',
     'ovp': 'de_overpass',
     'inf': 'de_inferno',
-    'trn': 'de_train'
+    'trn': 'de_train',
+    'vtg': 'de_vertigo'
 }
 
 # todo: fetch teams from both sites instead
-hltv_mdl_team_alias = {
-    'EURONICS': 'Euronics Gaming EU',
-    '3DMAX': '3DMAX_',
-    'OpTic': 'OpTic Gaming',
-    'Kinguin': 'Team Kinguin',
-    'Virtus.pro': 'Virtus pro',
-    'Sprout': 'SproutGG',
-    'Epsilon': 'Epsilon',
-    'Red Reserve': 'Red Reserve',
-    'Fragsters': 'Team Fragsters',
-    'Tricked': 'Tricked Esport',
-    'Flow': 'flow',
-    'Chaos': 'Chaos EC',
-    'expert': 'expert eSport',
-    'Spirit': 'Team Spirit',
-    'Valiance': 'Valiance and Co',
-    'ALTERNATE aTTaX': 'ALTERNATE aTTaX',
-    'PACT': 'PACT',
-    'x6tence Galaxy': 'x6tence Galaxy',
-    'Smoke Criminals': 'Smoke Criminals',
-    'SuperJymy': 'SuperJymy',
-    'Endpoint': 'Team Endpoint',
-    'aAa': 'against All authority'
-}
 
 async def do_tasks(client):
     while True:
@@ -69,13 +47,13 @@ async def do_tasks(client):
 async def check_if_ence_day(client):
     log.info("Checking if match day")
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
-    matches = MATCHES_DICT.get(now.date(), None)
-    if matches:
+    matches_today = MATCHES_DICT.get(now.date(), None)
+    if matches_today:
         if LAST_SPAMMED:
             if (LAST_SPAMMED.date() != now.date()): #If already spammed today
-                await do_matchday_spam(client, matches)
+                await do_matchday_spam(client, matches_today)
         else:
-            await do_matchday_spam(client, matches)
+            await do_matchday_spam(client, matches_today)
     else:
         log.info('No matches today')
 
@@ -104,10 +82,10 @@ async def do_matchday_spam(client, matches):
         else:
             msg = "It is match day! Today we have:\n"
         for match in matches:
-            item = [match[0], match[1], match[2], match[3], match[6]]
-            if item not in matches_list:
-                matches_list += [item] # Competition, Home team, away team, map, tod
-        util.threadsafe(client, channel.send(msg + "```" + columnmaker.columnmaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
+            match_as_row = convert_to_list(match)
+            if match_as_row not in matches_list:
+                matches_list += [match_as_row] # Competition, Home team, away team, map, tod
+        util.threadsafe(client, channel.send(msg + "```" + tablemaker.tablemaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
     await update_last_spammed_time()
     if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
@@ -140,7 +118,7 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
 async def get_hltv_matches():
     log.info("Fetching HLTV matches")
     scraper = cfscrape.create_scraper()
-    page = scraper.get("https://www.hltv.org/matches?team=4869")
+    page = scraper.get(ENCE_HLTV_MATCHES_LIST_URL)
     if page.status_code != 200:
         log.info("Failed to fetch HLTV matches. Error code %s" % page.status_code)
         return
@@ -166,11 +144,11 @@ async def parse_hltv_matches(match_elements):
             if map in ["bo1", "bo2", "bo3", "bo4", "bo5"]:
                 map = "TBD (%s)" % map
             tod = ('%s:%s' % (date.hour, (str(date.minute)) if date.minute != 0 else str(date.minute) + "0"))
-            item = [hltv_league_names.get(competition, competition[:10]), hltv_mdl_team_alias.get(home_team, home_team), hltv_mdl_team_alias.get(away_team, away_team), hltv_maps.get(map, map), 'Upcoming', date, tod]
-            matchday_item = MATCHES_DICT.get(date.date(), None)
-            if matchday_item:
-                if await not_added(item, matchday_item): # Check if item minus time of day is already added. This can happen if MDL has the same match with a different time added.
-                    matchday_item.append(item)
+            item = {'competition': competition[:15], 'home_team': home_team, 'away_team': away_team, 'map': map, 'status': 'Upcoming', 'date': date, 'tod': tod}
+            matches_for_date = MATCHES_DICT.get(date.date(), None)
+            if matches_for_date:
+                if await not_added(item, matches_for_date):
+                    matches_for_date.append(item)
                 else:
                     log.info('HLTV Match is already added')
             else:
@@ -186,21 +164,24 @@ async def not_added(comparsion_match, matches):
     return True
 
 
+async def convert_to_list(match_dict: dict, convert_date_to_str=True) -> list:
+        competition, home_team, away_team, map, status, date, tod = match_dict.get('competition'), match_dict.get(
+            'home_team'), match_dict.get('away_team'), match_dict.get('map'), match_dict.get('status'), match_dict.get('date'), match_dict.get(
+            'tod')
+        if convert_date_to_str:
+            date = str(date.date())
+        return [competition, home_team, away_team, map, status, date, tod]
+
 
 async def cmd_ence(client, message, arg):
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     if not LAST_CHECKED:
         await message.channel.send("https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
     else:
-        list_of_matches = deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0][5]) for x in y])
-
-        def convert_date(x):
-            x[5] = x[5].date()
-            return x
-        list_of_matches = [convert_date(x) for x in list_of_matches if x[5] > now] #We want to keep only matches that are upcoming, and show only date in date column
-
+        list_of_matches = deepcopy([x for y in sorted(MATCHES_DICT.values(), key=lambda x: x[0].get('date')) for x in y])
+        list_of_matches = [await convert_to_list(match_dict) for match_dict in list_of_matches if match_dict.get('date') > now]
         await message.channel.send((("\nAs of %s: ```" % to_helsinki(as_utc(LAST_CHECKED)).strftime(
-            "%Y-%m-%d %H:%M")) + columnmaker.columnmaker(
+            "%Y-%m-%d %H:%M")) + tablemaker(
             ['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'STATUS', 'DATE', 'TOD']
             , list_of_matches) + "\n#EZ4ENCE```"))
 
