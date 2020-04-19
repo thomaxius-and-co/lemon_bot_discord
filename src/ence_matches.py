@@ -33,7 +33,8 @@ hltv_maps = {
 
 # todo: fetch teams from both sites instead
 
-async def do_tasks(client):
+
+async def do_tasks(client) -> None:
     while True:
         global MATCHES_DICT
         MATCHES_DICT.clear()
@@ -58,18 +59,19 @@ async def check_if_ence_day(client):
         log.info('No matches today')
 
 
-async def get_all_spam__channels():
+async def get_all_spam__channels() -> None:
     return await db.fetch("""
         SELECT channel_id
         FROM faceit_notification_channel
     """)
 
 
-async def update_last_spammed_time():
+async def update_last_spammed_time() -> None:
     global LAST_SPAMMED
     LAST_SPAMMED = datetime.datetime.now()
 
-async def do_matchday_spam(client, matches):
+
+async def do_matchday_spam(client, matches: list) -> None:
     channels_query = await get_all_spam__channels() # Using faceit spam channel for now
     matches_list = []
     if not channels_query:
@@ -115,7 +117,7 @@ async def start_match_start_spam_task(client, channels_query, earliest_match): #
         # todo: fix this and spam about new match time if match is rescheduled
 
 
-async def get_hltv_matches():
+async def get_hltv_matches() -> list:
     log.info("Fetching HLTV matches")
     scraper = cfscrape.create_scraper()
     page = scraper.get(ENCE_HLTV_MATCHES_LIST_URL)
@@ -128,7 +130,7 @@ async def get_hltv_matches():
     return upcoming_hltv_matches_elements
 
 
-async def parse_hltv_matches(match_elements):
+async def parse_hltv_matches(match_elements: list) -> None:
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     if match_elements:
         for element in match_elements:
@@ -173,7 +175,7 @@ async def convert_to_list(match_dict: dict, convert_date_to_str=True) -> list:
         return [competition, home_team, away_team, map, status, date, tod]
 
 
-async def cmd_ence(client, message, arg):
+async def cmd_ence(client, message, arg) -> None:
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     if not LAST_CHECKED:
         await message.channel.send("https://i.ytimg.com/vi/CRvlTjeHWzA/maxresdefault.jpg\n(Matches haven't been fetched yet as the bot was just started, please try again soon)")
@@ -186,7 +188,7 @@ async def cmd_ence(client, message, arg):
             , list_of_matches) + "\n#EZ4ENCE```"))
 
 
-def register(client):
+def register(client) -> ():
     util.start_task_thread(do_tasks(client))
     return {
         'ence': cmd_ence,
