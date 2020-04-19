@@ -92,16 +92,16 @@ async def do_matchday_spam(client, matches: list) -> None:
     if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
 
-async def not_rescheduled(match_item):
+
+async def not_rescheduled(match_item: dict) -> bool:
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     matches = MATCHES_DICT.get(now.date(), None)
     log.info('match_item = %s, matches[0] = %s' % (match_item, matches[0]))
     return matches[0] != match_item
 
 
-
-async def start_match_start_spam_task(client, channels_query, earliest_match): # todo: maybe make a 'spam function' which can be used by both functions
-    match_time = earliest_match[5]
+async def start_match_start_spam_task(client, channels_query: list, earliest_match: dict) -> None: # todo: maybe make a 'spam function' which can be used by both functions
+    match_time = earliest_match.get('date')
     match = as_utc(match_time).replace(tzinfo=None)
     now = to_helsinki(as_utc(datetime.datetime.now())).replace(tzinfo=None)
     delta = max((match - now - datetime.timedelta(seconds=900)), datetime.timedelta(seconds=0))
@@ -149,21 +149,13 @@ async def parse_hltv_matches(match_elements: list) -> None:
             item = {'competition': competition[:15], 'home_team': home_team, 'away_team': away_team, 'map': map, 'status': 'Upcoming', 'date': date, 'tod': tod}
             matches_for_date = MATCHES_DICT.get(date.date(), None)
             if matches_for_date:
-                if await not_added(item, matches_for_date):
+                if item not in matches_for_date:
                     matches_for_date.append(item)
                 else:
                     log.info('HLTV Match is already added')
             else:
                 MATCHES_DICT.update({date.date():[item]})
     log.info("HLTV matches parsed.")
-
-async def not_added(comparsion_match, matches):
-    for match in matches:
-        log.info('match: %s, comparsion_match %s' % (matches, comparsion_match))
-        if match[0] == comparsion_match[0] and match[1] == comparsion_match[1] and match[2] == comparsion_match[2] \
-                and match[3] == comparsion_match[3] and match[4] == comparsion_match[4] and match[5].date() == comparsion_match[5].date():
-            return False
-    return True
 
 
 async def convert_to_list(match_dict: dict, convert_date_to_str=True) -> list:
