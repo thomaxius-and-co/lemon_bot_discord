@@ -180,7 +180,7 @@ async def cmd_ence(client, message, arg) -> None:
             , list_of_matches) + "\n#EZ4ENCE```"))
 
 
-def register(client) -> ():
+def register(client) -> dict:
     util.start_task_thread(do_tasks(client))
     return {
         'ence': cmd_ence,
