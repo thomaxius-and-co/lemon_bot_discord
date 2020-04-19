@@ -2,7 +2,7 @@ import random
 import asyncio
 from asyncio import sleep
 
-import columnmaker
+from tablemaker import tablemaker
 import emoji
 import database as db
 
@@ -684,7 +684,7 @@ async def cmd_leader(client, message, _):
             return "#{0}".format(rank), name, "${0}".format(balance)
 
         formatted = map(lambda row: format_leader(*row), leaders)
-        reply = columnmaker.columnmaker(['Rank', 'Name', 'Balance'], formatted)
+        reply = tablemaker(['Rank', 'Name', 'Balance'], formatted)
         await message.channel.send('```{0}```'.format(reply))
 
 

@@ -1,7 +1,7 @@
 import lxml.html as lh
 import pandas
 import cfscrape
-import columnmaker
+from tablemaker import tablemaker
 import logger
 import datetime
 import util

@@ -3,7 +3,7 @@ from discord.abc import GuildChannel
 import faceit_db_functions as faceit_db
 import faceit_api
 from faceit_api import NotFound, UnknownError
-import columnmaker
+from tablemaker import tablemaker
 from time_util import as_helsinki, to_utc
 from datetime import datetime
 import faceit_common as fc
@@ -265,14 +265,14 @@ async def cmd_show_records(client, message, _) -> None:
         records_as_tuples.append(item)
     records_as_tuples = sorted(records_as_tuples, reverse=True, key=lambda x: x[3])
     column_titles = ["Record name", "Value", "Record holder", "Record date", "Match score"]
-    table = columnmaker.columnmaker(column_titles, records_as_tuples)
+    table = tablemaker(column_titles, records_as_tuples)
     msg = ("```" + table + "```")
     if len(msg) > 2000:
         widest_record_title, widest_record_value, widest_record_holder, = widest_in_list_of_tuples(records_as_tuples, 0), widest_in_list_of_tuples(records_as_tuples, 1), max([widest_in_list_of_tuples(records_as_tuples, 2),len("Record holder")])
         table_first_half, table_second_half = records_as_tuples[:len(records_as_tuples)//2], records_as_tuples[len(records_as_tuples)//2:] #todo implement properly
-        await message.channel.send("```" + columnmaker.columnmaker(column_titles, table_first_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
+        await message.channel.send("```" + tablemaker(column_titles, table_first_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
         await asyncio.sleep(.5)
-        await message.channel.send("```" + columnmaker.columnmaker(column_titles, table_second_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
+        await message.channel.send("```" + tablemaker(column_titles, table_second_half, column_widths=[widest_record_title, widest_record_value, widest_record_holder,15,10]) + "```")
     else:
         await message.channel.send(msg)
 
@@ -391,7 +391,7 @@ async def get_faceit_leaderboard(guild_id):
         new_item = eu_ranking, faceit_nickname, csgo_elo, skill_level, await get_last_seen_string(
             player_last_played)
         toplist.append(new_item)
-    toplist_string = columnmaker.columnmaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'LAST SEEN'],
+    toplist_string = tablemaker(['EU RANKING', 'NAME', 'CS:GO ELO', 'SKILL LEVEL', 'LAST SEEN'],
                                              toplist)
     return toplist_string + (
             '\nLast changed: %s' % to_utc(as_helsinki(

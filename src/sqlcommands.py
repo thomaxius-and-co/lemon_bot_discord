@@ -3,7 +3,7 @@ import discord
 import re
 import json
 import database as db
-import columnmaker
+from tablemaker import tablemaker
 import emoji
 import random as rand
 from datetime import datetime, timedelta
@@ -82,7 +82,7 @@ async def getblackjacktoplist():
         new_item = (name[0:10], rank, total, wins, losses, surrenders, ties, moneyspent, round(moneywon), round(pct, 3))
         toplist.append(new_item)
     # toplist = addsymboltolist(toplist,9,' %')
-    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
+    return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 async def getslotstoplist():
     items = await db.fetch("""
@@ -110,7 +110,7 @@ async def getslotstoplist():
         new_item = (name[0:10], rank, total, wins, losses, moneyspent, moneywon, profit, round(pct, 3))
         toplist.append(new_item)
     # toplist = addsymboltolist(toplist,7,' %')
-    return columnmaker.columnmaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
+    return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
 
 async def getquoteforquotegame(guild_id, name):
     for properquote in range(0,10):
@@ -244,7 +244,7 @@ async def get_best_grammar():
         new_item = (name[0:10], message_count, good_messages, round(bs_percentage,3))
         toplist.append(new_item)
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
-    return columnmaker.columnmaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
+    return tablemaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 
@@ -306,7 +306,7 @@ async def get_worst_grammar():
         new_item = (name[0:10], message_count, bad_messages, round(bs_percentage, 3))
         toplist.append(new_item)
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
-    return columnmaker.columnmaker(
+    return tablemaker(
         ['NAME', 'RANK', 'TOTAL MSGS', 'BAD MSGS', 'BAD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
          emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
@@ -358,7 +358,7 @@ async def top_message_counts(filters, params, excludecommands):
         new_item = (name, message_count, round(msg_per_day,3), round(pct_of_total,3))
         list_with_msg_per_day.append(new_item)
     top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
-    return columnmaker.columnmaker(['NAME','RANK', 'TOTAL','MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
+    return tablemaker(['NAME','RANK', 'TOTAL','MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
                                     emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 def addranktolist(listwithoutrankandmedal): #todo: get rid of this shit
@@ -578,7 +578,7 @@ async def getwhosaiditranking():
         pct, bonuspct, correct,  total, name, rank = item
         new_item = (name, rank, correct, total, round(pct,3), bonuspct)
         toplist.append(new_item)
-    return columnmaker.columnmaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
+    return tablemaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
 
 async def get_whosaidit_weekly_ranking():
     items = await db.fetch("""
@@ -617,7 +617,7 @@ async def get_whosaidit_weekly_ranking():
         dateadded, name, score, wins, losses, accuracy, bonus, players, total = item
         new_item = (get_week_with_year(dateadded), name, round(score, 3), wins, losses, total)
         toplist.append(new_item)
-    return columnmaker.columnmaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
+    return tablemaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
 def get_week_with_year(datetimeobject):
     return datetimeobject.strftime("%V") + '/' + datetimeobject.strftime("%Y") #Week number/year todo: fix the issue of last year's days being problematic

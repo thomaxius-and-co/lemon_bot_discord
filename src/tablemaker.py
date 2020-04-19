@@ -1,6 +1,6 @@
-# Make beautiful columns, originally implemeted by rce
+# Make beautiful tables, originally implemeted by rce
 
-def columnmaker(titles, data, column_widths=None):
+def tablemaker(titles, data, column_widths=None):
 
     def column_width(rows, index):
         """Returns the width of the widest value in column"""
