@@ -96,7 +96,7 @@ async def get_toplist_from_db(guild_id):
             LEFT JOIN 
               ranking using (guild_id)     
             order by 
-              faceit_elo, faceit_ranking asc
+              faceit_elo desc, faceit_ranking asc
             limit 10
             """, str(guild_id))
 
