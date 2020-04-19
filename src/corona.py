@@ -109,7 +109,7 @@ async def cmd_corona(client, message, _) -> None:
         await message.channel.send('There was an error fetching corona stats.')
 
 
-def register(client) -> ():
+def register(client) -> dict:
     return {
         "corona": cmd_corona
     }
