@@ -173,8 +173,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2020, 5, 22, 17, 0)))
-        laivaover = to_utc(as_helsinki(datetime(2020, 5, 24, 11, 0)))
+        laiva = to_utc(as_helsinki(datetime(2020, 8, 21, 17, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2020, 8, 23, 11, 0)))
 
         now = as_utc(datetime.now())
 
