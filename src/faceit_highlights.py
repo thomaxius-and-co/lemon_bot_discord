@@ -296,7 +296,7 @@ async def get_team_total_deaths(team):
 
 
 async def has_many_kills_multi_kills(player):
-    if player.penta_kills == 0 and player.quadro_kills == 0 and player.triple_kills == 0:
+    if (player.penta_kills == 0 and player.quadro_kills == 0 and player.triple_kills == 0) or player.kills == 0:
         return False
     return ((((player.penta_kills * 5) + (player.quadro_kills * 4) + (player.triple_kills * 3)) / player.kills ) * 100) >= 50
 
