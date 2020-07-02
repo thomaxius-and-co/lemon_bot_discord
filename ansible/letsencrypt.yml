@@ -31,7 +31,7 @@
 - name: Directory for certbot systemd unit overrides
   file: path="/etc/systemd/system/certbot.service.d" state=directory owner=root group=root mode=0755
 
-- name: Reload reload nginx config after running certbot
+- name: Configure certbot service to reload nginx config after running
   copy:
     dest: "/etc/systemd/system/certbot.service.d/override.conf"
     content: |
