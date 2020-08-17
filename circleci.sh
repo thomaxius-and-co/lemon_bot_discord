@@ -15,7 +15,7 @@ apt-get -q install -y \
   zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
 
-apt-get -q install curl -y
+apt-get -q install -y curl 
 
 curl https://bootstrap.pypa.io/get-pip.py | python3.8
 pip install -r ansible/requirements.txt > /dev/null
