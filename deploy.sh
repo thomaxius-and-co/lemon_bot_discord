@@ -9,10 +9,10 @@ export AWS_DEFAULT_REGION="$AWS_REGION"
 ROOT="$( cd "$( dirname "$0" )" && pwd )"
 cd $ROOT
 
-set +o errexit
+set +o errexit +o nounset
 export NVM_DIR="$ROOT/.nvm"
 source "$ROOT/web/nvm.sh"
-set -o errexit
+set -o errexit -o nounset
 nvm install
 
 pushd "$ROOT/ansible"
