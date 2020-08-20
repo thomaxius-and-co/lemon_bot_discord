@@ -15,9 +15,13 @@ apt-get -q install -y \
   curl zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
 
-pip install --upgrade pip
-pip install --upgrade setuptools
-pip install -r ansible/requirements.txt > /dev/null
+# Install pyenv for choosing any specific Python vversion
+curl https://pyenv.run | bash
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+# Workaround for issues with pip/python 2 and UTF-8
+export LC_ALL="en_US.UTF-8"
 
 #DATABASE_HOST="localhost" \
 #DATABASE_PORT="5432" \
