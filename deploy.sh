@@ -12,8 +12,8 @@ cd $ROOT
 set +o errexit +o nounset
 export NVM_DIR="$ROOT/.nvm"
 source "$ROOT/web/nvm.sh"
-set -o errexit -o nounset
 nvm install
+set -o errexit -o nounset
 
 pushd "$ROOT/ansible"
 eval "$(pyenv init -)"
