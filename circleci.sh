@@ -21,7 +21,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 
 # Workaround for issues with pip/python 2 and UTF-8
-export LC_ALL="en_US.UTF-8"
+export LC_ALL="C.UTF-8"
 
 #DATABASE_HOST="localhost" \
 #DATABASE_PORT="5432" \
