@@ -1,0 +1,67 @@
+# https://wiki.archlinux.org/index.php/WireGuard#Specific_use-case:_VPN_server
+
+- sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- apt_repository:
+    repo: ppa:wireguard/wireguard
+
+- apt:
+    state: present
+    name:
+      - wireguard
+      - wireguard-tools
+
+- name: Generate server private key
+  shell: umask 077 && wg genkey > /etc/wireguard/privatekey
+  args:
+    creates: "/etc/wireguard/privatekey"
+
+- name: Derive server public key from private key
+  shell: umask 077 && cat /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
+  args:
+    creates: "/etc/wireguard/publickey"
+
+- slurp:
+    src: "/etc/wireguard/privatekey"
+  register: wireguard_server_privatekey
+
+- slurp:
+    src: "/etc/wireguard/publickey"
+  register: wireguard_server_publickey
+
+- debug:
+    msg: "{{ wireguard_server_publickey['content'] | b64decode | trim }}"
+
+- name: Create Wireguard server config
+  copy:
+    dest: "/etc/wireguard/wg0.conf"
+    mode: 0640
+    backup: yes
+    content: |
+      [Interface]
+      Address = {{ wireguard_vpn_cidr }}
+      ListenPort = 51820
+      PrivateKey = {{ wireguard_server_privatekey['content'] | b64decode | trim }}
+
+      {% for item in wireguard_users %}
+      [Peer] # username: {{ item.username }}
+      PublicKey = {{ item.publickey }}
+      AllowedIps = {{ item.allowedips }}
+      {% endfor %}
+  register: wireguard_server_config
+
+- name: Enable Wireguard service
+  service:
+    name: wg-quick@wg0
+    state: started
+    enabled: yes
+
+- name: Restart Wireguard if server config is changed
+  service:
+    name: wg-quick@wg0
+    state: restarted
+  when: wireguard_server_config.changed
