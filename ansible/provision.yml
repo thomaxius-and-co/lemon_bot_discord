@@ -45,6 +45,10 @@
         - reload sysctl.conf
 
     - include: postgres.yml
+      vars:
+        postgres_listen_addresses_string: 'localhost, 10.200.200.1'
+        postgres_allowed_ips:
+          - 10.200.200.1/24
     - include: redis.yml
 
     - name: Remove old packages

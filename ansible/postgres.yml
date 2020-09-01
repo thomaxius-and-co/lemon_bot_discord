@@ -26,6 +26,16 @@
   with_items:
     - postgresql
 
+- template:
+    src: "etc/postgresql/11/main/pg_hba.conf.j2"
+    dest: "/etc/postgresql/11/main/pg_hba.conf"
+  register: postgres_pg_hba_conf
+
+- template:
+    src: "etc/postgresql/11/main/postgresql.conf.j2"
+    dest: "/etc/postgresql/11/main/postgresql.conf"
+  register: postgres_postgresql_conf
+
 - name: Create database
   postgresql_db:
     name: "{{ secrets.db.dbname }}"
@@ -51,3 +61,15 @@
     name: postgresql
     state: started
     enabled: yes
+
+- name: reload postgres config
+  service:
+    name: postgresql
+    state: reloaded
+  when: postgres_pg_hba_conf.changed
+
+- name: restart postgres
+  service:
+    name: postgresql
+    state: restarted
+  when: postgres_postgresql_conf.changed
