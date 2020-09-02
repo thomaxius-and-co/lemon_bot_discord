@@ -8,18 +8,20 @@ const faceitStatisticsPage = require("./pages/faceitStatisticsPage")
 const personalFaceitStatsPage = require("./pages/personalFaceitStatsPage")
 const whosaiditPage = require("./pages/whosaiditPage")
 const adminPage = require("./pages/adminPage")
+const quotesPage = require("./pages/quotesPage")
 const Sentry = require("@sentry/browser")
 
 const findPage = path => {
   switch (path) {
-  case "/": return statisticsPage
-  case "/admin": return adminPage
-  case "/gamestatistics": return gameStatisticsPage  
-  case "/faceitstatistics": return faceitStatisticsPage
-  case "/personalfaceitstats": return personalFaceitStatsPage
-  case "/whosaidit": return whosaiditPage
-  case "/getquote": return whosaiditPage  
-}
+    case "/": return statisticsPage
+    case "/admin": return adminPage
+    case "/gamestatistics": return gameStatisticsPage
+    case "/faceitstatistics": return faceitStatisticsPage
+    case "/personalfaceitstats": return personalFaceitStatsPage
+    case "/whosaidit": return whosaiditPage
+    case "/getquote": return whosaiditPage
+    case "/quotes": return quotesPage
+  }
 }
 const currentPage = findPage(window.location.pathname)
 
@@ -50,5 +52,5 @@ window.onload = () => {
     })
   }
 
-  ReactDOM.hydrate(<App/>, document)
+  ReactDOM.hydrate(<App />, document)
 }

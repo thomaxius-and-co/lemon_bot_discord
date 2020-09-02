@@ -82,9 +82,9 @@ const init = app => {
     req.logout()
     res.redirect("/")
   })
-  app.get("/login", passport.authenticate("discord", {scope, failureRedirect: "/error"}), (req, res) => {
+  app.get("/login", passport.authenticate("discord", { scope, failureRedirect: "/error" }), (req, res) => {
     res.redirect("/")
   })
 }
 
-module.exports = {init, requireAdmin, requireLogin, requirePlayingClearance}
+module.exports = { init, requireAdmin, requireLogin, requirePlayingClearance }

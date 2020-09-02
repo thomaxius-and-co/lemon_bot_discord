@@ -1,12 +1,12 @@
 const Promise = require('bluebird')
 const pgp = require('pg-promise')({ promiseLib: Promise })
-const {distinct} = require('./util.js')
+const { distinct } = require('./util.js')
 
 const connectionDetails = {
-  host:     process.env.DATABASE_HOST,
-  port:     process.env.DATABASE_PORT,
+  host: process.env.DATABASE_HOST,
+  port: process.env.DATABASE_PORT,
   database: process.env.DATABASE_NAME,
-  user:     process.env.DATABASE_USERNAME,
+  user: process.env.DATABASE_USERNAME,
   password: process.env.DATABASE_PASSWORD,
   // After 75 connections used by the bot we have 25 connections left for the website
   min: 5,
@@ -39,7 +39,7 @@ const findSpammerOfTheDay = () =>
 const fetchPrecalculatedStatistics = statisticsId =>
   db.query(`SELECT content FROM statistics WHERE statistics_id = $1`, statisticsId)
     .then(rows => rows[0] ? rows[0].content : null)
-  
+
 const findMessageCountByUser = userId =>
   db.query(`SELECT count(*) FROM message WHERE user_id = $1`, userId).then(rows => rows[0].count)
 
@@ -62,7 +62,7 @@ const topBlackjack = () =>
         ORDER BY (wins_bj / (wins_bj + losses_bj)) * 100 DESC
         LIMIT 10
   `)
-  
+
 const topSlots = () =>
   db.query(`
 	SELECT
@@ -105,7 +105,7 @@ const topWhosaidit = () =>
             order by rank asc
 			limit 10
   `)
-  
+
 const whosaiditWeeklyWinners = () =>
   db.query(`
     -- week_score = score per pelaaja per viikko
@@ -136,10 +136,10 @@ const whosaiditWeeklyWinners = () =>
         -- Valitaan vain rivit, joilla score on viikon paras score, eli voittajat
           where not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 2
         order by dateadded desc
-  `)    
+  `)
 
 const faceitTopTen = () =>
-db.query(`
+  db.query(`
   WITH 
     last_month_elo as 
   (
@@ -232,7 +232,7 @@ db.query(`
     ORDER BY 
       current_ranking ASC
   `)
-  .then(rows => rows.map(convertTopListTypes))
+    .then(rows => rows.map(convertTopListTypes))
 
 const convertTopListTypes = row =>
   Object.assign({}, row, {
@@ -386,12 +386,12 @@ async function saveLegendaryQuote(messageid, userid) {
     VALUES 
         ($1, $2)
     `, [String(messageid), String(userid)]).then(() => {
-      console.log(`User ${userid} added a legendary quote ${messageid} into the database`) 
-      return true
-    }).catch((error) => {
-      console.log(error.error)
-      return false
-    })
+    console.log(`User ${userid} added a legendary quote ${messageid} into the database`)
+    return true
+  }).catch((error) => {
+    console.log(error.error)
+    return false
+  })
 }
 
 async function getQuoteForWhosaidit(guildid, userids) {
@@ -424,8 +424,44 @@ async function getQuoteForWhosaidit(guildid, userids) {
       random()
   LIMIT 
       15
-      `) 
+      `)
 
+  return quotes
+}
+
+async function getSensibleQuotes(guildId = 141649840923869184) {
+  const quotes = await db.query(`
+  SELECT
+      content,
+      coalesce(name, m->'author'->>'username') as username,
+      user_id,
+      m->'mentions',
+      message_id,
+      ts,
+      CASE 
+        WHEN message_id IN (SELECT message_id FROM legendary_quotes) THEN 'TRUE' 
+          ELSE 'False' 
+        END AS is_legendary 
+  FROM 
+      message 
+  JOIN 
+      discord_user USING (user_id)
+  WHERE
+      guild_id = '${guildid}'
+      AND length(content) > 12
+      AND length(content) < 1000 
+      AND content NOT LIKE '!%%' 
+      AND content NOT LIKE '%wwww%'
+      AND content NOT LIKE '%http%' 
+      AND content NOT LIKE '%.com%' 
+      AND content NOT LIKE '%.fi%'
+      AND content ~* '^[A-ZÅÄÖ]'
+      AND NOT bot
+  ORDER BY 
+      random()
+  LIMIT 
+      100
+      `)
   return quotes
 }
 
@@ -439,13 +475,13 @@ async function getUserNamesAndIds() {
 }
 
 async function saveWhosaiditHistory(userid, message_id, sanitizedquestion, correctname, answer) {
-    correct = correctname == answer
-    return await db.query(`
+  correct = correctname == answer
+  return await db.query(`
         INSERT INTO whosaidit_stats_history
         (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
         VALUES ($1, $2, $3, $4, $5, $6, now(), date_part('week', localtimestamp))
     `, [userid, message_id, sanitizedquestion, correctname, correct ? 'correct' : 'wrong', correct ? 1 : 0]).then(() => console.log(`Saved whosaidit game result for ${userid}`))
-    // Originally this was made using the 'wrong' and 'correct' strings, which is wrong and was later fixed to be 0 for wrong and 1 for correct. Here we add both cause I'm lazy to implement the new thing now.
+  // Originally this was made using the 'wrong' and 'correct' strings, which is wrong and was later fixed to be 0 for wrong and 1 for correct. Here we add both cause I'm lazy to implement the new thing now.
 }
 
 async function getPlayerNames(playerIds) {
@@ -455,7 +491,7 @@ async function getPlayerNames(playerIds) {
 }
 
 function assignName(nameMap) {
-  return obj => Object.assign({}, obj, {faceit_nickname: nameMap[obj.faceit_guid]})
+  return obj => Object.assign({}, obj, { faceit_nickname: nameMap[obj.faceit_guid] })
 }
 
 // Transforms [[a, b], [c, d]] to {a: b, c: d}
@@ -494,6 +530,7 @@ module.exports = {
   getQuoteForWhosaidit,
   saveWhosaiditHistory,
   getUserNamesAndIds,
-  saveLegendaryQuote
+  saveLegendaryQuote,
+  getSensibleQuotes
 }
 
