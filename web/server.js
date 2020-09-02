@@ -112,6 +112,14 @@ const buildInitialState = req => {
           })
         )
       }
+    case '/whosaidit':
+      return Promise.join(
+        db.topWhosaidit(),
+        (topWhosaidit) => ({
+          topWhosaidit,
+          user: req.user,
+        })
+      )
     case '/quotes':
       return Promise.join(
         db.getSensibleQuotes(),
