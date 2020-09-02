@@ -447,7 +447,7 @@ async function getSensibleQuotes(guildId = 141649840923869184) {
   JOIN 
       discord_user USING (user_id)
   WHERE
-      guild_id = '${guildid}'
+      guild_id = '${guildId}'
       AND length(content) > 12
       AND length(content) < 1000 
       AND content NOT LIKE '!%%' 
