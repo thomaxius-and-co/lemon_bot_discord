@@ -429,7 +429,7 @@ async function getQuoteForWhosaidit(guildid, userids) {
   return quotes
 }
 
-async function getSensibleQuotes(guildId = 141649840923869184) {
+async function getSensibleQuotes(guildId = "141649840923869184") {
   const quotes = await db.query(`
   SELECT
       content,
