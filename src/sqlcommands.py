@@ -111,7 +111,7 @@ async def get_blackjack_toplist():
     return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
 
-async def getslotstoplist():
+async def get_slots_toplist():
     items = await db.fetch("""
         SELECT
             name,
@@ -140,7 +140,7 @@ async def getslotstoplist():
     return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
 
 
-async def getquoteforquotegame(guild_id, name):
+async def get_quote_for_quote_game(guild_id, name):
     for properquote in range(0, 10):
         quote = await db.fetchrow("""
         SELECT
@@ -277,7 +277,7 @@ async def get_best_grammar():
         name, user_id, message_count, good_messages, bs_percentage = item
         new_item = (name[0:10], message_count, good_messages, round(bs_percentage, 3))
         toplist.append(new_item)
-    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
+    top_ten = add_rank_to_list(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
     return tablemaker(['NAME', 'RANK', 'TOTAL MSGS', 'GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
                        emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
@@ -339,7 +339,7 @@ async def get_worst_grammar():
         name, user_id, message_count, bad_messages, bs_percentage = item
         new_item = (name[0:10], message_count, bad_messages, round(bs_percentage, 3))
         toplist.append(new_item)
-    top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
+    top_ten = add_rank_to_list(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
     return tablemaker(
         ['NAME', 'RANK', 'TOTAL MSGS', 'BAD MSGS', 'BAD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
          emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
@@ -392,15 +392,15 @@ async def top_message_counts(filters, params, excludecommands):
         msg_per_day = message_count / user_days_in_chat[user_id]
         new_item = (name, message_count, round(msg_per_day, 3), round(pct_of_total, 3))
         list_with_msg_per_day.append(new_item)
-    top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
+    top_ten = add_rank_to_list(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
     return tablemaker(['NAME', 'RANK', 'TOTAL', 'MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
                        emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 
-def addranktolist(listwithoutrankandmedal):  # todo: get rid of this shit
+def add_rank_to_list(list_without_rank_and_medal):  # todo: get rid of this shit
     rank = 1
-    newlst = []
-    for item in listwithoutrankandmedal:
+    new_list = []
+    for item in list_without_rank_and_medal:
         if rank == 1:
             medal = '  ' + emoji.FIRST_PLACE_MEDAL
         elif rank == 2:
@@ -410,24 +410,24 @@ def addranktolist(listwithoutrankandmedal):  # todo: get rid of this shit
         else:
             medal = ''
         a, b, c, d = item
-        newlst.append((a, '#' + str(rank), b, c, d, medal))
+        new_list.append((a, '#' + str(rank), b, c, d, medal))
         rank += 1
-    return newlst
+    return new_list
 
 
-def addsymboltolist(lst, position, symbol):
-    newlst = []
+def add_symbol_to_list(lst, position, symbol):
+    new_list = []
     for item in lst:
-        olditem = list(item)
-        singleitem = olditem[position]
-        newitem = str(singleitem) + symbol
-        olditem.remove(singleitem)
-        olditem.append(newitem)
-        newlst.append(tuple(olditem))
-    return newlst
+        old_item = list(item)
+        single_item = old_item[position]
+        new_item = str(single_item) + symbol
+        old_item.remove(single_item)
+        old_item.append(new_item)
+        new_list.append(tuple(old_item))
+    return new_list
 
 
-async def checkifenoughmsgstoplay(guild_id):
+async def check_if_enough_messages_to_play(guild_id):
     items = await db.fetch("""
         SELECT
             coalesce(name, m->'author'->>'username') AS name
@@ -538,7 +538,7 @@ async def cmd_top(client, message, input):
         await message.channel.send((title + '\n' + '```' + weekly_winners_list + '```'))
         return
     elif input == 'blackjack' or input == 'bj':
-        reply, amountofpeople = await getblackjacktoplist()
+        reply, amountofpeople = await get_blackjack_toplist()
         if not reply or not amountofpeople:
             await message.channel.send('Not enough players to form a toplist.')
             return
@@ -548,7 +548,7 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'slots':
-        reply, amountofpeople = await getslotstoplist()
+        reply, amountofpeople = await get_slots_toplist()
         jackpot = await get_jackpot()
         if not reply or not amountofpeople:
             await message.channel.send('Not enough players to form a toplist. (need 100 games to qualify')
@@ -759,7 +759,7 @@ async def cmd_whosaidit(client, message, _):
 async def dowhosaidit(client, message, _):
     guild_id = message.guild.id
     channel = message.channel
-    listofspammers = await checkifenoughmsgstoplay(guild_id)
+    listofspammers = await check_if_enough_messages_to_play(guild_id)
     if not listofspammers or len(listofspammers) < 5:
         await channel.send('Not enough chat logged to play.')
         await remove_user_from_playing_dict(message.guild.id, message.author)
@@ -767,7 +767,7 @@ async def dowhosaidit(client, message, _):
     rand.shuffle(listofspammers)
     name = rand.choice(listofspammers)
     listofspammers.remove(name)
-    quote = await getquoteforquotegame(guild_id, name)
+    quote = await get_quote_for_quote_game(guild_id, name)
     if not quote:
         await channel.send('Not enough chat logged to play.')  # I guess this is a pretty
         #  rare occasion, # but just in case
