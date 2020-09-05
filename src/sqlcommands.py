@@ -15,10 +15,12 @@ import logger
 log = logger.get("SQLCOMMANDS")
 playing_dict = {}
 
+
 def sanitize_message(content, mentions):
     for m in mentions:
         content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
     return content
+
 
 async def send_quote(client, channel, random_message):
     content, timestamp, mentions, user_id, name, avatar = random_message
@@ -30,6 +32,7 @@ async def send_quote(client, channel, random_message):
     embed.set_author(name=name, icon_url=avatar_url)
     embed.set_footer(text=str(timestamp))
     await channel.send(embed=embed)
+
 
 async def random_message_with_filter(filters, params):
     return await db.fetchrow("""
@@ -84,6 +87,7 @@ async def getblackjacktoplist():
     # toplist = addsymboltolist(toplist,9,' %')
     return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', 'S', 'T', '$ SPENT', '$ WON', '%'], toplist), len(toplist)
 
+
 async def getslotstoplist():
     items = await db.fetch("""
         SELECT
@@ -112,8 +116,9 @@ async def getslotstoplist():
     # toplist = addsymboltolist(toplist,7,' %')
     return tablemaker(['NAME', 'RANK', 'TOT', 'W', 'L', '$ SPENT', '$ WON', '$ PROFIT', '%'], toplist), len(toplist)
 
+
 async def getquoteforquotegame(guild_id, name):
-    for properquote in range(0,10):
+    for properquote in range(0, 10):
         quote = await db.fetchrow("""
         SELECT
             content,
@@ -148,29 +153,34 @@ async def getquoteforquotegame(guild_id, name):
             log.info('This quote is bad, fetching a new one.. {0}'.format(quote['content'].encode("utf-8")))
     return None
 
+
 def invalid_quote(quote):
-    def is_custom_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+    def is_custom_emoji(quote):  # checks if quote is an emoji (ends and begins in :)
         return quote.startswith('<:') and quote.endswith('>')
 
-    def is_emoji(quote): #checks if quote is an emoji (ends and begins in :)
+    def is_emoji(quote):  # checks if quote is an emoji (ends and begins in :)
         return quote.startswith(":") and quote.endswith(":")
 
-    def is_gibberish(quote): #checks if quote consists of 6 different letters
+    def is_gibberish(quote):  # checks if quote consists of 6 different letters
         return len(set(quote)) < 6
 
     return is_gibberish(quote) or is_emoji(str(quote)) or is_custom_emoji(str(quote))
+
 
 def make_word_filters(guild_id, words):
     conditions = "content ~* $1 AND guild_id = $2"
     params = ["|".join(words), str(guild_id)]
     return conditions, params
 
+
 async def random(guild_id, filter):
     word_filters, params = make_word_filters(guild_id, filter)
     return await random_message_with_filter("AND ({0})".format(word_filters), params)
 
+
 async def random_quote_from_channel(channel_id):
     return await random_message_with_filter("AND m->>'channel_id' = $1", [str(channel_id)])
+
 
 async def get_user_days_in_chat():
     rows = await db.fetch("""
@@ -183,8 +193,9 @@ async def get_user_days_in_chat():
     result = {}
     for row in rows:
         result[row[0]] = row[1]
-# {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
+    # {'244610064038625280': 100.575020288113, '97767102722609152': 384.679490554317 }
     return result
+
 
 async def get_best_grammar():
     items = await db.fetch("""
@@ -241,11 +252,11 @@ async def get_best_grammar():
     toplist = []
     for item in items:
         name, user_id, message_count, good_messages, bs_percentage = item
-        new_item = (name[0:10], message_count, good_messages, round(bs_percentage,3))
+        new_item = (name[0:10], message_count, good_messages, round(bs_percentage, 3))
         toplist.append(new_item)
     top_ten = addranktolist(sorted(toplist, key=lambda x: x[3], reverse=True)[:10])
-    return tablemaker(['NAME','RANK', 'TOTAL MSGS','GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
-                                    emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
+    return tablemaker(['NAME', 'RANK', 'TOTAL MSGS', 'GOOD MSGS', 'GOOD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
+                       emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 
 async def get_worst_grammar():
@@ -310,6 +321,7 @@ async def get_worst_grammar():
         ['NAME', 'RANK', 'TOTAL MSGS', 'BAD MSGS', 'BAD GRAMMAR %', emoji.FIRST_PLACE_MEDAL +
          emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
+
 async def top_message_counts(filters, params, excludecommands):
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
     user_days_in_chat = await get_user_days_in_chat()
@@ -355,13 +367,14 @@ async def top_message_counts(filters, params, excludecommands):
     for item in items:
         name, user_id, message_count, pct_of_total = item
         msg_per_day = message_count / user_days_in_chat[user_id]
-        new_item = (name, message_count, round(msg_per_day,3), round(pct_of_total,3))
+        new_item = (name, message_count, round(msg_per_day, 3), round(pct_of_total, 3))
         list_with_msg_per_day.append(new_item)
     top_ten = addranktolist(sorted(list_with_msg_per_day, key=lambda x: x[2], reverse=True)[:10])
-    return tablemaker(['NAME','RANK', 'TOTAL','MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
-                                    emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
+    return tablemaker(['NAME', 'RANK', 'TOTAL', 'MSG PER DAY', '% OF TOTAL', emoji.FIRST_PLACE_MEDAL +
+                       emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
-def addranktolist(listwithoutrankandmedal): #todo: get rid of this shit
+
+def addranktolist(listwithoutrankandmedal):  # todo: get rid of this shit
     rank = 1
     newlst = []
     for item in listwithoutrankandmedal:
@@ -378,6 +391,7 @@ def addranktolist(listwithoutrankandmedal): #todo: get rid of this shit
         rank += 1
     return newlst
 
+
 def addsymboltolist(lst, position, symbol):
     newlst = []
     for item in lst:
@@ -388,6 +402,7 @@ def addsymboltolist(lst, position, symbol):
         olditem.append(newitem)
         newlst.append(tuple(olditem))
     return newlst
+
 
 async def checkifenoughmsgstoplay(guild_id):
     items = await db.fetch("""
@@ -414,14 +429,16 @@ async def checkifenoughmsgstoplay(guild_id):
             count(*) >= 500""", guild_id)
     return [item['name'] for item in items]
 
-def check_length(x,i):
+
+def check_length(x, i):
     return len(str(x[i]))
+
 
 async def cmd_top(client, message, input):
     guild_id = message.guild.id
     if not input:
         await message.channel.send('You need to specify a toplist. Available toplists: spammers,'
-                                                   ' custom <words separated by comma>')
+                                   ' custom <words separated by comma>')
         return
 
     excludecommands = input[0] != '!'
@@ -459,7 +476,7 @@ async def cmd_top(client, message, input):
         return
 
     elif input[0:6] == 'custom' or input[0:7] == '!custom':
-        customwords = await getcustomwords(input, message, client)
+        customwords = await get_custom_words(input, message, client)
         if not customwords:
             return
         filters, params = make_word_filters(guild_id, customwords)
@@ -522,8 +539,8 @@ async def cmd_top(client, message, input):
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
-            customwords = await get_custom_trophy_conditions(trophy) # todo?
-            customwords = await getcustomwords(customwords, message, client)
+            customwords = await get_custom_trophy_conditions(trophy)  # todo?
+            customwords = await get_custom_words(customwords, message, client)
             if not customwords:
                 return
             filters, params = make_word_filters(guild_id, customwords)
@@ -536,7 +553,8 @@ async def cmd_top(client, message, input):
             word = 'word' if len(customwords) == 1 else 'words'
             parameter = '(commands not included)' if excludecommands else '(commands included)'
 
-            title = 'Leaderboard of trophy %s (top %s users of the %s: %s %s)' % (trophy, amountofpeople, word, ', '.join(customwords), parameter)
+            title = 'Leaderboard of trophy %s (top %s users of the %s: %s %s)' % (
+            trophy, amountofpeople, word, ', '.join(customwords), parameter)
 
             await message.channel.send(('```%s \n' % title + reply + '```'))
             return
@@ -547,8 +565,10 @@ async def cmd_top(client, message, input):
         await message.channel.send(msg[:2000])
         return
 
+
 async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
+
 
 async def getwhosaiditranking():
     items = await db.fetch("""
@@ -575,10 +595,11 @@ async def getwhosaiditranking():
         return None, None
     toplist = []
     for item in items:
-        pct, bonuspct, correct,  total, name, rank = item
-        new_item = (name, rank, correct, total, round(pct,3), bonuspct)
+        pct, bonuspct, correct, total, name, rank = item
+        new_item = (name, rank, correct, total, round(pct, 3), bonuspct)
         toplist.append(new_item)
     return tablemaker(['NAME', 'RANK', 'CORRECT', 'TOTAL', 'ACCURACY', 'BONUS PCT'], toplist), len(toplist)
+
 
 async def get_whosaidit_weekly_ranking():
     items = await db.fetch("""
@@ -619,35 +640,44 @@ async def get_whosaidit_weekly_ranking():
         toplist.append(new_item)
     return tablemaker(['WEEK', 'NAME', 'SCORE', 'WINS', 'LOSSES', 'TOTAL'], toplist)
 
-def get_week_with_year(datetimeobject):
-    return datetimeobject.strftime("%V") + '/' + datetimeobject.strftime("%Y") #Week number/year todo: fix the issue of last year's days being problematic
 
-async def getcustomwords(input, message, client):
+def get_week_with_year(datetimeobject):
+    return datetimeobject.strftime("%V") + '/' + datetimeobject.strftime(
+        "%Y")  # Week number/year todo: fix the issue of last year's days being problematic
+
+
+async def get_custom_words(input, message, client):
     # Remove empty words from search, which occured when user typed a comma without text (!top custom test,)
-    customwords = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
-    def checkifsmall(value):
+    custom_words = list(map(lambda x: x.strip(), re.sub('!?custom', '', input).split(',')))
+
+    def check_if_small(value):
         return len(value) > 0
-    customwords = [word for word in customwords if checkifsmall(word)]
-    if len(customwords) == 0:
+
+    custom_words = [word for word in custom_words if check_if_small(word)]
+    if len(custom_words) == 0:
         await message.channel.send("You need to specify custom words to search for.")
         return
-    return customwords
+    return custom_words
+
 
 async def add_user_to_playing_dict(guild_id, author):
     if guild_id not in playing_dict:
-        playing_dict.update({guild_id:[author]})
+        playing_dict.update({guild_id: [author]})
     else:
         guild_playinglist = playing_dict.get(guild_id)
         if author not in guild_playinglist:
             guild_playinglist.append(author)
-            dict.update({guild_id:guild_playinglist})
+            dict.update({guild_id: guild_playinglist})
+
 
 async def remove_user_from_playing_dict(guild_id, author):
     playing_dict.get(guild_id).remove(author)
 
+
 async def is_playing(guild_id, name):
     playing_list = playing_dict.get(guild_id, [])
     return name in playing_list
+
 
 async def cmd_randomquote(client, themessage, input):
     guild_id = themessage.guild.id
@@ -656,7 +686,7 @@ async def cmd_randomquote(client, themessage, input):
         await channel.send("Sorry, cheating is not allowed. (You are playing whosaidit.)")
         return
     if input is not None and 'custom' in input.lower()[0:6]:
-        customwords = await getcustomwords(input, themessage, client)
+        customwords = await get_custom_words(input, themessage, client)
         if not customwords:
             return
         random_message = await random(guild_id, customwords)
@@ -684,6 +714,7 @@ async def cmd_randomquote(client, themessage, input):
         await themessage.channel.send("Sorry, no messages could be found")
     else:
         await send_quote(client, themessage.channel, random_message)
+        
 
 async def cmd_whosaidit(client, message, _):
     if not await is_playing(message.guild.id, message.author):
@@ -707,22 +738,24 @@ async def dowhosaidit(client, message, _):
     listofspammers.remove(name)
     quote = await getquoteforquotegame(guild_id, name)
     if not quote:
-        await channel.send('Not enough chat logged to play.') # I guess this is a pretty
+        await channel.send('Not enough chat logged to play.')  # I guess this is a pretty
         #  rare occasion, # but just in case
         await remove_user_from_playing_dict(message.guild.id, message.author)
         return
     await send_question(client, message, listofspammers, quote)
 
+
 async def send_question(client, message, listofspammers, thequote):
     correctname = thequote[1]
     message_id = thequote[3]
     sanitizedquestion = sanitize_message(thequote[0], json.loads(thequote[2]))
-    options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(), listofspammers[3].lower(),
+    options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(),
+               listofspammers[3].lower(),
                correctname.lower()]
     rand.shuffle(options)
     await message.channel.send("It's time to play 'Who said it?' !\n %s, who"
-                    " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
-                              % (message.author.name, sanitizedquestion, ', '.join(options)))
+                               " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
+                               % (message.author.name, sanitizedquestion, ', '.join(options)))
 
     try:
         answer = await getresponse(client, correctname, options, message)
@@ -737,6 +770,7 @@ async def send_question(client, message, listofspammers, thequote):
     await remove_user_from_playing_dict(message.guild.id, message.author)
     return
 
+
 async def getresponse(client, name, options, message):
     def is_response(m):
         is_reply = m.channel == message.channel and m.author == message.author
@@ -750,19 +784,22 @@ async def getresponse(client, name, options, message):
             return 'correct'
         return 'wrong'
 
+
 async def save_stats_history(userid, message_id, sanitizedquestion, correctname, answer):
     correct = correctname == answer
     await db.execute("""
         INSERT INTO whosaidit_stats_history AS a
         (user_id, message_id, quote, correctname, playeranswer, correct, time, week)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    """, userid, message_id, sanitizedquestion, correctname, answer, 1 if correct else 0, datetime.today(), datetime.today().isocalendar()[1])
+    """, userid, message_id, sanitizedquestion, correctname, answer, 1 if correct else 0, datetime.today(),
+                     datetime.today().isocalendar()[1])
     log.info("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
+
 
 async def cmd_add_excluded_user(client, message, input):
     if not input:
         await message.channel.send('Usage: !addexcludeduser <userID>. '
-                                                   'or highlight someone: !addexcludeduser @Thomaxius')
+                                   'or highlight someone: !addexcludeduser @Thomaxius')
         return
     input = input[:-1].lstrip('<@')
     if not input.isdigit():
@@ -779,10 +816,11 @@ async def cmd_add_excluded_user(client, message, input):
     await add_excluded_user_into_database(input, message.author.id)
     await message.channel.send('Added **%s** into the database.' % member.name)
 
+
 async def cmd_delete_excluded_user(client, message, input):
     if not input:
         await message.channel.send('Usage: !delexcludedduser <userID>. '
-                                                   'or highlight someone: !delexcludedduser @Thomaxius')
+                                   'or highlight someone: !delexcludedduser @Thomaxius')
         return
     input = input[:-1].lstrip('<@')
     if not input.isdigit():
@@ -796,6 +834,7 @@ async def cmd_delete_excluded_user(client, message, input):
     await del_excluded_user_from_database(input)
     await message.channel.send('Removed **%s** from the database.' % member.name)
 
+
 async def get_excluded_users():
     results = await db.fetch("""
         SELECT
@@ -805,12 +844,14 @@ async def get_excluded_users():
         """)
     return [item['excluded_user_id'] for item in results]
 
+
 async def add_excluded_user_into_database(excluded_user_id, adder_user_id):
     await db.execute("""
         INSERT INTO excluded_users AS a
         (excluded_user_id, added_by_id)
-        VALUES ($1, $2)""",excluded_user_id, adder_user_id)
+        VALUES ($1, $2)""", excluded_user_id, adder_user_id)
     log.info('Added an excluded user into the database: {0}'.format(excluded_user_id))
+
 
 async def del_excluded_user_from_database(excluded_user_id):
     await db.execute("""
@@ -819,8 +860,9 @@ async def del_excluded_user_from_database(excluded_user_id):
             excluded_users
         WHERE
             excluded_user_id like $1
-        """,excluded_user_id)
+        """, excluded_user_id)
     log.info('Removed an excluded user from the database:'.format(excluded_user_id))
+
 
 async def get_time_until_reset():
     datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -834,6 +876,7 @@ async def get_time_until_reset():
     template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
     msg = template.format(*delta_to_tuple(delta))
     return msg
+
 
 def register(client):
     return {
