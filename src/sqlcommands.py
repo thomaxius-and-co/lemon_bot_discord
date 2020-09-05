@@ -58,7 +58,30 @@ async def random_message_with_filter(filters, params):
     """.format(filters=filters), *params)
 
 
-async def getblackjacktoplist():
+async def legendary_quote(guild_id: str):
+    return await db.fetchrow(f"""
+        SELECT
+            content,
+            ts::timestamptz AT TIME ZONE 'Europe/Helsinki',
+            m->'mentions',
+            user_id,
+            name,
+            m->'author'->>'avatar' as avatar
+        FROM 
+            message m
+        JOIN 
+            discord_user USING (user_id)
+        JOIN
+            legendary_quotes l USING (message_id)
+        WHERE 
+            length(content) > 6
+            AND guild_id = $1
+        ORDER BY 
+            random() LIMIT 1
+    """, guild_id)
+
+
+async def get_blackjack_toplist():
     items = await db.fetch("""
         SELECT
             (wins_bj / (wins_bj + losses_bj)) * 100,
@@ -714,7 +737,15 @@ async def cmd_randomquote(client, themessage, input):
         await themessage.channel.send("Sorry, no messages could be found")
     else:
         await send_quote(client, themessage.channel, random_message)
-        
+
+
+async def cmd_legendary_quote(client, message, arg):
+    quote = await legendary_quote(str(message.guild.id))
+    if quote is None:
+        await message.channel.send("Sorry, no messages could be found")
+    else:
+        await send_quote(client, message.channel, quote)
+
 
 async def cmd_whosaidit(client, message, _):
     if not await is_playing(message.guild.id, message.author):
@@ -884,5 +915,6 @@ def register(client):
         'whosaidit': cmd_whosaidit,
         'top': cmd_top,
         'addexcludeduser': cmd_add_excluded_user,
-        'delexcludeduser': cmd_delete_excluded_user
+        'delexcludeduser': cmd_delete_excluded_user,
+        'legendaryquote': cmd_legendary_quote
     }
