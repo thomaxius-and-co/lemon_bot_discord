@@ -906,7 +906,7 @@ async def get_reset_date() -> datetime:
     return to_helsinki(as_utc(date))
 
 
-async def get_time_until_reset() -> str:
+async def get_time_until_reset_message() -> str:
     now = as_utc(datetime.now())
     reset_time: datetime = await get_reset_date()
     delta = reset_time - now
