@@ -24,13 +24,14 @@ def sanitize_message(content, mentions):
 
 async def send_quote(client, channel, random_message) -> discord.Message:
     content, timestamp, mentions, user_id, name, avatar = random_message
+    formatted_timestamp = timestamp.strftime("%a %d-%m-%Y %H:%M:%S")
     mentions = json.loads(mentions)
     sanitized = sanitize_message(content, mentions)
     avatar_url = "https://cdn.discordapp.com/avatars/{user_id}/{avatar}.jpg".format(user_id=user_id, avatar=avatar)
 
     embed = discord.Embed(description=sanitized)
     embed.set_author(name=name, icon_url=avatar_url)
-    embed.set_footer(text=str(timestamp))
+    embed.set_footer(text=formatted_timestamp)
     return await channel.send(embed=embed)
 
 
