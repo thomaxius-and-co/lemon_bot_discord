@@ -468,62 +468,62 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == 'spammers' or input == '!spammers':
-        reply, amountofpeople = await top_message_counts("AND 1 = $1", [1], excludecommands)
-        if not reply or not amountofpeople:
+        reply, amount_of_people = await top_message_counts("AND 1 = $1", [1], excludecommands)
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
         parameter = '(commands included)' if not excludecommands else '(commands not included)'
-        header = 'Top %s spammers %s\n' % (amountofpeople, parameter)
+        header = 'Top %s spammers %s\n' % (amount_of_people, parameter)
         await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'bestgrammar':
-        reply, amountofpeople = await get_best_grammar()
-        if not reply or not amountofpeople:
+        reply, amount_of_people = await get_best_grammar()
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
-        header = 'Top %s people with the best grammar (most messages written with proper grammar)\n' % (amountofpeople)
+        header = 'Top %s people with the best grammar (most messages written with proper grammar)\n' % (amount_of_people)
         await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'worstgrammar':
-        reply, amountofpeople = await get_worst_grammar()
-        if not reply or not amountofpeople:
+        reply, amount_of_people = await get_worst_grammar()
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
-        header = 'Top %s people with the worst grammar (most messages written with bad grammar)\n' % (amountofpeople)
+        header = 'Top %s people with the worst grammar (most messages written with bad grammar)\n' % (amount_of_people)
         await message.channel.send('```' + header + reply + '```')
         return
 
     elif input[0:6] == 'custom' or input[0:7] == '!custom':
-        customwords = await get_custom_words(input, message, client)
-        if not customwords:
+        custom_words = await get_custom_words(input, message, client)
+        if not custom_words:
             return
-        filters, params = make_word_filters(guild_id, customwords)
+        filters, params = make_word_filters(guild_id, custom_words)
         custom_filter = "AND ({0})".format(filters)
-        reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
-        if not reply or not amountofpeople:
+        reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands)
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
 
-        word = 'word' if len(customwords) == 1 else 'words'
+        word = 'word' if len(custom_words) == 1 else 'words'
         parameter = '(commands not included)' if excludecommands else '(commands included)'
 
-        title = 'Top %s users of the %s: %s %s' % (amountofpeople, word, ', '.join(customwords), parameter)
+        title = 'Top %s users of the %s: %s %s' % (amount_of_people, word, ', '.join(custom_words), parameter)
 
         await message.channel.send(('```%s \n' % title + reply + '```'))
         return
 
     elif input == 'whosaidit':
-        ranking, amountofpeople = await getwhosaiditranking()
-        if not ranking or not amountofpeople:
+        ranking, amount_of_people = await get_whosaidit_ranking()
+        if not ranking or not amount_of_people:
             await message.channel.send('Not enough players to form a toplist.')
             return
 
-        title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amountofpeople)
+        title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amount_of_people)
         time_until_reset = await get_time_until_reset()
         await message.channel.send(('```%s \n' % title + ranking + '\n' + time_until_reset + '```'))
         return
@@ -538,23 +538,23 @@ async def cmd_top(client, message, input):
         await message.channel.send((title + '\n' + '```' + weekly_winners_list + '```'))
         return
     elif input == 'blackjack' or input == 'bj':
-        reply, amountofpeople = await get_blackjack_toplist()
-        if not reply or not amountofpeople:
+        reply, amount_of_people = await get_blackjack_toplist()
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough players to form a toplist.')
             return
 
-        header = 'Top %s blackjack players\n' % (amountofpeople)
+        header = 'Top %s blackjack players\n' % (amount_of_people)
         await message.channel.send('```' + header + reply + '```')
         return
 
     elif input == 'slots':
-        reply, amountofpeople = await get_slots_toplist()
+        reply, amount_of_people = await get_slots_toplist()
         jackpot = await get_jackpot()
-        if not reply or not amountofpeople:
+        if not reply or not amount_of_people:
             await message.channel.send('Not enough players to form a toplist. (need 100 games to qualify')
             return
 
-        header = 'Top %s slots players (need 100 games to qualify)\n' % (amountofpeople)
+        header = 'Top %s slots players (need 100 games to qualify)\n' % (amount_of_people)
         jackpot = '\nCurrent jackpot: %s$' % (jackpot['jackpot'])
         await message.channel.send('```' + header + reply + jackpot + '```')
         return
@@ -562,22 +562,22 @@ async def cmd_top(client, message, input):
     for trophy in CUSTOM_TROPHY_NAMES:
         trophylower = trophy.lower()
         if input == trophylower:
-            customwords = await get_custom_trophy_conditions(trophy)  # todo?
-            customwords = await get_custom_words(customwords, message, client)
-            if not customwords:
+            custom_words = await get_custom_trophy_conditions(trophy)  # todo?
+            custom_words = await get_custom_words(custom_words, message, client)
+            if not custom_words:
                 return
-            filters, params = make_word_filters(guild_id, customwords)
+            filters, params = make_word_filters(guild_id, custom_words)
             custom_filter = "AND ({0})".format(filters)
-            reply, amountofpeople = await top_message_counts(custom_filter, params, excludecommands)
-            if not reply or not amountofpeople:
+            reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands)
+            if not reply or not amount_of_people:
                 await message.channel.send('Nobody has this trophy.')
                 return
 
-            word = 'word' if len(customwords) == 1 else 'words'
+            word = 'word' if len(custom_words) == 1 else 'words'
             parameter = '(commands not included)' if excludecommands else '(commands included)'
 
             title = 'Leaderboard of trophy %s (top %s users of the %s: %s %s)' % (
-            trophy, amountofpeople, word, ', '.join(customwords), parameter)
+            trophy, amount_of_people, word, ', '.join(custom_words), parameter)
 
             await message.channel.send(('```%s \n' % title + reply + '```'))
             return
@@ -593,7 +593,7 @@ async def get_jackpot():
     return await db.fetchrow("SELECT jackpot from casino_jackpot")
 
 
-async def getwhosaiditranking():
+async def get_whosaidit_ranking():
     items = await db.fetch("""
     with score as (
             select
@@ -709,10 +709,10 @@ async def cmd_randomquote(client, themessage, input):
         await channel.send("Sorry, cheating is not allowed. (You are playing whosaidit.)")
         return
     if input is not None and 'custom' in input.lower()[0:6]:
-        customwords = await get_custom_words(input, themessage, client)
-        if not customwords:
+        custom_words = await get_custom_words(input, themessage, client)
+        if not custom_words:
             return
-        random_message = await random(guild_id, customwords)
+        random_message = await random(guild_id, custom_words)
         if random_message is None:
             await channel.send("Sorry, no messages could be found")
             return
@@ -755,10 +755,10 @@ async def cmd_whosaidit(client, message, _):
     else:
         await message.channel.send('%s: Cannot play: You already have an unfinished game.' % message.author.name)
         return
-    await dowhosaidit(client, message, _)
+    await do_whosaidit(client, message, _)
 
 
-async def dowhosaidit(client, message, _):
+async def do_whosaidit(client, message, _):
     guild_id = message.guild.id
     channel = message.channel
     listofspammers = await check_if_enough_messages_to_play(guild_id)
@@ -779,41 +779,41 @@ async def dowhosaidit(client, message, _):
 
 
 async def send_question(client, message, listofspammers, thequote):
-    correctname = thequote[1]
+    correct_name = thequote[1]
     message_id = thequote[3]
-    sanitizedquestion = sanitize_message(thequote[0], json.loads(thequote[2]))
+    sanitized_question = sanitize_message(thequote[0], json.loads(thequote[2]))
     options = [listofspammers[0].lower(), listofspammers[1].lower(), listofspammers[2].lower(),
                listofspammers[3].lower(),
-               correctname.lower()]
+               correct_name.lower()]
     rand.shuffle(options)
     await message.channel.send("It's time to play 'Who said it?' !\n %s, who"
                                " said the following:\n ""*%s*""\n Options: %s. You have 15 seconds to answer!"
-                               % (message.author.name, sanitizedquestion, ', '.join(options)))
+                               % (message.author.name, sanitized_question, ', '.join(options)))
 
     try:
-        answer = await getresponse(client, correctname, options, message)
+        answer = await get_response(client, correct_name, options, message)
         if answer and answer == 'correct':
-            await message.channel.send("%s: Correct! It was %s" % (message.author.name, correctname))
+            await message.channel.send("%s: Correct! It was %s" % (message.author.name, correct_name))
         elif answer and answer == 'wrong':
-            await message.channel.send("%s: Wrong! It was %s" % (message.author.name, correctname))
+            await message.channel.send("%s: Wrong! It was %s" % (message.author.name, correct_name))
     except asyncio.TimeoutError:
         answer = 'wrong'
-        await message.channel.send("%s: Time is up! The answer was %s" % (message.author.name, correctname))
-    await save_stats_history(message.author.id, message_id, sanitizedquestion, correctname, answer)
+        await message.channel.send("%s: Time is up! The answer was %s" % (message.author.name, correct_name))
+    await save_stats_history(message.author.id, message_id, sanitized_question, correct_name, answer)
     await remove_user_from_playing_dict(message.guild.id, message.author)
     return
 
 
-async def getresponse(client, name, options, message):
+async def get_response(client, name, options, message):
     def is_response(m):
         is_reply = m.channel == message.channel and m.author == message.author
         is_option = m.content.lower() == name.lower() or m.content.lower() in options
         return is_reply and is_option
 
-    answer = await client.wait_for("message", timeout=15, check=is_response)
+    answer: discord.Message = await client.wait_for("message", timeout=15, check=is_response)
     if answer:
-        theanswer = answer.content.lower()
-        if theanswer == name.lower():
+        answer_content = answer.content.lower()
+        if answer_content == name.lower():
             return 'correct'
         return 'wrong'
 
@@ -829,42 +829,42 @@ async def save_stats_history(userid, message_id, sanitizedquestion, correctname,
     log.info("save_stats_history: saved game result for user {0}: {1}".format(userid, correct))
 
 
-async def cmd_add_excluded_user(client, message, input):
-    if not input:
+async def cmd_add_excluded_user(client, message, arg):
+    if not arg:
         await message.channel.send('Usage: !addexcludeduser <userID>. '
                                    'or highlight someone: !addexcludeduser @Thomaxius')
         return
-    input = input[:-1].lstrip('<@')
-    if not input.isdigit():
+    user_id: str = arg[:-1].lstrip('<@')
+    if not user_id.isdigit():
         await message.channel.send('UserID has to be numeric.')
         return
     excluded_users = await get_excluded_users()
-    if input in excluded_users:
+    if user_id in excluded_users:
         await message.channel.send('UserID is already in the database.')
         return
-    member = discord.utils.get(message.guild.members, id=input)
+    member = discord.utils.get(message.guild.members, id=user_id)
     if not member:
         await message.channel.send('UserID not found in the server.')
         return
-    await add_excluded_user_into_database(input, message.author.id)
+    await add_excluded_user_into_database(user_id, message.author.id)
     await message.channel.send('Added **%s** into the database.' % member.name)
 
 
-async def cmd_delete_excluded_user(client, message, input):
-    if not input:
+async def cmd_delete_excluded_user(client, message, arg):
+    if not arg:
         await message.channel.send('Usage: !delexcludedduser <userID>. '
                                    'or highlight someone: !delexcludedduser @Thomaxius')
         return
-    input = input[:-1].lstrip('<@')
-    if not input.isdigit():
+    user_id = arg[:-1].lstrip('<@')
+    if not user_id.isdigit():
         await message.channel.send('UserID has to be numeric.')
         return
     excluded_users = await get_excluded_users()
-    if input not in excluded_users:
+    if user_id not in excluded_users:
         await message.channel.send('UserID not found in the database')
         return
-    member = discord.utils.get(message.guild.members, id=input)
-    await del_excluded_user_from_database(input)
+    member = discord.utils.get(message.guild.members, id=user_id)
+    await del_excluded_user_from_database(user_id)
     await message.channel.send('Removed **%s** from the database.' % member.name)
 
 
@@ -897,15 +897,19 @@ async def del_excluded_user_from_database(excluded_user_id):
     log.info('Removed an excluded user from the database:'.format(excluded_user_id))
 
 
-async def get_time_until_reset():
-    datenow = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    if datenow.weekday() == 0:
-        datenow += timedelta(1)
-    while datenow.weekday() != 0:
-        datenow += timedelta(1)
-    timeuntilreset = to_helsinki(as_utc(datenow))
+async def get_reset_date() -> datetime:
+    date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    if date.weekday() == 0:
+        date += timedelta(1)
+    while date.weekday() != 0:
+        date += timedelta(1)
+    return to_helsinki(as_utc(date))
+
+
+async def get_time_until_reset() -> str:
     now = as_utc(datetime.now())
-    delta = timeuntilreset - now
+    reset_time: datetime = await get_reset_date()
+    delta = reset_time - now
     template = "Time until this week's stats will be reset: {0} days, {1} hours, {2} minutes, {3} seconds"
     msg = template.format(*delta_to_tuple(delta))
     return msg
