@@ -22,7 +22,7 @@ def sanitize_message(content, mentions):
     return content
 
 
-async def send_quote(client, channel, random_message):
+async def send_quote(client, channel, random_message) -> discord.Message:
     content, timestamp, mentions, user_id, name, avatar = random_message
     mentions = json.loads(mentions)
     sanitized = sanitize_message(content, mentions)
@@ -31,7 +31,7 @@ async def send_quote(client, channel, random_message):
     embed = discord.Embed(description=sanitized)
     embed.set_author(name=name, icon_url=avatar_url)
     embed.set_footer(text=str(timestamp))
-    await channel.send(embed=embed)
+    return await channel.send(embed=embed)
 
 
 async def random_message_with_filter(filters, params):
@@ -744,7 +744,9 @@ async def cmd_legendary_quote(client, message, arg):
     if quote is None:
         await message.channel.send("Sorry, no messages could be found")
     else:
-        await send_quote(client, message.channel, quote)
+        sent_message = await send_quote(client, message.channel, quote)
+        await sent_message.add_reaction(emoji="👍")
+        await sent_message.add_reaction(emoji="👎")
 
 
 async def cmd_whosaidit(client, message, _):
