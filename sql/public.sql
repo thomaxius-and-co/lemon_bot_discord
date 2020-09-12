@@ -212,3 +212,47 @@ CREATE TABLE withings_link (
     changed TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     created TIMESTAMP WITHOUT TIME ZONE DEFAULT current_timestamp NOT NULL
 );
+
+
+CREATE TABLE legendary_quotes (
+    message_id TEXT NOT NULL PRIMARY KEY REFERENCES message (message_id),
+    added_by TEXT NOT NULL REFERENCES discord_user (user_id),
+    added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE faceit_records (
+    id serial,
+    match_id TEXT NOT NULL,
+    guild_id TEXT NOT NULL,
+    faceit_guid TEXT REFERENCES faceit_player (faceit_guid) NOT NULL,
+    win boolean,
+    player_team_rank integer,
+    player_team_first_half_score integer,
+    player_team_second_half_score integer,
+    player_team_overtime_score integer,
+    started_at integer,
+    finished_at integer,
+    added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    kills integer,
+    assists integer,
+    deaths integer,
+    headshots integer,
+    headshot_percentage numeric,
+    mvps integer,
+    triple_kills integer,
+    quadro_kills integer,
+    penta_kills integer,
+    kd_ratio numeric(4,2),
+    kr_ratio numeric(4,2),
+    total_rounds integer,
+    enemy_team_first_half_score integer,
+    enemy_team_second_half_score integer,
+    enemy_team_overtime_score integer
+);
+
+CREATE TABLE faceit_records_config (
+    id serial,
+    guild_id TEXT NOT NULL,
+    reset_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reset_by TEXT NOT NULL REFERENCES discord_user (user_id)
+);
