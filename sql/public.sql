@@ -157,16 +157,28 @@ CREATE TABLE reminder (
 );
 
 -- osu!
-CREATE TABLE osu_pp (
-    osu_pp_id SERIAL PRIMARY KEY,
-    osu_user_id TEXT NOT NULL,
+CREATE TABLE osugamemode (
+    osugamemode_id text not null,
+    name text not null
+);
+
+INSERT INTO osugamemode (osugamemode_id, name) VALUES
+('STANDARD', 'osu!standard'),
+('MANIA', 'osu!mania');
+
+CREATE TABLE osuuser (
+    osuuser_id TEXT NOT NULL,
     channel_id TEXT NOT NULL,
-    standard_pp NUMERIC NOT NULL,
-    standard_rank INT NOT NULL,
-    mania_pp NUMERIC NOT NULL,
-    mania_rank INT NOT NULL,
+    PRIMARY KEY (osuuser_id, channel_id)
+);
+
+CREATE TABLE osupp (
+    osuuser_id TEXT NOT NULL,
+    osugamemode_id TEXT NOT NULL REFERENCES osugamemode (osugamemode_id),
+    pp NUMERIC NOT NULL,
+    rank INT NOT NULL,
     changed TIMESTAMP NOT NULL,
-    UNIQUE (osu_user_id, channel_id) -- TODO: guild_id instead
+    PRIMARY KEY (osuuser_id, osugamemode_id)
 );
 
 -- FACEIT
