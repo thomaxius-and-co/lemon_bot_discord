@@ -21,8 +21,8 @@ async def exec(log, tx):
     CREATE TABLE osupp (
       osuuser_id TEXT NOT NULL,
       osugamemode_id TEXT NOT NULL REFERENCES osugamemode (osugamemode_id),
-      pp NUMERIC NOT NULL,
-      rank INT NOT NULL,
+      pp NUMERIC,
+      rank INT,
       changed TIMESTAMP NOT NULL,
       PRIMARY KEY (osuuser_id, osugamemode_id)
     );
