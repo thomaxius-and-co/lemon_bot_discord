@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from lan import delta_to_tuple
 from time_util import as_utc, to_helsinki
 from trophies import CUSTOM_TROPHY_NAMES, get_custom_trophy_conditions
+from util import split_message_for_sending
 import logger
 
 log = logger.get("SQLCOMMANDS")
@@ -20,6 +21,7 @@ def sanitize_message(content, mentions):
     for m in mentions:
         content = content.replace("<@%s>" % m["id"], "@%s" % m["username"])
     return content
+
 
 
 async def send_quote(client, channel, random_message) -> discord.Message:
@@ -95,10 +97,14 @@ async def get_blackjack_toplist():
             moneyspent_bj,
             moneywon_bj,
             concat('#', row_number() OVER (ORDER BY  (wins_bj / (wins_bj + losses_bj)) * 100 desc)) AS rank
-        FROM casino_stats
-        JOIN discord_user USING (user_id)
-        WHERE (wins_bj + losses_bj) > 1
-        ORDER BY (wins_bj / (wins_bj + losses_bj)) * 100 DESC
+        FROM 
+            casino_stats
+        JOIN 
+            discord_user USING (user_id)
+        WHERE
+            (wins_bj + losses_bj) > 1
+        ORDER BY 
+            (wins_bj / (wins_bj + losses_bj)) * 100 DESC
         LIMIT 10
     """)
     if len(items) == 0:
@@ -124,10 +130,15 @@ async def get_slots_toplist():
             moneywon_slots,
             moneywon_slots - moneyspent_slots as profit,
             (wins_slots / (wins_slots + losses_slots)) * 100
-        FROM casino_stats
-        JOIN discord_user USING (user_id)
-        WHERE (wins_slots + losses_slots) > 100
-        ORDER BY moneywon_slots - moneyspent_slots DESC
+        FROM 
+            casino_stats
+        JOIN 
+            discord_user USING (user_id)
+        WHERE 
+            AND (wins_slots + losses_slots) > 100
+            
+        ORDER BY 
+            moneywon_slots - moneyspent_slots DESC
         LIMIT 10
     """)
     if len(items) == 0:
@@ -206,14 +217,17 @@ async def random_quote_from_channel(channel_id):
     return await random_message_with_filter("AND m->>'channel_id' = $1", [str(channel_id)])
 
 
-async def get_user_days_in_chat():
+async def get_user_days_in_chat(guild_id: str):
     rows = await db.fetch("""
         SELECT
             user_id,
             extract(epoch from current_timestamp - min(ts)) / 60 / 60 / 24
-        FROM message
+        FROM 
+            message
+        WHERE
+            guild_id = $1
         GROUP BY user_id
-    """)
+    """, guild_id)
     result = {}
     for row in rows:
         result[row[0]] = row[1]
@@ -221,7 +235,7 @@ async def get_user_days_in_chat():
     return result
 
 
-async def get_best_grammar():
+async def get_best_grammar(guild_id: str):
     items = await db.fetch("""
     with custommessage as (
             select
@@ -232,8 +246,9 @@ async def get_best_grammar():
                 message
             join 
                 discord_user using (user_id)
-            where 
-                NOT bot 
+            where
+                guild_id = $1
+                AND NOT bot 
                 AND content not LIKE '!%%'
                 AND content not like '%http%'
                 AND content not like '%www%'
@@ -251,8 +266,9 @@ async def get_best_grammar():
             message
         join 
             custommessage using (user_id)
-        where 
-            NOT bot
+        where
+            guild_id = $1
+            AND NOT bot
             and message_count > 300
             AND content NOT LIKE '!%%'
             AND content ~ '^[A-ZÅÄÖ][a-zöäå]'            
@@ -270,7 +286,7 @@ async def get_best_grammar():
             count(*) > 300
         order by 
             pctoftotal desc
-    """)
+    """, guild_id)
     if not items:
         return None, None
     toplist = []
@@ -283,7 +299,7 @@ async def get_best_grammar():
                        emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 
-async def get_worst_grammar():
+async def get_worst_grammar(guild_id: str):
     items = await db.fetch("""
     with custommessage as (
             select
@@ -294,8 +310,9 @@ async def get_worst_grammar():
                 message
             join 
                 discord_user using (user_id)
-            where 
-                NOT bot 
+            where
+                guild_id = $1 
+                AND NOT bot 
                 AND content not LIKE '!%%'
                 AND content not like '%http%'
                AND content not like '%www%'
@@ -313,8 +330,9 @@ async def get_worst_grammar():
             message
         join 
             custommessage using (user_id)
-        where 
-            NOT bot
+        where
+            guild_id = $1
+            AND NOT bot
             and message_count > 300
             AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
             AND content NOT LIKE '!%%'
@@ -332,7 +350,7 @@ async def get_worst_grammar():
             count(*) > 300
         order by 
             pctoftotal desc
-    """)
+    """, guild_id)
     if not items:
         return None, None
     toplist = []
@@ -346,9 +364,10 @@ async def get_worst_grammar():
          emoji.SECOND_PLACE_MEDAL + emoji.THIRD_PLACE_MEDAL], top_ten), len(top_ten)
 
 
-async def top_message_counts(filters, params, excludecommands):
+async def top_message_counts(filters, params, excludecommands, guild_id: str):
+    # todo: fix dangerous query
     sql_excludecommands = "AND content NOT LIKE '!%%'" if excludecommands else ""
-    user_days_in_chat = await get_user_days_in_chat()
+    user_days_in_chat = await get_user_days_in_chat(guild_id)
     items = await db.fetch("""
         with custommessage as (
             SELECT
@@ -360,7 +379,8 @@ async def top_message_counts(filters, params, excludecommands):
             JOIN 
                 discord_user using (user_id)
             WHERE 
-                NOT bot 
+                guild_id = '{guild_id}'
+                AND NOT bot 
                 AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id) 
                 {sql_excludecommands} 
                 {filters}
@@ -376,7 +396,8 @@ async def top_message_counts(filters, params, excludecommands):
         JOIN  
             custommessage using (user_id)
         WHERE 
-            NOT bot
+            guild_id = '{guild_id}'
+            AND NOT bot
             AND NOT EXISTS (SELECT * FROM excluded_users WHERE excluded_user_id = user_id)
             {sql_excludecommands} 
             {filters}
@@ -384,7 +405,7 @@ async def top_message_counts(filters, params, excludecommands):
             user_id, message_count, name 
         ORDER BY 
             pctoftotal DESC
-    """.format(filters=filters, sql_excludecommands=sql_excludecommands), *params)
+    """.format(guild_id=guild_id, filters=filters, sql_excludecommands=sql_excludecommands), *params)
     if not items:
         return None, None
     list_with_msg_per_day = []
@@ -459,7 +480,7 @@ def check_length(x, i):
 
 
 async def cmd_top(client, message, input):
-    guild_id = message.guild.id
+    guild_id = str(message.guild.id)
     if not input:
         await message.channel.send('You need to specify a toplist. Available toplists: spammers,'
                                    ' custom <words separated by comma>')
@@ -469,7 +490,7 @@ async def cmd_top(client, message, input):
 
     input = input.lower()
     if input == 'spammers' or input == '!spammers':
-        reply, amount_of_people = await top_message_counts("AND 1 = $1", [1], excludecommands)
+        reply, amount_of_people = await top_message_counts("AND 1 = $1", [1], excludecommands, guild_id)
         if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
@@ -480,7 +501,7 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'bestgrammar':
-        reply, amount_of_people = await get_best_grammar()
+        reply, amount_of_people = await get_best_grammar(guild_id)
         if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
@@ -490,7 +511,7 @@ async def cmd_top(client, message, input):
         return
 
     elif input == 'worstgrammar':
-        reply, amount_of_people = await get_worst_grammar()
+        reply, amount_of_people = await get_worst_grammar(guild_id)
         if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
@@ -505,7 +526,7 @@ async def cmd_top(client, message, input):
             return
         filters, params = make_word_filters(guild_id, custom_words)
         custom_filter = "AND ({0})".format(filters)
-        reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands)
+        reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands, guild_id)
         if not reply or not amount_of_people:
             await message.channel.send('Not enough chat logged into the database to form a toplist.')
             return
@@ -525,7 +546,7 @@ async def cmd_top(client, message, input):
             return
 
         title = 'Top %s players of !whosaidit (need 20 games to qualify):' % (amount_of_people)
-        time_until_reset = await get_time_until_reset()
+        time_until_reset = await get_time_until_reset_message()
         await message.channel.send(('```%s \n' % title + ranking + '\n' + time_until_reset + '```'))
         return
 
@@ -561,15 +582,15 @@ async def cmd_top(client, message, input):
         return
 
     for trophy in CUSTOM_TROPHY_NAMES:
-        trophylower = trophy.lower()
-        if input == trophylower:
+        _trophy = trophy.lower()
+        if input == _trophy:
             custom_words = await get_custom_trophy_conditions(trophy)  # todo?
             custom_words = await get_custom_words(custom_words, message, client)
             if not custom_words:
                 return
             filters, params = make_word_filters(guild_id, custom_words)
             custom_filter = "AND ({0})".format(filters)
-            reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands)
+            reply, amount_of_people = await top_message_counts(custom_filter, params, excludecommands, guild_id)
             if not reply or not amount_of_people:
                 await message.channel.send('Nobody has this trophy.')
                 return
@@ -583,10 +604,11 @@ async def cmd_top(client, message, input):
             await message.channel.send(('```%s \n' % title + reply + '```'))
             return
     else:
-        msg = "Unknown list. Available lists: spammers, whosaidit, blackjack, slots, bestgrammar, custom <words separated by comma>"
+        msg_content = "Unknown list. Available lists: spammers, whosaidit, blackjack, slots, bestgrammar, custom <words separated by comma>"
         if CUSTOM_TROPHY_NAMES:
-            msg += ", " + ", ".join(CUSTOM_TROPHY_NAMES)
-        await message.channel.send(msg[:2000])
+            msg_content += ", " + ", ".join(CUSTOM_TROPHY_NAMES)
+        for msg in split_message_for_sending([msg_content], join_str="\n\n"):
+            await message.channel.send(msg)
         return
 
 
@@ -601,20 +623,26 @@ async def get_whosaidit_ranking():
                 user_id,
                 sum(case playeranswer when 'correct' then 1 else 0 end) as wins,
                 sum(case playeranswer when 'wrong' then 1 else 0 end) as losses
-              from whosaidit_stats_history
-              where date_trunc('week', time) = date_trunc('week', current_timestamp)
+              from 
+                    whosaidit_stats_history
+              where 
+                    date_trunc('week', time) = date_trunc('week', current_timestamp)
               group by user_id)
             select
-                wins::float / (wins + losses) * 100 as ratio,
-                least(0.20 * wins, 20) as bonuspct,
-                wins,
-                wins + losses as total,
-                name,
-                concat('#', row_number() OVER (ORDER BY (wins::float / (wins + losses) * 100)+ least(0.20* wins, 20) desc)) AS rank
-            from score
-            join discord_user using (user_id)
-            where (wins + losses) >= 20
-            order by rank asc""")
+                    wins::float / (wins + losses) * 100 as ratio,
+                    least(0.20 * wins, 20) as bonuspct,
+                    wins,
+                    wins + losses as total,
+                    name,
+                    concat('#', row_number() OVER (ORDER BY (wins::float / (wins + losses) * 100)+ least(0.20* wins, 20) desc)) AS rank
+            from
+                score
+            join 
+                discord_user using (user_id)
+            where 
+                (wins + losses) >= 20
+            order by 
+                rank asc""")
     if len(items) == 0:
         return None, None
     toplist = []
@@ -653,7 +681,8 @@ async def get_whosaidit_weekly_ranking():
         from week_score
         join discord_user using (user_id)
         -- Valitaan vain rivit, joilla score on viikon paras score, eli voittajat
-          where not date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 2
+          where not 
+                AND date_trunc('week', dateadded) = date_trunc('week', current_timestamp) and score = weeks_best_score and players >= 2
         order by dateadded desc""")
     if len(items) == 0:
         return None, None
