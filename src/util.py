@@ -21,9 +21,11 @@ async def log_exception(error_log, msg=None):
         log.error(msg)
         os._exit(0)
 
+
 # Run discord.py coroutines from antoher thread
 def threadsafe(client, coroutine):
     return asyncio.run_coroutine_threadsafe(coroutine, client.loop).result()
+
 
 # Start a coroutine task in new thread
 def start_task_thread(coroutine):
@@ -33,10 +35,29 @@ def start_task_thread(coroutine):
         loop.run_until_complete(coroutine)
     threading.Thread(target=thread_func, args=(coroutine,)).start()
 
+
 async def pmap(async_func, xs):
     futures = map(async_func, xs)
     return await asyncio.gather(*futures)
 
+
 def grouped(xs, n):
     for i in range(0, len(xs), n):
         yield xs[i:i+n]
+
+
+def split_list(xs):
+    mid = len(xs) // 2
+    return xs[:mid], xs[mid:]
+
+
+def split_message_for_sending(pieces: str, join_str="\n", limit=2000):
+    joined = join_str.join(pieces)
+    if len(joined) <= limit:
+        return [joined]
+
+    a, b = split_list(pieces)
+    return [
+        *split_message_for_sending(a, join_str, limit),
+        *split_message_for_sending(b, join_str, limit),
+    ]

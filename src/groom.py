@@ -4,15 +4,17 @@ import aiohttp
 from time_util import as_utc, to_helsinki
 import cache
 import logger
-
+from util import split_message_for_sending
 log = logger.get("GROOM")
 
 SERVICE_BASIC = 27
 SERVICE_SPECIAL = 2
 SERVICE_RELAX = 2
 
+
 def register(client):
     return {"groom": cmd_groom}
+
 
 async def cmd_groom(client, message, arg):
     city = arg or "Helsinki"
@@ -26,6 +28,7 @@ async def cmd_groom(client, message, arg):
     for msg in split_message_for_sending(location_infos, join_str="\n\n"):
         await message.channel.send(msg)
 
+
 def build_location_time_message(loc_times):
     loc, times = loc_times
     today, tomorrow = times
@@ -34,20 +37,6 @@ def build_location_time_message(loc_times):
     if tomorrow: text += "\nHuomenna " + ", ".join(tomorrow)
     return text
 
-def split_message_for_sending(pieces, join_str="\n", limit=2000):
-    joined = join_str.join(pieces)
-    if len(joined) <= limit:
-        return [joined]
-
-    a, b = split_list(pieces)
-    return [
-        *split_message_for_sending(a, join_str, limit),
-        *split_message_for_sending(b, join_str, limit),
-    ]
-
-def split_list(xs):
-    mid = len(xs) // 2
-    return xs[:mid], xs[mid:]
 
 async def get_times_for_date(date, city):
     result = {}
@@ -58,14 +47,17 @@ async def get_times_for_date(date, city):
             result[loc["name"]] = (today, tomorrow)
     return result
 
+
 @cache.cache(ttl = cache.WEEK)
 async def get_locations(city=None):
     json = await call_api("/locations")
     locations = json.get("data", [])
     return list(filter(match_city(city), locations))
 
+
 def match_city(city):
     return lambda l: city is None or l["city"].lower() == city.lower()
+
 
 @cache.cache(ttl = cache.HOUR)
 async def get_times(date, location):
@@ -78,6 +70,7 @@ async def get_times(date, location):
     avail = today.get("available", [])
     return list(a["from"] for a in avail)
 
+
 async def call_api(path, *, params=None):
     async with aiohttp.ClientSession() as session:
         async with session.get(f"https://www.varaaheti.fi/groom/fi/api/public{path}", params=params) as r:
@@ -85,6 +78,7 @@ async def call_api(path, *, params=None):
             if r.status != 200:
                 raise Exception(f"Unexpected HTTP status {r.status}")
             return await r.json()
+
 
 def helsinki_date_now():
     return to_helsinki(as_utc(datetime.datetime.now())).date()
