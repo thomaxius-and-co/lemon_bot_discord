@@ -7,5 +7,5 @@ async def exec(log, tx):
   for mode in ['TAIKO', 'CATCH']:
     await tx.execute("""
       INSERT INTO osupp (osuuser_id, osugamemode_id, pp, rank, changed)
-      SELECT osu_user_id, $1, NULL, NULL, current_timestamp FROM osu_pp
+      SELECT osu_user_id, $1, NULL, NULL, current_timestamp FROM osuuser
     """, mode)
