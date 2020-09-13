@@ -132,7 +132,7 @@ async def least_used_emojis(client, message):
             map(''.join,
                 [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in top_twentyfive]))
                + '\n(emoji, number of times used, times used per day)')
-        for _msg in split_message_for_Sending([msg]):
+        for _msg in split_message_for_sending([msg]):
             await message.channel.send(_msg)
 
     await sleep(.25)
@@ -142,7 +142,7 @@ async def least_used_emojis(client, message):
                                     [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in
                                      top_twentyfive_animated]))
                + '\n(emoji, number of times used, times used per day)')
-        for _msg in split_message_for_Sending([msg]):
+        for _msg in split_message_for_sending([msg]):
             await message.channel.send(_msg)
 
 
@@ -166,7 +166,7 @@ async def most_used_emojis(client, message):
                                     [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in
                                      top_twentyfive]))
                + '\n(emoji, number of times used, times used per day)')
-        for _msg in split_message_for_Sending([msg]):
+        for _msg in split_message_for_sending([msg]):
             await message.channel.send(_msg)
 
     await sleep(.25)
@@ -176,7 +176,7 @@ async def most_used_emojis(client, message):
                                     [(x[0].ljust(3), ',' + str(x[1]).rjust(3), ', ' + str(x[2]).rjust(3)) for x in
                                      top_twentyfive_animated]))
                + '\n(emoji, number of times used, times used per day)')
-        for _msg in split_message_for_Sending([msg]):
+        for _msg in split_message_for_sending([msg]):
             await message.channel.send(_msg)
 
 
