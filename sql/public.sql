@@ -157,16 +157,28 @@ CREATE TABLE reminder (
 );
 
 -- osu!
-CREATE TABLE osu_pp (
-    osu_pp_id SERIAL PRIMARY KEY,
-    osu_user_id TEXT NOT NULL,
+CREATE TABLE osugamemode (
+    osugamemode_id text not null,
+    name text not null
+);
+
+INSERT INTO osugamemode (osugamemode_id, name) VALUES
+('STANDARD', 'osu!standard'),
+('MANIA', 'osu!mania');
+
+CREATE TABLE osuuser (
+    osuuser_id TEXT NOT NULL,
     channel_id TEXT NOT NULL,
-    standard_pp NUMERIC NOT NULL,
-    standard_rank INT NOT NULL,
-    mania_pp NUMERIC NOT NULL,
-    mania_rank INT NOT NULL,
+    PRIMARY KEY (osuuser_id, channel_id)
+);
+
+CREATE TABLE osupp (
+    osuuser_id TEXT NOT NULL,
+    osugamemode_id TEXT NOT NULL REFERENCES osugamemode (osugamemode_id),
+    pp NUMERIC,
+    rank INT,
     changed TIMESTAMP NOT NULL,
-    UNIQUE (osu_user_id, channel_id) -- TODO: guild_id instead
+    PRIMARY KEY (osuuser_id, osugamemode_id)
 );
 
 -- FACEIT
@@ -211,4 +223,48 @@ CREATE TABLE withings_link (
     original JSONB NOT NULL,
     changed TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     created TIMESTAMP WITHOUT TIME ZONE DEFAULT current_timestamp NOT NULL
+);
+
+
+CREATE TABLE legendary_quotes (
+    message_id TEXT NOT NULL PRIMARY KEY REFERENCES message (message_id),
+    added_by TEXT NOT NULL REFERENCES discord_user (user_id),
+    added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE faceit_records (
+    id serial,
+    match_id TEXT NOT NULL,
+    guild_id TEXT NOT NULL,
+    faceit_guid TEXT REFERENCES faceit_player (faceit_guid) NOT NULL,
+    win boolean,
+    player_team_rank integer,
+    player_team_first_half_score integer,
+    player_team_second_half_score integer,
+    player_team_overtime_score integer,
+    started_at integer,
+    finished_at integer,
+    added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    kills integer,
+    assists integer,
+    deaths integer,
+    headshots integer,
+    headshot_percentage numeric,
+    mvps integer,
+    triple_kills integer,
+    quadro_kills integer,
+    penta_kills integer,
+    kd_ratio numeric(4,2),
+    kr_ratio numeric(4,2),
+    total_rounds integer,
+    enemy_team_first_half_score integer,
+    enemy_team_second_half_score integer,
+    enemy_team_overtime_score integer
+);
+
+CREATE TABLE faceit_records_config (
+    id serial,
+    guild_id TEXT NOT NULL,
+    reset_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reset_by TEXT NOT NULL REFERENCES discord_user (user_id)
 );

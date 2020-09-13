@@ -1,5 +1,4 @@
 import lxml.html as lh
-import pandas
 import cfscrape
 from tablemaker import tablemaker
 import logger

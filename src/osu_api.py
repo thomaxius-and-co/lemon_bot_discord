@@ -12,6 +12,8 @@ log = logger.get("OSU_API")
 
 class Mode(enum.Enum):
     Standard = "0"
+    Taiko = "1"
+    Catch = "2"
     Mania = "3"
 
 def head(xs):
