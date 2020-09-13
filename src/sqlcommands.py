@@ -789,7 +789,7 @@ async def cmd_whosaidit(client, message, _):
 
 
 async def do_whosaidit(client, message, _):
-    guild_id = message.guild.id
+    guild_id = str(message.guild.id)
     channel = message.channel
     listofspammers = await check_if_enough_messages_to_play(guild_id)
     if not listofspammers or len(listofspammers) < 5:

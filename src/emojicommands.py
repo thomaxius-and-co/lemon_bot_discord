@@ -66,9 +66,9 @@ async def get_least_used_emojis(emojilist, guild_id):
                                 , as_utc(emoji.created_at), str(emoji), guild_id)
         if result:
             for item in result:
-                count = item['count']
-                used_per_day = count / item['daystocreated']
-                emojis_with_usage.append((str(emoji), count, round(used_per_day, 3)))
+                times_used = item['times_used']
+                used_per_day = times_used / item['daystocreated']
+                emojis_with_usage.append((str(emoji), times_used, round(used_per_day, 3)))
     if not emojis_with_usage:
         return None
     least_used_top_twentyfive = sorted(emojis_with_usage, key=lambda x: x[2])[:25]
@@ -93,9 +93,9 @@ async def get_most_used_emojis(emojilist, guild_id):
                                 , as_utc(emoji.created_at), str(emoji), guild_id)
         if result:
             for item in result:
-                count = item['count']
-                used_per_day = count / item['daystocreated']
-                emojiswithusage.append((str(emoji), count, round(used_per_day, 3)))
+                times_used = item['times_used']
+                used_per_day = times_used / item['daystocreated']
+                emojiswithusage.append((str(emoji), times_used, round(used_per_day, 3)))
     if not emojiswithusage:
         return None
     most_used_top_twentyfive = sorted(emojiswithusage, key=lambda x: x[2], reverse=True)[:25]
