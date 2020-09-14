@@ -14,7 +14,6 @@ import os
 import json
 import discord
 import random
-import enchanting_chances as en
 from BingTranslator import Translator
 import asyncio
 from asyncio import sleep
@@ -103,15 +102,6 @@ def parse(input):
     if args[0] in languages and args[1] in languages:
         return args
     return [None, 'en', input]
-
-# function to call the BDO script and relay odds on enchanting.
-async def cmd_enchant(client, message, arg):
-    try:
-        raw_data = arg.split(' ')
-        enchanting_results = en.run_the_odds(raw_data[0], raw_data[1])
-        await message.channel.send(enchanting_results)
-    except Exception:
-        await message.channel.send('Use the Format --> ```!enchant target_level fail_stacks```')
 
 # Rolling the odds for a user.
 async def cmd_roll(client, message, arg):
@@ -627,7 +617,6 @@ async def wrong_channel_for_this_word(current_message_channel_id, database_chann
 
 commands = {
     'sql': cmd_sql,
-    'enchant': cmd_enchant,
     'roll': cmd_roll,
     '8ball': cmd_8ball,
     'weather': cmd_weather,
