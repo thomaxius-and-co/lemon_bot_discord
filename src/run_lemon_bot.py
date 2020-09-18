@@ -711,6 +711,8 @@ async def on_message(message):
         if message.author.bot:
             return
 
+        if "orona" in content:
+            await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
 
         censor_check_passed = await do_censored_words_check(client, message)
 
