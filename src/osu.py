@@ -57,14 +57,18 @@ async def cmd_osu_add(client, message, arg):
 
     log.info(f"Adding osu player '{user}' by user {message.author.id} ({message.author.name})")
     user_std = await api.user(user, Mode.Standard)
+    user_taiko = await api.user(user, Mode.Taiko)
+    user_catch = await api.user(user, Mode.Catch)
     user_mania = await api.user(user, Mode.Mania)
-    if not user_std or not user_mania:
+    if not user_std or not user_taiko or not user_catch or not user_mania:
         return await message.channel.send("User could not be found")
 
     try:
         async with db.transaction() as tx:
           await tx.execute("INSERT INTO osuuser (osuuser_id, channel_id) VALUES ($1, $2)", user_std.id, str(message.channel.id))
           await tx.execute("INSERT INTO osupp (osuuser_id, osugamemode_id, pp, rank, changed) VALUES ($1, 'STANDARD', $2, $3, current_timestamp)", user_std.id, user_std.pp, user_std.rank)
+          await tx.execute("INSERT INTO osupp (osuuser_id, osugamemode_id, pp, rank, changed) VALUES ($1, 'TAIKO', $2, $3, current_timestamp)", user_taiko.id, user_taiko.pp, user_taiko.rank)
+          await tx.execute("INSERT INTO osupp (osuuser_id, osugamemode_id, pp, rank, changed) VALUES ($1, 'CATCH', $2, $3, current_timestamp)", user_catch.id, user_catch.pp, user_catch.rank)
           await tx.execute("INSERT INTO osupp (osuuser_id, osugamemode_id, pp, rank, changed) VALUES ($1, 'MANIA', $2, $3, current_timestamp)", user_mania.id, user_mania.pp, user_mania.rank)
     except UniqueViolationError:
         return await message.channel.send(f"User is already added")
