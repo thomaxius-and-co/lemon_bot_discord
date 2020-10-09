@@ -6,10 +6,6 @@
     state: present
     reload: yes
 
-- apt_repository:
-    state: absent
-    repo: ppa:wireguard/wireguard
-
 - apt:
     update_cache: yes
     state: present
