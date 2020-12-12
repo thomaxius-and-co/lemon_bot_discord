@@ -6,13 +6,10 @@
   apt_repository:
     repo: "ppa:certbot/certbot"
 
-- name: Update package repos
-  apt: update_cache=yes
-
 - name: Install certbot and dependencies
-  apt: name={{ item }}
-  with_items:
-    - certbot
+  apt:
+    update_cache: yes
+    package: certbot
 
 - name: Create app directory for lets encrypt challanges
   file:

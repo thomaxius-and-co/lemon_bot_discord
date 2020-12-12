@@ -1,8 +1,6 @@
 - name: Install required packages for web
   apt:
-    name: "{{ item }}"
-  with_items:
-    - nginx
+    package: nginx
 
 - name: Configure nginx
   template:

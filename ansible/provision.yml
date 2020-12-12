@@ -51,9 +51,7 @@
     - name: Install required packages
       apt:
         update_cache: yes
-        name: "{{ packages }}"
-      vars:
-        packages:
+        package:
           - libpq-dev
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
