@@ -400,7 +400,7 @@ async def edit_channel_bitrate(bitrate):
         try:
             await sleep(0.2)
             if channel.bitrate != bitrate:
-                await client.edit_channel(channel, bitrate=bitrate)
+                await channel.edit(bitrate=bitrate)
                 succesfully_edited_channels.append(channel)
             else:
                 skipped_channels.append(channel)

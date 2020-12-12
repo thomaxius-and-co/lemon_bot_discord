@@ -30,6 +30,8 @@ function run_tests {
   REDIS_HOST="localhost" \
   REDIS_PORT="6379" \
   python -m pytest
+
+  deactivate
 }
 
 function install_pyenv {
