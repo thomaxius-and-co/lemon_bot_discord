@@ -58,6 +58,23 @@
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
 
+    - name: Install pipenv
+      shell: "{{ python_bin }} -m pip install pipenv==2020.11.15"
+
+    - copy:
+        src: "../{{ item }}"
+        dest: "/home/{{ app_name }}/{{ item }}"
+      with_items:
+        - Pipfile
+        - Pipfile.lock
+
+    - name: Install Python dependencies
+      shell: "{{ python_bin }} -m pipenv install --system --deploy"
+      args:
+        chdir: "/home/{{ app_name }}"
+      notify:
+        - restart services
+
     - name: Copy source to server
       synchronize:
         src: ../src
@@ -65,11 +82,6 @@
         delete: yes
         rsync_opts:
           - "--chown={{ app_name }}:{{ app_name }}"
-      notify:
-        - restart services
-
-    - name: Install Python dependencies
-      shell: "{{ python_bin }} -m pip install -r /home/{{ app_name }}/src/requirements.txt"
       notify:
         - restart services
 
