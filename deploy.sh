@@ -21,7 +21,7 @@ function main {
     --vault-password-file="$repo/get_vault_password.sh" \
     --extra-vars=@secrets.yml \
     --extra-vars "discord_alarm_webhook_secret_arn=$discord_alarm_webhook_secret_arn" \
-    "$rpeo/ansible/deploy.yml"
+    "$repo/ansible/deploy.yml"
 }
 
 function setup_node_version {
