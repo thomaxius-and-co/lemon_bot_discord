@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$( dirname "${BASH_SOURCE[0]}" )/scripts/common"
+source "$( dirname "${BASH_SOURCE[0]}" )/scripts/common-functions.sh"
 
 function main {
   cd "$repo"

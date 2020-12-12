@@ -2,7 +2,7 @@
 
 set -e
 
-source "$(dirname "${BASH_SOURCE[0]}")"/scripts/common
+source "$(dirname "${BASH_SOURCE[0]}")"/scripts/common-functions.sh
 
 function init_node {
   # TODO: Windows?
