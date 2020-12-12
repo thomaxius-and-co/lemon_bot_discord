@@ -23,13 +23,5 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 # Workaround for issues with pip/python 2 and UTF-8
 export LC_ALL="C.UTF-8"
 
-#DATABASE_HOST="localhost" \
-#DATABASE_PORT="5432" \
-#DATABASE_NAME="lemon" \
-#DATABASE_USERNAME="lemon" \
-#DATABASE_PASSWORD="lemon" \
-#REDIS_HOST="localhost" \
-#REDIS_PORT="6379" \
-#./test.sh
 ./journald-cloudwatch/build.sh
 ./deploy.sh

@@ -1,2 +1,0 @@
-pytest==3.6.2
-pytest-watch==4.2.0

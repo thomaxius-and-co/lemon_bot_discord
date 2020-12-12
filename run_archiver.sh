@@ -7,7 +7,7 @@ function main {
   install_python_dependencies
 
   source "$repo/secrets"
-  TZ=UTC python -u "$repo/src/run_lemon_bot.py"
+  TZ=UTC python -u "$repo/src/archiver.py"
 }
 
 main "$@"

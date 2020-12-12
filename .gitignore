@@ -4,6 +4,7 @@ secrets
 .tox/
 .venv/
 __pycache__/
+.python-version
 
 # Vagrant
 *.log

@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "==5.2.2"
 pytest-watch = "==4.2.0"
+pylint = "*"
 
 [packages]
 BingTranslator = "==0.1"

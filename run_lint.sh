@@ -6,8 +6,8 @@ function main {
   set_python_version
   install_python_dependencies
 
-  source "$repo/secrets"
-  TZ=UTC python -u "$repo/src/run_lemon_bot.py"
+  cd "$repo/src"
+  python -m pylint --rcfile "$repo/.pylintrc" ./*
 }
 
 main "$@"

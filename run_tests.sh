@@ -4,10 +4,12 @@ source "$( dirname "${BASH_SOURCE[0]}" )/scripts/common"
 function main {
   cd "$repo"
   set_python_version
+  #python -m pipenv install --dev pytest-watch
   install_python_dependencies
 
   source "$repo/secrets"
-  TZ=UTC python -u "$repo/src/run_lemon_bot.py"
+  cd "$repo"
+  python -m pytest_watch
 }
 
 main "$@"
