@@ -1,0 +1,28 @@
+- name: Add Deadsnakes PPA
+  apt_repository:
+    repo: ppa:deadsnakes/ppa
+
+- name: Remove old packages
+  apt:
+    state: absent
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - python3.7
+      - python3.7-dev
+
+- name: Install required packages
+  apt:
+    update_cache: yes
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - python3.8
+      - python3.8-dev
+      - python3.8-distutils
+
+- set_fact:
+    python_bin: "/usr/bin/python3.8"
+
+- name: Install pip
+  shell: "curl https://bootstrap.pypa.io/get-pip.py | {{ python_bin }}"

@@ -24,10 +24,7 @@
             allowedips: 10.200.200.2/32
     - include: deployment_dependencies.yml
     - include: unattended_upgrades.yml
-
-    - name: Add Deadsnakes PPA
-      apt_repository:
-        repo: ppa:deadsnakes/ppa
+    - include: python.yml
 
     - name: Create group
       group:
@@ -51,24 +48,12 @@
           - 10.200.200.1/24
     - include: redis.yml
 
-    - name: Remove old packages
-      apt:
-        state: absent
-        name: "{{ packages }}"
-      vars:
-        packages:
-          - python3.7
-          - python3.7-dev
-
     - name: Install required packages
       apt:
         update_cache: yes
         name: "{{ packages }}"
       vars:
         packages:
-          - python3.8
-          - python3.8-dev
-          - python3.8-distutils
           - libpq-dev
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
@@ -83,11 +68,8 @@
       notify:
         - restart services
 
-    - name: Install pip
-      shell: "curl https://bootstrap.pypa.io/get-pip.py | python3.8"
-
     - name: Install Python dependencies
-      shell: "python3.8 -m pip install -r /home/{{ app_name }}/src/requirements.txt"
+      shell: "{{ python_bin }} -m pip install -r /home/{{ app_name }}/src/requirements.txt"
       notify:
         - restart services
 
