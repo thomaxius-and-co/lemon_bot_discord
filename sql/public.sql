@@ -158,13 +158,15 @@ CREATE TABLE reminder (
 
 -- osu!
 CREATE TABLE osugamemode (
-    osugamemode_id text not null,
+    osugamemode_id text primary key,
     name text not null
 );
 
 INSERT INTO osugamemode (osugamemode_id, name) VALUES
 ('STANDARD', 'osu!standard'),
-('MANIA', 'osu!mania');
+('MANIA', 'osu!mania'),
+('TAIKO', 'osu!taiko'),
+('CATCH', 'osu!catch');
 
 CREATE TABLE osuuser (
     osuuser_id TEXT NOT NULL,
