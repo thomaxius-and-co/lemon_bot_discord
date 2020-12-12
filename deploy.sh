@@ -9,13 +9,12 @@ function main {
   export AWS_REGION="eu-west-1"
   export AWS_DEFAULT_REGION="$AWS_REGION"
 
-  cd $repo
-
   setup_node_version
   setup_python_for_ansible
 
   discord_alarm_webhook_secret_arn="$(aws secretsmanager describe-secret --secret-id discord-alarm-webhook --query ARN --output text)"
 
+  cd "$repo/ansible"
   ANSIBLE_CONFIG="$repo/ansible/ansible.cfg" \
   ANSIBLE_LIBRARY="$repo/ansible/library" \
   ansible-playbook \
