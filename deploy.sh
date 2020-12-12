@@ -18,10 +18,10 @@ function main {
   ANSIBLE_CONFIG="$repo/ansible/ansible.cfg" \
   ANSIBLE_LIBRARY="$repo/ansible/library" \
   ansible-playbook \
-    --vault-password-file=./get_vault_password.sh \
-    --extra-vars=@ansible/secrets.yml \
+    --vault-password-file="$repo/get_vault_password.sh" \
+    --extra-vars=@secrets.yml \
     --extra-vars "discord_alarm_webhook_secret_arn=$discord_alarm_webhook_secret_arn" \
-    ansible/deploy.yml
+    "$rpeo/ansible/deploy.yml"
 }
 
 function setup_node_version {
