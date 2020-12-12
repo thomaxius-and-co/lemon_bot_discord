@@ -10,7 +10,7 @@ add-apt-repository -y ppa:deadsnakes/ppa
 apt-get -q update
 
 apt-get -q install -y \
-  python3.8 python3.8-dev \
+  python3.9 python3.9-dev \
   libxml2-dev libxslt1-dev zlib1g-dev \
   curl zip \
   build-essential git python-minimal python-pip findutils python3-minimal python3-dev
