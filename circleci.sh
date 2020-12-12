@@ -2,18 +2,10 @@
 source "$( dirname "${BASH_SOURCE[0]}" )/scripts/common-functions.sh"
 
 function main {
-  # For add-apt-repository
-  apt-get -q update
-  apt-get -q install -y software-properties-common
-
-  add-apt-repository -y ppa:deadsnakes/ppa
   apt-get -q update
 
   apt-get -q install -y \
-    python3.9 python3.9-dev \
-    libxml2-dev libxslt1-dev zlib1g-dev \
-    curl zip \
-    build-essential git python-minimal python-pip findutils python3-minimal python3-dev
+    libxslt1-dev zip git findutils
 
   install_pyenv
 
@@ -41,6 +33,12 @@ function run_tests {
 }
 
 function install_pyenv {
+  # https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+  sudo apt-get install --no-install-recommends \
+    make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
+    libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev \
+    libxmlsec1-dev libffi-dev liblzma-dev
+
   curl https://pyenv.run | bash
   export PYENV_ROOT="$HOME/.pyenv"
   export PATH="$PYENV_ROOT/bin:$PATH"
