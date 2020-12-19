@@ -4,7 +4,7 @@ def register(client):
   }
 
 pastas = {
-  "suihkun": "Nyt täytyy kyllä myöntää etten jaksanut lukea ollenkaan ja veikkaan ongelmasi olevan jotain täyttä hevonvitunpaskaa.\n\nMene suihkuun ja nukkumaan. Huomenna töihin. Muuta neuvoa ei tule.",
+  "suihkuun": "Nyt täytyy kyllä myöntää etten jaksanut lukea ollenkaan ja veikkaan ongelmasi olevan jotain täyttä hevonvitunpaskaa.\n\nMene suihkuun ja nukkumaan. Huomenna töihin. Muuta neuvoa ei tule.",
 }
 
 async def cmd_pasta(client, message, pasta_name):
