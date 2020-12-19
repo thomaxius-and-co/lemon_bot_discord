@@ -704,6 +704,8 @@ async def on_message(message):
 
         if "orona" in content:
             await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
+        elif len(content) > 1000 and "suihkuun" in pasta.pastas:
+            await message.channel.send(pasta.pastas.get("suihkuun"))
 
         censor_check_passed = await do_censored_words_check(client, message)
 
