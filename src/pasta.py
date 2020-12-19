@@ -1,5 +1,4 @@
 def register(client):
-  util.start_task_thread(task(client))
   return {
     "pasta": cmd_pasta,
   }
