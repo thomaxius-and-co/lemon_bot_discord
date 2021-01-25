@@ -1,5 +1,5 @@
 - set_fact:
-    certbot_email: "rce@rce.fi"
+    certbot_email: "discord-bot@rce.fi"
     certbot_domain: "discord.rce.fi"
 
 - name: Add certbot PPA
