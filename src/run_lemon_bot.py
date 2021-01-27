@@ -40,6 +40,7 @@ import logger
 import faceit_main
 import muutto
 import statistics
+import crypto
 import status
 import emojicommands
 import lossimpsonquotes
@@ -83,10 +84,11 @@ async def main():
     # Database schema has to be initialized before running the bot
     await db.initialize_schema()
     await trophies.main()
+    await crypto.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
                    faceit_main, muutto, statistics, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek, ence_matches, mememaker, corona, kansallisgalleria, pasta]:
+                   groom, shrek, ence_matches, mememaker, corona, kansallisgalleria, pasta, crypto]:
         commands.update(module.register(client))
 
     try:
