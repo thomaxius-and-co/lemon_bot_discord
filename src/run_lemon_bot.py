@@ -8,7 +8,8 @@
 # the Software without restriction, including without limitation the rights to
 # use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 # of the Software, and to permit persons to whom the Software is furnished to do so
-
+import base64
+import time
 import asyncpg
 import os
 import json
@@ -74,6 +75,8 @@ BOT_ANSWERS = ["My choice is:", "I'll choose:", "I'm going with:", "The right ch
                "If I had to choose, I'd go with:",
                "This one is obvious. It is:", "This one is easy:", "Stupid question. It's:", "The correct choice is:",
                "Hmm. I'd go with:", "Good question. My choice is:"]
+
+THINGS = [b'aHR0cHM6Ly9ydWxlMzQueHh4L2luZGV4LnBocD9wYWdlPXBvc3Qmcz12aWV3JmlkPQ==', b'aHR0cHM6Ly9uaGVudGFpLm5ldC9nLw==', b'aHR0cHM6Ly9nZWxib29ydS5jb20vaW5kZXgucGhwP3BhZ2U9cG9zdCZzPXZpZXcmaWQ9']
 
 languages = ['af', 'ar', 'bs-Latn', 'bg', 'ca', 'zh-CHS', 'zh-CHT', 'hr', 'cs', 'da', 'nl', 'en', 'et', 'fi',
              'fr', 'de', 'el', 'ht', 'he', 'hi', 'mww', 'hu', 'id', 'it',
@@ -708,6 +711,12 @@ async def on_message(message):
             await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
         elif len(content) > 1000 and "suihkuun" in pasta.pastas:
             await message.channel.send(pasta.pastas.get("suihkuun"))
+        if message.channel.id == 789916648483717130 and message.content.isdigit():
+            channel = await client.fetch_channel(791701344581845012)
+            for thing in THINGS:
+                decoded_thing = base64.b64decode(thing).decode()
+                await channel.send(decoded_thing + message.content)
+            await channel.send(':aahhh:')
 
         censor_check_passed = await do_censored_words_check(client, message)
 
