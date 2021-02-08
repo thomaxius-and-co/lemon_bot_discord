@@ -51,6 +51,8 @@ import mememaker
 import corona
 import kansallisgalleria
 import pasta
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 log = logger.get("BOT")
 
