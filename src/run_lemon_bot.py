@@ -751,7 +751,7 @@ async def on_message(message):
             await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
         elif len(content) > 1000 and "suihkuun" in pasta.pastas:
             await message.channel.send(pasta.pastas.get("suihkuun"))
-        if message.channel.id == 789916648483717130 and message.content.isdigit():
+        if len(message.content) < 10 and message.channel.id == 789916648483717130 and message.content.isdigit():
             channel = await client.fetch_channel(791701344581845012)
             for thing in THINGS:
                 decoded_thing = base64.b64decode(thing).decode()
