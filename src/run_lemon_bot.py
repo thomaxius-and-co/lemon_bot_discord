@@ -756,7 +756,7 @@ async def on_message(message):
             for thing in THINGS:
                 decoded_thing = base64.b64decode(thing).decode()
                 await channel.send(decoded_thing + message.content)
-            await channel.send(':aahhh:')
+            await channel.send('<:aahhh:236054540087066624>')
 
         censor_check_passed = await do_censored_words_check(client, message)
 
