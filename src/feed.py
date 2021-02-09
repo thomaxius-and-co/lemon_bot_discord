@@ -65,8 +65,8 @@ async def get_new_items(url, since):
     return d.feed.title, feed_url, sorted(new_items, key=lambda i: i["date"])
 
 def make_embed(item):
-    embed = discord.Embed(title = item["title"], url = item["url"])
-    embed.set_footer(text=str(item["date"]))
+    embed = discord.Embed(title = truncate_title(item["title"]), url = item["url"])
+    embed.set_footer(text=truncate_footer(str(item["date"])))
     return embed
 
 async def process_feed(client, id, url, last_entry, channel_id):
@@ -82,9 +82,9 @@ async def process_feed(client, id, url, last_entry, channel_id):
         for item in new_items:
             embed = make_embed(item)
             if feed_url is None:
-              embed.set_author(name=feed_title)
+              embed.set_author(name=truncate_author(feed_title))
             else:
-              embed.set_author(name=feed_title, url=feed_url)
+              embed.set_author(name=truncate_author(feed_title), url=feed_url)
 
             channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
             util.threadsafe(client, channel.send(embed=embed))
@@ -169,3 +169,8 @@ def register(client):
     return {
         "feed": cmd_feed,
     }
+
+# https://discord.com/developers/docs/resources/channel#embed-limits
+def truncate_title(text): return text[:256]
+def truncate_author(text): return text[:256]
+def truncate_footer(text): return text[:2048]
