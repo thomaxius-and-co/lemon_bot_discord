@@ -757,7 +757,11 @@ async def on_message(message):
                 decoded_thing = base64.b64decode(thing).decode()
                 await channel.send(decoded_thing + message.content)
             await channel.send('<:aahhh:236054540087066624>')
-
+            
+        if message.author.id == 210182155928731649 and 'timuliigan salainen viesti' in content and message.channel.id == 141649840923869184:
+            channel = message.channel
+            await message.delete()
+            await channel.send('You need to have a Timuliiga account to be able to view this message.')
         censor_check_passed = await do_censored_words_check(client, message)
 
         cmd, arg = command.parse(content)
