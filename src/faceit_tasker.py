@@ -343,18 +343,18 @@ def create_player_obj_old_api(rank, player_dict):
             player_dict.get("player_id"),
             player_dict.get("csgo_skill_level"),
             rank,
-            int(player_dict.get("player_stats").get("Kills")),
-            int(player_dict.get("player_stats").get("Assists")),
-            int(player_dict.get("player_stats").get("Deaths")),
-            int(player_dict.get("player_stats").get("Headshot")),
-            int(player_dict.get("player_stats").get("Headshots %")),
-            float(player_dict.get("player_stats").get("K/D Ratio")),
-            float(player_dict.get("player_stats").get("K/R Ratio")),
-            int(player_dict.get("player_stats").get("MVPs")),
-            int(player_dict.get("player_stats").get("Penta Kills")),
-            int(player_dict.get("player_stats").get("Quadro Kills")),
-            int(player_dict.get("player_stats").get("Triple Kills")),
-            int(player_dict.get("player_stats").get("Result"))
+            int(player_dict.get("player_stats").get("Kills", 0)),
+            int(player_dict.get("player_stats").get("Assists", 0)),
+            int(player_dict.get("player_stats").get("Deaths", 0)),
+            int(player_dict.get("player_stats").get("Headshot", 0)),
+            int(player_dict.get("player_stats").get("Headshots %", 0)),
+            float(player_dict.get("player_stats").get("K/D Ratio", 0)),
+            float(player_dict.get("player_stats").get("K/R Ratio", 0)),
+            int(player_dict.get("player_stats").get("MVPs", 0)),
+            int(player_dict.get("player_stats").get("Penta Kills", 0)),
+            int(player_dict.get("player_stats").get("Quadro Kills", 0)),
+            int(player_dict.get("player_stats").get("Triple Kills", 0)),
+            int(player_dict.get("player_stats").get("Result", 0))
         )
 
 class PlayerStats:
