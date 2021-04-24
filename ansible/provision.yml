@@ -67,7 +67,7 @@
         - Pipfile.lock
 
     - name: Install Python dependencies
-      shell: "{{ python_bin }} -m pipenv install --system --deploy"
+      shell: "{{ python_bin }} -m pipenv install --deploy"
       args:
         chdir: "/home/{{ app_name }}"
       notify:
