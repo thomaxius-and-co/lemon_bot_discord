@@ -55,6 +55,7 @@
           - libpq-dev
           - libxml2-dev # for lxml
           - libxslt1-dev # for lxml
+          - zlib1g-dev # for lxml
 
     - name: Install pipenv
       shell: "{{ python_bin }} -m pip install pipenv==2020.11.15"
