@@ -63,12 +63,15 @@
     - copy:
         src: "../{{ item }}"
         dest: "/home/{{ app_name }}/{{ item }}"
+        owner: "{{ app_name }}"
+        group: "{{ app_name }}"
       with_items:
         - Pipfile
         - Pipfile.lock
 
     - name: Install Python dependencies
       shell: "{{ python_bin }} -m pipenv install --deploy"
+      become: "{{ app_name }}"
       args:
         chdir: "/home/{{ app_name }}"
       notify:
