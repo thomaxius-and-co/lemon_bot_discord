@@ -31,7 +31,7 @@
     "express": "4.16.3",
     "express-session": "1.15.6",
     "moment": "2.22.2",
-    "moment-timezone": "0.5.17",
+    "moment-timezone": "0.5.33",
     "npm-check": "^5.9.2",
     "passport": "0.4.0",
     "passport-discord": "0.1.3",
