@@ -30,7 +30,7 @@
     "connect-redis": "3.3.3",
     "express": "4.17.1",
     "express-session": "1.15.6",
-    "moment": "2.22.2",
+    "moment": "2.29.1",
     "moment-timezone": "0.5.33",
     "npm-check": "^5.9.2",
     "passport": "0.4.1",
