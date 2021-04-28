@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6311617720de0746441ad71ae3428d543a040ba6ca7b764ea3f814817b58db3d"
+            "sha256": "f1a194bed50d9f670fc8a4feac2ce7923f44901b1e3ddb973a149f0e3d856846"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -219,19 +219,12 @@
             ],
             "version": "==2.10"
         },
-        "inflect": {
+        "jaraco.context": {
             "hashes": [
-                "sha256:41a23f6788962e9775e40e2ecfb1d6455d02de315022afeedd3c5dc070019d73",
-                "sha256:42560be16af702a21d43d59427f276b5aed79efb1ded9b713468c081f4353d10"
+                "sha256:1dd2a6c13a1be2ea9bd28b448ca3dfff6a20297d511ff13c495a001002fcf436",
+                "sha256:4cdf4a1a1ede942e926fb75951769972191966cef91c67131afbc163a69bf585"
             ],
-            "version": "==5.3.0"
-        },
-        "jaraco.itertools": {
-            "hashes": [
-                "sha256:6267875df924466f08b3eb2c7152301b3a463990af9141b99cf5f82211b122a1",
-                "sha256:6939e47806a39330a9f9772bf9ea910da39abc159ff2579d454a763358553439"
-            ],
-            "version": "==6.0.1"
+            "version": "==4.0.0"
         },
         "lxml": {
             "hashes": [
@@ -354,13 +347,6 @@
             ],
             "version": "==1.0.0"
         },
-        "six": {
-            "hashes": [
-                "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259",
-                "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"
-            ],
-            "version": "==1.15.0"
-        },
         "soupsieve": {
             "hashes": [
                 "sha256:052774848f448cf19c7e959adf5566904d525f33a3f8b6ba6f6f8f26ec7de0cc",
@@ -413,11 +399,11 @@
         },
         "wolframalpha": {
             "hashes": [
-                "sha256:35c68635c9460a25f3e7b3b3b5498d2d7a4d05667f7e30a3007b0e1c611f2599",
-                "sha256:e1eef0cbee3cd5387cae8f112a5464e951161facf1e37f61ca98d77e7a4c01fa"
+                "sha256:159f5d8fd31e4a734a34a9f3ae8aec4e9b2ef392607f82069b4a324b6b1831d5",
+                "sha256:38bf27654039ec85cc62c199dd319b6a4d6a7badfed7af1cd161f081afdb57c0"
             ],
             "index": "pypi",
-            "version": "==3.0.1"
+            "version": "==5.0.0"
         },
         "xmltodict": {
             "hashes": [
