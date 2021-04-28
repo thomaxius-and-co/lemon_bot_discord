@@ -33,7 +33,7 @@
     "moment": "2.22.2",
     "moment-timezone": "0.5.33",
     "npm-check": "^5.9.2",
-    "passport": "0.4.0",
+    "passport": "0.4.1",
     "passport-discord": "0.1.4",
     "pg-promise": "10.10.1",
     "react": "16.4.1",
