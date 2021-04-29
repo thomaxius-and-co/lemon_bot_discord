@@ -1,14 +1,15 @@
 const passport = require("passport")
 const DiscordStrategy = require("passport-discord").Strategy
 const session = require("express-session")
+const redis = require("redis")
 const RedisStore = require("connect-redis")(session)
 
-const redisOptions = {
+const redisClient = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
-  prefix: "web:session:",
-  logErrors: true,
-}
+})
+//const redisOptions = {
+//}
 
 const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || "").split(",")
 const ALLOWED_WHOSAIDIT_USERIDS = ADMIN_USER_IDS.concat([
@@ -82,7 +83,10 @@ const init = app => {
   }))
 
   app.use(session({
-    store: new RedisStore(redisOptions),
+    store: new RedisStore({
+      client: redisClient,
+      prefix: "web:session:",
+    }),
     secret: process.env.WEB_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
