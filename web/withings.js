@@ -1,6 +1,6 @@
 const request = require('request-promise')
 const {db} = require('./db')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 const API_HOSTNAME = `wbsapi.withings.net`
 const AUTH_HOSTNAME = `account.withings.com`
