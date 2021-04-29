@@ -25,7 +25,7 @@
     "babel-preset-react": "6.24.1",
     "babelify": "8.0.0",
     "bluebird": "3.7.2",
-    "browserify": "16.2.2",
+    "browserify": "17.0.0",
     "c3": "0.7.20",
     "connect-redis": "3.3.3",
     "express": "4.17.1",
