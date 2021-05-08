@@ -36,7 +36,7 @@ function setup_node_version {
 
 function setup_python_for_ansible {
   pushd "$repo/ansible"
-  eval "$(pyenv init -)"
+  eval "$(pyenv init --path)"
   pyenv install --skip-existing "$ANSIBLE_PYTHON_VERSION"
   pyenv local "$ANSIBLE_PYTHON_VERSION"
 

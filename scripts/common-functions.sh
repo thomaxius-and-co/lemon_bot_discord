@@ -9,7 +9,7 @@ function set_python_version {
   require_command pyenv
 
   pushd "$repo"
-  eval "$( pyenv init - )"
+  eval "$( pyenv init --path )"
   pyenv install --skip-existing "$PYTHON_VERSION"
   pyenv local "$PYTHON_VERSION"
   popd
