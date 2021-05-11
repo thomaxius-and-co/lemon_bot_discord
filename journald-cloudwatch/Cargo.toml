@@ -7,4 +7,4 @@ authors = ["Henry Heikkinen <rce@rce.fi>"]
 libc = "0.2.32"
 regex = "0.2.2"
 rusoto_core = "0.28.0"
-rusoto_logs = "0.28.0"
+rusoto_logs = "0.31.0"
