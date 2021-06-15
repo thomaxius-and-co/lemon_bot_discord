@@ -747,7 +747,9 @@ async def on_message(message):
         if message.author.bot:
             return
 
-        if "orona" in content:
+        if "rokot" in content:
+            await message.channel.send("Heh heh, kohta voidaankin taas kätellä, kun on nämä rokotteet")
+        elif "orona" in content:
             await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
         elif len(content) > 1000 and "suihkuun" in pasta.pastas:
             await message.channel.send(pasta.pastas.get("suihkuun"))
