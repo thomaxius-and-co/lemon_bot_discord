@@ -118,11 +118,11 @@ TEMPLATES_LAIVA = {
 }
 
 TEMPLATES_LAIVA_SEASON_TWO = {
-    "theme": "The Laiva Season 2 Episode I: I survived Corona",
-    "happening": "The Laiva Season 2 is currently happening!!",
-    "ended": lambda time_ago: f"**Last laiva (The Laiva Season 2) ended:** {time_ago} ago, **next laiva:** TBA.",
+    "theme": "The Laiva Season 2 Episode III: Åland",
+    "happening": "The Laiva Season 2 Episode III is currently happening!!",
+    "ended": lambda time_ago: f"**Last laiva (The Laiva Season 2 Episode III) ended:** {time_ago} ago, **next laiva:** TBA.",
     "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
-    "over": "The Laiva Season 2 is already over, but paha olo remains.",
+    "over": "The Laiva Season 2 Episode III is already over, but paha olo remains.",
 }
 
 memes_fireball = list(map(parse_image_id, [
@@ -173,8 +173,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2021, 6, 4, 16, 0)))
-        laivaover = to_utc(as_helsinki(datetime(2021, 6, 6, 11, 0)))
+        laiva = to_utc(as_helsinki(datetime(2021, 6, 28, 16, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2021, 7, 2, 13, 45)))
 
         now = as_utc(datetime.now())
 
