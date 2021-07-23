@@ -53,6 +53,7 @@ import corona
 import kansallisgalleria
 import pasta
 import signal
+import bot_replies
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -747,21 +748,17 @@ async def on_message(message):
         if message.author.bot:
             return
 
-        if "rokot" in content.lower():
-            await message.channel.send("Heh heh, kohta voidaankin taas kätellä, kun on nämä rokotteet")
-        elif "orona" in content.lower():
-            await message.channel.send("Heh heh, nyt ei voidakaan kätellä, kun on tämä korona")
-        elif "enään" in content.lower():
-            await message.channel.send("Yleiskielessä käytetään muotoa enää eikä länsimurteissa tavallista muotoa enään.")
-        elif len(content) > 1000 and "suihkuun" in pasta.pastas:
-            await message.channel.send(pasta.pastas.get("suihkuun"))
+        replies = bot_replies.replies_by_content(content)
+        for reply in replies:
+            await message.channel.send(reply)
+
         if len(message.content) < 10 and message.channel.id == 789916648483717130 and message.content.isdigit():
             channel = await client.fetch_channel(791701344581845012)
             for thing in THINGS:
                 decoded_thing = base64.b64decode(thing).decode()
                 await channel.send(decoded_thing + message.content)
             await channel.send('<:aahhh:236054540087066624>')
-            
+
         if message.author.id == 210182155928731649 and 'timuliigan salainen viesti' in content and message.channel.id == 141649840923869184:
             channel = message.channel
             await message.delete()
