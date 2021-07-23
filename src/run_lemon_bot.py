@@ -447,10 +447,10 @@ async def cmd_edit_channel_kbps(client, message, input):
     num_of_succesfully_edited_channels, num_of_unsuccesfully_edited_channels, num_of_skipped_channels = await edit_channel_bitrate(
         int(input))
     msg = ("Changed bitrate of %s channels, skipped %s channel(s)." % (
-    num_of_succesfully_edited_channels, num_of_skipped_channels)) if (num_of_unsuccesfully_edited_channels == 0) \
+        num_of_succesfully_edited_channels, num_of_skipped_channels)) if (num_of_unsuccesfully_edited_channels == 0) \
         else (
-                "Changed bitrate of %s channel(s), skipped %s, failed %s\n(The bot is probably lacking manage permissions for some channel(s)."
-                % (num_of_succesfully_edited_channels, num_of_skipped_channels, num_of_unsuccesfully_edited_channels))
+            "Changed bitrate of %s channel(s), skipped %s, failed %s\n(The bot is probably lacking manage permissions for some channel(s)."
+            % (num_of_succesfully_edited_channels, num_of_skipped_channels, num_of_unsuccesfully_edited_channels))
     await message.channel.send(msg)
 
 
@@ -738,6 +738,7 @@ async def upsert_users(users):
                     name = EXCLUDED.name,
                     raw = EXCLUDED.raw
             """, user.get("id"), user.get("username"), json.dumps(user))
+
 
 
 # Dispacther for messages from the users.
