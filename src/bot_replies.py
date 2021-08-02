@@ -1,7 +1,9 @@
 import pasta
 
 
-GENERAL_M_MISTAKE_REPLY = "Murteista johtuen 'niinpä', 'kunpa', 'onpa' kirjoitetaan usein virheellisesti käyttäen M-kirjainta N-kirjaimen sijaan.",
+GENERAL_M_MISTAKE_REPLY = "Murteista johtuen 'niinpä', 'kunpa', 'onpa' kirjoitetaan usein virheellisesti käyttäen " \
+                          "M-kirjainta N-kirjaimen sijaan."
+
 REPLIES_BY_WORD = {
     'rokot': "Heh heh, kohta voidaankin taas kätellä, kun on nämä rokotteet.",
     'orona': "Heh heh, nyt ei voidakaan kätellä, kun on tämä korona.",
@@ -20,8 +22,10 @@ def replies_by_content(content: str) -> list:
     replies = []
     if len(content) > 1000 and "suihkuun" in pasta.pastas:
         replies.append(pasta.pastas.get("suihkuun"))
-    for word in REPLIES_BY_WORD.keys():
-        if word in content.lower():
-            replies.append(REPLIES_BY_WORD[word])
-            break
+
+    for matched_word in REPLIES_BY_WORD.keys():
+        for word in content.lower().split():
+            if word.startswith(matched_word) or word.endswith(matched_word):
+                replies.append(REPLIES_BY_WORD[matched_word])
+                break
     return replies
