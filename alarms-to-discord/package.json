@@ -1,6 +1,6 @@
 {
   "name": "alarms-to-discord",
   "dependencies": {
-    "aws-sdk": "2.954.0"
+    "aws-sdk": "2.986.0"
   }
 }
