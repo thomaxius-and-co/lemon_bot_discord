@@ -20,8 +20,8 @@ def delta_to_tuple(delta):
     return (days, hours, minutes, seconds)
 
 async def cmd_lan(client, message, query):
-    lan = to_utc(as_helsinki(datetime(2019, 11, 22, 16, 0)))
-    lan_over = to_utc(as_helsinki(datetime(2019, 11, 24, 14, 30)))
+    lan = to_utc(as_helsinki(datetime(2021, 11, 26, 16, 0)))
+    lan_over = to_utc(as_helsinki(datetime(2021, 11, 28, 14, 30)))
     now = as_utc(datetime.now())
 
     if (lan < now) and (lan_over > now):
