@@ -9,7 +9,7 @@ ALLOWED_CHANNELS = [359308335184609281, 141649840923869184, 244452088279465985]
 
 def register(client):
     return {
-        "laiva": mk_cmd_laiva(TEMPLATES_LAIVA_SEASON_TWO),
+        "laiva": mk_cmd_laiva(TEMPLATES_LAUTTA),
         #"fireball": mk_cmd_laiva(TEMPLATES_FIREBALL),
         #"laivalle": mk_cmd_laiva(TEMPLATES_LAIVA),
     }
@@ -117,6 +117,14 @@ TEMPLATES_LAIVA = {
     "over": "Laiva is already over, but paha olo remains.",
 }
 
+TEMPLATES_LAUTTA = {
+    "theme": "The lautta to replace laivas",
+    "happening": "Lautta is currently happening!!",
+    "ended": lambda time_ago: f"**Last lautta ended:** {time_ago} ago, **next lautta:** TBA.",
+    "meme_text": lambda days_to_go: "**Lautta meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
+    "over": "Lautta is already over, but paha olo remains.",
+}
+
 TEMPLATES_LAIVA_SEASON_TWO = {
     "theme": "The Laiva Season 2 Episode III: Åland",
     "happening": "The Laiva Season 2 Episode III is currently happening!!",
@@ -173,8 +181,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2021, 6, 28, 16, 0)))
-        laivaover = to_utc(as_helsinki(datetime(2021, 7, 2, 13, 45)))
+        laiva = to_utc(as_helsinki(datetime(2021, 8, 21, 16, 0)))
+        laivaover = to_utc(as_helsinki(datetime(2021, 8, 21, 21, 0)))
 
         now = as_utc(datetime.now())
 
