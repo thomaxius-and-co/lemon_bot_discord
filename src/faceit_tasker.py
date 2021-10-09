@@ -324,7 +324,7 @@ def create_player_obj(rank, player_dict):
             int(player_dict.get("player_stats").get("Kills", 0)),
             int(player_dict.get("player_stats").get("Assists", 0)),
             int(player_dict.get("player_stats").get("Deaths", 0)),
-            int(player_dict.get("player_stats").get("Headshot", 0)),
+            int(player_dict.get("player_stats").get("Headshots", 0)),
             int(player_dict.get("player_stats").get("Headshots %", 0)),
             float(player_dict.get("player_stats").get("K/D Ratio", 0)),
             float(player_dict.get("player_stats").get("K/R Ratio", 0)),
