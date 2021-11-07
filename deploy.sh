@@ -35,7 +35,7 @@ function setup_node_version {
 }
 
 function setup_python_for_ansible {
-  export ANSIBLE_PYTHON_VERSION="3.10.0"
+  export ANSIBLE_PYTHON_VERSION="3.9.1"
   pushd "$repo/ansible"
   eval "$(pyenv init --path)"
   pyenv install --skip-existing "$ANSIBLE_PYTHON_VERSION"
