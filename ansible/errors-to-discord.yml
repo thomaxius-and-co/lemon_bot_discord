@@ -2,6 +2,7 @@
   iam_role:
     state: present
     name: "{{ prefix }}-errors-to-discord-lambda-role"
+    purge_policies: yes
     assume_role_policy_document: >
       {
         "Version": "2008-10-17",
@@ -52,7 +53,7 @@
       }
 
 - name: Create errors to Discord lambda
-  aws_lambda:
+  lemon_aws_lambda:
     name: "{{ prefix }}-errors-to-discord-lambda"
     path: "../errors-to-discord"
     role: "{{ errors_to_discord_lambda_role_out.iam_role.arn }}"

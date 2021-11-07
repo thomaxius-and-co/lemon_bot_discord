@@ -58,7 +58,7 @@
           - zlib1g-dev # for lxml
 
     - name: Install pipenv
-      shell: "{{ python_bin }} -m pip install pipenv==2020.11.15"
+      shell: "{{ python_bin }} -m pip install pipenv==2021.11.5.post0"
 
     - copy:
         src: "../{{ item }}"
@@ -71,7 +71,8 @@
 
     - name: Install Python dependencies
       shell: "{{ python_bin }} -m pipenv install --deploy"
-      become: "{{ app_name }}"
+      become: yes
+      become_user: "{{ app_name }}"
       args:
         chdir: "/home/{{ app_name }}"
       notify:

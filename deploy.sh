@@ -4,8 +4,6 @@ set -o errexit -o nounset -o pipefail
 repo="$( cd "$( dirname "$0" )" && pwd )"
 
 function main {
-  export ANSIBLE_PYTHON_VERSION="2.7.17"
-
   export AWS_REGION="eu-west-1"
   export AWS_DEFAULT_REGION="$AWS_REGION"
 
@@ -25,22 +23,25 @@ function main {
 }
 
 function setup_node_version {
+  local -r node_version="14"
+
   pushd "$repo"
   set +o errexit +o nounset
   export NVM_DIR="$repo/.nvm"
   source "$repo/web/nvm.sh"
-  nvm install
+  nvm use "${node_version}" || nvm install "${node_version}"
   set -o errexit -o nounset
   popd
 }
 
 function setup_python_for_ansible {
+  export ANSIBLE_PYTHON_VERSION="3.10.0"
   pushd "$repo/ansible"
   eval "$(pyenv init --path)"
   pyenv install --skip-existing "$ANSIBLE_PYTHON_VERSION"
   pyenv local "$ANSIBLE_PYTHON_VERSION"
 
-  python -m pip install pipenv
+  python -m pip install pipenv==2021.11.5.post0
   python -m pipenv install
   source "$(python -m pipenv --venv)/bin/activate"
   popd

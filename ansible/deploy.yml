@@ -18,6 +18,7 @@
         state: present
         name: "{{ prefix }}-alarms-to-discord-lambda-role"
         assume_role_policy_document: "{{ lookup('template', 'alarms-to-discord-lambda-assume-role-policy.json') }}"
+        purge_policies: yes
       register: lambda_role_out
 
     - name: Give the Lambda permissions to write logs and read Discord webhook
@@ -59,7 +60,7 @@
           }
 
     - name: Create alarms to Discord lambda
-      aws_lambda:
+      lemon_aws_lambda:
         name: "{{ prefix }}-alarms-to-discord-lambda"
         path: "../alarms-to-discord"
         role: "{{ lambda_role_out.iam_role.arn }}"
@@ -70,7 +71,7 @@
     - include: errors-to-discord.yml
 
     - name: Create SNS topic for alarms
-      fixed_sns_topic:
+      community.aws.sns_topic:
         state: present
         name: "{{ prefix }}-alarms-sns-topic"
         subscriptions:
@@ -101,7 +102,7 @@
         namespace: "AWS/Logs"
         metric: "IncomingLogEvents"
         statistic: "Sum"
-        comparison: "<="
+        comparison: "LessThanOrEqualToThreshold"
         threshold: 0
         period: 60
         evaluation_periods: 1
@@ -120,37 +121,39 @@
 
   vars:
     droplet_name: lemon-bot
-    droplet_size: s-1vcpu-1gb
+    droplet_size: s-1vcpu-2gb
     droplet_region: fra1 # Frankfurt 1
     droplet_image: ubuntu-16-04-x64
     ssh_key_name: lemon-bot
 
   tasks:
     - name: Add SSH key to DigitalOcean
-      digital_ocean:
-        api_token: "{{ secrets.digital_ocean_api_token }}"
-        command: ssh
+      community.digitalocean.digital_ocean_sshkey:
+        oauth_token: "{{ secrets.digital_ocean_api_token }}"
         name: "{{ ssh_key_name }}"
         ssh_pub_key: "{{ ssh_key.public }}"
       register: do_ssh_key
 
     - name: Create droplet
-      digital_ocean:
-        api_token: "{{ secrets.digital_ocean_api_token }}"
-        command: droplet
+      community.digitalocean.digital_ocean_droplet:
+        oauth_token: "{{ secrets.digital_ocean_api_token }}"
         name: "{{ droplet_name }}"
         unique_name: yes
-        size_id: "{{ droplet_size }}"
-        region_id: "{{ droplet_region }}"
-        image_id: "{{ droplet_image }}"
-        ssh_key_ids: "{{ do_ssh_key.ssh_key.id }}"
+        size: "{{ droplet_size }}"
+        region: "{{ droplet_region }}"
+        image: "{{ droplet_image }}"
+        ssh_keys:
+          - "{{ do_ssh_key.data.ssh_key.id }}"
         monitoring: yes
-        backups_enabled: yes
+        private_networking: yes
+        backups: yes
       register: droplet
+
+    - debug: var=droplet
 
     - name: Add new droplet to host group
       add_host:
-        hostname: "{{ droplet.droplet.ip_address }}"
+        hostname: "{{ droplet.data.ip_address }}"
         groupname: server
       changed_when: False
 

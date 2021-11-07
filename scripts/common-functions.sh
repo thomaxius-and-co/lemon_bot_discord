@@ -2,6 +2,7 @@
 set -o errexit -o nounset -o pipefail
 readonly repo="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
+readonly PIPENV_VERSION="2021.11.5.post0"
 readonly PYTHON_VERSION="3.9.1"
 
 function set_python_version {
@@ -17,7 +18,7 @@ function set_python_version {
 
 function install_python_dependencies {
   pushd "$repo"
-  python -m pip install pipenv==2020.11.15
+  python -m pip install pipenv==${PIPENV_VERSION}
   python -m pipenv install --dev > /dev/null
   source "$( python -m pipenv --venv )/bin/activate"
 

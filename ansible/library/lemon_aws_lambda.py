@@ -67,7 +67,7 @@ def build_lambda(path):
         src_dir = tmp_dir + "/src"
         shutil.copytree(path, src_dir)
         subprocess.check_call(["npm", "install"], cwd=src_dir)
-        subprocess.check_call(["zip", "-r",  "../lambda.zip", "."], cwd=src_dir)
+        shutil.make_archive(tmp_dir + "/lambda", "zip", src_dir)
 
         with open(tmp_dir + "/lambda.zip", "rb") as zip_file:
             return zip_file.read()
