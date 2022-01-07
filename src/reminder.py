@@ -51,6 +51,10 @@ async def task(client):
         except Exception as e:
             await util.log_exception(log)
 
+IGNORED_DISCORD_ERROR_CODES = [
+    50007, # Cannot send messages to this user
+]
+
 async def process_next_reminder(client):
     async with db.transaction() as tx:
         reminders = await tx.fetch("""
@@ -67,7 +71,13 @@ async def process_next_reminder(client):
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
             user = util.threadsafe(client, client.fetch_user(int(user_id)))
-            util.threadsafe(client, user.send(msg))
+            try:
+                util.threadsafe(client, user.send(msg))
+            except discord.errors.HTTPException as e:
+                if e.code in IGNORED_DISCORD_ERROR_CODES:
+                    log.info("Ignoring Discord error response %s", e)
+                else:
+                    raise e
 
             await tx.execute("""
                 UPDATE reminder
