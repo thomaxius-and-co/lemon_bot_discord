@@ -45,7 +45,7 @@ async def task(client):
     util.threadsafe(client, client.wait_until_ready())
 
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(60)
         try:
             await process_next_reminder(client)
         except Exception as e:
