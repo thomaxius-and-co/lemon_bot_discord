@@ -3,6 +3,7 @@ import asyncio
 import parsedatetime
 from datetime import datetime
 from time_util import to_utc, to_helsinki, as_utc, as_helsinki
+import discord
 
 import emoji
 import database as db
