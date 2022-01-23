@@ -37,13 +37,13 @@ function getDevice(userId) {
 function refreshAccessToken(userId) {
   return getTokens(userId).then(tokens =>
     request({
-      url: `https://${AUTH_HOSTNAME}/oauth2/token`,
+      url: `https://${API_HOSTNAME}/oauth2`,
       method: 'POST',
       form: makeRefreshRequest(tokens.refresh_token),
       json: true,
     }).then(response => {
       console.log(`Refreshed Withings access token`)
-      return upsertToken(userId, response)
+      return upsertToken(userId, response.body)
     })
   )
 }
@@ -64,13 +64,13 @@ function handleCallback(req, res) {
   console.log(`Received code from Withings`)
 
   request({
-    url: `https://${AUTH_HOSTNAME}/oauth2/token`,
+    url: `https://${API_HOSTNAME}/oauth2`,
     method: 'POST',
     form: makeTokenRequest(req.query.code),
     json: true,
   }).then(response => {
     console.log(`Received access token from Withings`)
-    upsertToken(req.user.id, response).then(() => res.redirect('/'))
+    upsertToken(req.user.id, response.body).then(() => res.redirect('/'))
   })
 }
 
