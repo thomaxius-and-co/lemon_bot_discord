@@ -49,6 +49,7 @@ def main():
 
         client.update_function_configuration(
             FunctionName=module.params["name"],
+            Runtime=module.params["runtime"],
             Role=module.params["role"],
             Handler=module.params["handler"],
             Environment=lambda_environment
