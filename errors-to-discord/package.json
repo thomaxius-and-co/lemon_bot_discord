@@ -1,6 +1,6 @@
 {
   "name": "errors-to-discord",
   "dependencies": {
-    "aws-sdk": "2.990.0"
+    "aws-sdk": "2.1073.0"
   }
 }
