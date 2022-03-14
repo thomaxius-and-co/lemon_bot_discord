@@ -27,7 +27,7 @@
     "bluebird": "3.7.2",
     "browserify": "17.0.0",
     "c3": "0.7.20",
-    "connect-redis": "6.0.0",
+    "connect-redis": "6.1.2",
     "express": "4.17.1",
     "express-session": "1.17.2",
     "moment": "2.29.1",
