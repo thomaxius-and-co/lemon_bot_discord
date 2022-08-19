@@ -13,8 +13,12 @@ REPLIES_BY_WORD = {
     'kumpa': GENERAL_M_MISTAKE_REPLY,
     'ompa': GENERAL_M_MISTAKE_REPLY,
     'kuullostaa': 'Yleiskielessä käymättömään kuullostaa-muotoon on ehkä päädytty kuulla-sanan mukaan. Sen taivutusmuodoissa ei kuitenkaan ole kahta ällää. Oikea kirjoitusmuoto on siis kuulostaa.',
-    'sydämm': "Joissakin sanoissa tai sanojen taivutusmuodoissa voi puheessa kuulua pitkä m-äänne, vaikka kirjoitettaisiinkin vain yksi m, esimerkiksi: 'sydämellä', 'morsiamella', 'avoimuus'."
-              "Sana sydän taipuu siis sydän : sydämen (vrt. avain : avaimen). Yksi m-kirjain on myös sydän-sanan johdoksissa, esim. sydämellinen, sydämellisin terveisin."
+    'sydämm': "Joissakin sanoissa tai sanojen taivutusmuodoissa voi puheessa kuulua pitkä m-äänne, "
+              "vaikka kirjoitettaisiinkin vain yksi m, esimerkiksi: 'sydämellä', 'morsiamella', 'avoimuus'. "
+              "Sana sydän taipuu siis sydän : sydämen (vrt. avain : avaimen). Yksi m-kirjain on myös sydän-sanan "
+              "johdoksissa, esim. sydämellinen, sydämellisin terveisin. \n\nSydämmellisin terveisin, bot.",
+    'sekuntti': "Joissakin sanoissa tai sanojen taivutusmuodoissa voi puhekielessä kuulla pidemmän äänteen, jota ei kuitenkaan kirjoittaessa käytetä. "
+                "Esimerkiksi sana 'sekunti' kirjoitetaan puhekieltä mukaillen usein virheellisesti kahdella t-kirjaimella. Oikea kirjoitusmuoto on kuitenkin 'sekunti'."
 }
 
 
