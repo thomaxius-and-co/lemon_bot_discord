@@ -10,18 +10,11 @@
 
   pre_tasks:
     - name: Install python on remote machine
-      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal)
       changed_when: False
     - setup:
 
   tasks:
-    - include: wireguard_vpn.yml
-      vars:
-        wireguard_vpn_cidr: 10.200.200.1/24
-        wireguard_users:
-          - username: rce
-            publickey: lGQkn1YB2XGxmyVZso9l/anaQRatlJZH9ahY7ifY1gY=
-            allowedips: 10.200.200.2/32
     - include: deployment_dependencies.yml
     - include: unattended_upgrades.yml
     - include: python.yml
@@ -41,12 +34,12 @@
       notify:
         - reload sysctl.conf
 
-    - include: postgres.yml
-      vars:
-        postgres_listen_addresses_string: 'localhost, 10.200.200.1'
-        postgres_allowed_ips:
-          - 10.200.200.1/24
-    - include: redis.yml
+    #- include: postgres.yml
+    #  vars:
+    #    postgres_listen_addresses_string: 'localhost, 10.200.200.1'
+    #    postgres_allowed_ips:
+    #      - 10.200.200.1/24
+    #- include: redis.yml
 
     - name: Install required packages
       apt:
@@ -83,8 +76,8 @@
         src: ../src
         dest: "/home/{{ app_name }}"
         delete: yes
-        rsync_opts:
-          - "--chown={{ app_name }}:{{ app_name }}"
+        #rsync_opts:
+        #  - "--usermap=*:{{ app_name }}"
       notify:
         - restart services
 
@@ -107,10 +100,10 @@
         state: started
         enabled: yes
 
-    - include: nodejs.yml
+    #- include: nodejs.yml
     - include: web.yml
-    - include: letsencrypt.yml
-    - include: logs.yml
+    #- include: letsencrypt.yml
+    #- include: logs.yml
 
   handlers:
     - name: reload sysctl.conf

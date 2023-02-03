@@ -4,18 +4,6 @@ set -e
 
 source "$(dirname "${BASH_SOURCE[0]}")"/scripts/common-functions.sh
 
-function init_node {
-  # TODO: Windows?
-  if [ "$(uname -s)" = "Darwin" ]; then
-    echo "Using nvm to select nodejs version"
-    export NVM_DIR="$ROOT/web/.nvm"
-    source "$ROOT/web/nvm.sh"
-    nvm install
-  else
-    echo "Using system nodejs: $(node --version)"
-  fi
-}
-
 function run_web {
   pushd "$ROOT/web"
   npm install

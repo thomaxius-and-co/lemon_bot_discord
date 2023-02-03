@@ -1,0 +1,3 @@
+[profile discord-prod]
+source_profile = rce-organization
+role_arn = arn:aws:iam::407456120779:role/OrganizationAccountAccessRole

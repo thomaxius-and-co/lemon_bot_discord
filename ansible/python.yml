@@ -2,13 +2,13 @@
   apt_repository:
     repo: ppa:deadsnakes/ppa
 
-- name: Remove old packages
-  apt:
-    state: absent
-    package:
-      - python3.8
-      - python3.8-dev
-      - python3.8-distutils
+#- name: Remove old packages
+#  apt:
+#    state: absent
+#    package:
+#      - python3.8
+#      - python3.8-dev
+#      - python3.8-distutils
 
 - name: Install required packages
   apt:

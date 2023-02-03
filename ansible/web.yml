@@ -14,8 +14,8 @@
     src: ../web
     dest: "/home/{{ app_name }}"
     delete: yes
-    rsync_opts:
-      - "--chown=lemon:lemon"
+    #rsync_opts:
+    #  - "--usermap=*:{{ app_name }}"
   notify:
     - restart web service
 
