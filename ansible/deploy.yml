@@ -123,7 +123,7 @@
     droplet_name: lemon-bot
     droplet_size: s-1vcpu-2gb
     droplet_region: fra1 # Frankfurt 1
-    droplet_image: ubuntu-16-04-x64
+    droplet_image: ubuntu-22-04-x64
     ssh_key_name: lemon-bot
 
   tasks:
