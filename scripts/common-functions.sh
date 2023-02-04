@@ -6,10 +6,6 @@ readonly PIPENV_VERSION="2021.11.5.post0"
 readonly PYTHON_VERSION="3.9.1"
 
 function setup_aws {
-  if ! running_on_github_actions; then
-    export AWS_CONFIG_FILE="${repo}/scripts/lib/aws_config"
-    export AWS_PROFILE="discord-$ENV"
-  fi
   export AWS_REGION="eu-west-1"
   export AWS_DEFAULT_REGION="$AWS_REGION"
 
