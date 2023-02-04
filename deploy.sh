@@ -28,9 +28,9 @@ function main {
 function setup_python_for_ansible {
   export ANSIBLE_PYTHON_VERSION="3.9.1"
   pushd "$repo/ansible"
-  #eval "$(pyenv init --path)"
-  #pyenv install --skip-existing "$ANSIBLE_PYTHON_VERSION"
-  #pyenv local "$ANSIBLE_PYTHON_VERSION"
+  eval "$(pyenv init --path)"
+  pyenv install --skip-existing "$ANSIBLE_PYTHON_VERSION"
+  pyenv local "$ANSIBLE_PYTHON_VERSION"
 
   python3 -m pip install pipenv==2021.11.5.post0
   python3 -m pipenv install

@@ -5,7 +5,7 @@ function main {
   apt-get -q update
 
   apt-get -q install -y \
-    libxslt1-dev zip git findutils
+    libxslt1-dev zip git findutils docker
 
   install_pyenv
 
