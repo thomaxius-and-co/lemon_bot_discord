@@ -39,11 +39,11 @@ function docker_run_with_aws_env {
     "$@"
 }
 
-function aws {
-  docker_run_with_aws_env \
-    --volume "$( pwd ):/aws" \
-    --rm -i amazon/aws-cli:2.0.6 $@
-}
+#function aws {
+#  docker_run_with_aws_env \
+#    --volume "$( pwd ):/aws" \
+#    --rm -i amazon/aws-cli:2.0.6 $@
+#}
 
 function running_on_github_actions {
   [ "${GITHUB_ACTION:-}" != "" ]
