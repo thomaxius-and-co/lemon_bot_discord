@@ -11,6 +11,7 @@ function main {
   npm ci
   npx cdk bootstrap "aws://$AWS_ACCOUNT_ID/$AWS_REGION"
   npx cdk deploy \
+    --require-approval never \
     --app "npx ts-node infra/Application.ts" \
     Application
 }

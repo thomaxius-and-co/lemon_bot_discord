@@ -1,5 +1,14 @@
 import {App, Stack} from 'aws-cdk-lib'
-import {IpAddresses, SubnetType, Vpc} from "aws-cdk-lib/aws-ec2";
+import {
+  InstanceClass,
+  InstanceSize,
+  InstanceType,
+  IpAddresses,
+  SecurityGroup,
+  SubnetType,
+  Vpc
+} from "aws-cdk-lib/aws-ec2";
+import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion} from "aws-cdk-lib/aws-rds";
 
 async function main() {
   const app = new App()
@@ -18,7 +27,7 @@ class Application extends Stack {
 
     const vpc = new Vpc(this, "Vpc", {
       ipAddresses: IpAddresses.cidr('10.0.0.0/16'),
-      maxAzs: 1,
+      maxAzs: 2,
       subnetConfiguration: [{
         name: "public",
         subnetType: SubnetType.PUBLIC,
@@ -26,6 +35,19 @@ class Application extends Stack {
       }]
     })
 
+    const dbSecurityGroup = new SecurityGroup(this, "DatabaseSecurityGroup", { vpc })
+    const engine = DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_12 })
+    const db = new DatabaseInstance(this, "Database", {
+      engine,
+      vpc,
+      instanceType: InstanceType.of(InstanceClass.T4G, InstanceSize.MICRO),
+      securityGroups: [ dbSecurityGroup ],
+      vpcSubnets: { subnetType: SubnetType.PUBLIC },
+      credentials: Credentials.fromGeneratedSecret('postgres'),
+      autoMinorVersionUpgrade: true,
+      allocatedStorage: 20,
+      maxAllocatedStorage: 20,
+    })
   }
 }
 
