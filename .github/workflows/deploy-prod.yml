@@ -27,4 +27,4 @@ jobs:
           role-to-assume: arn:aws:iam::407456120779:role/GithubActionsAccessRole
           aws-region: eu-west-1
 
-      - run: aws sts get-caller-identity
+      - run: ./scripts/deploy-prod.sh
