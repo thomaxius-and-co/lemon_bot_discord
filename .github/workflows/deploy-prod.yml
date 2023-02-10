@@ -1,0 +1,30 @@
+on:
+  push:
+    branches:
+      - github-actions-test
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  deploy-prod:
+    name: deploy-prod
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: deploy-prod
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume: arn:aws:iam::407456120779:role/GithubActionsAccessRole
+          aws-region: eu-west-1
+
+      - run: aws sts get-caller-identity
