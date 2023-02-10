@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+env:
+  VERSION_TAG: "${{ github.sha }}"
+
 jobs:
   deploy-prod:
     name: deploy-prod

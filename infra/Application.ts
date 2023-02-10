@@ -9,11 +9,25 @@ import {
   Vpc
 } from "aws-cdk-lib/aws-ec2";
 import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion} from "aws-cdk-lib/aws-rds";
+import {Repository} from "aws-cdk-lib/aws-ecr";
 
 async function main() {
   const app = new App()
+  new ImageRepository(app)
   new Application(app)
   app.synth()
+}
+
+class ImageRepository extends Stack {
+  constructor(scope: App) {
+    super(scope, "ImageRepository")
+    new Repository(this, "Repository", {
+      repositoryName: "lemon",
+      lifecycleRules: [{
+        maxImageCount: 2,
+      }]
+    })
+  }
 }
 
 class Application extends Stack {
