@@ -18,9 +18,6 @@ class ContinuousDeliveryStack extends Stack {
 
     const githubRepositories = [{
       repo: "thomaxius-and-co/lemon_bot_discord",
-      branch: "github-actions-test"
-    }, {
-      repo: "thomaxius-and-co/lemon_bot_discord",
       branch: "master"
     }]
 
