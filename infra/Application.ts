@@ -138,7 +138,7 @@ class Application extends Stack {
     const service = new FargateService(this, "Service", {
       cluster,
       taskDefinition,
-      assignPublicIp: true, // to make secrets manager integration work
+      assignPublicIp: true,
       desiredCount: 1,
       maxHealthyPercent: 100,
       minHealthyPercent: 0,

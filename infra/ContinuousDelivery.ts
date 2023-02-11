@@ -46,11 +46,6 @@ class ContinuousDeliveryStack extends Stack {
   }
 }
 
-type RepoBranch = {
-  repo: string
-  branch: string
-}
-
 main().catch(err => {
   console.error(err)
   process.exit(1)
