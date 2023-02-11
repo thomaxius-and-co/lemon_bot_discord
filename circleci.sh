@@ -13,7 +13,6 @@ function main {
   export LC_ALL="C.UTF-8"
 
   run_tests
-  ./journald-cloudwatch/build.sh
   ./deploy.sh
 }
 
