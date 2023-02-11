@@ -1,9 +1,0 @@
-- name: Install packages used for deployment
-  apt:
-    package:
-      - python-pip
-      - libpq-dev # FIXME: requires postgres repository?
-
-- name: Install python packages used for deployment
-  pip:
-    name: psycopg2

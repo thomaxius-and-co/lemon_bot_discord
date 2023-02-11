@@ -1,5 +1,0 @@
-- name: Install nodejs
-  apt: deb=https://deb.nodesource.com/node_8.x/pool/main/n/nodejs/nodejs_8.10.0-1nodesource1_amd64.deb
-
-- name: Install jq for successful npm installs with only 512mb ram. This is a horrible hack. Please kill me.
-  apt: name=jq
