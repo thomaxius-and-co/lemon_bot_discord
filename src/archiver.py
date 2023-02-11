@@ -192,8 +192,3 @@ async def main():
         except Exception:
             await util.log_exception(log)
         await asyncio.sleep(15 * 60)
-
-if __name__ == '__main__':
-    logger.init()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())

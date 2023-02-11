@@ -795,5 +795,6 @@ async def on_ready():
 
 
 if __name__ == "__main__":
+    util.start_task_thread(archiver.main())
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
