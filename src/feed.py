@@ -102,7 +102,7 @@ async def task(client):
     util.threadsafe(client, client.wait_until_ready())
 
     # Check feeds every minute
-    fetch_interval = 60
+    fetch_interval = 30 * 60
 
     while True:
         await asyncio.sleep(fetch_interval)

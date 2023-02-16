@@ -17,7 +17,7 @@ NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
 log = logger.get("FACEIT")
 async def elo_notifier_task(client):
-    fetch_interval = 60
+    fetch_interval = 3 * 60
     while True:
         await asyncio.sleep(fetch_interval)
         try:

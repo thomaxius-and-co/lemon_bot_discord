@@ -187,7 +187,7 @@ async def update_pp(user_id, mode, pp, rank):
 
 async def task(client):
     util.threadsafe(client, client.wait_until_ready())
-    fetch_interval = 60
+    fetch_interval = 10 * 60
 
     while True:
         await asyncio.sleep(fetch_interval)
