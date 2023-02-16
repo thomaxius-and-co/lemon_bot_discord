@@ -9,8 +9,8 @@ log = logger.get("DATABASE")
 
 # 15 because we have 5 threads and each has own connection pool
 # 75 connections should be more than enough for our loads
-MIN_CONNECTION_POOL_SIZE = 5
-MAX_CONNECTION_POOL_SIZE = 15
+MIN_CONNECTION_POOL_SIZE = 2
+MAX_CONNECTION_POOL_SIZE = 4
 
 _pool_holder = threading.local()
 
