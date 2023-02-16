@@ -49,7 +49,6 @@ import groom
 import shrek
 import ence_matches
 import mememaker
-import corona
 import kansallisgalleria
 import pasta
 import signal
@@ -95,7 +94,7 @@ async def main():
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
                    faceit_main, muutto, statistics, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek, ence_matches, mememaker, corona, kansallisgalleria, pasta]:
+                   groom, shrek, ence_matches, mememaker, kansallisgalleria, pasta]:
         commands.update(module.register(client))
 
     try:
@@ -791,7 +790,7 @@ def autocorrect_command(cmd):
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Game(name='is not working | I am your worker. I am your slave.'))
-    await status.main(client, 'corona')
+    await status.main(client, 'messages_count')
 
 
 if __name__ == "__main__":
