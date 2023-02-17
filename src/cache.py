@@ -1,5 +1,5 @@
 import functools
-import redis
+import database as db
 import pickle
 
 import logger
@@ -16,9 +16,19 @@ def make_key(func, args, kwargs):
     cache_prefix = "_cache:{0}.{1}:".format(func.__module__, func.__name__)
     return cache_prefix.encode("utf-8") + args_pickled
 
+async def get_binary(cache_key):
+    sql = "SELECT value FROM cache WHERE key = $1 AND (expires_at > current_timestamp OR expires_at IS NULL)"
+    return await db.fetchval(sql, cache_key)
+async def set(cache_key, value, expire):
+    sql = """
+        INSERT INTO cache (key, value, expires_at) VALUES ($1, $2, current_timestamp + ($3 || ' seconds')::interval)
+        ON CONFLICT (key) DO UPDATE SET value = excluded.value, expires_at = excluded.expires_at
+    """
+    return await db.execute(sql, cache_key, value, str(expire))
+
 def cache(ttl=None):
     """
-    Cache function results to redis. The ttl (time to live) parameter can be
+    Cache function results to database. The ttl (time to live) parameter can be
     used to make the cache invalidate in given amount of seconds.
     """
 
@@ -29,13 +39,13 @@ def cache(ttl=None):
         @functools.wraps(func)
         async def func_with_cache(*args, **kwargs):
             cache_key = make_key(func, args, kwargs)
-            cached = await redis.get_binary(cache_key)
+            cached = await get_binary(cache_key)
             if cached is not None:
                 log.debug("GET %s", cache_key)
                 return pickle.loads(cached)
 
             result = await func(*args, **kwargs)
-            await redis.set(cache_key, pickle.dumps(result), expire=ttl)
+            await set(cache_key, pickle.dumps(result), expire=ttl)
             log.debug("SET %s", cache_key)
             return result
         return func_with_cache
