@@ -12,6 +12,7 @@ import {
 } from "aws-cdk-lib/aws-ec2";
 import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion} from "aws-cdk-lib/aws-rds";
 import {Repository} from "aws-cdk-lib/aws-ecr";
+import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import {
   AwsLogDriver,
   Cluster,
@@ -21,8 +22,10 @@ import {
   FargateTaskDefinition,
   Secret as EcsSecret
 } from "aws-cdk-lib/aws-ecs";
-import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
+import {FilterPattern, LogGroup, RetentionDays, SubscriptionFilter} from "aws-cdk-lib/aws-logs";
 import {Secret} from "aws-cdk-lib/aws-secretsmanager";
+import {join} from "path";
+import {LambdaDestination} from "aws-cdk-lib/aws-logs-destinations";
 
 async function main() {
   const app = new App()
@@ -149,6 +152,21 @@ class Application extends Stack {
 
     dbSecurityGroup.addIngressRule(appSecurityGroup, Port.tcp(5432))
     dbSecurityGroup.addIngressRule(Peer.ipv4("84.250.229.119/32"), Port.tcp(5432))
+
+
+    const webhookUrlSecret = Secret.fromSecretNameV2(this, "DiscordWebhookSecret", "discord-alarm-webhook")
+    const errorsToDiscordLambda = new Function(this, "ErrorsToDiscord", {
+      runtime: Runtime.NODEJS_14_X,
+      handler: "errors-to-discord.handler",
+      code: Code.fromAsset(join(__dirname, "../errors-to-discord")),
+    })
+    webhookUrlSecret.grantRead(errorsToDiscordLambda)
+
+    new SubscriptionFilter(this, "ErrorLogSubscription", {
+      logGroup,
+      destination: new LambdaDestination(errorsToDiscordLambda),
+      filterPattern: FilterPattern.literal("[date, time, level=ERROR, module, message]"),
+    })
   }
 }
 

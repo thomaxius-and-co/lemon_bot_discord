@@ -68,8 +68,6 @@
         runtime: "nodejs14.x"
       register: lambda_out
 
-    - include: errors-to-discord.yml
-
     - name: Create SNS topic for alarms
       community.aws.sns_topic:
         state: present
