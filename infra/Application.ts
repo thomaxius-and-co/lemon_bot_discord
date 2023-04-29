@@ -10,7 +10,7 @@ import {
   SubnetType,
   Vpc
 } from "aws-cdk-lib/aws-ec2";
-import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion} from "aws-cdk-lib/aws-rds";
+import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion, PerformanceInsightRetention} from "aws-cdk-lib/aws-rds";
 import {Repository} from "aws-cdk-lib/aws-ecr";
 import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import {
@@ -84,6 +84,8 @@ class Application extends Stack {
       autoMinorVersionUpgrade: true,
       allocatedStorage: 20,
       maxAllocatedStorage: 20,
+      enablePerformanceInsights: true,
+      performanceInsightRetention: PerformanceInsightRetention.DEFAULT,
     })
 
     const cluster = new Cluster(this, "Cluster", { vpc })
