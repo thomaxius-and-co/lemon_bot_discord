@@ -150,5 +150,5 @@ async def upsert_statistic(statistic_id, content):
     await db.execute(sql, statistic_id, json_string)
 
 def register(client):
-    util.start_task_thread(task())
+    #util.start_task_thread(task())
     return {}
