@@ -127,6 +127,7 @@ class Application extends Stack {
         "WITHINGS_CLIENT_ID": EcsSecret.fromSecretsManager(appSecrets, "WITHINGS_CLIENT_ID"),
         "WITHINGS_CLIENT_SECRET": EcsSecret.fromSecretsManager(appSecrets, "WITHINGS_CLIENT_SECRET"),
         "WITHINGS_CALLBACK_URL": EcsSecret.fromSecretsManager(appSecrets, "WITHINGS_CALLBACK_URL"),
+        "OPENAI_KEY": EcsSecret.fromSecretsManager(appSecrets, "OPENAI_KEY"),
         "KANSALLISGALLERIA_API_KEY": EcsSecret.fromSecretsManager(appSecrets, "KANSALLISGALLERIA_API_KEY"),
         "DATABASE_USERNAME": EcsSecret.fromSecretsManager(db.secret!, "username"),
         "DATABASE_PASSWORD": EcsSecret.fromSecretsManager(db.secret!, "password"),
