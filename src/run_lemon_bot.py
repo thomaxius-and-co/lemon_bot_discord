@@ -752,7 +752,21 @@ async def on_message(message):
         if openai.is_enabled():
             bot_mentioned = any(user for user in message.mentions if user.id == client.user.id)
             if bot_mentioned:
-                response = await openai.get_simple_response(message.clean_content)
+                def is_relevant_context(m):
+                    same_channel = m.channel.id == message.channel.id
+                    from_bot = m.author.id == client.user.id
+                    from_user = m.author.id == message.author.id
+                    return same_channel and (from_bot or from_user)
+
+                context_messages = [m for m in client.cached_messages if is_relevant_context(m) and m.id != message.id]
+                messages = []
+                for m in context_messages[-5:]:
+                    messages.append({
+                        "role": "user" if m.author.id == message.author.id else "assistant",
+                        "content": m.clean_content,
+                    })
+                messages.append({ "role": "user", "content": message.clean_content })
+                response = await openai.get_response_for_messages(messages)
                 await message.reply(response)
                 return
 

@@ -30,6 +30,12 @@ async def cmd_openai(client, message, arg):
         await util.log_exception(log)
         await message.channel.send("Something went wrong, Tommi pls fix")
 
+async def get_response_for_messages(messages):
+    result = await chat_completions({
+        "model": "gpt-3.5-turbo",
+        "messages": messages
+    })
+    return result["choices"][0]["message"]["content"]
 async def get_simple_response(prompt):
     result = await chat_completions({
         "model": "gpt-3.5-turbo",
@@ -47,6 +53,7 @@ async def chat_completions(payload):
 
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
 async def _call_api(path, json_body=None, query=None):
+    log.info("%s", json.dumps(json_body))
     url = "https://api.openai.com{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
