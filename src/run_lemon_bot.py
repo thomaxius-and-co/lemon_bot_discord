@@ -763,7 +763,10 @@ async def on_message(message):
                 messages = []
                 systemprompt = await db.fetchval("SELECT systemprompt FROM openaiconfig WHERE channel_id = $1", str(message.channel.id))
                 if systemprompt is not None:
-                    messages.append({ "role": "system", "content": systemprompt })
+                    # As mentioned in OpenAI chat completion introduction, the gpt-3.5-turbo-0301 model doesn't pay
+                    # strong attention to system messages so the system prompt is provided as if it was an user prompt.
+                    # https://platform.openai.com/docs/guides/chat/introduction
+                    messages.append({ "role": "user", "content": systemprompt })
                 for m in context_messages[-5:]:
                     messages.append({
                         "role": "user" if m.author.id == message.author.id else "assistant",
