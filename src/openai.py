@@ -10,9 +10,12 @@ log = logger.get("OPENAI")
 OPENAI_KEY = os.environ.get("OPENAI_KEY", None)
 AUTH_HEADER = {"Authorization": "Bearer {0}".format(OPENAI_KEY)}
 
+def is_enabled():
+    return OPENAI_KEY is not None
+
 def register(client):
-    if OPENAI_KEY is None:
-        log.info("OPENAI_KEY not defined, not enabling feature")
+    if not is_enabled():
+        log.info("OpenAI feature disabled")
         return {}
 
     return {
@@ -21,17 +24,20 @@ def register(client):
 
 async def cmd_openai(client, message, arg):
     try:
-        result = await chat_completions({
-            "model": "gpt-3.5-turbo",
-            "messages": [
-                {"role": "user", "content": arg}
-            ]
-        })
-        response = result["choices"][0]["message"]["content"]
+        response = get_simple_response(arg)
         await message.channel.send(response)
     except Exception:
         await util.log_exception(log)
         await message.channel.send("Something went wrong, Tommi pls fix")
+
+async def get_simple_response(prompt):
+    result = await chat_completions({
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    })
+    return result["choices"][0]["message"]["content"]
 
 
 # https://platform.openai.com/docs/api-reference/chat/create

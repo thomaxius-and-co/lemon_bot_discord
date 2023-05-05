@@ -749,6 +749,13 @@ async def on_message(message):
         if message.author.bot:
             return
 
+        if openai.is_enabled():
+            bot_mentioned = any(user for user in message.mentions if user.id == client.user.id)
+            if bot_mentioned:
+                response = await openai.get_simple_response(message.clean_content)
+                await message.reply(response)
+                return
+
         replies = bot_replies.replies_by_content(content)
         for reply in replies:
             await message.channel.send(reply)
