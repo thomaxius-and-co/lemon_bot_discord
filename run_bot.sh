@@ -29,6 +29,7 @@ function main {
     --env WITHINGS_CLIENT_ID \
     --env WITHINGS_CLIENT_SECRET \
     --env WITHINGS_CALLBACK_URL="http://localhost:8080/auth/withings/callback" \
+    --env OPENAI_KEY \
     --env KANSALLISGALLERIA_API_KEY \
     lemon
 

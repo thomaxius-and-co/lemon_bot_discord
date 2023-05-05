@@ -52,6 +52,7 @@ import mememaker
 import kansallisgalleria
 import pasta
 import signal
+import openai
 import bot_replies
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -94,7 +95,7 @@ async def main():
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
                    faceit_main, muutto, statistics, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek, ence_matches, mememaker, kansallisgalleria, pasta]:
+                   groom, shrek, ence_matches, mememaker, kansallisgalleria, pasta, openai]:
         commands.update(module.register(client))
 
     try:
