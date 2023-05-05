@@ -756,7 +756,8 @@ async def on_message(message):
                     same_channel = m.channel.id == message.channel.id
                     from_bot = m.author.id == client.user.id
                     from_user = m.author.id == message.author.id
-                    return same_channel and (from_bot or from_user)
+                    is_command = m.content.startswith('!')
+                    return same_channel and (from_bot or from_user) and not is_command
 
                 context_messages = [m for m in client.cached_messages if is_relevant_context(m) and m.id != message.id]
                 messages = []
