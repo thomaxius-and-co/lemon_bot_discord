@@ -5,6 +5,7 @@ import json
 import http_util
 import logger
 import retry
+import database as db
 
 log = logger.get("OPENAI")
 
@@ -20,16 +21,17 @@ def register(client):
         return {}
 
     return {
-        'openai': cmd_openai,
+        'setprompt': cmd_setprompt,
     }
 
-async def cmd_openai(client, message, arg):
-    try:
-        response = get_simple_response(arg)
-        await message.channel.send(response)
-    except Exception:
-        await util.log_exception(log)
-        await message.channel.send("Something went wrong, Tommi pls fix")
+async def cmd_setprompt(client, message, arg):
+    if len(arg) > 0:
+        await db.execute("""
+            INSERT INTO openaiconfig (channel_id, systemprompt) VALUES ($1, $2)
+            ON CONFLICT (channel_id) DO UPDATE SET systemprompt = excluded.systemprompt
+        """, str(message.channel.id), arg)
+    else:
+        await db.execute("DELETE FROM openaiconfig WHERE channel_id = $1", str(message.channel.id))
 
 async def get_response_for_messages(messages):
     result = await chat_completions({

@@ -760,6 +760,9 @@ async def on_message(message):
 
                 context_messages = [m for m in client.cached_messages if is_relevant_context(m) and m.id != message.id]
                 messages = []
+                systemprompt = await db.fetchval("SELECT systemprompt FROM openaiconfig WHERE channel_id = $1", str(message.channel.id))
+                if systemprompt is not None:
+                    messages.append({ "role": "system", "content": systemprompt })
                 for m in context_messages[-5:]:
                     messages.append({
                         "role": "user" if m.author.id == message.author.id else "assistant",
