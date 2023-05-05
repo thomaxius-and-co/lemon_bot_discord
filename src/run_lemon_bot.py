@@ -774,7 +774,8 @@ async def on_message(message):
                     messages.append({ "role": "user", "content": systemprompt })
                 messages.append({ "role": "user", "content": message.clean_content })
                 response = await openai.get_response_for_messages(messages)
-                await message.reply(response)
+                for msg in util.split_message_for_sending(response.split("\n")):
+                    await message.reply(msg)
                 return
 
         replies = bot_replies.replies_by_content(content)
