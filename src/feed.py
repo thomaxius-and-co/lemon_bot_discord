@@ -86,8 +86,8 @@ async def process_feed(client, id, url, last_entry, channel_id):
             else:
               embed.set_author(name=truncate_author(feed_title), url=feed_url)
 
-            channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
-            util.threadsafe(client, channel.send(embed=embed))
+            channel = await client.fetch_channel(int(channel_id))
+            await channel.send(embed=embed)
 
         # Update last entry
         max_timestamp = max(map(lambda i: i["date"], new_items))
@@ -98,9 +98,6 @@ async def process_feed(client, id, url, last_entry, channel_id):
         """, max_timestamp, id)
 
 async def task(client):
-    # Wait until the client is ready
-    util.threadsafe(client, client.wait_until_ready())
-
     # Check feeds every minute
     fetch_interval = 30 * 60
 
@@ -165,7 +162,6 @@ async def respond(message, reaction):
 
 def register(client):
     log.info("Registering")
-    util.start_task_thread(task(client))
     return {
         "feed": cmd_feed,
     }

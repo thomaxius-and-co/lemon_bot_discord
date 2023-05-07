@@ -1,5 +1,5 @@
 import database as db
-from asyncio import sleep
+import asyncio
 import discord
 import logger
 
@@ -35,7 +35,7 @@ async def check_user_and_message_count(client):
             CUSTOM_STATUS_DISPLAYED = True
         else:
             log.info("Nothing to update")
-        await sleep(1800)
+        await asyncio.sleep(1800)
 
 async def change_status(client, status):
     await client.change_presence(

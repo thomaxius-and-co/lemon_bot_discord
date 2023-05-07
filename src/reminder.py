@@ -14,7 +14,6 @@ log = logger.get("REMINDER")
 
 def register(client):
     log.info("Registering")
-    util.start_task_thread(task(client))
     return {
         "remind": cmd_reminder,
         "remindme": cmd_reminder,
@@ -42,9 +41,6 @@ async def add_reminder(user_id, time, text, original_text):
     """, str(user_id), time.replace(tzinfo=None), text, original_text)
 
 async def task(client):
-    # Wait until the client is ready
-    util.threadsafe(client, client.wait_until_ready())
-
     while True:
         await asyncio.sleep(60)
         try:
@@ -71,9 +67,9 @@ async def process_next_reminder(client):
 
         for id, user_id, text in reminders:
             msg = "Hello! I'm here to remind you about `{0}`".format(text)
-            user = util.threadsafe(client, client.fetch_user(int(user_id)))
+            user = await client.fetch_user(int(user_id))
             try:
-                util.threadsafe(client, user.send(msg))
+                await user.send(msg)
             except discord.errors.HTTPException as e:
                 if e.code in IGNORED_DISCORD_ERROR_CODES:
                     log.info("Ignoring Discord error response %s", e)

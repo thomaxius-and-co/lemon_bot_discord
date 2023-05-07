@@ -77,7 +77,7 @@ async def do_matchday_spam(client, matches: list) -> None:
         log.info('No spam channels have been set')
         return
     for row in channels_query:
-        channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
+        channel = await client.fetch_channel(int(row['channel_id']))
         if len(matches) > 1:
             msg = "It is match day!\nToday we have %s matches:\n" % len(matches)
         else:
@@ -86,7 +86,7 @@ async def do_matchday_spam(client, matches: list) -> None:
             match_as_row = convert_to_list(match)
             if match_as_row not in matches_list:
                 matches_list += [match_as_row] # Competition, Home team, away team, map, tod
-        util.threadsafe(client, channel.send(msg + "```" + tablemaker.tablemaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```"))
+        await channel.send(msg + "```" + tablemaker.tablemaker(['COMPETITION', 'HOME TEAM', 'AWAY TEAM', 'MAP', 'TOD'], matches_list) + "\n#EZ4ENCE```")
     await update_last_spammed_time()
     if channels_query and matches[0][6] != '-':
         await start_match_start_spam_task(client, channels_query, matches[0])
@@ -109,8 +109,8 @@ async def start_match_start_spam_task(client, channels_query: list, earliest_mat
     log.info('Match spammer task: waking up and attempting to spam')
     if await not_rescheduled(earliest_match):
         for row in channels_query:
-            channel = util.threadsafe(client, client.fetch_channel(int(row['channel_id'])))
-            util.threadsafe(client, channel.send(("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6]))))
+            channel = await client.fetch_channel(int(row['channel_id']))
+            await channel.send(("The %s match %s versus %s is about to start! (announced starting time: %s) \n#EZ4ENCE" % (earliest_match[0], earliest_match[1], earliest_match[2], earliest_match[6])))
         await update_last_spammed_time()
         # todo: fire up do_tasks after this function
         # todo: fix this and spam about new match time if match is rescheduled
@@ -180,7 +180,6 @@ async def cmd_ence(client, message, arg) -> None:
 
 
 def register(client) -> dict:
-    util.start_task_thread(do_tasks(client))
     return {
         'ence': cmd_ence,
     }

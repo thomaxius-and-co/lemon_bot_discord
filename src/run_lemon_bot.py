@@ -39,6 +39,7 @@ import anssicommands
 import trophies
 import logger
 import faceit_main
+import faceit_tasker
 import muutto
 import statistics
 import status
@@ -51,15 +52,13 @@ import ence_matches
 import mememaker
 import kansallisgalleria
 import pasta
-import signal
 import openai
 import bot_replies
 
-signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 log = logger.get("BOT")
 
-client = discord.Client()
+intents = discord.Intents.all()
+client = discord.Client(intents=intents)
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
@@ -91,6 +90,7 @@ async def main():
     logger.init()
     # Database schema has to be initialized before running the bot
     await db.initialize_schema()
+    asyncio.create_task(archiver.main())
     await trophies.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
@@ -820,10 +820,13 @@ def autocorrect_command(cmd):
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Game(name='is not working | I am your worker. I am your slave.'))
-    await status.main(client, 'messages_count')
-
+    asyncio.create_task(feed.task(client))
+    asyncio.create_task(osu.task(client))
+    asyncio.create_task(faceit_tasker.elo_notifier_task(client))
+    asyncio.create_task(reminder.task(client))
+    asyncio.create_task(kansallisgalleria.task(client))
+    asyncio.create_task(ence_matches.do_tasks(client))
+    asyncio.create_task(status.main(client, 'messages_count'))
 
 if __name__ == "__main__":
-    util.start_task_thread(archiver.main())
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

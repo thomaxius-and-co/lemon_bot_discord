@@ -14,18 +14,21 @@ log = logger.get("KANSALLISGALLERIA")
 
 objects_with_images = []
 
+def is_enabled():
+    return "KANSALLISGALLERIA_API_KEY" in os.environ
+
 def register(client):
-  if "KANSALLISGALLERIA_API_KEY" not in os.environ:
-    log.info("KANSALLISGALLERIA_API_KEY is not set; feature is disabled")
+  if not is_enabled():
     return {}
 
-  util.start_task_thread(task(client))
   return {
     "art": cmd_art,
   }
 
 async def task(client):
-  util.threadsafe(client, client.wait_until_ready())
+  if not is_enabled():
+    return
+
   fetch_interval = 24 * 60 * 60
 
   while True:

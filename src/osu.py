@@ -158,8 +158,8 @@ async def process_user(client, user, mode, last_pp, last_rank):
       pp_diff = round(pp_diff, 1),
       rank_str = rank_str
     )
-    channel = util.threadsafe(client, client.fetch_channel(int(channel_id)))
-    util.threadsafe(client, channel.send(msg))
+    channel = await client.fetch_channel(int(channel_id))
+    await channel.send(msg)
     await update_pp(user_id, mode, u.pp, u.rank)
 
 def format_change(diff):
@@ -186,7 +186,6 @@ async def update_pp(user_id, mode, pp, rank):
   """, pp, rank, user_id, gamemode_id)
 
 async def task(client):
-    util.threadsafe(client, client.wait_until_ready())
     fetch_interval = 10 * 60
 
     while True:
@@ -198,7 +197,6 @@ async def task(client):
             await util.log_exception(log)
 
 def register(client):
-    util.start_task_thread(task(client))
     return {
         "osu": cmd_osu,
     }
