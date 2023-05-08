@@ -45,8 +45,7 @@ async def handle_message(client, message):
             "role": "user" if m.author.id == message.author.id else "assistant",
             "content": m.clean_content,
         })
-    systemprompt = await db.fetchval("SELECT systemprompt FROM openaiconfig WHERE channel_id = $1", str(message.channel.id))
-    if systemprompt is not None:
+    if (systemprompt := await get_channel_prompt(message.channel.id)) is not None:
         # As mentioned in OpenAI chat completion introduction, the gpt-3.5-turbo-0301 model doesn't pay
         # strong attention to system messages so the system prompt is provided as if it was an user prompt.
         # https://platform.openai.com/docs/guides/chat/introduction
@@ -57,15 +56,26 @@ async def handle_message(client, message):
         await message.reply(msg)
     return True
 
-
 async def cmd_setprompt(client, message, arg):
     if len(arg) > 0:
-        await db.execute("""
+        await set_channel_prompt(message.channel.id, arg)
+    else:
+        await delete_channel_prompt(message.channel.id)
+
+
+async def get_channel_prompt(channel_id):
+    return await db.fetchval("SELECT systemprompt FROM openaiconfig WHERE channel_id = $1", str(channel_id))
+
+
+async def set_channel_prompt(channel_id, systemprompt):
+    await db.execute("""
             INSERT INTO openaiconfig (channel_id, systemprompt) VALUES ($1, $2)
             ON CONFLICT (channel_id) DO UPDATE SET systemprompt = excluded.systemprompt
-        """, str(message.channel.id), arg)
-    else:
-        await db.execute("DELETE FROM openaiconfig WHERE channel_id = $1", str(message.channel.id))
+        """, str(channel_id), systemprompt)
+
+
+async def delete_channel_prompt(channel_id):
+    await db.execute("DELETE FROM openaiconfig WHERE channel_id = $1", str(channel_id))
 
 async def get_response_for_messages(messages):
     result = await chat_completions({
