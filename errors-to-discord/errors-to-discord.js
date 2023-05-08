@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
 
   if (payload.messageType === "DATA_MESSAGE") {
     for (const e of payload.logEvents) {
-      const lines = e.message.split("\n")
+      const lines = parseMessage(e.message).split("\n")
       const messages = splitMessage(lines, "\n", MAX_MESSAGE_LENGTH)
       for (const msg of messages) {
         const data = {
@@ -28,6 +28,15 @@ exports.handler = async function(event, context) {
         await post(DISCORD_WEBHOOK_URL + "/slack", data)
       }
     }
+  }
+}
+
+function parseMessage(message) {
+  try {
+    const json = JSON.parse(message)
+    return `${json.timestamp} ${json.level} ${json.name} ${json.message}`
+  } catch (e) {
+    return message
   }
 }
 
