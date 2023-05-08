@@ -33,16 +33,13 @@ async def handle_message(client, message):
         return False
 
     messages = []
+    if (systemprompt := await get_channel_prompt(message.channel.id)) is not None:
+        messages.append({ "role": "system", "content": systemprompt })
     for m in await get_reply_chain(client, message):
         messages.append({
             "role": "assistant" if m.author.id == client.user.id else "user",
             "content": m.clean_content,
         })
-    if (systemprompt := await get_channel_prompt(message.channel.id)) is not None:
-        # As mentioned in OpenAI chat completion introduction, the gpt-3.5-turbo-0301 model doesn't pay
-        # strong attention to system messages so the system prompt is provided as if it was an user prompt.
-        # https://platform.openai.com/docs/guides/chat/introduction
-        messages.append({ "role": "user", "content": systemprompt })
     messages.append({ "role": "user", "content": message.clean_content })
     response = await get_response_for_messages(messages)
     reply_target = message
