@@ -155,7 +155,7 @@ class Application extends Stack {
     })
 
     dbSecurityGroup.addIngressRule(appSecurityGroup, Port.tcp(5432))
-    dbSecurityGroup.addIngressRule(Peer.ipv4("84.250.229.119/32"), Port.tcp(5432))
+    dbSecurityGroup.addIngressRule(Peer.ipv4("84.250.255.24/32"), Port.tcp(5432))
 
 
     const webhookUrlSecret = Secret.fromSecretNameV2(this, "DiscordWebhookSecret", "discord-alarm-webhook")
