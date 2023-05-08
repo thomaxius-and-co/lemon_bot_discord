@@ -1,4 +1,5 @@
 import aiohttp
+import discord
 import os
 import json
 
@@ -31,18 +32,10 @@ async def handle_message(client, message):
     if not bot_mentioned:
         return False
 
-    def is_relevant_context(m):
-        same_channel = m.channel.id == message.channel.id
-        from_bot = m.author.id == client.user.id
-        from_user = m.author.id == message.author.id
-        is_command = m.content.startswith('!')
-        return same_channel and (from_bot or from_user) and not is_command
-
-    context_messages = [m for m in client.cached_messages if is_relevant_context(m) and m.id != message.id]
     messages = []
-    for m in context_messages[-5:]:
+    for m in await get_reply_chain(client, message):
         messages.append({
-            "role": "user" if m.author.id == message.author.id else "assistant",
+            "role": "assistant" if m.author.id == client.user.id else "user",
             "content": m.clean_content,
         })
     if (systemprompt := await get_channel_prompt(message.channel.id)) is not None:
@@ -55,6 +48,29 @@ async def handle_message(client, message):
     for msg in util.split_message_for_sending(response.split("\n")):
         await message.reply(msg)
     return True
+
+async def get_reply_chain(client, message):
+    if message.reference is None:
+        return []
+
+    previous = await resolve_message_reference(client, message.reference)
+    if previous is None:
+        return []
+    return await get_reply_chain(client, previous) + [previous]
+
+async def resolve_message_reference(client, reference):
+    if isinstance(reference.resolved, discord.DeletedReferencedMessage):
+        log.info("Referenced message is deleted")
+        return None
+
+    log.info("Message reference not resolved, looking from cache")
+    from_cache = next(iter(m for m in client.cached_messages if m.id == reference.message_id), None)
+    if from_cache is not None:
+        log.info("Message found in cache")
+        return from_cache
+
+    log.info("Not in cache, fetching from API")
+    return await client.get_channel(reference.channel_id).fetch_message(reference.message_id)
 
 async def cmd_setprompt(client, message, arg):
     if len(arg) > 0:
