@@ -106,6 +106,7 @@ class Application extends Stack {
       logging: new AwsLogDriver({ logGroup, streamPrefix: "lemon" }),
       environment: {
         "DATABASE_NAME": "postgres",
+        "LOG_JSON": "true",
       },
       secrets: {
         "ADMIN_USER_IDS": EcsSecret.fromSecretsManager(appSecrets, "ADMIN_USER_IDS"),
@@ -168,7 +169,7 @@ class Application extends Stack {
     new SubscriptionFilter(this, "ErrorLogSubscription", {
       logGroup,
       destination: new LambdaDestination(errorsToDiscordLambda),
-      filterPattern: FilterPattern.literal("[date, time, level=ERROR, module, message]"),
+      filterPattern: FilterPattern.literal('{ $.level = "ERROR" }'),
     })
   }
 }
