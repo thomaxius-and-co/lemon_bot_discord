@@ -45,8 +45,9 @@ async def handle_message(client, message):
         messages.append({ "role": "user", "content": systemprompt })
     messages.append({ "role": "user", "content": message.clean_content })
     response = await get_response_for_messages(messages)
+    reply_target = message
     for msg in util.split_message_for_sending(response.split("\n")):
-        await message.reply(msg)
+        reply_target = await reply_target.reply(msg)
     return True
 
 async def get_reply_chain(client, message):
