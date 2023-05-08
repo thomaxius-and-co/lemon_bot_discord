@@ -68,7 +68,10 @@ async def resolve_message_reference(client, reference):
         return from_cache
 
     log.info("Not in cache, fetching from API")
-    return await client.get_channel(reference.channel_id).fetch_message(reference.message_id)
+    if (channel := client.get_channel(reference.channel_id)) is None:
+        log.info("Channel not in cache, fetching from API")
+        channel = await client.fetch_channel(reference.channel_id)
+    return await channel.fetch_message(reference.message_id)
 
 async def cmd_setprompt(client, message, arg):
     if len(arg) > 0:
