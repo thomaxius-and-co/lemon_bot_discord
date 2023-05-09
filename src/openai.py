@@ -2,6 +2,7 @@ import aiohttp
 import discord
 import os
 import json
+import io
 
 import http_util
 import logger
@@ -24,6 +25,7 @@ def register(client):
 
     return {
         'setprompt': cmd_setprompt,
+        'genimage': cmd_genimage,
     }
 
 
@@ -80,6 +82,17 @@ async def cmd_setprompt(client, message, arg):
         await delete_channel_prompt(message.channel.id)
 
 
+async def cmd_genimage(client, message, arg):
+    prompt = arg
+    response = await create_image(prompt)
+    url = response["data"][0]["url"]
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as imageresponse:
+            img = await imageresponse.read()
+            with io.BytesIO(img) as file:
+                await message.reply(file=discord.File(file, f"{prompt}.png"))
+
+
 async def get_channel_prompt(channel_id):
     return await db.fetchval("SELECT systemprompt FROM openaiconfig WHERE channel_id = $1", str(channel_id))
 
@@ -93,6 +106,17 @@ async def set_channel_prompt(channel_id, systemprompt):
 
 async def delete_channel_prompt(channel_id):
     await db.execute("DELETE FROM openaiconfig WHERE channel_id = $1", str(channel_id))
+
+
+async def create_image(prompt):
+    response = await _call_api("/v1/images/generations", json_body={
+        "prompt": prompt,
+        "n": 1,
+        "size": "256x256",
+        "response_format": "url",
+    })
+    return await response.json()
+
 
 async def get_response_for_messages(messages):
     result = await chat_completions({
