@@ -117,10 +117,9 @@ async def chat_completions(payload):
 
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
 async def _call_api(path, json_body=None, query=None):
-    log.info("%s", json.dumps(json_body))
     url = "https://api.openai.com{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.post(url, headers=AUTH_HEADER, json=json_body)
-            log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
+            log.info("%s %s %s %s %s", response.method, response.url, response.status, json.dumps(json_body), await response.text())
             return response
