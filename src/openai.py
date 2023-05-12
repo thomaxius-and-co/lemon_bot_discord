@@ -4,6 +4,7 @@ import discord
 import os
 import json
 import io
+import emoji
 
 import http_util
 import logger
@@ -102,12 +103,16 @@ async def handle_message(client, message):
             "content": m.clean_content,
         })
     messages.append({ "role": "user", "content": message.clean_content })
-    response = await get_response_for_messages(messages)
-    reply_target = message
-    for msg in util.split_message_for_sending(response.split("\n")):
-        reply_target = await reply_target.reply(msg)
-    return True
 
+    match await get_response_for_messages(messages):
+        case 400, _:
+            await message.add_reaction(emoji.CROSS_MARK)
+        case 200, result:
+            response = result["choices"][0]["message"]["content"]
+            reply_target = message
+            for msg in util.split_message_for_sending(response.split("\n")):
+                reply_target = await reply_target.reply(msg)
+    return True
 async def get_reply_chain(client, message):
     if message.reference is None:
         return []
@@ -141,15 +146,21 @@ async def cmd_setprompt(client, message, arg):
         await delete_channel_prompt(message.channel.id)
 
 
-async def cmd_genimage(client, message, arg):
-    prompt = arg
-    response = await create_image(prompt)
-    url = response["data"][0]["url"]
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as imageresponse:
-            img = await imageresponse.read()
-            with io.BytesIO(img) as file:
-                await message.reply(file=discord.File(file, f"{prompt}.png"))
+async def cmd_genimage(client, message, prompt):
+    match await create_image(prompt):
+        case 200, response:
+            url = response["data"][0]["url"]
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as imageresponse:
+                    img = await imageresponse.read()
+                    with io.BytesIO(img) as file:
+                        await message.reply(file=discord.File(file, f"{prompt}.png"))
+        case 400, response:
+            await message.add_reaction(emoji.CROSS_MARK)
+            if response["error"]["type"] == "invalid_request_error":
+                await message.reply(response["error"]["message"])
+        case _:
+            await message.add_reaction(emoji.CROSS_MARK)
 
 
 async def get_channel_prompt(channel_id):
@@ -168,43 +179,28 @@ async def delete_channel_prompt(channel_id):
 
 
 async def create_image(prompt):
-    response = await _call_api("/v1/images/generations", json_body={
+    return await _call_api("/v1/images/generations", json_body={
         "prompt": prompt,
         "n": 1,
         "size": "256x256",
         "response_format": "url",
     })
-    return await response.json()
 
 
 async def get_response_for_messages(messages):
-    result = await chat_completions({
+    return await _call_api("/v1/chat/completions", json_body={
         "model": "gpt-3.5-turbo",
         "messages": messages
     })
-    return result["choices"][0]["message"]["content"]
-async def get_simple_response(prompt):
-    result = await chat_completions({
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    })
-    return result["choices"][0]["message"]["content"]
-
-
-# https://platform.openai.com/docs/api-reference/chat/create
-async def chat_completions(payload):
-    response = await _call_api("/v1/chat/completions", json_body=payload)
-    return await response.json()
 
 
 async def embeddings(input, model="text-embedding-ada-002"):
-    response = await _call_api("/v1/embeddings", json_body={
+    status, response = await _call_api("/v1/embeddings", json_body={
         "model": model,
         "input": input,
     }, skip_log=True)
-    return await response.json()
+    return response
+
 
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
 async def _call_api(path, json_body=None, query=None, skip_log=False):
@@ -222,4 +218,4 @@ async def _call_api(path, json_body=None, query=None, skip_log=False):
                 log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")
                 await asyncio.sleep(ratelimit_delay)
                 continue
-            return response
+            return response.status, await response.json()
