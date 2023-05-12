@@ -27,6 +27,7 @@ def register(client):
     return {
         'setprompt': cmd_setprompt,
         'genimage': cmd_genimage,
+        'search': cmd_search,
     }
 
 
@@ -37,6 +38,29 @@ async def main():
         except Exception:
             await util.log_exception(log)
         await asyncio.sleep(5)
+
+
+async def cmd_search(client, message, arg):
+    messages = await search_embedding(message.guild.id, arg)
+    contents = list(map(lambda r: r["content"], messages))
+    response = "\n".join(contents)
+    reply_target = message
+    for msg in util.split_message_for_sending(response.split("\n")):
+        reply_target = await reply_target.reply(msg)
+
+
+async def search_embedding(guild_id, query):
+    response = await embeddings([query])
+    embedding = response["data"][0]["embedding"]
+    return await db.fetch("""
+        SELECT message_id, content
+        FROM message JOIN openaiembedding USING (message_id)
+        WHERE guild_id = $1
+         -- OpenAI embeddings are normalized to length 1 so this is best performance for exact search
+         -- https://platform.openai.com/docs/guides/embeddings/which-distance-function-should-i-use
+        ORDER BY embedding <#> $2
+        LIMIT 5
+    """, str(guild_id), embedding)
 
 
 async def generate_embeddings():
