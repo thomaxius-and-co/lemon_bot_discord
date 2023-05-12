@@ -37,6 +37,4 @@ class JsonFormatter(Formatter):
             "name": record.name,
             "level": record.levelname,
             "message": record.getMessage(),
-            "filename": record.filename,
-            "funcName": record.funcName,
         })
