@@ -72,7 +72,7 @@ class Application extends Stack {
     })
 
     const dbSecurityGroup = new SecurityGroup(this, "DatabaseSecurityGroup", { vpc })
-    const engine = DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_12 })
+    const engine = DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_13 })
     const credentials = Credentials.fromGeneratedSecret("postgres")
     const db = new DatabaseInstance(this, "Database", {
       engine,
@@ -81,6 +81,7 @@ class Application extends Stack {
       securityGroups: [ dbSecurityGroup ],
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
       credentials,
+      allowMajorVersionUpgrade: true,
       autoMinorVersionUpgrade: true,
       allocatedStorage: 20,
       maxAllocatedStorage: 20,
