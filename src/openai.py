@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import discord
 import os
 import json
@@ -27,6 +28,37 @@ def register(client):
         'setprompt': cmd_setprompt,
         'genimage': cmd_genimage,
     }
+
+
+async def main():
+    while True:
+        try:
+            await generate_embeddings()
+        except Exception:
+            await util.log_exception(log)
+        await asyncio.sleep(5)
+
+
+async def generate_embeddings():
+    rows = await db.fetch("""
+        SELECT message_id, content
+        FROM message
+        WHERE NOT bot and content != '' AND content NOT LIKE '!%'
+        AND NOT EXISTS (SELECT 1 FROM openaiembedding WHERE openaiembedding.message_id = message.message_id)
+        LIMIT 100
+    """)
+    if len(rows) == 0:
+        return
+
+    contents = list(map(lambda r: r["content"], rows))
+    response = await embeddings(contents)
+
+    async with db.transaction() as tx:
+        for output in response["data"]:
+            await tx.execute("""
+                INSERT INTO openaiembedding(message_id, embedding)
+                VALUES ($1, $2)
+            """, rows[output["index"]]["message_id"], output["embedding"])
 
 
 async def handle_message(client, message):
@@ -139,11 +171,20 @@ async def chat_completions(payload):
     response = await _call_api("/v1/chat/completions", json_body=payload)
     return await response.json()
 
+
+async def embeddings(input, model="text-embedding-ada-002"):
+    response = await _call_api("/v1/embeddings", json_body={
+        "model": model,
+        "input": input,
+    }, skip_log=True)
+    return await response.json()
+
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
-async def _call_api(path, json_body=None, query=None):
+async def _call_api(path, json_body=None, query=None, skip_log=False):
     url = "https://api.openai.com{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.post(url, headers=AUTH_HEADER, json=json_body)
-            log.info("%s %s %s %s %s", response.method, response.url, response.status, json.dumps(json_body), await response.text())
+            if not skip_log:
+                log.info("%s %s %s %s %s", response.method, response.url, response.status, json.dumps(json_body), await response.text())
             return response

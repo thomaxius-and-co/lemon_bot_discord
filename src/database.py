@@ -4,6 +4,7 @@ import threading
 import asyncpg
 import logger
 import migration
+from pgvector.asyncpg import register_vector
 
 log = logger.get("DATABASE")
 
@@ -29,10 +30,16 @@ async def get_pool():
         pool = await asyncpg.create_pool(
             _connect_string,
             min_size=MIN_CONNECTION_POOL_SIZE,
-            max_size=MAX_CONNECTION_POOL_SIZE
+            max_size=MAX_CONNECTION_POOL_SIZE,
+            init=init_connection,
         )
         setattr(_pool_holder, "pool", pool)
     return pool
+
+
+async def init_connection(conn):
+    await register_vector(conn)
+
 
 async def close_pool():
     global _pool_holder
@@ -69,14 +76,15 @@ async def explain(sql, *params, tx=None):
     return "\n".join(map(lambda r: r["QUERY PLAN"], rows))
 
 class transaction:
-    def __init__(self, readonly = False):
+    def __init__(self, readonly = False, pool=None):
         self.readonly = readonly
-        self.pool = None
+        self.pool = pool
         self.con = None
         self.tx = None
 
     async def __aenter__(self):
-        self.pool = await get_pool()
+        if self.pool is None:
+            self.pool = await get_pool()
         self.con = await self.pool.acquire()
         self.tx = self.con.transaction(readonly=self.readonly, isolation='serializable' if self.readonly else 'read_committed')
         await self.tx.start()
@@ -91,5 +99,8 @@ class transaction:
         await self.pool.release(self.con)
 
 async def initialize_schema():
-    async with transaction() as tx:
-        await migration.run_migrations(tx)
+    # Pool without init function because we can't register vector type handler before
+    # the pgvector extension is created which is done here in migrations
+    async with asyncpg.create_pool(_connect_string, min_size=1, max_size=1) as pool:
+        async with transaction(pool=pool) as tx:
+            await migration.run_migrations(tx)

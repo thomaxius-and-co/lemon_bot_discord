@@ -91,6 +91,7 @@ async def main():
     # Database schema has to be initialized before running the bot
     await db.initialize_schema()
     asyncio.create_task(archiver.main())
+    asyncio.create_task(openai.main())
     await trophies.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
