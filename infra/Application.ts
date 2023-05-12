@@ -72,7 +72,7 @@ class Application extends Stack {
     })
 
     const dbSecurityGroup = new SecurityGroup(this, "DatabaseSecurityGroup", { vpc })
-    const engine = DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_14 })
+    const engine = DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_15 })
     const credentials = Credentials.fromGeneratedSecret("postgres")
     const db = new DatabaseInstance(this, "Database", {
       engine,
