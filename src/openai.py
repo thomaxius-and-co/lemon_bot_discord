@@ -217,4 +217,9 @@ async def _call_api(path, json_body=None, query=None, skip_log=False):
             else:
                 # Read the body as it can't be done after the client session is closed
                 await response.text()
+
+            if response.status == 429:
+                log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")
+                await asyncio.sleep(ratelimit_delay)
+                continue
             return response
