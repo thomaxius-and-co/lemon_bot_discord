@@ -10,6 +10,7 @@ import logger
 import retry
 import database as db
 import util
+import perf
 
 log = logger.get("OPENAI")
 
@@ -63,13 +64,14 @@ async def search_embedding(guild_id, query):
     """, str(guild_id), embedding)
 
 
+@perf.time_async("generate_embeddings")
 async def generate_embeddings():
     rows = await db.fetch("""
         SELECT message_id, content
         FROM message
         WHERE NOT bot and content != '' AND content NOT LIKE '!%'
         AND NOT EXISTS (SELECT 1 FROM openaiembedding WHERE openaiembedding.message_id = message.message_id)
-        LIMIT 100
+        LIMIT 1000
     """)
     if len(rows) == 0:
         return
@@ -78,11 +80,12 @@ async def generate_embeddings():
     response = await embeddings(contents)
 
     async with db.transaction() as tx:
-        for output in response["data"]:
-            await tx.execute("""
-                INSERT INTO openaiembedding(message_id, embedding)
-                VALUES ($1, $2)
-            """, rows[output["index"]]["message_id"], output["embedding"])
+        def mk_row(output): return rows[output["index"]]["message_id"], output["embedding"]
+        queryparams = list(mk_row(output) for output in response["data"])
+        await tx.executemany(
+            "INSERT INTO openaiembedding(message_id, embedding) VALUES ($1, $2)",
+            queryparams
+        )
 
 
 async def handle_message(client, message):
