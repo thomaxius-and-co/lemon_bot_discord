@@ -211,4 +211,7 @@ async def _call_api(path, json_body=None, query=None, skip_log=False):
             response = await session.post(url, headers=AUTH_HEADER, json=json_body)
             if not skip_log:
                 log.info("%s %s %s %s %s", response.method, response.url, response.status, json.dumps(json_body), await response.text())
+            else:
+                # Read the body as it can't be done after the client session is closed
+                await response.text()
             return response
