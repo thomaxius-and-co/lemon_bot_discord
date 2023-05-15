@@ -693,28 +693,28 @@ async def on_socket_raw_receive(raw_msg):
     msg = json.loads(raw_msg)
     type = msg.get("t", None)
     data = msg.get("d", None)
+    match type:
+        case "MESSAGE_CREATE":
+            log.info("Insta-archiving a new message")
+            guild_id = await db.fetchval("SELECT guild_id FROM channel_archiver_status WHERE channel_id = $1",
+                                         data["channel_id"])
+            await archiver.insert_message(db, guild_id, data)
 
-    if (type == "MESSAGE_CREATE"):
-        log.info("Insta-archiving a new message")
-        guild_id = await db.fetchval("SELECT guild_id FROM channel_archiver_status WHERE channel_id = $1",
-                                     data["channel_id"])
-        await archiver.insert_message(db, guild_id, data)
+        case "GUILD_CREATE":
+            log.info("Updating users from GUILD_CREATE event")
+            members = data.get("members", [])
+            users = [m.get("user") for m in members]
+            await upsert_users(users)
 
-    elif (type == "GUILD_CREATE"):
-        log.info("Updating users from GUILD_CREATE event")
-        members = data.get("members", [])
-        users = [m.get("user") for m in members]
-        await upsert_users(users)
+        case "GUILD_MEMBER_UPDATE":
+            log.info("Updating user from GUILD_MEMBER_UPDATE event")
+            user = data.get("user")
+            await upsert_users([user])
 
-    elif (type == "GUILD_MEMBER_UPDATE"):
-        log.info("Updating user from GUILD_MEMBER_UPDATE event")
-        user = data.get("user")
-        await upsert_users([user])
-
-    elif (type == "PRESENCE_UPDATE"):
-        log.info("Updating user from PRESENCE_UPDATE event")
-        user = data.get("user")
-        await upsert_users([user])
+        case "PRESENCE_UPDATE":
+            log.info("Updating user from PRESENCE_UPDATE event")
+            user = data.get("user")
+            await upsert_users([user])
 
 
 def is_full_user(user):
