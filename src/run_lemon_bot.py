@@ -58,7 +58,7 @@ import bot_replies
 log = logger.get("BOT")
 
 intents = discord.Intents.all()
-client = discord.Client(intents=intents)
+client = discord.Client(intents=intents, enable_debug_events=True)
 EIGHT_BALL_OPTIONS = ["It is certain", "It is decidedly so", "Without a doubt",
                       "Yes definitely", "You may rely on it", "As I see it yes",
                       "Most likely", "Outlook good", "Yes",
@@ -689,7 +689,8 @@ def parse_raw_msg(msg):
 
 
 @client.event
-async def on_socket_response(msg):
+async def on_socket_raw_receive(raw_msg):
+    msg = json.loads(raw_msg)
     type = msg.get("t", None)
     data = msg.get("d", None)
 
