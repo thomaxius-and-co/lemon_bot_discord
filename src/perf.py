@@ -21,7 +21,7 @@ def time(name):
 def log_perf(name, start, end, func, args, kwargs):
     duration = duration = (end - start) * 1000
     call = call_str(func, args, kwargs)
-    log.info("[{name}] [{duration}] {call}".format(name=name, duration=round(duration), call=call))
+    log.info({ "name": name, "duration": round(duration), "call": call })
 
 def time_async(name):
     def wrap_func_with_timer(func):

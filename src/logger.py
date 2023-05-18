@@ -32,9 +32,15 @@ class JsonFormatter(Formatter):
         super().__init__()
 
     def format(self, record: LogRecord) -> str:
-        return json.dumps({
+        record_to_log = {
             "timestamp": datetime.utcfromtimestamp(record.created).isoformat(),
             "name": record.name,
             "level": record.levelname,
-            "message": record.getMessage(),
-        })
+        }
+
+        if isinstance(record.msg, dict):
+            record_to_log["message"] = record.msg
+        else:
+            record_to_log["message"] = record.getMessage()
+
+        return json.dumps(record_to_log)
