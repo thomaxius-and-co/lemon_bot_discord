@@ -37,7 +37,12 @@ async def get(path):
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as r:
-            log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
+            log.debug({
+                "requestMethod": r.method,
+                "requestUrl": str(r.url),
+                "responseStatus": r.status,
+                "responseBody": await r.text(),
+            })
             if r.status == 500:
                 raise HttpError(r)
             response = await r.json()

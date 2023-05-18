@@ -27,7 +27,12 @@ async def call_api(endpoint, params):
     url = "https://api.steampowered.com/%s%s" % (endpoint, make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.debug("%s %s %s %s", r.method, str(r.url).replace(os.environ["STEAM_API_KEY"], "<REDACTED>"), r.status, await r.text())
+        log.debug({
+            "requestMethod": r.method,
+            "requestUrl": str(r.url).replace(os.environ["STEAM_API_KEY"], "<REDACTED>"),
+            "responseStatus": r.status,
+            "responseBody": await r.text(),
+        })
         return await r.json()
 
 @cache.cache(ttl = cache.HOUR)
@@ -50,7 +55,12 @@ async def call_appdetails(appid):
     url = "http://store.steampowered.com/api/appdetails?appids={appid}".format(appid=appid)
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
+        log.debug({
+            "requestMethod": r.method,
+            "requestUrl": str(r.url),
+            "responseStatus": r.status,
+            "responseBody": await r.text(),
+        })
         return await r.json()
 
 @cache.cache()

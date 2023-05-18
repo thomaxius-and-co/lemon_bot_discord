@@ -110,10 +110,13 @@ async def _call_api(path, query=None):
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.get(url, headers=AUTH_HEADER)
-            if response.status == 200:
-                log.debug("%s %s %s %s", response.method, response.url, response.status, await response.text())
-            else:
-                log.info("%s %s %s %s", response.method, response.url, response.status, await response.text())
+            log_fn = log.debug if response.status == 200 else log.info
+            log_fn({
+                "requestMethod": response.method,
+                "requestUrl": str(response.url),
+                "responseStatus": response.status,
+                "responseBody": await response.text(),
+            })
 
             # Hit ratelimits! Always retry after a delay
             if response.status == 429:

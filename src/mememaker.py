@@ -63,8 +63,12 @@ async def meme_from_url(url, meme):
     async with aiohttp.ClientSession() as session:
         url = f"http://memeapi.santamaa.com/memefromurl?url={url}&meme={meme}"
         response = await session.get(url)
-        log.debug("%s %s %s %s", response.method, response.url, response.status, await
-        response.text())
+        log.debug({
+            "requestMethod": response.method,
+            "requestUrl": str(response.url),
+            "responseStatus": response.status,
+            "responseBody": await response.text(),
+        })
         if response.status not in [200, 404]:
             raise Exception("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
         result = await response.json()

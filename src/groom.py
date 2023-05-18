@@ -74,7 +74,12 @@ async def get_times(date, location):
 async def call_api(path, *, params=None):
     async with aiohttp.ClientSession() as session:
         async with session.get(f"https://www.varaaheti.fi/groom/fi/api/public{path}", params=params) as r:
-            log.debug("%s %s %s %s", r.method, r.url, r.status, await r.text())
+            log.debug({
+                "requestMethod": r.method,
+                "requestUrl": str(r.url),
+                "responseStatus": r.status,
+                "responseBody": await r.text()
+            })
             if r.status != 200:
                 raise Exception(f"Unexpected HTTP status {r.status}")
             return await r.json()

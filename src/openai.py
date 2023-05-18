@@ -208,11 +208,14 @@ async def _call_api(path, json_body=None, query=None, skip_log=False):
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.post(url, headers=AUTH_HEADER, json=json_body)
-            if not skip_log:
-                log.info("%s %s %s %s %s", response.method, response.url, response.status, json.dumps(json_body), await response.text())
-            else:
-                # Read the body as it can't be done after the client session is closed
-                await response.text()
+            log_fn = log.debug if skip_log and response.status == 200 else log.info
+            log_fn({
+                "requestMethod": response.method,
+                "requestUrl": str(response.url),
+                "responseStatus": response.status,
+                "requestBody": json.dumps(json_body),
+                "responseBody": await response.text(),
+            })
 
             if response.status == 429:
                 log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")

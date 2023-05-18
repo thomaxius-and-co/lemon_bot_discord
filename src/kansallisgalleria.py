@@ -66,5 +66,10 @@ async def call_api(endpoint, params = {}):
     url = "https://www.kansallisgalleria.fi/api%s%s" % (endpoint, http_util.make_query_string(params))
     async with aiohttp.ClientSession() as session:
         r = await session.get(url, headers=headers)
-        log.debug("%s %s %s %s", r.method, str(r.url), r.status, await r.text())
+        log.debug({
+          "requestMethod": r.method,
+          "requestUrl": str(r.url),
+          "responseStatus": r.status,
+          "responseBody": await r.text(),
+        })
         return await r.json()

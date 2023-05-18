@@ -42,7 +42,12 @@ async def getdevice(user_id):
     url = f"https://{API_HOSTNAME}/v2/user{http_util.make_query_string(params)}"
     async with aiohttp.ClientSession() as session:
         r = await session.get(url)
-        log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, await r.text())
+        log.debug({
+            "requestMethod": r.method,
+            "requestUrl": str(r.url).replace(access_token, "<REDACTED>"),
+            "responseStatus": r.status,
+            "responseBody": await r.text(),
+        })
         return await r.json(content_type='text/json')
 
 async def refresh_access_token(user_id):
@@ -55,7 +60,12 @@ async def refresh_access_token(user_id):
             "client_secret": os.environ.get("WITHINGS_CLIENT_SECRET"),
             "refresh_token": refresh_token,
         })
-        log.debug("%s %s %s %s", r.method, str(r.url).replace(access_token, "<REDACTED>"), r.status, "<REDACTED>")
+        log.debug({
+            "requestMethod": r.method,
+            "requestUrl": str(r.url).replace(access_token, "<REDACTED>"),
+            "responseStatus": r.status,
+            "responseBody": "<REDACTED>",
+        })
         api_response = await r.json(content_type='application/json')
         token_response = api_response["body"]
         await upsert_access_token(user_id, token_response)
