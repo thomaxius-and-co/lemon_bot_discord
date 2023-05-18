@@ -39,7 +39,7 @@ async def main():
             await generate_embeddings()
         except Exception:
             await util.log_exception(log)
-        await asyncio.sleep(5)
+        await asyncio.sleep(120)
 
 
 async def cmd_search(client, message, arg):
