@@ -4,7 +4,6 @@ import threading
 import asyncpg
 import logger
 import migration
-from pgvector.asyncpg import register_vector
 
 log = logger.get("DATABASE")
 
@@ -31,14 +30,9 @@ async def get_pool():
             _connect_string,
             min_size=MIN_CONNECTION_POOL_SIZE,
             max_size=MAX_CONNECTION_POOL_SIZE,
-            init=init_connection,
         )
         setattr(_pool_holder, "pool", pool)
     return pool
-
-
-async def init_connection(conn):
-    await register_vector(conn)
 
 
 async def close_pool():

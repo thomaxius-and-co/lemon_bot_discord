@@ -11,7 +11,6 @@ import logger
 import retry
 import database as db
 import util
-import perf
 
 log = logger.get("OPENAI")
 
@@ -29,64 +28,7 @@ def register(client):
     return {
         'setprompt': cmd_setprompt,
         'genimage': cmd_genimage,
-        'search': cmd_search,
     }
-
-
-async def main():
-    while True:
-        try:
-            await generate_embeddings()
-        except Exception:
-            await util.log_exception(log)
-        await asyncio.sleep(120)
-
-
-async def cmd_search(client, message, arg):
-    messages = await search_embedding(message.guild.id, arg)
-    contents = list(map(lambda r: f"Result with distance {r['distance']}:\n{r['content']}", messages))
-    response = "\n".join(contents)
-    reply_target = message
-    for msg in util.split_message_for_sending(response.split("\n")):
-        reply_target = await reply_target.reply(msg)
-
-
-async def search_embedding(guild_id, query):
-    response = await embeddings([query])
-    embedding = response["data"][0]["embedding"]
-    return await db.fetch("""
-        SELECT message_id, content, embedding <#> $2 AS distance
-        FROM message JOIN openaiembedding USING (message_id)
-        WHERE guild_id = $1 -- AND (embedding <#> $2) < -0.85
-         -- OpenAI embeddings are normalized to length 1 so this is best performance for exact search
-         -- https://platform.openai.com/docs/guides/embeddings/which-distance-function-should-i-use
-        ORDER BY embedding <#> $2
-        LIMIT 5
-    """, str(guild_id), embedding)
-
-
-@perf.time_async("generate_embeddings")
-async def generate_embeddings():
-    rows = await db.fetch("""
-        SELECT message_id, content
-        FROM message
-        WHERE NOT bot and content != '' AND content NOT LIKE '!%'
-        AND NOT EXISTS (SELECT 1 FROM openaiembedding WHERE openaiembedding.message_id = message.message_id)
-        LIMIT 1000
-    """)
-    if len(rows) == 0:
-        return
-
-    contents = list(map(lambda r: r["content"], rows))
-    response = await embeddings(contents)
-
-    async with db.transaction() as tx:
-        def mk_row(output): return rows[output["index"]]["message_id"], output["embedding"]
-        queryparams = list(mk_row(output) for output in response["data"])
-        await tx.executemany(
-            "INSERT INTO openaiembedding(message_id, embedding) VALUES ($1, $2)",
-            queryparams
-        )
 
 
 async def handle_message(client, message):
@@ -194,22 +136,13 @@ async def get_response_for_messages(messages):
     })
 
 
-async def embeddings(input, model="text-embedding-ada-002"):
-    status, response = await _call_api("/v1/embeddings", json_body={
-        "model": model,
-        "input": input,
-    }, skip_log=True)
-    return response
-
-
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
-async def _call_api(path, json_body=None, query=None, skip_log=False):
+async def _call_api(path, json_body=None, query=None):
     url = "https://api.openai.com{0}{1}".format(path, http_util.make_query_string(query))
     async with aiohttp.ClientSession() as session:
         for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
             response = await session.post(url, headers=AUTH_HEADER, json=json_body)
-            log_fn = log.debug if skip_log and response.status == 200 else log.info
-            log_fn({
+            log.info({
                 "requestMethod": response.method,
                 "requestUrl": str(response.url),
                 "responseStatus": response.status,
