@@ -30,9 +30,15 @@ async def get_pool():
             _connect_string,
             min_size=MIN_CONNECTION_POOL_SIZE,
             max_size=MAX_CONNECTION_POOL_SIZE,
+            setup=setup_connection,
         )
         setattr(_pool_holder, "pool", pool)
     return pool
+
+
+async def setup_connection(conn):
+    request_id = logger._request_id_var.get("bot")
+    await conn.execute(f"SET application_name TO '{request_id}'")
 
 
 async def close_pool():
@@ -92,9 +98,10 @@ class transaction:
 
         await self.pool.release(self.con)
 
+
 async def initialize_schema():
     # Pool without init function because we can't register vector type handler before
     # the pgvector extension is created which is done here in migrations
-    async with asyncpg.create_pool(_connect_string, min_size=1, max_size=1) as pool:
+    async with asyncpg.create_pool(_connect_string, min_size=1, max_size=1, setup=setup_connection) as pool:
         async with transaction(pool=pool) as tx:
             await migration.run_migrations(tx)
