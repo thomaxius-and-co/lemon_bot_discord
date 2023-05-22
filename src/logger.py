@@ -1,8 +1,41 @@
+import functools
+import inspect
 import logging
 import json
 import os
+from uuid import uuid4
 from logging import Formatter, LogRecord
 from datetime import datetime
+from contextvars import ContextVar
+from contextlib import contextmanager
+
+
+_request_id_var: ContextVar[str] = ContextVar("request_id")
+
+
+def with_request_id(func):
+    if inspect.iscoroutinefunction(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            with new_request_id():
+                return await func(*args, **kwargs)
+        return wrapper
+    else:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with new_request_id():
+                return func(*args, **kwargs)
+        return wrapper
+
+
+@contextmanager
+def new_request_id():
+    request_id = str(uuid4())
+    token = _request_id_var.set(request_id)
+    try:
+        yield request_id
+    finally:
+        _request_id_var.reset(token)
 
 def init():
     if json_log_enabled():
@@ -42,5 +75,8 @@ class JsonFormatter(Formatter):
             record_to_log["message"] = record.msg
         else:
             record_to_log["message"] = record.getMessage()
+
+        if (request_id := _request_id_var.get(None)) is not None:
+            record_to_log["requestId"] = request_id
 
         return json.dumps(record_to_log)
