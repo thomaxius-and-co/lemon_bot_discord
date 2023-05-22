@@ -25,21 +25,9 @@ def register(client):
     "art": cmd_art,
   }
 
-async def task(client):
-  if not is_enabled():
-    return
 
-  fetch_interval = 24 * 60 * 60
-
-  while True:
-    try:
-      log.info("Fetching newest fulldump")
-      await update_data()
-    except Exception:
-      await util.log_exception(log)
-    await asyncio.sleep(fetch_interval)
-
-async def update_data():
+async def update_data(client):
+  log.info("Fetching newest fulldump")
   global objects_with_images
   objects = await call_api("/v1/objects")
   objects_with_images = [o for o in objects if len(o["multimedia"]) > 0]

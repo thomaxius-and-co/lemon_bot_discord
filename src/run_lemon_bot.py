@@ -744,6 +744,7 @@ async def upsert_users(users):
 
 # Dispacther for messages from the users.
 @client.event
+@logger.with_request_id
 async def on_message(message):
     content = message.content
     try:
@@ -796,13 +797,29 @@ def autocorrect_command(cmd):
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Game(name='is not working | I am your worker. I am your slave.'))
-    asyncio.create_task(feed.task(client))
-    asyncio.create_task(osu.task(client))
-    asyncio.create_task(faceit_tasker.elo_notifier_task(client))
-    asyncio.create_task(reminder.task(client))
-    asyncio.create_task(kansallisgalleria.task(client))
-    asyncio.create_task(ence_matches.do_tasks(client))
-    asyncio.create_task(status.main(client, 'messages_count'))
+
+    def minutes(n): return n * 60
+    def hours(n): return n * minutes(60)
+
+    run_scheduled_task(feed.check_feeds, minutes(30))
+    run_scheduled_task(osu.check_pps, minutes(5))
+    run_scheduled_task(faceit_tasker.elo_notifier_task, minutes(3))
+    run_scheduled_task(reminder.process_next_reminder, minutes(1))
+    if kansallisgalleria.is_enabled():
+        run_scheduled_task(kansallisgalleria.update_data, hours(24))
+    run_scheduled_task(ence_matches.do_tasks, hours(2.5))
+    run_scheduled_task(status.check_user_and_message_count, minutes(30))
+
+def run_scheduled_task(task_func, interval):
+    async def loop():
+        while True:
+            with logger.new_request_id():
+                try:
+                    await task_func(client)
+                except Exception:
+                    await util.log_exception(log)
+                await asyncio.sleep(interval)
+    asyncio.create_task(loop())
 
 if __name__ == "__main__":
     asyncio.run(main())

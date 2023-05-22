@@ -85,6 +85,7 @@ async def cmd_osu_remove(client, message, arg):
       await tx.execute("DELETE FROM osuuser WHERE osuuser_id = $1", user_std.id)
 
 async def check_pps(client):
+    log.info("Checking tracked player performance")
     users = await db.fetch("""
       SELECT
         osuuser.osuuser_id, channel_id,
@@ -185,16 +186,6 @@ async def update_pp(user_id, mode, pp, rank):
     WHERE osuuser_id = $3 AND osugamemode_id = $4
   """, pp, rank, user_id, gamemode_id)
 
-async def task(client):
-    fetch_interval = 10 * 60
-
-    while True:
-        await asyncio.sleep(fetch_interval)
-        try:
-            log.info("Checking tracked player performance")
-            await check_pps(client)
-        except Exception:
-            await util.log_exception(log)
 
 def register(client):
     return {

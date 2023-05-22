@@ -40,13 +40,6 @@ async def add_reminder(user_id, time, text, original_text):
         VALUES ($1, $2, $3, $4)
     """, str(user_id), time.replace(tzinfo=None), text, original_text)
 
-async def task(client):
-    while True:
-        await asyncio.sleep(60)
-        try:
-            await process_next_reminder(client)
-        except Exception as e:
-            await util.log_exception(log)
 
 IGNORED_DISCORD_ERROR_CODES = [
     50007, # Cannot send messages to this user

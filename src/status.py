@@ -7,35 +7,26 @@ log = logger.get("STATUS")
 
 CUSTOM_STATUS = None
 CUSTOM_STATUS_DISPLAYED = False
-
-
-
-async def main(client, task_name):
-    task = TASKS.get(task_name, None)
-    if not task:
-        raise Exception('Error: Invalid task name supplied to status.py')
-    await task(client)
+old_user_count, old_message_count = None, None
 
 
 async def check_user_and_message_count(client):
     global CUSTOM_STATUS_DISPLAYED
-    old_user_count, old_message_count = None, None
-    while True:
-        log.info("Checking user and message count")
-        total_users = await get_user_count()
-        total_messages = await get_message_count()
-        if total_messages and ((total_users != old_user_count) or (total_messages != old_message_count)) and \
-                ((not CUSTOM_STATUS) or (CUSTOM_STATUS and CUSTOM_STATUS_DISPLAYED)):
-            log.info("Setting new values: %s total users, %s messages", total_users, total_messages)
-            await change_status(client, ('Total users: %s | Total messages: %s' % (total_users, total_messages)))
-            old_user_count, old_message_count = total_users, total_messages
-            CUSTOM_STATUS_DISPLAYED = False
-        elif CUSTOM_STATUS and not CUSTOM_STATUS_DISPLAYED:
-            await change_status(client, CUSTOM_STATUS)
-            CUSTOM_STATUS_DISPLAYED = True
-        else:
-            log.info("Nothing to update")
-        await asyncio.sleep(1800)
+    global old_user_count, old_message_count
+    log.info("Checking user and message count")
+    total_users = await get_user_count()
+    total_messages = await get_message_count()
+    if total_messages and ((total_users != old_user_count) or (total_messages != old_message_count)) and \
+            ((not CUSTOM_STATUS) or (CUSTOM_STATUS and CUSTOM_STATUS_DISPLAYED)):
+        log.info("Setting new values: %s total users, %s messages", total_users, total_messages)
+        await change_status(client, ('Total users: %s | Total messages: %s' % (total_users, total_messages)))
+        old_user_count, old_message_count = total_users, total_messages
+        CUSTOM_STATUS_DISPLAYED = False
+    elif CUSTOM_STATUS and not CUSTOM_STATUS_DISPLAYED:
+        await change_status(client, CUSTOM_STATUS)
+        CUSTOM_STATUS_DISPLAYED = True
+    else:
+        log.info("Nothing to update")
 
 async def change_status(client, status):
     await client.change_presence(
@@ -93,9 +84,6 @@ async def cmd_status(client, message, input):
     CUSTOM_STATUS = input
     CUSTOM_STATUS_DISPLAYED = True
 
-TASKS = {
-    'messages_count': check_user_and_message_count
-}
 
 def register(client):
     return {

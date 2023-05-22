@@ -1,5 +1,4 @@
 import aiohttp
-import asyncio
 from contextlib import suppress
 from datetime import datetime
 import time
@@ -10,7 +9,6 @@ import io
 import database as db
 import command
 import emoji
-import util
 import logger
 import perf
 import retry
@@ -34,10 +32,12 @@ def get_date(entry):
 
 @perf.time_async("Checking feeds")
 async def check_feeds(client):
+    log.info("Checking feeds")
     feeds = await db.fetch("SELECT feed_id, url, last_entry, channel_id FROM feed")
 
     for id, url, last_entry, channel_id in feeds:
         await process_feed(client, id, url, last_entry, channel_id)
+    log.info("Feed: feeds checked")
 
 @retry.on_any_exception(max_attempts = 10, init_delay = 1, max_delay = 10)
 async def fetch_feed(url):
@@ -102,18 +102,6 @@ async def process_feed(client, id, url, last_entry, channel_id):
             WHERE feed_id = $2
         """, max_timestamp, id)
 
-async def task(client):
-    # Check feeds every minute
-    fetch_interval = 30 * 60
-
-    while True:
-        await asyncio.sleep(fetch_interval)
-        try:
-            log.info("Checking feeds")
-            await check_feeds(client)
-            log.info("Feed: feeds checked")
-        except Exception:
-            await util.log_exception(log)
 
 async def cmd_feed(client, message, arg):
     if arg is None:

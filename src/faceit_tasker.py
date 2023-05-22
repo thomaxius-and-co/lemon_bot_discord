@@ -16,21 +16,18 @@ import traceback
 NOT_A_PM_COMMAND_ERROR = "This command doesn't work in private chat."
 
 log = logger.get("FACEIT")
+
+
 async def elo_notifier_task(client):
-    fetch_interval = 3 * 60
-    while True:
-        await asyncio.sleep(fetch_interval)
-        try:
-            await check_faceit_elo(client)
-        except UnknownError as e:
-            if 500 <= e.response.status <= 599:
-                # Faceit API is broken and  there's probably very little we can
-                # do so no reason to spam errors channel
-                log.warning("Failed to check faceit stats\n" + traceback.format_exc())
-            else:
-                await util.log_exception(log, "Failed to check faceit stats")
-        except Exception as e:
-            await util.log_exception(log, "Failed to check faceit stats")
+    try:
+        await check_faceit_elo(client)
+    except UnknownError as e:
+        if 500 <= e.response.status <= 599:
+            # Faceit API is broken and  there's probably very little we can
+            # do so no reason to spam errors channel
+            log.warning("Failed to check faceit stats\n" + traceback.format_exc())
+        else:
+            raise e
 
 
 async def check_faceit_elo(client):

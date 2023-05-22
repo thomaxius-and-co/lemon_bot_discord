@@ -11,7 +11,6 @@ from asyncio import sleep
 
 log = logger.get("ENCE")
 
-FETCH_INTERVAL = 9000
 
 MATCHES_DICT = {}
 LAST_CHECKED = None
@@ -34,14 +33,12 @@ hltv_maps = {
 
 
 async def do_tasks(client) -> None:
-    while True:
-        global MATCHES_DICT
-        MATCHES_DICT.clear()
-        await parse_hltv_matches(await get_hltv_matches())
-        global LAST_CHECKED
-        LAST_CHECKED = datetime.datetime.now()
-        await check_if_ence_day(client)
-        await sleep(FETCH_INTERVAL)
+    global MATCHES_DICT
+    MATCHES_DICT.clear()
+    await parse_hltv_matches(await get_hltv_matches())
+    global LAST_CHECKED
+    LAST_CHECKED = datetime.datetime.now()
+    await check_if_ence_day(client)
 
 
 async def check_if_ence_day(client):
