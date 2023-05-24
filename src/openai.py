@@ -124,7 +124,7 @@ async def create_image(prompt):
     return await _call_api("/v1/images/generations", json_body={
         "prompt": prompt,
         "n": 1,
-        "size": "256x256",
+        "size": "1024x1024",
         "response_format": "url",
     })
 
