@@ -99,7 +99,7 @@ class Application extends Stack {
 
     const taskDefinition = new FargateTaskDefinition(this, "AppTaskDefinition", {
       cpu: 256,
-      memoryLimitMiB: 512,
+      memoryLimitMiB: 1024,
     })
     const appSecrets = Secret.fromSecretNameV2(this, "ApplicationSecrets", "ApplicationSecrets")
     taskDefinition.addContainer("AppContainer", {
