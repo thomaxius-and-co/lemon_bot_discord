@@ -15,7 +15,7 @@ log = logger.get("KANSALLISGALLERIA")
 objects_with_images = []
 
 def is_enabled():
-    return "KANSALLISGALLERIA_API_KEY" in os.environ
+    return False
 
 def register(client):
   if not is_enabled():
