@@ -270,3 +270,8 @@ CREATE TABLE faceit_records_config (
     reset_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reset_by TEXT NOT NULL REFERENCES discord_user (user_id)
 );
+
+CREATE TABLE kgobject (
+  kgobject_id bigint PRIMARY KEY,
+  data JSONB NOT NULL
+);
