@@ -48,7 +48,7 @@ async def update_data(client):
 @perf.time_async("Kansallisgalleria data import - database insert")
 async def batch_insert_objects(tx, file):
     batch = []
-    for obj in json_stream.load(fp).persistent():
+    for obj in json_stream.load(file).persistent():
         has_media = len(obj["multimedia"]) > 0
         has_title = "title" in obj and obj["title"] is not None
         if has_title and has_media:
