@@ -52,7 +52,7 @@ async def batch_insert_objects(tx, file):
         has_media = len(obj["multimedia"]) > 0
         has_title = "title" in obj and obj["title"] is not None
         if has_title and has_media:
-            batch.append((obj["id"], json.dumps(obj, cls=JSONStreamEncoder)))
+            batch.append((obj["objectId"], json.dumps(obj, cls=JSONStreamEncoder)))
 
         if len(batch) >= 1000:
             await tx.executemany("INSERT INTO kgobject (kgobject_id, data) VALUES ($1, $2)", batch)
@@ -74,12 +74,9 @@ async def cmd_art(client, message, _):
   title = o["title"]
   embed = discord.Embed(
     title=title.get("fi", title.get("en", title.get("sv", ""))),
-    url=f"https://www.kansallisgalleria.fi/en/object/{o['id']}"
+    url=f"https://www.kansallisgalleria.fi/en/object/{o['objectId']}"
   )
-  multimedia = o["multimedia"][0]
-  filename = str(multimedia['id']) + multimedia['filename_extension']
-  image_url = f"https://d3uvo7vkyyb63c.cloudfront.net/1/jpg/1000/{filename}"
-  embed.set_image(url=image_url)
+  embed.set_image(url=o["multimedia"][0]["jpg"]["1000"])
   await message.channel.send(embed=embed)
 
 @retry.on_any_exception()
