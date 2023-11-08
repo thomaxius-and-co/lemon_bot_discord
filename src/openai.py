@@ -131,7 +131,7 @@ async def create_image(prompt):
 
 async def get_response_for_messages(messages):
     return await _call_api("/v1/chat/completions", json_body={
-        "model": "gpt-4",
+        "model": "gpt-4-1106-preview",
         "messages": messages
     })
 
