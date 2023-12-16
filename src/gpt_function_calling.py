@@ -25,35 +25,37 @@ class GptFunctionStore:
 
 
     async def handle_tool_call(self, message, tool_call):
-        if tool_call["type"] == "function":
+        if tool_call["type"] != "function":
+            return
+
+        try:
             tool_call_id = tool_call["id"]
             function = tool_call["function"]
             function_name = function["name"]
 
             log.info("Received tool call for function %s", function_name)
-            if (func := self.tool_lookup.get(function_name, None)) is not None:
-                args_object = json.loads(function["arguments"])
-                log.info("Calling function %s with arguments %s", function_name, args_object)
-                arg_values = [args_object.get(arg_name) for arg_name, _ in get_function_arguments(func)]
-                token = self.trigger_message.set(message)
-                try:
-                    response = await func(*arg_values)
-                    return {
-                        "role": "tool",
-                        "tool_call_id": tool_call_id,
-                        "name": function_name,
-                        "content": f"Function call {function_name} returned:\n{response}"
-                    }
-                except Exception as e:
-                    log.info("Function call %s failed with exception %s", function_name, e)
-                    return {
-                        "role": "tool",
-                        "tool_call_id": tool_call_id,
-                        "name": function_name,
-                        "content": f"Unexpected error when calling function {function_name}"
-                    }
-                finally:
-                    self.trigger_message.reset(token)
+            func = self.tool_lookup[function_name]
+            args_object = json.loads(function["arguments"])
+            log.info("Calling function %s with arguments %s", function_name, args_object)
+            arg_values = [args_object.get(arg_name) for arg_name, _ in get_function_arguments(func)]
+            token = self.trigger_message.set(message)
+            response = await func(**args_object)
+            return {
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "name": function_name,
+                "content": response,
+            }
+        except Exception as e:
+            log.error("Function call %s failed with exception %s", function_name, e)
+            return {
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "name": function_name,
+                "content": f"Unexpected error when calling function {function_name}"
+            }
+        finally:
+            self.trigger_message.reset(token)
 
 def mk_tool_description(func):
     def get_function_name(func): return func.__name__
