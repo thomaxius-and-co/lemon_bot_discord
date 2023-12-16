@@ -44,7 +44,12 @@ async def change_user_nickname(
     The new nickname must be between 1 and 32 characters long."""
     message = gpt_functions.get_trigger_message()
     log.info(f"Changing nickname of {message.author} to {new_nickname}")
-    await message.author.edit(nick=new_nickname)
+    try:
+        await message.author.edit(nick=new_nickname)
+        return f"Successfully changed nickname to {new_nickname}."
+    except Exception:
+        return f"Failed to change nickname to {new_nickname}. Possibly because of lack of Discord permissions"
+
 
 @gpt_functions.register
 async def add_two_integers(
@@ -54,7 +59,7 @@ async def add_two_integers(
     """You can call this function to add two integers."""
     message = gpt_functions.get_trigger_message()
     log.info(f"Adding {a} and {b}")
-    await message.reply("The result is {0}".format(a + b))
+    return f"{a} + {b} = {a + b}"
 
 
 async def handle_message(client, message):
@@ -76,15 +81,27 @@ async def handle_message(client, message):
         case 400, _:
             await message.add_reaction(emoji.CROSS_MARK)
         case 200, result:
-            if (response_content := result["choices"][0]["message"]["content"]) is not None:
-                reply_target = message
-                for msg in util.split_message_for_sending(response_content.split("\n")):
-                    reply_target = await reply_target.reply(msg)
-            if (tool_calls := result["choices"][0]["message"]["tool_calls"]) is not None:
-                for tool_call in tool_calls:
-                    await gpt_functions.handle_tool_call(message, tool_call)
+            gpt_message = result["choices"][0]["message"]
+            if (response_content := gpt_message["content"]) is not None:
+                await split_reply(message, response_content)
+
+            if tool_calls := gpt_message["tool_calls"]:
+                responses = [await gpt_functions.handle_tool_call(message, tool_call) for tool_call in tool_calls]
+                log.info("Received function call responses: %s", responses)
+                match await get_response_for_messages(messages + [gpt_message] + responses, allow_tool_calls=False):
+                    case 400, e:
+                        log.info("Failed to generate next text response after tool call: %s", e)
+                    case 200, result:
+                        if (response_content := result["choices"][0]["message"]["content"]) is not None:
+                            await split_reply(message, response_content)
+
 
     return True
+
+async def split_reply(reply_target, response_content):
+    for msg in util.split_message_for_sending(response_content.split("\n")):
+        reply_target = await reply_target.reply(msg)
+    return reply_target
 
 async def get_reply_chain(client, message):
     if message.reference is None:
@@ -160,12 +177,14 @@ async def create_image(prompt):
     })
 
 
-async def get_response_for_messages(messages):
-    return await _call_api("/v1/chat/completions", json_body={
+async def get_response_for_messages(messages, *, allow_tool_calls=True):
+    request = {
         "model": "gpt-4-1106-preview",
         "messages": messages,
-        "tools": gpt_functions.get_functions_schema(),
-    })
+    }
+    if allow_tool_calls:
+        request["tools"] = gpt_functions.get_functions_schema()
+    return await _call_api("/v1/chat/completions", json_body=request)
 
 
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)

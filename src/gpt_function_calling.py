@@ -26,6 +26,7 @@ class GptFunctionStore:
 
     async def handle_tool_call(self, message, tool_call):
         if tool_call["type"] == "function":
+            tool_call_id = tool_call["id"]
             function = tool_call["function"]
             function_name = function["name"]
 
@@ -36,7 +37,21 @@ class GptFunctionStore:
                 arg_values = [args_object.get(arg_name) for arg_name, _ in get_function_arguments(func)]
                 token = self.trigger_message.set(message)
                 try:
-                    await func(*arg_values)
+                    response = await func(*arg_values)
+                    return {
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "name": function_name,
+                        "content": f"Function call {function_name} returned:\n{response}"
+                    }
+                except Exception as e:
+                    log.info("Function call %s failed with exception %s", function_name, e)
+                    return {
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "name": function_name,
+                        "content": f"Unexpected error when calling function {function_name}"
+                    }
                 finally:
                     self.trigger_message.reset(token)
 
