@@ -61,11 +61,14 @@ async def add_two_integers(
     log.info(f"Adding {a} and {b}")
     return f"{a} + {b} = {a + b}"
 
-
 async def handle_message(client, message):
     bot_mentioned = any(user for user in message.mentions if user.id == client.user.id)
     if not bot_mentioned:
         return False
+
+    bot_mention_string = "@" + get_bot_name(client, message.channel)
+    def clean_content(message):
+        return message.clean_content.replace(bot_mention_string, "")
 
     messages = []
     if (systemprompt := await get_channel_prompt(message.channel.id)) is not None:
@@ -73,9 +76,9 @@ async def handle_message(client, message):
     for m in await get_reply_chain(client, message):
         messages.append({
             "role": "assistant" if m.author.id == client.user.id else "user",
-            "content": m.clean_content,
+            "content": clean_content(m),
         })
-    messages.append({ "role": "user", "content": message.clean_content })
+    messages.append({ "role": "user", "content": clean_content(message) })
 
     match await get_response_for_messages(messages):
         case 400, _:
@@ -95,8 +98,12 @@ async def handle_message(client, message):
                         if (response_content := result["choices"][0]["message"]["content"]) is not None:
                             await split_reply(message, response_content)
 
-
     return True
+
+def get_bot_name(client, channel):
+    if guild := channel.guild:
+        return guild.me.nick or guild.me.name
+    return client.user.name
 
 async def split_reply(reply_target, response_content):
     for msg in util.split_message_for_sending(response_content.split("\n")):
