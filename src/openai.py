@@ -1,3 +1,5 @@
+from typing import Annotated
+
 import aiohttp
 import asyncio
 import discord
@@ -5,6 +7,8 @@ import os
 import json
 import io
 import emoji
+
+from gpt_function_calling import GptFunctionStore
 
 import http_util
 import logger
@@ -16,6 +20,8 @@ log = logger.get("OPENAI")
 
 OPENAI_KEY = os.environ.get("OPENAI_KEY", None)
 AUTH_HEADER = {"Authorization": "Bearer {0}".format(OPENAI_KEY)}
+
+gpt_functions = GptFunctionStore()
 
 def is_enabled():
     return OPENAI_KEY is not None
@@ -29,6 +35,26 @@ def register(client):
         'setprompt': cmd_setprompt,
         'genimage': cmd_genimage,
     }
+
+@gpt_functions.register
+async def change_user_nickname(
+        new_nickname: Annotated[str, "New nickname for the user between 1 and 32 characters long."],
+):
+    """You can rename the user with this function. Use this only if it seems necessary.
+    The new nickname must be between 1 and 32 characters long."""
+    message = gpt_functions.get_trigger_message()
+    log.info(f"Changing nickname of {message.author} to {new_nickname}")
+    await message.author.edit(nick=new_nickname)
+
+@gpt_functions.register
+async def add_two_integers(
+        a: Annotated[int, "First integer to add"],
+        b: Annotated[int, "Second integer to add"],
+):
+    """You can call this function to add two integers."""
+    message = gpt_functions.get_trigger_message()
+    log.info(f"Adding {a} and {b}")
+    await message.reply("The result is {0}".format(a + b))
 
 
 async def handle_message(client, message):
@@ -50,11 +76,16 @@ async def handle_message(client, message):
         case 400, _:
             await message.add_reaction(emoji.CROSS_MARK)
         case 200, result:
-            response = result["choices"][0]["message"]["content"]
-            reply_target = message
-            for msg in util.split_message_for_sending(response.split("\n")):
-                reply_target = await reply_target.reply(msg)
+            if (response_content := result["choices"][0]["message"]["content"]) is not None:
+                reply_target = message
+                for msg in util.split_message_for_sending(response_content.split("\n")):
+                    reply_target = await reply_target.reply(msg)
+            if (tool_calls := result["choices"][0]["message"]["tool_calls"]) is not None:
+                for tool_call in tool_calls:
+                    await gpt_functions.handle_tool_call(message, tool_call)
+
     return True
+
 async def get_reply_chain(client, message):
     if message.reference is None:
         return []
@@ -132,7 +163,8 @@ async def create_image(prompt):
 async def get_response_for_messages(messages):
     return await _call_api("/v1/chat/completions", json_body={
         "model": "gpt-4-1106-preview",
-        "messages": messages
+        "messages": messages,
+        "tools": gpt_functions.get_functions_schema(),
     })
 
 
