@@ -177,6 +177,7 @@ async def delete_channel_prompt(channel_id):
 
 async def create_image(prompt):
     return await _call_api("/v1/images/generations", json_body={
+        "model": "dall-e-3",
         "prompt": prompt,
         "n": 1,
         "size": "1024x1024",
