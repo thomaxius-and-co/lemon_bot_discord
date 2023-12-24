@@ -13,7 +13,8 @@ class GptFunctionStore:
 
     def register(self, func):
         schema = mk_tool_description(func)
-        self.available_tools.append(schema)
+        func.schema = schema
+        self.available_tools.append(func)
         self.tool_lookup[schema["function"]["name"]] = func
         return func
 
@@ -21,7 +22,7 @@ class GptFunctionStore:
         return self.trigger_message.get()
 
     def get_functions_schema(self):
-        return self.available_tools
+        return [t.schema for t in self.available_tools]
 
 
     async def handle_tool_call(self, message, tool_call):
