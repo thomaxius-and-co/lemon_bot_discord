@@ -30,30 +30,23 @@ class GptFunctionStore:
             return
 
         try:
-            tool_call_id = tool_call["id"]
-            function = tool_call["function"]
-            function_name = function["name"]
-
-            log.info("Received tool call for function %s", function_name)
-            func = self.tool_lookup[function_name]
-            args_object = json.loads(function["arguments"])
-            log.info("Calling function %s with arguments %s", function_name, args_object)
-            arg_values = [args_object.get(arg_name) for arg_name, _ in get_function_arguments(func)]
+            log.info("Handling tool call: %s", tool_call)
+            func = self.tool_lookup[tool_call["function"]["name"]]
+            arguments = json.loads(tool_call["function"]["arguments"])
             token = self.trigger_message.set(message)
-            response = await func(**args_object)
             return {
                 "role": "tool",
-                "tool_call_id": tool_call_id,
-                "name": function_name,
-                "content": response,
+                "tool_call_id": tool_call["id"],
+                "name": tool_call["function"]["name"],
+                "content": await func(**arguments),
             }
         except Exception as e:
-            log.error("Function call %s failed with exception %s", function_name, e)
+            log.error("Function call %s failed with exception %s", tool_call["function"]["name"], e)
             return {
                 "role": "tool",
-                "tool_call_id": tool_call_id,
-                "name": function_name,
-                "content": f"Unexpected error when calling function {function_name}"
+                "tool_call_id": tool_call["id"],
+                "name": tool_call["function"]["name"],
+                "content": f"Unexpected error when calling function {tool_call['function']['name']}"
             }
         finally:
             self.trigger_message.reset(token)
