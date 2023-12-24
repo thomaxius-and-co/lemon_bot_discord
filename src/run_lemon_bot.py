@@ -770,23 +770,77 @@ async def on_message(message):
             channel = message.channel
             await message.delete()
             await channel.send('You need to have a Timuliiga account to be able to view this message.')
-        censor_check_passed = await do_censored_words_check(client, message)
-
-        cmd, arg = command.parse(content)
-        if not cmd or not censor_check_passed:
+        if not await do_censored_words_check(client, message):
             return
 
-        handler = commands.get(cmd)
-        if not handler:
-            handler = commands.get(autocorrect_command(cmd))
+        if await handle_command(message):
+            return
 
-        if handler:
-            await handler(client, message, arg)
+        if await summarize_embeds(message):
             return
 
     except Exception:
         await util.log_exception(log)
 
+
+@client.event
+async def on_message_edit(before, after):
+    if (not before.embeds) and after.embeds:
+        await summarize_embeds(after)
+
+async def summarize_embeds(message):
+    if message.channel.id != 141649840923869184:
+        return False
+
+    if not message.embeds:
+        return False
+
+    async with aiohttp.ClientSession() as session:
+        for e in message.embeds:
+            log.info("Summarizing embed: %s", e.url)
+            response = await session.get(e.url)
+            from bs4 import BeautifulSoup
+            html = BeautifulSoup(await response.text(), "lxml")
+            page_content = "\n".join([e.get_text() for e in html.find_all('p')])
+            messages = [{
+                "role": "system",
+                "content": """
+                Your task is to summarize the main points of the article content on given web page in one short paragraph.
+                You can also decide to not summarize if the page doesn't seem to be an article or otherwise isn't suitable for summarization.
+                In this case reply with just "no" and nothing else at all.
+                """
+            }, {
+                "role": "user",
+                "content": page_content,
+            }]
+
+            match await openai.get_response_for_messages(messages, allow_tool_calls=False):
+                case 200, response:
+                    summary = response["choices"][0]["message"]["content"]
+                    if summary.lower() == "no":
+                        log.info("No summary")
+                    else:
+                        await openai.split_reply(message, summary)
+                        return True
+                case _:
+                    return False
+
+    return False
+
+
+async def handle_command(message):
+    cmd, arg = command.parse(message.content)
+    if not cmd:
+        return False
+
+    handler = commands.get(cmd)
+    if not handler:
+        handler = commands.get(autocorrect_command(cmd))
+
+    if handler:
+        await handler(client, message, arg)
+        return True
+    return False
 
 def autocorrect_command(cmd):
     matches = difflib.get_close_matches(cmd, commands.keys(), n=1, cutoff=0.7)
