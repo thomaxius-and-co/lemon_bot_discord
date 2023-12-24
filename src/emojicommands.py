@@ -195,7 +195,7 @@ async def cmd_emojicommands(client, message, arg):
         return
 
 
-def register(client):
+def register():
     return {
         'emoji': cmd_emojicommands,
     }

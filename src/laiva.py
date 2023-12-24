@@ -7,7 +7,7 @@ from time_util import as_helsinki, as_utc, to_utc
 
 ALLOWED_CHANNELS = [359308335184609281, 141649840923869184, 244452088279465985]
 
-def register(client):
+def register():
     return {
         "laiva": mk_cmd_laiva(TEMPLATES_LAIVA_POST_CORONA),
         #"fireball": mk_cmd_laiva(TEMPLATES_FIREBALL),

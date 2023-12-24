@@ -153,8 +153,7 @@ async def respond(message, reaction):
         with suppress(discord.errors.Forbidden):
             await message.channel.send(reaction)
 
-def register(client):
-    log.info("Registering")
+def register():
     return {
         "feed": cmd_feed,
     }

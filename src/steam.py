@@ -3,7 +3,7 @@ import random
 import command
 import steam_api as api
 
-def register(client):
+def register():
     return {
         "steam": cmd_steam,
     }

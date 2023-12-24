@@ -456,7 +456,7 @@ async def get_last_seen_string(last_entry_time_string):
         return str(abs(difference_in_days)) + ' Days ago'
 
 
-def register(client):
+def register():
     return {
         'faceit': cmd_faceit_commands,
     }

@@ -63,7 +63,7 @@ async def cmd_ask(client, message, question):
     await asyncio.sleep(2)
     await message.channel.send(random.choice(choices) + " :thinking: ")
 
-def register(client):
+def register():
     return {
         'ask': cmd_ask
     }

@@ -12,7 +12,7 @@ import logger
 
 log = logger.get("REMINDER")
 
-def register(client):
+def register():
     log.info("Registering")
     return {
         "remind": cmd_reminder,

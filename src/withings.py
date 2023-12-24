@@ -26,7 +26,7 @@ async def cmd_withings_devices(client, message, arg):
     except AccountNotLinkedException:
         await message.channel.send("Please link your Withings account")
 
-def register(client):
+def register():
     return {
         "nokia": cmd_withings,
         "withings": cmd_withings,

@@ -148,7 +148,3 @@ async def upsert_statistic(statistic_id, content):
             changed = EXCLUDED.changed
     """
     await db.execute(sql, statistic_id, json_string)
-
-def register(client):
-    #asyncio.create_task(task())
-    return {}

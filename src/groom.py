@@ -12,7 +12,7 @@ SERVICE_SPECIAL = 2
 SERVICE_RELAX = 2
 
 
-def register(client):
+def register():
     return {"groom": cmd_groom}
 
 

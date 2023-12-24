@@ -945,7 +945,7 @@ async def get_time_until_reset_message() -> str:
     return msg
 
 
-def register(client):
+def register():
     return {
         'randomquote': cmd_randomquote,
         'whosaidit': cmd_whosaidit,

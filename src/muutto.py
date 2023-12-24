@@ -3,7 +3,7 @@ from math import floor
 
 from time_util import as_helsinki, as_utc, to_utc
 
-def register(client):
+def register():
     return {
         "muutto": cmd_muutto,
     }

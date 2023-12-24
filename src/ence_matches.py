@@ -176,7 +176,7 @@ async def cmd_ence(client, message, arg) -> None:
             , list_of_matches) + "\n#EZ4ENCE```"))
 
 
-def register(client) -> dict:
+def register():
     return {
         'ence': cmd_ence,
     }

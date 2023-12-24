@@ -2,7 +2,7 @@ import urllib
 import aiohttp
 from bs4 import BeautifulSoup
 
-def register(client):
+def register():
     return {
         "youtube": cmd_youtube,
         "yt": cmd_youtube,

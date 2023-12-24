@@ -94,9 +94,9 @@ async def main():
     await trophies.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
-                   faceit_main, muutto, statistics, status, emojicommands, lossimpsonquotes, withings,
-                   groom, shrek, ence_matches, mememaker, kansallisgalleria, pasta, openai]:
-        commands.update(module.register(client))
+                   faceit_main, muutto, status, emojicommands, lossimpsonquotes, withings, groom, shrek, ence_matches,
+                   mememaker, kansallisgalleria, pasta, openai]:
+        commands.update(module.register())
 
     try:
         token = os.environ['LEMONBOT_TOKEN']

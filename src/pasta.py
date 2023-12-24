@@ -1,4 +1,4 @@
-def register(client):
+def register():
   return {
     "pasta": cmd_pasta,
   }

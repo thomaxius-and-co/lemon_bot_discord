@@ -1,6 +1,6 @@
 from datetime import datetime
 
-def register(client):
+def register():
     return {
         "shrek": cmd_shrek
     }

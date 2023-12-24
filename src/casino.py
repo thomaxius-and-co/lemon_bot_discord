@@ -688,7 +688,7 @@ async def cmd_leader(client, message, _):
         await message.channel.send('```{0}```'.format(reply))
 
 
-def register(client):
+def register():
     return {
         'bet': cmd_bet,
         'reviewbet': cmd_reviewbet,

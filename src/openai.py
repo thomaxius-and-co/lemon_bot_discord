@@ -26,7 +26,7 @@ gpt_functions = GptFunctionStore()
 def is_enabled():
     return OPENAI_KEY is not None
 
-def register(client):
+def register():
     if not is_enabled():
         log.info("OpenAI feature disabled")
         return {}

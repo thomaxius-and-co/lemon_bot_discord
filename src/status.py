@@ -85,7 +85,7 @@ async def cmd_status(client, message, input):
     CUSTOM_STATUS_DISPLAYED = True
 
 
-def register(client):
+def register():
     return {
         'status': cmd_status,
         'clearstatus': cmd_clearstatus

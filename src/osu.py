@@ -187,7 +187,7 @@ async def update_pp(user_id, mode, pp, rank):
   """, pp, rank, user_id, gamemode_id)
 
 
-def register(client):
+def register():
     return {
         "osu": cmd_osu,
     }

@@ -568,7 +568,7 @@ trophies = {
     'Spammer of the week': get_spammer_of_the_week
 }
 
-def register(client):
+def register():
     return {
         'trophycabinet': cmd_trophycabinet,
         'alltrophies': cmd_alltrophies,

@@ -83,7 +83,7 @@ async def meme_from_url(url, meme):
             raise Exception("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
 
 
-def register(client):
+def register():
     return {
         "mememaker": cmd_mememaker,
         "makememe": cmd_mememaker,
