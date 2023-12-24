@@ -29,11 +29,11 @@ class GptFunctionStore:
         if tool_call["type"] != "function":
             return
 
+        token = self.trigger_message.set(message)
         try:
             log.info("Handling tool call: %s", tool_call)
             func = self.tool_lookup[tool_call["function"]["name"]]
             arguments = json.loads(tool_call["function"]["arguments"])
-            token = self.trigger_message.set(message)
             return {
                 "role": "tool",
                 "tool_call_id": tool_call["id"],
