@@ -789,7 +789,7 @@ async def on_message_edit(before, after):
         await summarize_embeds(after)
 
 async def summarize_embeds(message):
-    if message.channel.id != 141649840923869184:
+    if (not message.guild) or message.guild.id != 141649840923869184:
         return False
 
     if not message.embeds:
