@@ -775,8 +775,8 @@ async def cmd_legendary_quote(client, message, arg):
         await message.channel.send("Sorry, no messages could be found")
     else:
         sent_message = await send_quote(client, message.channel, quote)
-        await sent_message.add_reaction(emoji="👍")
-        await sent_message.add_reaction(emoji="👎")
+        await sent_message.add_reaction("👍")
+        await sent_message.add_reaction("👎")
 
 
 async def cmd_whosaidit(client, message, _):
