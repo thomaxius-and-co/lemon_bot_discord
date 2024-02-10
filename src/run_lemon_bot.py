@@ -863,6 +863,25 @@ async def on_ready():
         run_scheduled_task(kansallisgalleria.update_data, hours(24))
     run_scheduled_task(ence_matches.do_tasks, hours(2.5))
     run_scheduled_task(status.check_user_and_message_count, minutes(30))
+    asyncio.create_task(play_sound(client))
+
+async def play_sound(client):
+  try:
+    voice_channel_id = 855406379916853258
+    voice_channel = await client.fetch_channel(voice_channel_id)
+    voice_client = await voice_channel.connect()
+    source = await discord.FFmpegOpusAudio.from_probe('https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3')
+    def after(error):
+      if error is not None:
+        log.info(error)
+    voice_client.play(source, after=after)
+    while voice_client.is_playing():
+      log.info("still playing...")
+      await asyncio.sleep(1)
+    await voice_client.disconnect()
+  except Exception as e:
+    log.info(e)
+
 
 def run_scheduled_task(task_func, interval):
     async def loop():
