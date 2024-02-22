@@ -814,7 +814,7 @@ async def summarize_embeds(message):
                 "content": page_content,
             }]
 
-            match await openai.get_response_for_messages(messages, allow_tool_calls=False):
+            match await openai.get_response_for_messages(messages, message.author.id, allow_tool_calls=False):
                 case 200, response:
                     summary = response["choices"][0]["message"]["content"]
                     if summary.lower() == "no":

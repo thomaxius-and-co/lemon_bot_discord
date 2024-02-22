@@ -80,7 +80,7 @@ async def handle_message(client, message):
         })
     messages.append({ "role": "user", "content": clean_content(message) })
 
-    match await get_response_for_messages(messages):
+    match await get_response_for_messages(messages, message.author.id):
         case 400, _:
             await message.add_reaction(emoji.CROSS_MARK)
         case 200, result:
@@ -91,7 +91,7 @@ async def handle_message(client, message):
             if tool_calls := gpt_message["tool_calls"]:
                 responses = [await gpt_functions.handle_tool_call(message, tool_call) for tool_call in tool_calls]
                 log.info("Received function call responses: %s", responses)
-                match await get_response_for_messages(messages + [gpt_message] + responses, allow_tool_calls=False):
+                match await get_response_for_messages(messages + [gpt_message] + responses, message.author.id, allow_tool_calls=False):
                     case 400, e:
                         log.info("Failed to generate next text response after tool call: %s", e)
                     case 200, result:
@@ -144,7 +144,7 @@ async def cmd_setprompt(client, message, arg):
 
 
 async def cmd_genimage(client, message, prompt):
-    match await create_image(prompt):
+    match await create_image(prompt, message.author.id):
         case 200, response:
             url = response["data"][0]["url"]
             async with aiohttp.ClientSession() as session:
@@ -175,20 +175,22 @@ async def delete_channel_prompt(channel_id):
     await db.execute("DELETE FROM openaiconfig WHERE channel_id = $1", str(channel_id))
 
 
-async def create_image(prompt):
+async def create_image(prompt, user_id):
     return await _call_api("/v1/images/generations", json_body={
         "model": "dall-e-3",
         "prompt": prompt,
         "n": 1,
         "size": "1024x1024",
         "response_format": "url",
+        "user": str(user_id),
     })
 
 
-async def get_response_for_messages(messages, *, allow_tool_calls=True):
+async def get_response_for_messages(messages, user_id, *, allow_tool_calls=True):
     request = {
         "model": "gpt-4-1106-preview",
         "messages": messages,
+        "user": str(user_id),
     }
     if allow_tool_calls:
         request["tools"] = gpt_functions.get_functions_schema()
