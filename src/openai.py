@@ -185,6 +185,13 @@ async def create_image(prompt, user_id):
         "user": str(user_id),
     })
 
+async def prompt(prompt, user_id):
+    messages = [{ "role": "user", "content": prompt }]
+    match await get_response_for_messages(messages, user_id, allow_tool_calls=False):
+        case 200, response:
+            return response["choices"][0]["message"]["content"]
+        case _:
+            raise Exception("Failed to call OpenAI")
 
 async def get_response_for_messages(messages, user_id, *, allow_tool_calls=True):
     request = {

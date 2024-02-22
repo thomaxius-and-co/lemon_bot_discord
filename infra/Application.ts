@@ -11,6 +11,7 @@ import {
   Vpc
 } from "aws-cdk-lib/aws-ec2";
 import {Credentials, DatabaseInstance, DatabaseInstanceEngine, PostgresEngineVersion, PerformanceInsightRetention} from "aws-cdk-lib/aws-rds";
+import {Effect, PolicyStatement} from "aws-cdk-lib/aws-iam";
 import {Repository} from "aws-cdk-lib/aws-ecr";
 import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import {
@@ -137,6 +138,12 @@ class Application extends Stack {
         "DATABASE_PORT": EcsSecret.fromSecretsManager(db.secret!, "port"),
       }
     })
+
+    taskDefinition.addToTaskRolePolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ["polly:SynthesizeSpeech"],
+      resources: ["*"],
+    }))
     appSecrets.grantRead(taskDefinition.executionRole!)
     appSecrets.grantRead(taskDefinition.taskRole)
     db.secret!.grantRead(taskDefinition.executionRole!)

@@ -9,6 +9,7 @@
 # use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 # of the Software, and to permit persons to whom the Software is furnished to do so
 import base64
+import tempfile
 import time
 import asyncpg
 import os
@@ -657,7 +658,19 @@ async def wrong_channel_for_this_word(current_message_channel_id, database_chann
     return current_message_channel_id != database_channel_id
 
 
+async def cmd_aforismi(client, message, arg):
+    aforismi = await openai.prompt("""
+        Luo lyhyt vanhanaikainen päivän aforismi piristämään nuorison iltapäivää.
+        Selitä myös lyhyesti, miten aforismin voisi tulkita nykymaailmassa.
+    """, message.author.id)
+
+    await message.reply(aforismi)
+    if voice_state := message.author.voice:
+        if voice_channel := voice_state.channel:
+            await say_in_voice_channel(voice_channel, aforismi)
+
 commands = {
+    'aforismi': cmd_aforismi,
     'sql': cmd_sql,
     'roll': cmd_roll,
     '8ball': cmd_8ball,
@@ -739,7 +752,6 @@ async def upsert_users(users):
                     name = EXCLUDED.name,
                     raw = EXCLUDED.raw
             """, user.get("id"), user.get("username"), json.dumps(user))
-
 
 
 # Dispacther for messages from the users.
@@ -863,24 +875,53 @@ async def on_ready():
         run_scheduled_task(kansallisgalleria.update_data, hours(24))
     run_scheduled_task(ence_matches.do_tasks, hours(2.5))
     run_scheduled_task(status.check_user_and_message_count, minutes(30))
-    asyncio.create_task(play_sound(client))
 
-async def play_sound(client):
-  try:
-    voice_channel_id = 855406379916853258
-    voice_channel = await client.fetch_channel(voice_channel_id)
+def run_in_asyncio_executor(func):
+    from functools import partial
+    async def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, partial(func, *args, **kwargs))
+    return wrapper
+
+@run_in_asyncio_executor
+def text_to_speech(text, output_file):
+    log.info("Generating speech for text: %s", text)
+    from boto3 import Session
+    from contextlib import closing
+
+    session = Session()
+    polly = session.client('polly')
+    response = polly.synthesize_speech(
+        Text=text,
+        OutputFormat='mp3',
+        VoiceId='Suvi',
+        Engine='neural',
+        LanguageCode='fi-FI',
+    )
+    if "AudioStream" in response:
+        with closing(response["AudioStream"]) as stream:
+            output_file.write(stream.read())
+        output_file.seek(0)
+    else:
+        raise Exception("No AudioStream in response")
+
+async def say_in_voice_channel(voice_channel, text):
+    with tempfile.TemporaryDirectory() as d:
+        filepath = os.path.join(d, "output.mp3")
+        with open(filepath, "wb") as file:
+            await text_to_speech(text, file)
+        await play_file_on_channel(voice_channel, filepath)
+
+async def play_file_on_channel(voice_channel, filepath):
+    source = await discord.FFmpegOpusAudio.from_probe(filepath)
     voice_client = await voice_channel.connect()
-    source = await discord.FFmpegOpusAudio.from_probe('https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3')
     def after(error):
-      if error is not None:
-        log.info(error)
+        if error is not None:
+            log.info(error)
     voice_client.play(source, after=after)
     while voice_client.is_playing():
-      log.info("still playing...")
-      await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
     await voice_client.disconnect()
-  except Exception as e:
-    log.info(e)
 
 
 def run_scheduled_task(task_func, interval):
