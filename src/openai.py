@@ -176,7 +176,7 @@ async def delete_channel_prompt(channel_id):
 
 
 async def create_image(prompt, user_id):
-    return await _call_api("/v1/images/generations", json_body={
+    return await _call_json_api("/v1/images/generations", json_body={
         "model": "dall-e-3",
         "prompt": prompt,
         "n": 1,
@@ -184,6 +184,21 @@ async def create_image(prompt, user_id):
         "response_format": "url",
         "user": str(user_id),
     })
+
+async def create_speech(text):
+    import random
+    request_body = {
+        "model": "tts-1", # or "tts-1-hd"
+        "input": text,
+        "voice": random.choice(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]),
+        "response_format": "opus", # or "mp3", "aac", "flac", "wav" or "pcm"
+        "speed": 1.0,
+    }
+    async with aiohttp.ClientSession() as session:
+      response = await _request(session, "/v1/audio/speech", json_body=request_body, log_response_body=False)
+      bytes = await response.read()
+      return bytes
+
 
 async def prompt(prompt, user_id):
     messages = [{ "role": "user", "content": prompt }]
@@ -201,25 +216,30 @@ async def get_response_for_messages(messages, user_id, *, allow_tool_calls=True)
     }
     if allow_tool_calls:
         request["tools"] = gpt_functions.get_functions_schema()
-    return await _call_api("/v1/chat/completions", json_body=request)
+    return await _call_json_api("/v1/chat/completions", json_body=request)
 
+async def _call_json_api(path, json_body=None, query=None, log_response_body=True):
+    async with aiohttp.ClientSession() as session:
+      response = await _request(session, path, json_body=json_body, query=query, log_response_body=True)
+      return response.status, await response.json()
 
 @retry.on_any_exception(max_attempts = 1, init_delay = 1, max_delay = 30)
-async def _call_api(path, json_body=None, query=None):
+async def _request(session, path, json_body=None, query=None, log_response_body=True):
     url = "https://api.openai.com{0}{1}".format(path, http_util.make_query_string(query))
-    async with aiohttp.ClientSession() as session:
-        for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
-            response = await session.post(url, headers=AUTH_HEADER, json=json_body)
-            log.info({
-                "requestMethod": response.method,
-                "requestUrl": str(response.url),
-                "responseStatus": response.status,
-                "requestBody": json.dumps(json_body),
-                "responseBody": await response.text(),
-            })
+    for ratelimit_delay in retry.jitter(retry.exponential(1, 128)):
+        response = await session.post(url, headers=AUTH_HEADER, json=json_body)
+        log_message = {
+            "requestMethod": response.method,
+            "requestUrl": str(response.url),
+            "responseStatus": response.status,
+            "requestBody": json.dumps(json_body),
+        }
+        if log_response_body:
+            log_message["responseBody"] = await response.text()
+        log.info(log_message)
 
-            if response.status == 429:
-                log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")
-                await asyncio.sleep(ratelimit_delay)
-                continue
-            return response.status, await response.json()
+        if response.status == 429:
+            log.info(f"Ratelimited, retrying in {round(ratelimit_delay, 1)} seconds")
+            await asyncio.sleep(ratelimit_delay)
+            continue
+        return response

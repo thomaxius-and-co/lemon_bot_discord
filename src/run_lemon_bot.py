@@ -667,7 +667,7 @@ async def cmd_aforismi(client, message, arg):
     await message.reply(aforismi)
     if voice_state := message.author.voice:
         if voice_channel := voice_state.channel:
-            await say_in_voice_channel(voice_channel, aforismi)
+            await say_in_voice_channel_with_openai(voice_channel, aforismi)
 
 commands = {
     'aforismi': cmd_aforismi,
@@ -876,6 +876,14 @@ async def on_ready():
     run_scheduled_task(ence_matches.do_tasks, hours(2.5))
     run_scheduled_task(status.check_user_and_message_count, minutes(30))
 
+async def say_in_voice_channel_with_openai(voice_channel, text):
+    with tempfile.TemporaryDirectory() as d:
+        filepath = os.path.join(d, "output.opus")
+        with open(filepath, "wb") as file:
+            bytes = await openai.create_speech(text)
+            file.write(bytes)
+        await play_file_on_channel(voice_channel, filepath)
+
 def run_in_asyncio_executor(func):
     from functools import partial
     async def wrapper(*args, **kwargs):
@@ -905,7 +913,7 @@ def text_to_speech(text, output_file):
     else:
         raise Exception("No AudioStream in response")
 
-async def say_in_voice_channel(voice_channel, text):
+async def say_in_voice_channel_with_amazon_polly(voice_channel, text):
     with tempfile.TemporaryDirectory() as d:
         filepath = os.path.join(d, "output.mp3")
         with open(filepath, "wb") as file:
