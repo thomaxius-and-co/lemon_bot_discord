@@ -88,7 +88,7 @@ async def handle_message(client, message):
             if (response_content := gpt_message["content"]) is not None:
                 await split_reply(message, response_content)
 
-            if tool_calls := gpt_message["tool_calls"]:
+            if tool_calls := gpt_message.get("tool_calls", None):
                 responses = [await gpt_functions.handle_tool_call(message, tool_call) for tool_call in tool_calls]
                 log.info("Received function call responses: %s", responses)
                 match await get_response_for_messages(messages + [gpt_message] + responses, message.author.id, allow_tool_calls=False):
