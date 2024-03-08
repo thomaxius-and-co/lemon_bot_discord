@@ -50,6 +50,31 @@ async def change_user_nickname(
     except Exception:
         return f"Failed to change nickname to {new_nickname}. Possibly because of lack of Discord permissions"
 
+@gpt_functions.register
+async def generate_image_with_dalle(
+        prompt: Annotated[str, "Prompt for the DALL-E model to generate an image from"],
+):
+    """You can generate image with DALL-E by using this function. Do not call this tool function without user request.
+    You SHOULD be creative with the prompt. You can use multiple sentences. You DO NOT have to pass user request as is."""
+
+    log.info(f"Generating image with DALL-E from prompt: {prompt}")
+    try:
+        message = gpt_functions.get_trigger_message()
+        match await create_image(prompt, message.author.id):
+            case 200, response:
+                url = response["data"][0]["url"]
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as imageresponse:
+                        img = await imageresponse.read()
+                        with io.BytesIO(img) as file:
+                            await message.reply(file=discord.File(file, f"{prompt}.png"))
+                        return f"You successfully generated and presented an image to the user. The DALL-E prompt used was the following:\n\n{prompt}"
+            case _, response:
+                log.info("Failed to generate image with DALL-E. Unexpected error: %s", response)
+                raise Exception("Unexpected error")
+    except Exception as e:
+        await util.log_exception(log, e)
+        return "Failed to generate image with DALL-E Because of an unexpected error."
 
 @gpt_functions.register
 async def add_two_integers(
@@ -91,7 +116,7 @@ async def handle_message(client, message):
             if tool_calls := gpt_message.get("tool_calls", None):
                 responses = [await gpt_functions.handle_tool_call(message, tool_call) for tool_call in tool_calls]
                 log.info("Received function call responses: %s", responses)
-                match await get_response_for_messages(messages + [gpt_message] + responses, message.author.id, allow_tool_calls=False):
+                match await get_response_for_messages(messages + [gpt_message] + responses, message.author.id):
                     case 400, e:
                         log.info("Failed to generate next text response after tool call: %s", e)
                     case 200, result:
