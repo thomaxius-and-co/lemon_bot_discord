@@ -79,14 +79,6 @@ async def cmd_art(client, message, _):
   embed.set_image(url=o["multimedia"][0]["jpg"]["1000"])
   await message.channel.send(embed=embed)
 
-@retry.on_any_exception()
-@perf.time_async("KANSALLISGALLERIA_API")
-async def call_api(endpoint, params = {}):
-    async with call_api_raw_stream(endpint, params) as r:
-        return await r.json()
-
-#@retry.on_any_exception()
-#@perf.time_async("KANSALLISGALLERIA_API")
 @asynccontextmanager
 async def call_api_raw_stream(endpoint, params = {}):
     headers = {"x-api-key": os.environ["KANSALLISGALLERIA_API_KEY"]}
