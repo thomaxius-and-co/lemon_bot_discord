@@ -81,7 +81,7 @@ async def call_api(path, *, params=None):
                 "responseBody": await r.text()
             })
             if r.status != 200:
-                raise Exception(f"Unexpected HTTP status {r.status}")
+                raise RuntimeError(f"Unexpected HTTP status {r.status}")
             return await r.json()
 
 

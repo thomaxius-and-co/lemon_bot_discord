@@ -16,9 +16,9 @@ async def get_quote():
             "responseBody": await response.text(),
         })
         if response.status not in [200, 404]:
-            raise Exception("Error fetching data from The Simpsons quotes api: HTTP status {0}".format(response.status))
+            raise RuntimeError("Error fetching data from The Simpsons quotes api: HTTP status {0}".format(response.status))
         result = await response.json()
         if result:
             return result[0]['quote'], result[0]['character'], result[0]['image']
         else:
-            raise Exception("Error fetching data from The Simpsons quotes api: HTTP status {0}".format(response.status))
+            raise RuntimeError("Error fetching data from The Simpsons quotes api: HTTP status {0}".format(response.status))

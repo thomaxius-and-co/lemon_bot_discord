@@ -68,12 +68,12 @@ def mk_tool_description(func):
             elif primary_type == bool:
                 return "boolean"
             else:
-                raise Exception(f"Unsupported type {hint} for argument {arg}")
+                raise RuntimeError(f"Unsupported type {hint} for argument {arg}")
 
         parameters = {}
         for arg, hint in get_function_arguments(func):
             if hint is None:
-                raise Exception(f"Missing type hint for argument {arg}")
+                raise RuntimeError(f"Missing type hint for argument {arg}")
             parameters[arg] = {"type": get_arg_type(arg, hint), "description": get_arg_description(hint)}
         return {
             "type": "object",

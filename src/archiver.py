@@ -77,7 +77,7 @@ async def fetch_messages_from(channel_id, after_id):
             log.warning('tried to archive a channel we no longer have access to')
             return []
         else:
-            raise Exception(error)
+            raise RuntimeError(error)
 
     while len(next_messages) > 0:
         all_messages = next_messages + all_messages
@@ -88,7 +88,7 @@ async def fetch_messages_from(channel_id, after_id):
                 log.warning('tried to archive a channel we no longer have access to')
                 break
             else:
-                raise Exception(error)
+                raise RuntimeError(error)
 
     return all_messages
 

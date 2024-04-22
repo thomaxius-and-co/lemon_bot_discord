@@ -71,7 +71,7 @@ async def generate_image_with_dalle(
                         return f"You successfully generated and presented an image to the user. The DALL-E prompt used was the following:\n\n{prompt}"
             case _, response:
                 log.info("Failed to generate image with DALL-E. Unexpected error: %s", response)
-                raise Exception("Unexpected error")
+                raise RuntimeError("Unexpected error")
     except Exception as e:
         await util.log_exception(log, e)
         return "Failed to generate image with DALL-E Because of an unexpected error."
@@ -231,7 +231,7 @@ async def prompt(prompt, user_id):
         case 200, response:
             return response["choices"][0]["message"]["content"]
         case _:
-            raise Exception("Failed to call OpenAI")
+            raise RuntimeError("Failed to call OpenAI")
 
 async def get_response_for_messages(messages, user_id, *, allow_tool_calls=True):
     request = {

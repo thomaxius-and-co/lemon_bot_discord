@@ -102,7 +102,7 @@ async def main():
     try:
         token = os.environ['LEMONBOT_TOKEN']
         await client.start(token)
-        raise Exception("client.start() returned")
+        raise RuntimeError("client.start() returned")
     except Exception as e:
         await util.log_exception(log)
         os._exit(0)
@@ -911,7 +911,7 @@ def text_to_speech(text, output_file):
             output_file.write(stream.read())
         output_file.seek(0)
     else:
-        raise Exception("No AudioStream in response")
+        raise RuntimeError("No AudioStream in response")
 
 async def say_in_voice_channel_with_amazon_polly(voice_channel, text):
     with tempfile.TemporaryDirectory() as d:

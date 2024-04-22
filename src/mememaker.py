@@ -70,7 +70,7 @@ async def meme_from_url(url, meme):
             "responseBody": await response.text(),
         })
         if response.status not in [200, 404]:
-            raise Exception("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
+            raise RuntimeError("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
         result = await response.json()
         error, status, return_url = result.get('error', None), result.get('status', None), result.get('url', None)
         if return_url:
@@ -80,7 +80,7 @@ async def meme_from_url(url, meme):
                 raise InvalidUrlError(
                     "Invalid URL. Mememaker api HTTP status {0}, error: {1}".format(response.status, error))
         else:
-            raise Exception("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
+            raise RuntimeError("Error fetching data from mememaker API: HTTP status {0}".format(response.status))
 
 
 def register():
