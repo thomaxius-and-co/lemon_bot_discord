@@ -168,7 +168,7 @@ class Application extends Stack {
 
     const webhookUrlSecret = Secret.fromSecretNameV2(this, "DiscordWebhookSecret", "discord-alarm-webhook")
     const errorsToDiscordLambda = new Function(this, "ErrorsToDiscord", {
-      runtime: Runtime.NODEJS_14_X,
+      runtime: Runtime.NODEJS_18_X,
       handler: "errors-to-discord.handler",
       code: Code.fromAsset(join(__dirname, "../errors-to-discord")),
     })

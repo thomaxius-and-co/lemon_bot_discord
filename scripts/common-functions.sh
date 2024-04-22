@@ -53,7 +53,7 @@ function init_node {
   set +o errexit +o nounset
   export NVM_DIR="$HOME/.cache/nvm"
   source "$repo/scripts/lib/nvm.sh"
-  nvm install "16"
+  nvm install "18"
   set -o errexit -o nounset
 }
 
