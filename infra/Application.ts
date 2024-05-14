@@ -170,6 +170,7 @@ class Application extends Stack {
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
       securityGroups: [appSecurityGroup],
       platformVersion: FargatePlatformVersion.VERSION1_4,
+      enableExecuteCommand: true,
     })
 
     dbSecurityGroup.addIngressRule(appSecurityGroup, Port.tcp(5432))
