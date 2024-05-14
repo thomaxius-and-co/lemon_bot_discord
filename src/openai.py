@@ -235,7 +235,7 @@ async def prompt(prompt, user_id):
 
 async def get_response_for_messages(messages, user_id, *, allow_tool_calls=True):
     request = {
-        "model": "gpt-4-turbo-preview",
+        "model": "gpt-4o",
         "messages": messages,
         "user": str(user_id),
     }
