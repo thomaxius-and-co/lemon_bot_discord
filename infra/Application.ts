@@ -144,6 +144,16 @@ class Application extends Stack {
       actions: ["polly:SynthesizeSpeech"],
       resources: ["*"],
     }))
+    taskDefinition.addToTaskRolePolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel"
+      ],
+      resources: ["*"],
+    }))
     appSecrets.grantRead(taskDefinition.executionRole!)
     appSecrets.grantRead(taskDefinition.taskRole)
     db.secret!.grantRead(taskDefinition.executionRole!)
