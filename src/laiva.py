@@ -110,7 +110,7 @@ def parse_image_id(url):
     return url[len("https://drive.google.com/open?id="):]
 
 TEMPLATES_LAIVA = {
-    "theme": "The laiva to start a new generation of laivas",
+    "theme": "The ",
     "happening": "Laiva is currently happening!!",
     "ended": lambda time_ago: f"**Last laiva ended:** {time_ago} ago, **next laiva:** TBA.",
     "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
@@ -134,7 +134,7 @@ TEMPLATES_LAIVA_SEASON_TWO = {
 }
 
 TEMPLATES_LAIVA_POST_CORONA = {
-    "theme": "The glasses free laiva for true life enjoyers",
+    "theme": "The Depeche Mode laiva",
     "happening": "The glasses free laiva for true enjoyers is currently happening while you are sitting at home molding!!",
     "ended": lambda time_ago: f"**Last laiva (The glasses free laiva for true enjoyers) ended:** {time_ago} ago, **next laiva:** TBA.",
     "meme_text": lambda days_to_go: "**Laiva meme of the day**:\n" + image_url_from_id(memes[days_to_go]),
@@ -189,8 +189,8 @@ def mk_cmd_laiva(templates):
             return
 
         theme = templates["theme"]
-        laiva = to_utc(as_helsinki(datetime(2022, 6, 17, 16, 0)))
-        laivaover = to_utc(as_helsinki(datetime(2022, 6, 19, 12, 0)))
+        laiva = to_utc(as_helsinki(datetime(2024, 7, 13, 13, 30)))
+        laivaover = to_utc(as_helsinki(datetime(2024, 7, 15, 15, 30)))
 
         now = as_utc(datetime.now())
 
