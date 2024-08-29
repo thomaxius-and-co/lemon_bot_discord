@@ -91,7 +91,6 @@ async def main():
     logger.init()
     # Database schema has to be initialized before running the bot
     await db.initialize_schema()
-    asyncio.create_task(archiver.main())
     await trophies.main()
 
     for module in [casino, sqlcommands, osu, feed, reminder, youtube, lan, steam, anssicommands, trophies, laiva,
@@ -706,12 +705,6 @@ async def on_socket_raw_receive(raw_msg):
     type = msg.get("t", None)
     data = msg.get("d", None)
     match type:
-        case "MESSAGE_CREATE":
-            log.info("Insta-archiving a new message")
-            guild_id = await db.fetchval("SELECT guild_id FROM channel_archiver_status WHERE channel_id = $1",
-                                         data["channel_id"])
-            await archiver.insert_message(db, guild_id, data)
-
         case "GUILD_CREATE":
             log.info("Updating users from GUILD_CREATE event")
             members = data.get("members", [])
