@@ -18,13 +18,8 @@ import util
 
 log = logger.get("KANSALLISGALLERIA")
 
-def is_enabled():
-    return "KANSALLISGALLERIA_API_KEY" in os.environ
 
 def register():
-  if not is_enabled():
-    return {}
-
   return {
     "art": cmd_art,
   }
@@ -81,10 +76,9 @@ async def cmd_art(client, message, _):
 
 @asynccontextmanager
 async def call_api_raw_stream(endpoint, params = {}):
-    headers = {"x-api-key": os.environ["KANSALLISGALLERIA_API_KEY"]}
     url = "https://www.kansallisgalleria.fi/api%s%s" % (endpoint, http_util.make_query_string(params))
     async with aiohttp.ClientSession() as session:
-        r = await session.get(url, headers=headers)
+        r = await session.get(url)
         log.debug({
           "requestMethod": r.method,
           "requestUrl": str(r.url),
