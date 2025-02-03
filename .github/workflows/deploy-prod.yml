@@ -1,9 +1,4 @@
-on:
-  push:
-    branches:
-      - master
-  schedule:
-    - cron: '0 0 * * *'
+on: workflow_dispatch
 
 env:
   VERSION_TAG: "${{ github.sha }}"
